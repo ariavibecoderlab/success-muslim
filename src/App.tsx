@@ -17,6 +17,9 @@ import QadaSolatTrack from "./pages/QadaSolatTrack";
 import RamadhanQadaSetup from "./pages/RamadhanQadaSetup";
 import RamadhanQadaTrack from "./pages/RamadhanQadaTrack";
 import Fidyah from "./pages/Fidyah";
+import DhikrCounter from "./pages/DhikrCounter";
+import ZakatCalculator from "./pages/ZakatCalculator";
+import SunnahTracker from "./pages/SunnahTracker";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +50,9 @@ const App = () => (
             <Route path="/ramadhan-qada/setup" element={<RamadhanQadaSetup />} />
             <Route path="/ramadhan-qada/track" element={<RamadhanQadaTrack />} />
             <Route path="/fidyah" element={<Fidyah />} />
+            <Route path="/deen/dhikr" element={<DhikrCounter />} />
+            <Route path="/deen/zakat" element={<ZakatCalculator />} />
+            <Route path="/deen/sunnah" element={<SunnahTracker />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
