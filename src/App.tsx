@@ -7,6 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import AppLayout from "./components/AppLayout";
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
+import Deen from "./pages/Deen";
 import Health from "./pages/Health";
 import Wealth from "./pages/Wealth";
 import Productivity from "./pages/Productivity";
@@ -33,6 +34,7 @@ const App = () => (
             {/* Pillar pages with bottom nav */}
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/deen" element={<Deen />} />
               <Route path="/health" element={<Health />} />
               <Route path="/wealth" element={<Wealth />} />
               <Route path="/productivity" element={<Productivity />} />
