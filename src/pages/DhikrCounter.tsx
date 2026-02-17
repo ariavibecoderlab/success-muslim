@@ -1,11 +1,17 @@
 import { useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, RotateCcw, Check } from 'lucide-react';
+import { RotateCcw, Check } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPresets, getDailyDhikr, saveDhikrCount, type DhikrPreset } from '@/lib/dhikr-storage';
+import SubPageLayout from '@/components/SubPageLayout';
+
+const DEEN_SIBLINGS = [
+  { path: '/deen/dhikr', label: 'Dhikr' },
+  { path: '/deen/sunnah', label: 'Sunnah' },
+  { path: '/deen/zakat', label: 'Zakat' },
+];
 
 const DhikrCounter = () => {
   const presets = getPresets();
@@ -42,17 +48,8 @@ const DhikrCounter = () => {
   const daily = getDailyDhikr();
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center gap-3">
-          <Link to="/deen" className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <span className="text-lg font-bold">Dhikr Counter</span>
-        </div>
-      </nav>
-
-      <main className="max-w-md mx-auto px-5 py-6 space-y-6">
+    <SubPageLayout title="Dhikr Counter" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/dhikr">
+      <div className="space-y-6">
         {/* Preset Selector */}
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           {presets.map(p => (
@@ -150,8 +147,8 @@ const DhikrCounter = () => {
             )}
           </CardContent>
         </Card>
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 
