@@ -14,7 +14,10 @@ const Wealth = () => (
   <div className="min-h-screen bg-background">
     <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-        <span className="text-lg font-bold text-primary">💰 Wealth & Finance</span>
+        <span className="text-lg font-bold text-primary flex items-center gap-2">
+          <Wallet className="h-5 w-5" />
+          Wealth & Finance
+        </span>
       </div>
     </nav>
 
