@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   Moon, BookOpen, Droplets, Sun, Sunrise, Sunset, CloudSun,
-  TrendingUp, CheckCircle2, Star, Heart, Sparkles,
+  TrendingUp, CheckCircle2, Star, Heart, Sparkles, Settings, Shield, Megaphone,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -14,6 +14,9 @@ import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage
 import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAdmin } from '@/hooks/useAdmin';
+import { supabase } from '@/integrations/supabase/client';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -38,12 +41,26 @@ const QUOTES = [
 const Dashboard = () => {
   const [, forceUpdate] = useState(0);
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
+  const { user } = useAuth();
+  const { isAdmin } = useAdmin();
+  const [displayName, setDisplayName] = useState('');
+  const [announcements, setAnnouncements] = useState<{ id: string; title: string; content: string }[]>([]);
 
   useEffect(() => {
     const onFocus = () => forceUpdate(n => n + 1);
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from('profiles').select('display_name').eq('id', user.id).single()
+        .then(({ data }) => { if (data?.display_name) setDisplayName(data.display_name); });
+      supabase.from('announcements').select('id, title, content').eq('is_active', true)
+        .order('created_at', { ascending: false }).limit(3)
+        .then(({ data }) => { if (data) setAnnouncements(data); });
+    }
+  }, [user]);
 
   useEffect(() => {
     fetchPrayerTimes().then(data => {
@@ -107,7 +124,7 @@ const Dashboard = () => {
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
 
-  return (
+   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
@@ -115,14 +132,41 @@ const Dashboard = () => {
             <Moon className="h-5 w-5" />
             Success Muslim
           </Link>
-          <span className="text-xs text-muted-foreground">{gregorianDate} · {hijriDate}</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">{gregorianDate} · {hijriDate}</span>
+            {isAdmin && (
+              <Link to="/admin" className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center hover:bg-primary/20 transition-colors" title="Admin Panel">
+                <Shield className="h-4 w-4 text-primary" />
+              </Link>
+            )}
+            <Link to="/settings" className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </Link>
+          </div>
         </div>
       </nav>
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-5">
+        {/* Announcements */}
+        {announcements.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
+            {announcements.map(a => (
+              <Card key={a.id} className="bg-accent/10 border-accent/20 mb-2">
+                <CardContent className="p-3 flex items-start gap-3">
+                  <Megaphone className="h-4 w-4 text-accent-foreground flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">{a.title}</p>
+                    <p className="text-xs text-muted-foreground">{a.content}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </motion.div>
+        )}
+
         {/* Greeting */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-          <h1 className="text-2xl font-bold mb-0.5">Assalamualaikum 👋</h1>
+          <h1 className="text-2xl font-bold mb-0.5">Assalamualaikum{displayName ? `, ${displayName}` : ''} 👋</h1>
           <p className="text-muted-foreground text-sm">Your spiritual dashboard</p>
         </motion.div>
 

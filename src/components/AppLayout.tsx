@@ -1,4 +1,4 @@
-import { useLocation, useOutlet } from 'react-router-dom';
+import { useLocation, Outlet } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 
@@ -10,7 +10,6 @@ const pageVariants = {
 
 const AppLayout = () => {
   const { pathname } = useLocation();
-  const outlet = useOutlet();
 
   return (
     <>
@@ -23,7 +22,7 @@ const AppLayout = () => {
             animate="animate"
             exit="exit"
           >
-            {outlet}
+            <Outlet />
           </motion.div>
         </AnimatePresence>
       </div>
