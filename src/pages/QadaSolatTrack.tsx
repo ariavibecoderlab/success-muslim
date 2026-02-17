@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Flame, Target, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,13 +17,13 @@ const QadaSolatTrack = () => {
   const todayLog = progress.dailyLogs[today] || { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
   const todayTotal = Object.values(todayLog).reduce((s, v) => s + v, 0);
 
-  const handleToggle = useCallback((prayer: PrayerType) => {
+  const handleToggle = (prayer: PrayerType) => {
     if (todayLog[prayer] > 0) {
       setProgress(undoQadaPrayer(prayer));
     } else {
       setProgress(logQadaPrayer(prayer));
     }
-  }, [todayLog]);
+  };
 
   if (!setup) {
     return (

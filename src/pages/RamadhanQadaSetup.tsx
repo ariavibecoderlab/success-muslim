@@ -92,7 +92,10 @@ const RamadhanQadaSetupPage = () => {
           </CardContent>
         </Card>
 
-        <Button onClick={handleSave} className="w-full" size="lg">
+        {totalDays <= 0 && (
+          <p className="text-xs text-destructive">Please enter at least 1 day.</p>
+        )}
+        <Button onClick={handleSave} className="w-full" size="lg" disabled={totalDays <= 0}>
           <CheckCircle className="h-4 w-4 mr-2" /> Start Tracking
         </Button>
       </main>
