@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Moon, Heart, Wallet, ListChecks, Users } from 'lucide-react';
+import { Home, Moon, Heart, Wallet, ListChecks, Users } from 'lucide-react';
 
 const tabs = [
-  { icon: Moon, label: 'Deen', path: '/dashboard' },
+  { icon: Home, label: 'Home', path: '/dashboard' },
+  { icon: Moon, label: 'Deen', path: '/deen' },
   { icon: Heart, label: 'Health', path: '/health' },
   { icon: Wallet, label: 'Wealth', path: '/wealth' },
   { icon: ListChecks, label: 'Tasks', path: '/productivity' },
