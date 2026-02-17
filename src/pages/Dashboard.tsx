@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target } from 'lucide-react';
+import { Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target, Moon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -45,7 +45,10 @@ const Dashboard = () => {
       {/* Top bar */}
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="text-lg font-bold text-primary">☪ Success Muslim</Link>
+          <Link to="/" className="text-lg font-bold text-primary flex items-center gap-2">
+            <Moon className="h-5 w-5" />
+            Success Muslim
+          </Link>
         </div>
       </nav>
 

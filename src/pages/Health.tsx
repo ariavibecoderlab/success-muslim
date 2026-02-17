@@ -14,7 +14,10 @@ const Health = () => (
   <div className="min-h-screen bg-background">
     <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-        <span className="text-lg font-bold text-primary">💪 Health & Fitness</span>
+        <span className="text-lg font-bold text-primary flex items-center gap-2">
+          <Heart className="h-5 w-5" />
+          Health & Fitness
+        </span>
       </div>
     </nav>
 
