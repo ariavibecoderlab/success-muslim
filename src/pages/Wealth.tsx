@@ -1,5 +1,6 @@
 import { Wallet, PiggyBank, TrendingDown, Calculator, HandCoins, BarChart3 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import EditableText from '@/components/cms/EditableText';
 
 const features = [
   { icon: Wallet, title: 'Budget Tracker', desc: 'Income, expenses & balance overview' },
@@ -16,7 +17,7 @@ const Wealth = () => (
       <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
         <span className="text-lg font-bold text-primary flex items-center gap-2">
           <Wallet className="h-5 w-5" />
-          Wealth & Finance
+          <EditableText elementKey="wealth.nav" defaultText="Wealth & Finance" tag="span" />
         </span>
       </div>
     </nav>
@@ -26,23 +27,21 @@ const Wealth = () => (
         <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
           <Wallet className="h-8 w-8 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold mb-2">Coming Soon</h1>
-        <p className="text-muted-foreground text-sm max-w-sm">
-          Manage your wealth with barakah. Halal earnings, smart spending, generous giving.
-        </p>
+        <EditableText elementKey="wealth.title" defaultText="Coming Soon" tag="h1" className="text-2xl font-bold mb-2" />
+        <EditableText elementKey="wealth.desc" defaultText="Manage your wealth with barakah. Halal earnings, smart spending, generous giving." tag="p" className="text-muted-foreground text-sm max-w-sm" />
       </div>
 
-      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Planned Features</h2>
+      <EditableText elementKey="wealth.features.title" defaultText="Planned Features" tag="h2" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4" />
       <div className="grid sm:grid-cols-2 gap-3">
-        {features.map(f => (
+        {features.map((f, i) => (
           <Card key={f.title} className="border-dashed opacity-70">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                 <f.icon className="h-4 w-4 text-muted-foreground" />
               </div>
               <div>
-                <p className="text-sm font-medium">{f.title}</p>
-                <p className="text-xs text-muted-foreground">{f.desc}</p>
+                <EditableText elementKey={`wealth.feature.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
+                <EditableText elementKey={`wealth.feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-xs text-muted-foreground" />
               </div>
             </CardContent>
           </Card>

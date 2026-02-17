@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getActiveIF, getIFSessions, startIF, stopIF } from '@/lib/health-storage';
 import { format } from 'date-fns';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -46,7 +47,6 @@ const HealthIFTimer = () => {
     setSessions(getIFSessions());
   };
 
-  // Timer calculations
   let elapsed = 0;
   let total = 0;
   let remaining = 0;
@@ -74,7 +74,6 @@ const HealthIFTimer = () => {
   return (
     <SubPageLayout title="IF Timer" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/if-timer">
       <div className="space-y-5">
-        {/* Mode selector (only when not active) */}
         {!active && (
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             {MODES.map(m => (
@@ -91,7 +90,6 @@ const HealthIFTimer = () => {
           </div>
         )}
 
-        {/* Timer ring */}
         <div className="flex flex-col items-center">
           <div className="relative w-52 h-52">
             <svg className="w-52 h-52 -rotate-90" viewBox="0 0 160 160">
@@ -111,7 +109,7 @@ const HealthIFTimer = () => {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               {active ? (
                 <>
-                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <EditableText elementKey="iftimer.remaining" defaultText="Remaining" tag="p" className="text-xs text-muted-foreground" />
                   <p className="text-2xl font-bold font-mono">{formatTime(remaining)}</p>
                   <p className="text-xs text-muted-foreground mt-1">{active.mode} fast</p>
                 </>
@@ -126,7 +124,6 @@ const HealthIFTimer = () => {
           </div>
         </div>
 
-        {/* Controls */}
         <div className="flex justify-center gap-3">
           {!active ? (
             <Button onClick={handleStart} className="gap-2 px-8">
@@ -146,11 +143,10 @@ const HealthIFTimer = () => {
           )}
         </div>
 
-        {/* Elapsed info */}
         {active && (
           <Card>
             <CardContent className="p-4 text-center space-y-1">
-              <p className="text-xs text-muted-foreground">Elapsed</p>
+              <EditableText elementKey="iftimer.elapsed" defaultText="Elapsed" tag="p" className="text-xs text-muted-foreground" />
               <p className="text-lg font-bold font-mono">{formatTime(elapsed)}</p>
               <p className="text-xs text-muted-foreground">
                 Started {format(new Date(active.startTime), 'HH:mm, dd MMM')}
@@ -159,11 +155,10 @@ const HealthIFTimer = () => {
           </Card>
         )}
 
-        {/* History */}
         {sessions.length > 0 && (
           <Card>
             <CardContent className="p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-3">Recent Fasts</p>
+              <EditableText elementKey="iftimer.history" defaultText="Recent Fasts" tag="p" className="text-xs font-semibold text-muted-foreground mb-3" />
               <div className="space-y-2">
                 {sessions.slice(0, 5).map((s, i) => (
                   <div key={i} className="flex items-center justify-between text-sm">

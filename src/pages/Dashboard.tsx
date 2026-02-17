@@ -17,6 +17,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
+import EditableText from '@/components/cms/EditableText';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -85,14 +86,12 @@ const Dashboard = () => {
   const hasRamadhan = !!ramadhanSetup;
   const hasFidyah = fidyahHistory.length > 0;
 
-  // Real sunnah data
   const sunnahItems = getSunnahItems().filter(i => i.enabled);
   const sunnahLog = getDayLog();
   const sunnahDone = sunnahLog.completed.filter(id => sunnahItems.find(i => i.id === id)).length;
   const sunnahStreak = getSunnahStreak();
   const dailyDhikr = getDailyDhikr();
 
-  // Use real sunnah data for habits widget if available, fallback to dummy
   const habits = sunnahItems.length > 0
     ? sunnahItems.slice(0, 4).map(i => ({
         label: i.label,
@@ -102,7 +101,6 @@ const Dashboard = () => {
     : DUMMY_HABITS;
   const habitsDone = habits.filter(h => h.done).length;
 
-  // Prayer data
   const prayers = prayerData
     ? prayerData.timings.map((t, i) => ({
         name: t.name,
@@ -130,7 +128,7 @@ const Dashboard = () => {
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link to="/" className="text-lg font-bold text-primary flex items-center gap-2">
             <Moon className="h-5 w-5" />
-            Success Muslim
+            <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" />
           </Link>
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground">{gregorianDate} · {hijriDate}</span>
@@ -167,7 +165,7 @@ const Dashboard = () => {
         {/* Greeting */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
           <h1 className="text-2xl font-bold mb-0.5">Assalamualaikum{displayName ? `, ${displayName}` : ''} 👋</h1>
-          <p className="text-muted-foreground text-sm">Your spiritual dashboard</p>
+          <EditableText elementKey="greeting.subtitle" defaultText="Your spiritual dashboard" tag="p" className="text-muted-foreground text-sm" />
         </motion.div>
 
         {/* Daily Prayer Widget */}
@@ -180,7 +178,7 @@ const Dashboard = () => {
                     <Star className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h2 className="text-sm font-semibold">Today's Prayers</h2>
+                    <EditableText elementKey="prayer.title" defaultText="Today's Prayers" tag="h2" className="text-sm font-semibold" />
                     <p className="text-xs text-muted-foreground">{prayersDone}/5 passed</p>
                   </div>
                 </div>
@@ -219,7 +217,7 @@ const Dashboard = () => {
                 <Flame className="h-4 w-4 text-primary" />
               </div>
               <span className="text-lg font-bold">{sunnahStreak || 0}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight">Sunnah Streak</span>
+              <EditableText elementKey="stat.sunnah" defaultText="Sunnah Streak" tag="span" className="text-[10px] text-muted-foreground leading-tight" />
             </CardContent>
           </Card>
           <Card>
@@ -228,7 +226,7 @@ const Dashboard = () => {
                 <BookOpen className="h-4 w-4 text-accent-foreground" />
               </div>
               <span className="text-lg font-bold">{dailyDhikr.totalCount}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight">Dhikr Today</span>
+              <EditableText elementKey="stat.dhikr" defaultText="Dhikr Today" tag="span" className="text-[10px] text-muted-foreground leading-tight" />
             </CardContent>
           </Card>
           <Card>
@@ -237,7 +235,7 @@ const Dashboard = () => {
                 <Droplets className="h-4 w-4 text-secondary-foreground" />
               </div>
               <span className="text-lg font-bold">{sunnahDone}/{sunnahItems.length || '—'}</span>
-              <span className="text-[10px] text-muted-foreground leading-tight">Sunnah Done</span>
+              <EditableText elementKey="stat.sunnahdone" defaultText="Sunnah Done" tag="span" className="text-[10px] text-muted-foreground leading-tight" />
             </CardContent>
           </Card>
         </motion.div>
@@ -251,7 +249,7 @@ const Dashboard = () => {
                   <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                     <Sparkles className="h-4 w-4 text-accent-foreground" />
                   </div>
-                  <h2 className="text-sm font-semibold">Daily Habits</h2>
+                  <EditableText elementKey="habits.title" defaultText="Daily Habits" tag="h2" className="text-sm font-semibold" />
                 </div>
                 <span className="text-xs text-muted-foreground">{habitsDone}/{habits.length} done</span>
               </div>
@@ -289,7 +287,7 @@ const Dashboard = () => {
                         <Clock className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm">Qada Solat</h3>
+                        <EditableText elementKey="qada.title" defaultText="Qada Solat" tag="h3" className="font-semibold text-sm" />
                         <p className="text-xs text-muted-foreground">
                           {qadaSetup!.totalPrayers - qadaProgress.totalCompleted} prayers remaining
                         </p>
@@ -320,7 +318,7 @@ const Dashboard = () => {
                         <CalendarCheck className="h-5 w-5 text-accent-foreground" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm">Ramadhan Qada</h3>
+                        <EditableText elementKey="ramadhan.title" defaultText="Ramadhan Qada" tag="h3" className="font-semibold text-sm" />
                         <p className="text-xs text-muted-foreground">
                           {ramadhanSetup!.totalDays - ramadhanProgress.completedDates.length} days remaining
                         </p>
@@ -346,7 +344,7 @@ const Dashboard = () => {
                         <Calculator className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold text-sm">Fidyah</h3>
+                        <EditableText elementKey="fidyah.title" defaultText="Fidyah" tag="h3" className="font-semibold text-sm" />
                         <p className="text-xs text-muted-foreground">
                           Last: {fidyahHistory[0].currency} {fidyahHistory[0].total.toFixed(2)} ({fidyahHistory[0].days} days)
                         </p>
@@ -377,7 +375,7 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={8}>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Actions</h2>
+          <EditableText elementKey="quickactions.title" defaultText="Quick Actions" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
           <div className="grid grid-cols-3 gap-3">
             {[
               { icon: Clock, title: 'Qada Solat', to: hasQada ? '/qada-solat/track' : '/qada-solat/setup' },
@@ -407,7 +405,7 @@ const Dashboard = () => {
                   <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
                     <TrendingUp className="h-4 w-4 text-secondary-foreground" />
                   </div>
-                  <h2 className="text-sm font-semibold">This Week</h2>
+                  <EditableText elementKey="weekly.title" defaultText="This Week" tag="h2" className="text-sm font-semibold" />
                 </div>
               </div>
               <div className="flex items-end gap-1.5 h-20">

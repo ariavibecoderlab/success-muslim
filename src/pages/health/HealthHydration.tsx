@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getHydration, addCup, removeCup, getHydrationHistory } from '@/lib/health-storage';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -65,7 +66,7 @@ const HealthHydration = () => {
         {/* Weekly history */}
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-semibold text-muted-foreground mb-3">Last 7 Days</p>
+            <EditableText elementKey="hydration.history.title" defaultText="Last 7 Days" tag="p" className="text-xs font-semibold text-muted-foreground mb-3" />
             <ResponsiveContainer width="100%" height={100}>
               <BarChart data={history}>
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />

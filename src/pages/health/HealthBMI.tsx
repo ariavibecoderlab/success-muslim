@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getBMI, saveBMI, calculateBMI, calculateTDEE, bmiCategory, todayKey, type BMIData } from '@/lib/health-storage';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -94,7 +95,7 @@ const HealthBMI = () => {
                 <p className={`text-sm font-medium ${cat.color}`}>{cat.label}</p>
               </div>
               <div className="border-t border-border pt-3">
-                <p className="text-xs text-muted-foreground">Daily Calorie Need (TDEE)</p>
+                <EditableText elementKey="bmi.tdee.label" defaultText="Daily Calorie Need (TDEE)" tag="p" className="text-xs text-muted-foreground" />
                 <p className="text-2xl font-bold">{result.tdee} <span className="text-sm font-normal text-muted-foreground">kcal</span></p>
               </div>
             </CardContent>

@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPresets, getDailyDhikr, saveDhikrCount, type DhikrPreset } from '@/lib/dhikr-storage';
 import SubPageLayout from '@/components/SubPageLayout';
+import EditableText from '@/components/cms/EditableText';
 
 const DEEN_SIBLINGS = [
   { path: '/deen/dhikr', label: 'Dhikr' },
@@ -113,7 +114,7 @@ const DhikrCounter = () => {
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Progress</span>
+            <EditableText elementKey="dhikr.progress" defaultText="Progress" tag="span" />
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -122,7 +123,7 @@ const DhikrCounter = () => {
         {/* Today's Summary */}
         <Card>
           <CardContent className="p-4">
-            <h3 className="text-sm font-semibold mb-3">Today's Summary</h3>
+            <EditableText elementKey="dhikr.summary" defaultText="Today's Summary" tag="h3" className="text-sm font-semibold mb-3" />
             <div className="space-y-2">
               {daily.sessions.filter(s => s.count > 0).map(s => {
                 const preset = presets.find(p => p.id === s.presetId);
@@ -137,7 +138,7 @@ const DhikrCounter = () => {
                 );
               })}
               {daily.sessions.filter(s => s.count > 0).length === 0 && (
-                <p className="text-xs text-muted-foreground">No dhikr recorded today. Tap the circle to start!</p>
+                <EditableText elementKey="dhikr.empty" defaultText="No dhikr recorded today. Tap the circle to start!" tag="p" className="text-xs text-muted-foreground" />
               )}
             </div>
             {daily.totalCount > 0 && (

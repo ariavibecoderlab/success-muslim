@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import EditableText from '@/components/cms/EditableText';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -69,14 +70,14 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <span className="text-lg font-bold text-primary flex items-center gap-2">
             <Moon className="h-5 w-5" />
-            Success Muslim
+            <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" />
           </span>
           <div className="flex items-center gap-3">
             <Button asChild variant="ghost" size="sm">
-              <Link to="/auth">Sign In</Link>
+              <Link to="/auth"><EditableText elementKey="nav.signin" defaultText="Sign In" tag="span" /></Link>
             </Button>
             <Button asChild size="sm">
-              <Link to="/auth">Get Started</Link>
+              <Link to="/auth"><EditableText elementKey="nav.getstarted" defaultText="Get Started" tag="span" /></Link>
             </Button>
           </div>
         </div>
@@ -89,31 +90,28 @@ const Landing = () => {
             className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-6"
           >
             <Zap className="h-3.5 w-3.5" />
-            The All-in-One Life System for Muslims
+            <EditableText elementKey="hero.badge" defaultText="The All-in-One Life System for Muslims" tag="span" />
           </motion.div>
 
-          <motion.h1 initial="hidden" animate="visible" variants={fadeUp} custom={1}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] mb-6"
-          >
-            Optimize Your Life<br />
-            <span className="text-primary">For Both Worlds</span>
-          </motion.h1>
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] mb-6">
+              <EditableText elementKey="hero.title" defaultText="Optimize Your Life" tag="span" /><br />
+              <span className="text-primary"><EditableText elementKey="hero.title2" defaultText="For Both Worlds" tag="span" /></span>
+            </h1>
+          </motion.div>
 
-          <motion.p initial="hidden" animate="visible" variants={fadeUp} custom={2}
-            className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10"
-          >
-            Track your prayers, health, wealth, productivity, and family — all in one beautiful app. 
-            Get a daily Life Score and build consistent habits that matter.
-          </motion.p>
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
+            <EditableText elementKey="hero.subtitle" defaultText="Track your prayers, health, wealth, productivity, and family — all in one beautiful app. Get a daily Life Score and build consistent habits that matter." tag="p" className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10" />
+          </motion.div>
 
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shadow-lg">
-              <Link to="/auth">Start Free <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <Link to="/auth"><EditableText elementKey="hero.cta" defaultText="Start Free" tag="span" /> <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="text-base px-8 py-6 rounded-xl">
-              <a href="#how-it-works">See How It Works</a>
+              <a href="#how-it-works"><EditableText elementKey="hero.cta2" defaultText="See How It Works" tag="span" /></a>
             </Button>
           </motion.div>
         </div>
@@ -125,8 +123,8 @@ const Landing = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Your Life Score</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">One number that reflects your holistic progress across spiritual, physical, and productive dimensions.</p>
+            <EditableText elementKey="lifescore.title" defaultText="Your Life Score" tag="h2" className="text-3xl sm:text-4xl font-bold mb-4" />
+            <EditableText elementKey="lifescore.desc" defaultText="One number that reflects your holistic progress across spiritual, physical, and productive dimensions." tag="p" className="text-muted-foreground max-w-lg mx-auto" />
           </motion.div>
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}>
@@ -167,8 +165,8 @@ const Landing = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Five Pillars of Success</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">A comprehensive framework covering every dimension of the Muslim lifestyle.</p>
+            <EditableText elementKey="pillars.heading" defaultText="Five Pillars of Success" tag="h2" className="text-3xl sm:text-4xl font-bold mb-4" />
+            <EditableText elementKey="pillars.desc" defaultText="A comprehensive framework covering every dimension of the Muslim lifestyle." tag="p" className="text-muted-foreground max-w-lg mx-auto" />
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -179,8 +177,8 @@ const Landing = () => {
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${p.color} flex items-center justify-center mb-4`}>
                       <p.icon className="h-6 w-6 text-foreground" />
                     </div>
-                    <h3 className="text-lg font-semibold mb-2">{p.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                    <EditableText elementKey={`pillar.${i}.title`} defaultText={p.title} tag="h3" className="text-lg font-semibold mb-2" />
+                    <EditableText elementKey={`pillar.${i}.desc`} defaultText={p.desc} tag="p" className="text-sm text-muted-foreground leading-relaxed" />
                   </CardContent>
                 </Card>
               </motion.div>
@@ -195,8 +193,8 @@ const Landing = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Powerful Tools</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">Purpose-built features designed for the Muslim lifestyle.</p>
+            <EditableText elementKey="features.heading" defaultText="Powerful Tools" tag="h2" className="text-3xl sm:text-4xl font-bold mb-4" />
+            <EditableText elementKey="features.desc" defaultText="Purpose-built features designed for the Muslim lifestyle." tag="p" className="text-muted-foreground max-w-lg mx-auto" />
           </motion.div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -208,8 +206,8 @@ const Landing = () => {
                       <f.icon className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-sm mb-1">{f.title}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                      <EditableText elementKey={`feature.${i}.title`} defaultText={f.title} tag="h3" className="font-semibold text-sm mb-1" />
+                      <EditableText elementKey={`feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-xs text-muted-foreground leading-relaxed" />
                     </div>
                   </CardContent>
                 </Card>
@@ -231,7 +229,7 @@ const Landing = () => {
             ].map((s, i) => (
               <motion.div key={s.label} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
                 <p className="text-3xl font-bold text-primary">{s.value.toLocaleString()}{s.suffix}</p>
-                <p className="text-sm text-muted-foreground mt-1">{s.label}</p>
+                <EditableText elementKey={`stat.${i}.label`} defaultText={s.label} tag="p" className="text-sm text-muted-foreground mt-1" />
               </motion.div>
             ))}
           </div>
@@ -244,7 +242,7 @@ const Landing = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
+            <EditableText elementKey="howitworks.heading" defaultText="How It Works" tag="h2" className="text-3xl sm:text-4xl font-bold mb-4" />
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8">
@@ -253,8 +251,8 @@ const Landing = () => {
                 className="text-center"
               >
                 <div className="text-5xl font-bold text-primary/20 mb-3">{s.num}</div>
-                <h3 className="text-lg font-semibold mb-2">{s.title}</h3>
-                <p className="text-sm text-muted-foreground">{s.desc}</p>
+                <EditableText elementKey={`step.${i}.title`} defaultText={s.title} tag="h3" className="text-lg font-semibold mb-2" />
+                <EditableText elementKey={`step.${i}.desc`} defaultText={s.desc} tag="p" className="text-sm text-muted-foreground" />
                 {i < 2 && <ChevronRight className="hidden md:block mx-auto mt-4 text-primary/30 h-6 w-6" />}
               </motion.div>
             ))}
@@ -268,7 +266,7 @@ const Landing = () => {
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">What Users Say</h2>
+            <EditableText elementKey="testimonials.heading" defaultText="What Users Say" tag="h2" className="text-3xl sm:text-4xl font-bold mb-4" />
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -281,10 +279,10 @@ const Landing = () => {
                         <Star key={j} className="h-4 w-4 fill-accent text-accent" />
                       ))}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-4 italic">"{t.text}"</p>
+                    <p className="text-sm text-muted-foreground mb-4 italic">"<EditableText elementKey={`testimonial.${i}.text`} defaultText={t.text} tag="span" />"</p>
                     <div>
-                      <p className="font-semibold text-sm">{t.name}</p>
-                      <p className="text-xs text-muted-foreground">{t.role}</p>
+                      <EditableText elementKey={`testimonial.${i}.name`} defaultText={t.name} tag="p" className="font-semibold text-sm" />
+                      <EditableText elementKey={`testimonial.${i}.role`} defaultText={t.role} tag="p" className="text-xs text-muted-foreground" />
                     </div>
                   </CardContent>
                 </Card>
@@ -298,13 +296,11 @@ const Landing = () => {
       <section className="py-20 px-6 bg-primary text-primary-foreground">
         <div className="max-w-3xl mx-auto text-center">
           <Shield className="h-12 w-12 mx-auto mb-6 opacity-80" />
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4">Every Prayer Counts</h2>
-          <p className="text-primary-foreground/80 mb-2 text-lg italic">
-            "The most beloved deeds to Allah are those done consistently, even if they are small."
-          </p>
-          <p className="text-primary-foreground/60 text-sm mb-8">— Sahih al-Bukhari & Muslim</p>
+          <EditableText elementKey="cta.title" defaultText="Every Prayer Counts" tag="h2" className="text-2xl sm:text-3xl font-bold mb-4" />
+          <EditableText elementKey="cta.quote" defaultText="&quot;The most beloved deeds to Allah are those done consistently, even if they are small.&quot;" tag="p" className="text-primary-foreground/80 mb-2 text-lg italic" />
+          <EditableText elementKey="cta.attribution" defaultText="— Sahih al-Bukhari & Muslim" tag="p" className="text-primary-foreground/60 text-sm mb-8" />
           <Button asChild size="lg" variant="secondary" className="text-base px-8 py-6 rounded-xl">
-            <Link to="/auth">Begin Your Journey <ArrowRight className="ml-2 h-5 w-5" /></Link>
+            <Link to="/auth"><EditableText elementKey="cta.button" defaultText="Begin Your Journey" tag="span" /> <ArrowRight className="ml-2 h-5 w-5" /></Link>
           </Button>
         </div>
       </section>
@@ -313,14 +309,14 @@ const Landing = () => {
       <footer className="py-10 px-6 border-t border-border">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <span className="text-sm font-semibold text-primary flex items-center gap-2">
-            <Moon className="h-4 w-4" /> Success Muslim
+            <Moon className="h-4 w-4" /> <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
           </span>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground">Privacy</a>
             <a href="#" className="hover:text-foreground">Terms</a>
             <a href="#" className="hover:text-foreground">Contact</a>
           </div>
-          <p className="text-xs text-muted-foreground">© 2026 Success Muslim. Built with purpose.</p>
+          <EditableText elementKey="footer.copyright" defaultText="© 2026 Success Muslim. Built with purpose." tag="p" className="text-xs text-muted-foreground" />
         </div>
       </footer>
     </div>
