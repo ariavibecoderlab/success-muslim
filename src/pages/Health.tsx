@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBMI, getHydration, getSleepLog, bmiCategory } from '@/lib/health-storage';
+import EditableText from '@/components/cms/EditableText';
 
 const features = [
   { icon: Scale, title: 'BMI Calculator', desc: 'Body metrics & calorie needs', path: '/health/bmi' },
@@ -30,24 +31,24 @@ const Health = () => {
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
           <Heart className="h-7 w-7 text-primary" />
         </div>
-        <h1 className="text-xl font-bold">Health & Wellness</h1>
-        <p className="text-sm text-muted-foreground">Body is an amanah — take care of it.</p>
+        <EditableText elementKey="health.title" defaultText="Health & Wellness" tag="h1" className="text-xl font-bold" />
+        <EditableText elementKey="health.desc" defaultText="Body is an amanah — take care of it." tag="p" className="text-sm text-muted-foreground" />
       </div>
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-2">
         <Card><CardContent className="p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">BMI</p>
+          <EditableText elementKey="health.stat.bmi" defaultText="BMI" tag="p" className="text-[10px] text-muted-foreground" />
           <p className="text-lg font-bold">{bmi?.bmi ?? '—'}</p>
           {cat && <p className={`text-[10px] font-medium ${cat.color}`}>{cat.label}</p>}
         </CardContent></Card>
         <Card><CardContent className="p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">Water</p>
+          <EditableText elementKey="health.stat.water" defaultText="Water" tag="p" className="text-[10px] text-muted-foreground" />
           <p className="text-lg font-bold">{hydration.cups}/{hydration.goal}</p>
           <p className="text-[10px] text-muted-foreground">glasses</p>
         </CardContent></Card>
         <Card><CardContent className="p-3 text-center">
-          <p className="text-[10px] text-muted-foreground">Sleep</p>
+          <EditableText elementKey="health.stat.sleep" defaultText="Sleep" tag="p" className="text-[10px] text-muted-foreground" />
           <p className="text-lg font-bold">{lastSleep?.duration ?? '—'}</p>
           <p className="text-[10px] text-muted-foreground">hours</p>
         </CardContent></Card>
@@ -55,9 +56,9 @@ const Health = () => {
 
       {/* Feature cards */}
       <div>
-        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Wellness Tools</h2>
+        <EditableText elementKey="health.tools.title" defaultText="Wellness Tools" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
         <div className="grid grid-cols-2 gap-2">
-          {features.map(f => (
+          {features.map((f, i) => (
             <Card
               key={f.path}
               className="cursor-pointer hover:bg-secondary/50 transition-colors active:scale-[0.98]"
@@ -68,8 +69,8 @@ const Health = () => {
                   <f.icon className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">{f.title}</p>
-                  <p className="text-[10px] text-muted-foreground">{f.desc}</p>
+                  <EditableText elementKey={`health.feature.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
+                  <EditableText elementKey={`health.feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-[10px] text-muted-foreground" />
                 </div>
               </CardContent>
             </Card>

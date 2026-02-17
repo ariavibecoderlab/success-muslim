@@ -8,6 +8,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine, R
 import SubPageLayout from '@/components/SubPageLayout';
 import { getWeightLog, addWeightEntry, getWeightGoal, setWeightGoal, todayKey } from '@/lib/health-storage';
 import { format, parseISO } from 'date-fns';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -49,10 +50,9 @@ const HealthWeight = () => {
   return (
     <SubPageLayout title="Weight Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/weight">
       <div className="space-y-5">
-        {/* Add entry */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            <Label className="text-xs">Log today's weight (kg)</Label>
+            <EditableText elementKey="weight.log.label" defaultText="Log today's weight (kg)" tag="p" className="text-xs" />
             <div className="flex gap-2">
               <Input type="number" value={newWeight} onChange={e => setNewWeight(e.target.value)} placeholder="70.5" />
               <Button onClick={handleAdd} size="sm">Add</Button>
@@ -60,19 +60,18 @@ const HealthWeight = () => {
           </CardContent>
         </Card>
 
-        {/* Stats */}
         {log.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             <Card><CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Current</p>
+              <EditableText elementKey="weight.current" defaultText="Current" tag="p" className="text-xs text-muted-foreground" />
               <p className="text-lg font-bold">{latest?.weight}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Highest</p>
+              <EditableText elementKey="weight.highest" defaultText="Highest" tag="p" className="text-xs text-muted-foreground" />
               <p className="text-lg font-bold">{highest}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
-              <p className="text-xs text-muted-foreground">Change</p>
+              <EditableText elementKey="weight.change" defaultText="Change" tag="p" className="text-xs text-muted-foreground" />
               <p className={`text-lg font-bold flex items-center justify-center gap-1 ${change < 0 ? 'text-primary' : change > 0 ? 'text-destructive' : ''}`}>
                 {change > 0 ? <TrendingUp className="h-3 w-3" /> : change < 0 ? <TrendingDown className="h-3 w-3" /> : null}
                 {change > 0 ? '+' : ''}{change}
@@ -81,7 +80,6 @@ const HealthWeight = () => {
           </div>
         )}
 
-        {/* Chart */}
         {chartData.length > 1 && (
           <Card>
             <CardContent className="p-4">
@@ -99,7 +97,6 @@ const HealthWeight = () => {
           </Card>
         )}
 
-        {/* Goal */}
         <Card>
           <CardContent className="p-4 space-y-3">
             <Label className="text-xs flex items-center gap-1"><Target className="h-3 w-3" /> Goal Weight (kg)</Label>

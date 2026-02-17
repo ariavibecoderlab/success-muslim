@@ -7,6 +7,7 @@ import { saveFidyahEntry, getFidyahHistory } from '@/lib/storage';
 import { FidyahEntry } from '@/lib/types';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
+import EditableText from '@/components/cms/EditableText';
 
 const CURRENCIES = ['MYR', 'USD', 'GBP', 'EUR', 'SAR', 'IDR', 'SGD'];
 
@@ -39,8 +40,8 @@ const FidyahPage = () => {
     <SubPageLayout title="Fidyah Calculator" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/fidyah">
       <div className="space-y-6">
         <div>
-          <h2 className="text-xl font-bold mb-1">Calculate Fidyah</h2>
-          <p className="text-sm text-muted-foreground">For those unable to fast due to chronic illness or old age.</p>
+          <EditableText elementKey="fidyah.title" defaultText="Calculate Fidyah" tag="h2" className="text-xl font-bold mb-1" />
+          <EditableText elementKey="fidyah.desc" defaultText="For those unable to fast due to chronic illness or old age." tag="p" className="text-sm text-muted-foreground" />
         </div>
 
         <div className="space-y-4">
@@ -78,7 +79,7 @@ const FidyahPage = () => {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
             <Card className="bg-primary/5 border-primary/20">
               <CardContent className="p-6 text-center">
-                <p className="text-sm text-muted-foreground mb-1">Total Fidyah</p>
+                <EditableText elementKey="fidyah.result.label" defaultText="Total Fidyah" tag="p" className="text-sm text-muted-foreground mb-1" />
                 <p className="text-3xl font-bold text-primary">{currency} {result.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground mt-2">{days} days × {currency} {costPerMeal.toFixed(2)}/meal</p>
               </CardContent>
@@ -92,11 +93,8 @@ const FidyahPage = () => {
             <div className="flex gap-3">
               <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
-                <h4 className="font-medium text-sm mb-1">What is Fidyah?</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  Fidyah is a compensation paid when a Muslim is unable to fast during Ramadhan due to chronic illness, 
-                  old age, or other valid permanent reasons. It involves feeding one person for each day of fasting missed.
-                </p>
+                <EditableText elementKey="fidyah.info.title" defaultText="What is Fidyah?" tag="h4" className="font-medium text-sm mb-1" />
+                <EditableText elementKey="fidyah.info.desc" defaultText="Fidyah is a compensation paid when a Muslim is unable to fast during Ramadhan due to chronic illness, old age, or other valid permanent reasons. It involves feeding one person for each day of fasting missed." tag="p" className="text-xs text-muted-foreground leading-relaxed" />
               </div>
             </div>
           </CardContent>
@@ -105,7 +103,7 @@ const FidyahPage = () => {
         {/* History */}
         {history.length > 0 && (
           <div>
-            <h3 className="font-semibold mb-3">History</h3>
+            <EditableText elementKey="fidyah.history" defaultText="History" tag="h3" className="font-semibold mb-3" />
             <div className="space-y-2">
               {history.slice(0, 5).map(entry => (
                 <div key={entry.id} className="flex justify-between items-center py-2 border-b border-border last:border-0 text-sm">

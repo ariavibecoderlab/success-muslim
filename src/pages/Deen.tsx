@@ -11,6 +11,7 @@ import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage
 import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
+import EditableText from '@/components/cms/EditableText';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -54,7 +55,6 @@ const Deen = () => {
   const hasFidyah = fidyahHistory.length > 0;
   const hasAny = hasQada || hasRamadhan || hasFidyah;
 
-  // Sunnah & Dhikr summaries
   const sunnahStreak = getSunnahStreak();
   const sunnahLog = getDayLog();
   const sunnahItems = getSunnahItems().filter(i => i.enabled);
@@ -67,7 +67,7 @@ const Deen = () => {
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center">
           <span className="text-lg font-bold text-primary flex items-center gap-2">
             <Moon className="h-5 w-5" />
-            Deen
+            <EditableText elementKey="deen.nav" defaultText="Deen" tag="span" />
           </span>
         </div>
       </nav>
@@ -77,10 +77,8 @@ const Deen = () => {
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
           <Card className="bg-primary/5 border-primary/10">
             <CardContent className="p-5">
-              <h1 className="text-lg font-bold mb-1">Spiritual Journey</h1>
-              <p className="text-sm text-muted-foreground">
-                Track your ibadah, settle spiritual debts, and grow closer to Allah.
-              </p>
+              <EditableText elementKey="deen.hero.title" defaultText="Spiritual Journey" tag="h1" className="text-lg font-bold mb-1" />
+              <EditableText elementKey="deen.hero.desc" defaultText="Track your ibadah, settle spiritual debts, and grow closer to Allah." tag="p" className="text-sm text-muted-foreground" />
               {(sunnahStreak > 0 || dailyDhikr.totalCount > 0) && (
                 <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
                   {sunnahStreak > 0 && (
@@ -101,7 +99,7 @@ const Deen = () => {
         {/* Active Trackers */}
         {hasAny && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Active Trackers</h2>
+            <EditableText elementKey="deen.trackers.title" defaultText="Active Trackers" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
             <div className="space-y-3">
               {hasQada && (
                 <Link to="/qada-solat/track">
@@ -211,9 +209,9 @@ const Deen = () => {
 
         {/* Deen Features */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Spiritual Tools</h2>
+          <EditableText elementKey="deen.spiritual.title" defaultText="Spiritual Tools" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
           <div className="space-y-2">
-            {DEEN_FEATURES.map(f => (
+            {DEEN_FEATURES.map((f, i) => (
               <Link key={f.title} to={f.to}>
                 <Card className="hover:shadow-sm transition-shadow">
                   <CardContent className="p-4 flex items-center justify-between">
@@ -222,8 +220,8 @@ const Deen = () => {
                         <f.icon className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium">{f.title}</p>
-                        <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+                        <EditableText elementKey={`deen.feature.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
+                        <EditableText elementKey={`deen.feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-[11px] text-muted-foreground" />
                       </div>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -237,17 +235,17 @@ const Deen = () => {
         {/* Coming Soon */}
         {COMING_SOON.length > 0 && (
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}>
-            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Coming Soon</h2>
+            <EditableText elementKey="deen.coming.title" defaultText="Coming Soon" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
             <div className="grid grid-cols-2 gap-3">
-              {COMING_SOON.map(f => (
+              {COMING_SOON.map((f, i) => (
                 <Card key={f.title} className="border-dashed opacity-70">
                   <CardContent className="p-4 flex items-center gap-3">
                     <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
                       <f.icon className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium">{f.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+                      <EditableText elementKey={`deen.coming.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
+                      <EditableText elementKey={`deen.coming.${i}.desc`} defaultText={f.desc} tag="p" className="text-[11px] text-muted-foreground" />
                     </div>
                   </CardContent>
                 </Card>

@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, LogOut, Save } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import EditableText from '@/components/cms/EditableText';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -65,11 +66,11 @@ const Settings = () => {
       </nav>
 
       <main className="max-w-md mx-auto px-6 py-8 space-y-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <EditableText elementKey="settings.title" defaultText="Settings" tag="h1" className="text-2xl font-bold" />
 
         <Card>
           <CardContent className="p-6 space-y-4">
-            <h2 className="font-semibold text-sm">Profile</h2>
+            <EditableText elementKey="settings.profile" defaultText="Profile" tag="h2" className="font-semibold text-sm" />
             <div className="space-y-3">
               <div className="space-y-1">
                 <label className="text-xs text-muted-foreground">Email</label>

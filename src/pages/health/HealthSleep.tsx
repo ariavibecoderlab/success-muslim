@@ -8,6 +8,7 @@ import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getSleepLog, addSleepEntry, calculateSleepDuration, sleepQuality, todayKey } from '@/lib/health-storage';
 import { format, parseISO } from 'date-fns';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -63,7 +64,7 @@ const HealthSleep = () => {
         {lastEntry && quality && (
           <Card>
             <CardContent className="p-4 text-center space-y-2">
-              <p className="text-xs text-muted-foreground">Last Night</p>
+              <EditableText elementKey="sleep.lastnight" defaultText="Last Night" tag="p" className="text-xs text-muted-foreground" />
               <p className="text-4xl font-bold">{lastEntry.duration}h</p>
               <p className={`text-sm font-medium ${quality.color}`}>{quality.label}</p>
               <p className="text-xs text-muted-foreground">{lastEntry.bedtime} → {lastEntry.wakeTime}</p>
@@ -74,11 +75,11 @@ const HealthSleep = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-2">
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">7-Day Avg</p>
+            <EditableText elementKey="sleep.avg" defaultText="7-Day Avg" tag="p" className="text-xs text-muted-foreground" />
             <p className="text-lg font-bold">{avg}h</p>
           </CardContent></Card>
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">Entries</p>
+            <EditableText elementKey="sleep.entries" defaultText="Entries" tag="p" className="text-xs text-muted-foreground" />
             <p className="text-lg font-bold">{log.length}</p>
           </CardContent></Card>
         </div>
@@ -87,7 +88,7 @@ const HealthSleep = () => {
         {last7.length > 1 && (
           <Card>
             <CardContent className="p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-3">Last 7 Days</p>
+              <EditableText elementKey="sleep.chart.title" defaultText="Last 7 Days" tag="p" className="text-xs font-semibold text-muted-foreground mb-3" />
               <ResponsiveContainer width="100%" height={120}>
                 <BarChart data={last7}>
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />

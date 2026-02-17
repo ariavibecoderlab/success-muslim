@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getFastingLog, toggleFasting } from '@/lib/health-storage';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from 'date-fns';
+import EditableText from '@/components/cms/EditableText';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -66,7 +67,6 @@ const HealthFasting = () => {
                 const key = format(day, 'yyyy-MM-dd');
                 const fasted = !!fastingLog[key];
                 const recommended = isRecommended(day);
-                const dayNum = getDay(day);
                 const isWhiteDay = day.getDate() >= 13 && day.getDate() <= 15;
                 return (
                   <button
@@ -95,11 +95,11 @@ const HealthFasting = () => {
         {/* Summary */}
         <div className="grid grid-cols-2 gap-2">
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">Days Fasted</p>
+            <EditableText elementKey="fasting.daysfasted" defaultText="Days Fasted" tag="p" className="text-xs text-muted-foreground" />
             <p className="text-lg font-bold">{totalFasted}</p>
           </CardContent></Card>
           <Card><CardContent className="p-3 text-center">
-            <p className="text-xs text-muted-foreground">Sunnah Days Hit</p>
+            <EditableText elementKey="fasting.sunnahhit" defaultText="Sunnah Days Hit" tag="p" className="text-xs text-muted-foreground" />
             <p className="text-lg font-bold">{recommendedHit}/{totalRecommended}</p>
           </CardContent></Card>
         </div>
@@ -108,10 +108,8 @@ const HealthFasting = () => {
         <Card className="bg-secondary/50">
           <CardContent className="p-4 text-center">
             <Moon className="h-5 w-5 mx-auto text-primary mb-2" />
-            <p className="text-xs text-muted-foreground italic">
-              "The Prophet ﷺ used to fast on Mondays and Thursdays."
-            </p>
-            <p className="text-[10px] text-muted-foreground mt-1">— Tirmidhi</p>
+            <EditableText elementKey="fasting.hadith" defaultText="&quot;The Prophet ﷺ used to fast on Mondays and Thursdays.&quot;" tag="p" className="text-xs text-muted-foreground italic" />
+            <EditableText elementKey="fasting.hadith.source" defaultText="— Tirmidhi" tag="p" className="text-[10px] text-muted-foreground mt-1" />
           </CardContent>
         </Card>
       </div>
