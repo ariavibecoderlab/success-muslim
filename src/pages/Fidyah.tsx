@@ -1,14 +1,20 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Calculator, Info } from 'lucide-react';
+import { Calculator, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { saveFidyahEntry, getFidyahHistory } from '@/lib/storage';
 import { FidyahEntry } from '@/lib/types';
 import { motion } from 'framer-motion';
+import SubPageLayout from '@/components/SubPageLayout';
 
 const CURRENCIES = ['MYR', 'USD', 'GBP', 'EUR', 'SAR', 'IDR', 'SGD'];
+
+const DEEN_TRACKERS = [
+  { path: '/qada-solat/track', label: 'Qada Solat' },
+  { path: '/ramadhan-qada/track', label: 'Ramadhan' },
+  { path: '/fidyah', label: 'Fidyah' },
+];
 
 const FidyahPage = () => {
   const [days, setDays] = useState<number>(1);
@@ -22,10 +28,7 @@ const FidyahPage = () => {
     setResult(total);
     const entry: FidyahEntry = {
       id: Date.now().toString(),
-      days,
-      costPerMeal,
-      currency,
-      total,
+      days, costPerMeal, currency, total,
       date: new Date().toISOString(),
     };
     saveFidyahEntry(entry);
@@ -33,15 +36,8 @@ const FidyahPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center gap-4">
-          <Link to="/dashboard" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
-          <span className="font-semibold">Fidyah Calculator</span>
-        </div>
-      </nav>
-
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+    <SubPageLayout title="Fidyah Calculator" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/fidyah">
+      <div className="space-y-6">
         <div>
           <h2 className="text-xl font-bold mb-1">Calculate Fidyah</h2>
           <p className="text-sm text-muted-foreground">For those unable to fast due to chronic illness or old age.</p>
@@ -120,8 +116,8 @@ const FidyahPage = () => {
             </div>
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 

@@ -1,14 +1,21 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Flame, Target, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
+import { Flame, Target, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer } from '@/lib/storage';
 import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
 import { PRAYER_NAMES, PrayerType } from '@/lib/types';
 import { motion } from 'framer-motion';
+import SubPageLayout from '@/components/SubPageLayout';
 
 const PRAYERS: PrayerType[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+
+const DEEN_TRACKERS = [
+  { path: '/qada-solat/track', label: 'Qada Solat' },
+  { path: '/ramadhan-qada/track', label: 'Ramadhan' },
+  { path: '/fidyah', label: 'Fidyah' },
+];
 
 const QadaSolatTrack = () => {
   const setup = getQadaSetup();
@@ -27,15 +34,17 @@ const QadaSolatTrack = () => {
 
   if (!setup) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
-        <Card>
-          <CardContent className="p-8 text-center">
-            <p className="text-lg font-semibold mb-2">No setup found</p>
-            <p className="text-sm text-muted-foreground mb-4">Please complete the setup wizard first.</p>
-            <Link to="/qada-solat/setup" className="text-primary font-medium text-sm">Go to Setup →</Link>
-          </CardContent>
-        </Card>
-      </div>
+      <SubPageLayout title="Qada Solat" backTo="/deen">
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-lg font-semibold mb-2">No setup found</p>
+              <p className="text-sm text-muted-foreground mb-4">Please complete the setup wizard first.</p>
+              <Link to="/qada-solat/setup" className="text-primary font-medium text-sm">Go to Setup →</Link>
+            </CardContent>
+          </Card>
+        </div>
+      </SubPageLayout>
     );
   }
 
@@ -49,15 +58,8 @@ const QadaSolatTrack = () => {
     : "Bismillah, start your qada for today";
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center gap-4">
-          <Link to="/dashboard" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
-          <span className="font-semibold">Qada Solat</span>
-        </div>
-      </nav>
-
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+    <SubPageLayout title="Qada Solat" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/qada-solat/track">
+      <div className="space-y-6">
         {/* Overall progress */}
         <Card>
           <CardContent className="p-6">
@@ -140,8 +142,8 @@ const QadaSolatTrack = () => {
         <p className="text-center text-xs text-muted-foreground">
           Estimated completion: {estimateCompletionDate(setup, progress.totalCompleted)}
         </p>
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 
