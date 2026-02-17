@@ -1,12 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Calculator, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { Calculator, History, ChevronDown, ChevronUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { calculateZakat, getZakatHistory, saveZakatResult, CURRENCIES, type ZakatInput, type ZakatResult } from '@/lib/zakat';
+import SubPageLayout from '@/components/SubPageLayout';
+
+const DEEN_SIBLINGS = [
+  { path: '/deen/dhikr', label: 'Dhikr' },
+  { path: '/deen/sunnah', label: 'Sunnah' },
+  { path: '/deen/zakat', label: 'Zakat' },
+];
 
 const ZakatCalculator = () => {
   const [currency, setCurrency] = useState('MYR');
@@ -45,17 +51,8 @@ const ZakatCalculator = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center gap-3">
-          <Link to="/deen" className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <span className="text-lg font-bold">Zakat Calculator</span>
-        </div>
-      </nav>
-
-      <main className="max-w-md mx-auto px-5 py-6 space-y-5">
+    <SubPageLayout title="Zakat Calculator" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/zakat">
+      <div className="space-y-5">
         {/* Currency Selector */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {CURRENCIES.map(c => (
@@ -156,8 +153,8 @@ const ZakatCalculator = () => {
             )}
           </div>
         )}
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 

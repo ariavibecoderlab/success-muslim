@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowLeft, Flame, Settings2 } from 'lucide-react';
+import { Flame, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
@@ -9,6 +8,7 @@ import {
   getSunnahItems, saveSunnahItems, getDayLog, toggleSunnahItem, getSunnahStreak,
   type SunnahItem,
 } from '@/lib/sunnah-storage';
+import SubPageLayout from '@/components/SubPageLayout';
 
 const CATEGORY_LABELS: Record<string, string> = {
   prayer: 'Sunnah Prayers',
@@ -16,6 +16,12 @@ const CATEGORY_LABELS: Record<string, string> = {
   quran: 'Quran',
   other: 'Other',
 };
+
+const DEEN_SIBLINGS = [
+  { path: '/deen/dhikr', label: 'Dhikr' },
+  { path: '/deen/sunnah', label: 'Sunnah' },
+  { path: '/deen/zakat', label: 'Zakat' },
+];
 
 const SunnahTracker = () => {
   const [items, setItems] = useState(getSunnahItems);
@@ -46,22 +52,18 @@ const SunnahTracker = () => {
   }, {});
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/deen" className="text-muted-foreground hover:text-foreground">
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <span className="text-lg font-bold">Sunnah Tracker</span>
-          </div>
-          <button onClick={() => setEditing(!editing)} className="text-muted-foreground hover:text-foreground">
-            <Settings2 className="h-5 w-5" />
-          </button>
-        </div>
-      </nav>
-
-      <main className="max-w-md mx-auto px-5 py-6 space-y-5">
+    <SubPageLayout
+      title="Sunnah Tracker"
+      backTo="/deen"
+      siblingRoutes={DEEN_SIBLINGS}
+      currentPath="/deen/sunnah"
+      headerRight={
+        <button onClick={() => setEditing(!editing)} className="text-muted-foreground hover:text-foreground">
+          <Settings2 className="h-5 w-5" />
+        </button>
+      }
+    >
+      <div className="space-y-5">
         {/* Summary */}
         <Card className="bg-primary/5 border-primary/10">
           <CardContent className="p-5">
@@ -136,8 +138,8 @@ const SunnahTracker = () => {
             </div>
           </div>
         ))}
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 
