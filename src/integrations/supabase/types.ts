@@ -62,6 +62,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_overrides: {
+        Row: {
+          element_key: string
+          id: string
+          override_type: string
+          page: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          element_key: string
+          id?: string
+          override_type: string
+          page: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          element_key?: string
+          id?: string
+          override_type?: string
+          page?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null

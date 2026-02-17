@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { EditModeProvider } from "./contexts/EditModeContext";
+import EditModeToggle from "./components/cms/EditModeToggle";
 import AppLayout from "./components/AppLayout";
 import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
@@ -47,49 +49,52 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+          <EditModeProvider>
+            <EditModeToggle />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Protected pillar pages with bottom nav */}
-            <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/deen" element={<Deen />} />
-              <Route path="/health" element={<Health />} />
-              <Route path="/wealth" element={<Wealth />} />
-              <Route path="/productivity" element={<Productivity />} />
-              <Route path="/family" element={<Family />} />
-            </Route>
+              {/* Protected pillar pages with bottom nav */}
+              <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/deen" element={<Deen />} />
+                <Route path="/health" element={<Health />} />
+                <Route path="/wealth" element={<Wealth />} />
+                <Route path="/productivity" element={<Productivity />} />
+                <Route path="/family" element={<Family />} />
+              </Route>
 
-            {/* Protected feature sub-pages (no bottom nav) */}
-            <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
-            <Route path="/qada-solat/setup" element={<AuthGuard><QadaSolatSetup /></AuthGuard>} />
-            <Route path="/qada-solat/track" element={<AuthGuard><QadaSolatTrack /></AuthGuard>} />
-            <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
-            <Route path="/ramadhan-qada/track" element={<AuthGuard><RamadhanQadaTrack /></AuthGuard>} />
-            <Route path="/fidyah" element={<AuthGuard><Fidyah /></AuthGuard>} />
-            <Route path="/deen/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
-            <Route path="/deen/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
-            <Route path="/deen/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
-            <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
-            <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
-            <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
-            <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
-            <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
-            <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
+              {/* Protected feature sub-pages (no bottom nav) */}
+              <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+              <Route path="/qada-solat/setup" element={<AuthGuard><QadaSolatSetup /></AuthGuard>} />
+              <Route path="/qada-solat/track" element={<AuthGuard><QadaSolatTrack /></AuthGuard>} />
+              <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
+              <Route path="/ramadhan-qada/track" element={<AuthGuard><RamadhanQadaTrack /></AuthGuard>} />
+              <Route path="/fidyah" element={<AuthGuard><Fidyah /></AuthGuard>} />
+              <Route path="/deen/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
+              <Route path="/deen/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
+              <Route path="/deen/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
+              <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
+              <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
+              <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
+              <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
+              <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
+              <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
 
-            {/* Admin routes */}
-            <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/analytics" element={<AdminAnalytics />} />
-              <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-            </Route>
+              {/* Admin routes */}
+              <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </EditModeProvider>
         </BrowserRouter>
       </ErrorBoundary>
     </TooltipProvider>
