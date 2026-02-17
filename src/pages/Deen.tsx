@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import {
   Moon, Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
-  BookOpen, Star, Compass, HandHeart,
+  BookOpen, Star, HandHeart, ListChecks,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
 import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
+import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
+import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect } from 'react';
 
@@ -15,11 +17,15 @@ const fadeUp = {
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4 } }),
 };
 
-const UPCOMING_FEATURES = [
-  { icon: Star, title: 'Prayer Times', desc: 'Azan times based on your location' },
-  { icon: BookOpen, title: 'Quran Tracker', desc: 'Daily tilawah & khatam progress' },
-  { icon: Compass, title: 'Qibla Finder', desc: 'Find Qibla direction anywhere' },
-  { icon: HandHeart, title: 'Dhikr Counter', desc: 'Tasbih, tahmid & takbir counter' },
+const DEEN_FEATURES = [
+  { icon: HandHeart, title: 'Dhikr Counter', desc: 'Tasbih & daily counting', to: '/deen/dhikr' },
+  { icon: Calculator, title: 'Zakat Calculator', desc: 'Calculate your zakat', to: '/deen/zakat' },
+  { icon: ListChecks, title: 'Sunnah Tracker', desc: 'Daily sunnah checklist', to: '/deen/sunnah' },
+];
+
+const COMING_SOON = [
+  { icon: Star, title: 'Prayer Times', desc: 'Azan times by location' },
+  { icon: BookOpen, title: 'Quran Tracker', desc: 'Daily tilawah & khatam' },
 ];
 
 const Deen = () => {
@@ -48,6 +54,13 @@ const Deen = () => {
   const hasFidyah = fidyahHistory.length > 0;
   const hasAny = hasQada || hasRamadhan || hasFidyah;
 
+  // Sunnah & Dhikr summaries
+  const sunnahStreak = getSunnahStreak();
+  const sunnahLog = getDayLog();
+  const sunnahItems = getSunnahItems().filter(i => i.enabled);
+  const sunnahDone = sunnahLog.completed.filter(id => sunnahItems.find(i => i.id === id)).length;
+  const dailyDhikr = getDailyDhikr();
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
@@ -68,6 +81,19 @@ const Deen = () => {
               <p className="text-sm text-muted-foreground">
                 Track your ibadah, settle spiritual debts, and grow closer to Allah.
               </p>
+              {(sunnahStreak > 0 || dailyDhikr.totalCount > 0) && (
+                <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
+                  {sunnahStreak > 0 && (
+                    <span className="flex items-center gap-1"><Flame className="h-3 w-3 text-primary" /> {sunnahStreak}d sunnah streak</span>
+                  )}
+                  {dailyDhikr.totalCount > 0 && (
+                    <span>{dailyDhikr.totalCount} dhikr today</span>
+                  )}
+                  {sunnahItems.length > 0 && (
+                    <span>{sunnahDone}/{sunnahItems.length} sunnah</span>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -183,25 +209,52 @@ const Deen = () => {
           </div>
         </motion.div>
 
-        {/* Coming Soon */}
+        {/* Deen Features */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
-          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Coming Soon</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {UPCOMING_FEATURES.map(f => (
-              <Card key={f.title} className="border-dashed opacity-70">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                    <f.icon className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">{f.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{f.desc}</p>
-                  </div>
-                </CardContent>
-              </Card>
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Spiritual Tools</h2>
+          <div className="space-y-2">
+            {DEEN_FEATURES.map(f => (
+              <Link key={f.title} to={f.to}>
+                <Card className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <f.icon className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{f.title}</p>
+                        <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
         </motion.div>
+
+        {/* Coming Soon */}
+        {COMING_SOON.length > 0 && (
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}>
+            <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Coming Soon</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {COMING_SOON.map(f => (
+                <Card key={f.title} className="border-dashed opacity-70">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                      <f.icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{f.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </motion.div>
+        )}
 
         <div className="h-4" />
       </main>
