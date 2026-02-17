@@ -25,6 +25,12 @@ import Fidyah from "./pages/Fidyah";
 import DhikrCounter from "./pages/DhikrCounter";
 import ZakatCalculator from "./pages/ZakatCalculator";
 import SunnahTracker from "./pages/SunnahTracker";
+import HealthBMI from "./pages/health/HealthBMI";
+import HealthWeight from "./pages/health/HealthWeight";
+import HealthHydration from "./pages/health/HealthHydration";
+import HealthSleep from "./pages/health/HealthSleep";
+import HealthFasting from "./pages/health/HealthFasting";
+import HealthIFTimer from "./pages/health/HealthIFTimer";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -67,6 +73,12 @@ const App = () => (
             <Route path="/deen/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
             <Route path="/deen/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
             <Route path="/deen/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
+            <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
+            <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
+            <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
+            <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
+            <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
+            <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
 
             {/* Admin routes */}
             <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
