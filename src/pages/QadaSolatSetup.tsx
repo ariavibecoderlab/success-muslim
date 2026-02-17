@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, User, BarChart3, CheckCircle, Target } from 'lucide-react';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,8 +8,9 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 import { calculateQadaPrayers, formatYearsMonths } from '@/lib/calculations';
 import { saveQadaSetup } from '@/lib/storage';
-import { Gender, ConsistencyLevel, CONSISTENCY_MAP, PRAYER_NAMES, PrayerType, QadaSolatSetup } from '@/lib/types';
+import { Gender, ConsistencyLevel, PRAYER_NAMES, PrayerType, QadaSolatSetup } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
+import SubPageLayout from '@/components/SubPageLayout';
 
 const STEPS = ['Personal Info', 'Consistency', 'Results', 'Create Plan'];
 
@@ -27,11 +28,7 @@ const QadaSolatSetupPage = () => {
 
   const handleSave = () => {
     const setup: QadaSolatSetup = {
-      currentAge,
-      balighAge,
-      gender,
-      consistency,
-      dailyTarget,
+      currentAge, balighAge, gender, consistency, dailyTarget,
       totalByPrayer: result.totalByPrayer,
       totalPrayers: result.totalPrayers,
       setupDate: new Date().toISOString(),
@@ -46,17 +43,8 @@ const QadaSolatSetupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center gap-4">
-          <Link to="/dashboard" className="text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <span className="font-semibold">Qada Solat Setup</span>
-        </div>
-      </nav>
-
-      <main className="max-w-2xl mx-auto px-6 py-8">
+    <SubPageLayout title="Qada Solat Setup" backTo="/deen">
+      <div>
         {/* Progress */}
         <div className="flex items-center gap-2 mb-2">
           {STEPS.map((s, i) => (
@@ -189,7 +177,7 @@ const QadaSolatSetupPage = () => {
         <div className="flex gap-3 mt-10">
           {step > 0 && (
             <Button variant="outline" onClick={() => setStep(s => s - 1)} className="flex-1">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back
+              Back
             </Button>
           )}
           {step < 3 ? (
@@ -202,8 +190,8 @@ const QadaSolatSetupPage = () => {
             </Button>
           )}
         </div>
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 

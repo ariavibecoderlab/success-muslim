@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { saveRamadhanSetup } from '@/lib/storage';
 import { FastingReason, FastingStrategy, RamadhanQadaSetup } from '@/lib/types';
 import { motion } from 'framer-motion';
+import SubPageLayout from '@/components/SubPageLayout';
 
 const RamadhanQadaSetupPage = () => {
   const navigate = useNavigate();
@@ -22,9 +23,7 @@ const RamadhanQadaSetupPage = () => {
 
   const handleSave = () => {
     const setup: RamadhanQadaSetup = {
-      totalDays,
-      reason,
-      strategy,
+      totalDays, reason, strategy,
       setupDate: new Date().toISOString(),
     };
     saveRamadhanSetup(setup);
@@ -32,15 +31,8 @@ const RamadhanQadaSetupPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-2xl mx-auto px-6 h-16 flex items-center gap-4">
-          <Link to="/dashboard" className="text-muted-foreground hover:text-foreground"><ArrowLeft className="h-5 w-5" /></Link>
-          <span className="font-semibold">Ramadhan Qada Setup</span>
-        </div>
-      </nav>
-
-      <main className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+    <SubPageLayout title="Ramadhan Qada Setup" backTo="/deen">
+      <div className="space-y-6">
         <div>
           <h2 className="text-xl font-bold mb-1">Track Your Missed Fasts</h2>
           <p className="text-sm text-muted-foreground">Set up your Ramadhan qada plan.</p>
@@ -98,8 +90,8 @@ const RamadhanQadaSetupPage = () => {
         <Button onClick={handleSave} className="w-full" size="lg" disabled={totalDays <= 0}>
           <CheckCircle className="h-4 w-4 mr-2" /> Start Tracking
         </Button>
-      </main>
-    </div>
+      </div>
+    </SubPageLayout>
   );
 };
 
