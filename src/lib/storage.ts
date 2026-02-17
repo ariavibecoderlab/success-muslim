@@ -98,10 +98,79 @@ export const toggleRamadhanDay = (date: string) => {
     progress.completedDates.splice(idx, 1);
   } else {
     progress.completedDates.push(date);
-    progress.completedDates.sort();
   }
+  progress.completedDates.sort();
+
+  // Calculate streaks from sorted dates
+  const { current, longest } = calculateFastingStreak(progress.completedDates);
+  progress.currentStreak = current;
+  progress.longestStreak = Math.max(longest, progress.longestStreak);
+
   saveRamadhanProgress(progress);
   return progress;
+};
+
+function calculateFastingStreak(dates: string[]): { current: number; longest: number } {
+  if (dates.length === 0) return { current: 0, longest: 0 };
+
+  let longest = 1;
+  let streak = 1;
+
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000);
+    if (diff === 1) {
+      streak++;
+      longest = Math.max(longest, streak);
+    } else if (diff > 1) {
+      streak = 1;
+    }
+  }
+
+  // Current streak: count backwards from last date, only if last date is today or yesterday
+  const today = new Date().toISOString().split('T')[0];
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayKey = yesterday.toISOString().split('T')[0];
+  const last = dates[dates.length - 1];
+
+  let current = 0;
+  if (last === today || last === yesterdayKey) {
+    current = 1;
+    for (let i = dates.length - 2; i >= 0; i--) {
+      const d1 = new Date(dates[i]);
+      const d2 = new Date(dates[i + 1]);
+      const diff = Math.round((d2.getTime() - d1.getTime()) / 86400000);
+      if (diff === 1) current++;
+      else break;
+    }
+  }
+
+  return { current, longest: Math.max(longest, current) };
+}
+
+// Reset functions
+export const clearQadaSetup = () => {
+  localStorage.removeItem(KEYS.qadaSolatSetup);
+  localStorage.removeItem(KEYS.qadaSolatProgress);
+};
+
+export const clearRamadhanSetup = () => {
+  localStorage.removeItem(KEYS.ramadhanSetup);
+  localStorage.removeItem(KEYS.ramadhanProgress);
+};
+
+// Export all data
+export const exportAllData = () => {
+  return {
+    qadaSetup: getQadaSetup(),
+    qadaProgress: getQadaProgress(),
+    ramadhanSetup: getRamadhanSetup(),
+    ramadhanProgress: getRamadhanProgress(),
+    fidyahHistory: getFidyahHistory(),
+    exportedAt: new Date().toISOString(),
+  };
 };
 
 // Fidyah

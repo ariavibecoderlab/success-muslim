@@ -7,7 +7,7 @@ import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, g
 import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
 import { PRAYER_NAMES, PrayerType } from '@/lib/types';
 import { motion } from 'framer-motion';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -15,6 +15,13 @@ const fadeUp = {
 };
 
 const Dashboard = () => {
+  const [, forceUpdate] = useState(0);
+  useEffect(() => {
+    const onFocus = () => forceUpdate(n => n + 1);
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
   const qadaSetup = getQadaSetup();
   const qadaProgress = getQadaProgress();
   const ramadhanSetup = getRamadhanSetup();

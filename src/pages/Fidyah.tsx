@@ -70,7 +70,10 @@ const FidyahPage = () => {
             <Input type="number" value={costPerMeal} onChange={e => setCostPerMeal(Number(e.target.value))} min={0.01} step={0.01} />
           </div>
 
-          <Button onClick={calculate} className="w-full" size="lg">
+          {(days <= 0 || costPerMeal <= 0) && (
+            <p className="text-xs text-destructive">Days and cost per meal must be greater than 0.</p>
+          )}
+          <Button onClick={calculate} className="w-full" size="lg" disabled={days <= 0 || costPerMeal <= 0}>
             <Calculator className="h-4 w-4 mr-2" /> Calculate
           </Button>
         </div>
