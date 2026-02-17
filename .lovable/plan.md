@@ -1,236 +1,145 @@
-# Upgrade Plan: Backend, Admin, and Homepage Revamp
 
-This plan covers three major upgrades: (1) a stunning new homepage to excite users, (2) a full Supabase backend with authentication and data sync, and (3) an admin panel for managing the app.
 
----
+# Health & Wellness Module - Full Implementation
 
-## Part 1: Homepage Revamp
-
-The current landing page only promotes 3 features (Qada, Ramadhan, Fidyah). The app now has much more. We will redesign it to reflect the full "Success Muslim App" vision.
-
-### New Homepage Sections
-
-1. **Hero Section** -- Bold headline: "Success Muslim App" with animated background pattern (geometric Islamic art via CSS). Subheadline referencing the 5 pillars. Two CTAs: "Start Free" and "See How It Works" (scroll anchor).
-2. **Life Score Preview** -- Animated mockup showing a Life Score gauge (0-100) with Iman/Wellness/Productivity breakdowns. This is the hook -- the differentiator.
-3. **5 Pillars Showcase** -- Interactive tabs or horizontal scroll showing all 5 pillars (Iman, Wellness, Wealth, Productivity, Family) with feature previews and icons. Each pillar card expands to show 3-4 key features.
-4. **Feature Highlights** -- 6-card grid showing the most exciting tools: Prayer Times, Dhikr Counter, Qada Solat Tracker, Zakat Calculator, Sunnah Tracker, Life Score.
-5. **Social Proof / Stats** -- Counter badges: "X prayers tracked", "X dhikr counted" (pulled from real aggregate data via an edge function).
-6. **How It Works** -- Updated 3-step flow: Track -> Score -> Improve.
-7. **Testimonials Placeholder** -- Ready for future real testimonials.
-8. **Bottom CTA** -- "Every Prayer Counts" with motivational Islamic quote.
-9. **Footer** -- Links to privacy, terms (placeholder), social links.
+This plan transforms the Health "Coming Soon" placeholder into a fully functional wellness hub with 6 interactive tools, all using localStorage for data persistence (matching the existing Deen module pattern).
 
 ---
 
-## Part 2: Backend Setup (Lovable Cloud)
+## Overview
 
-### 2A. Enable Lovable Cloud
+The Health page becomes a dashboard (like Deen) with quick stats at the top and links to 6 sub-pages:
 
-- Spin up database, auth, edge functions, and storage.
+1. **BMI Calculator** - Weight, height, BMI result with category, plus calorie recommendation (Mifflin-St Jeor formula)
+2. **Weight Tracker** - Log daily weight, view trend chart (recharts line chart), set goal weight
+3. **Hydration Tracker** - Track daily water intake (glasses/cups), daily goal, visual progress ring
+4. **Sleep Tracker** - Log bedtime and wake time, calculate duration, track consistency
+5. **Sunnah Fasting Calendar** - Calendar view showing Monday, Thursday, White Days (13-15th); tap to mark fasted
+6. **Intermittent Fasting Timer** - Choose mode (16:8, 20:4, 24h), start/stop timer with countdown
 
-### 2B. Database Schema
+---
 
-**Tables to create:**
+## File Structure
+
+### New Files to Create
 
 ```text
-profiles
-  - id (uuid, FK -> auth.users)
-  - display_name (text)
-  - city (text)
-  - country (text)
-  - gender (text)
-  - created_at (timestamptz)
-  - updated_at (timestamptz)
-
-user_roles
-  - id (uuid)
-  - user_id (uuid, FK -> auth.users)
-  - role (app_role enum: admin, moderator, user)
-  - unique(user_id, role)
-
-user_activity
-  - id (uuid)
-  - user_id (uuid, FK -> auth.users)
-  - module (text: iman, wellness, productivity, wealth, family)
-  - action (text: prayer_logged, dhikr_counted, task_completed, etc.)
-  - metadata (jsonb)
-  - created_at (timestamptz)
-
-app_stats
-  - id (uuid)
-  - stat_key (text, unique: total_prayers, total_dhikr, total_users, etc.)
-  - stat_value (bigint)
-  - updated_at (timestamptz)
-
-announcements
-  - id (uuid)
-  - title (text)
-  - content (text)
-  - is_active (boolean)
-  - created_at (timestamptz)
-  - created_by (uuid, FK -> auth.users)
+src/lib/health-storage.ts        -- localStorage helpers for all health data
+src/pages/health/HealthBMI.tsx         -- BMI calculator + calorie recommendation
+src/pages/health/HealthWeight.tsx      -- Weight log + trend chart
+src/pages/health/HealthHydration.tsx   -- Daily water intake tracker
+src/pages/health/HealthSleep.tsx       -- Sleep/wake log
+src/pages/health/HealthFasting.tsx     -- Sunnah fasting calendar
+src/pages/health/HealthIFTimer.tsx     -- Intermittent fasting timer
 ```
 
-### 2C. Authentication
+### Files to Modify
 
-- Email + password sign-up/login
-- Auth pages: `/auth` (login/signup toggle), `/reset-password`
-- Auto-create profile on signup via database trigger
-- Protected routes: redirect to `/auth` if not logged in
-- Admin emails configured via a list (e.g., your email) checked on signup to auto-assign admin role
-
-### 2D. Data Migration Strategy
-
-- For MVP: localStorage data remains the primary source (no disruption)
-- Add a "Sync to Cloud" button in profile/settings that uploads localStorage data to Supabase
-- Future: real-time sync replaces localStorage entirely
-
-### 2E. RLS Policies
-
-- profiles: users can only read/update their own
-- user_roles: read-only for users, managed by admins via `has_role()` security definer function
-- user_activity: users can insert/read their own
-- app_stats: public read, admin write
-- announcements: public read, admin create/update/delete
+```text
+src/pages/Health.tsx     -- Replace "Coming Soon" with dashboard hub
+src/App.tsx              -- Add 6 new routes under /health/*
+```
 
 ---
 
-## Part 3: Admin Panel
+## Detailed Feature Specs
 
-### 3A. Admin Routes
+### 1. BMI Calculator (`/health/bmi`)
+- Input: weight (kg), height (cm), age, gender
+- Output: BMI value, category (underweight/normal/overweight/obese), color-coded badge
+- Calorie section: TDEE using Mifflin-St Jeor formula with activity level selector (sedentary/light/moderate/active)
+- Results saved to localStorage for reuse
+- Clean card-based UI with the SubPageLayout wrapper
 
-- `/admin` -- Admin dashboard (protected, role-checked)
-- `/admin/users` -- User management
-- `/admin/analytics` -- Usage analytics
-- `/admin/announcements` -- Manage app announcements
-- `/admin/settings` -- App-wide settings
+### 2. Weight Tracker (`/health/weight`)
+- "Add Weight" button opens a simple input (kg, date defaults to today)
+- Line chart (recharts) showing weight over time
+- Goal weight input with a horizontal line on chart
+- Stats: current weight, highest, lowest, change from start
+- Data stored as array of `{ date: string, weight: number }` in localStorage
 
-### 3B. Admin Dashboard (`/admin`)
+### 3. Hydration Tracker (`/health/hydration`)
+- Visual: circular progress ring showing cups consumed vs daily goal
+- Tap "+" to add a glass (250ml default)
+- Daily goal configurable (default 8 glasses)
+- History: last 7 days shown as small bar chart
+- Auto-resets each day
 
-- Total registered users (count from profiles)
-- Daily/weekly/monthly active users (from user_activity)
-- Module usage breakdown (Iman vs Wellness vs Productivity)
-- New signups chart (recharts line chart)
-- Quick stat cards: total prayers tracked, total dhikr, total Qada completed
+### 4. Sleep Tracker (`/health/sleep`)
+- Input: bedtime and wake time (time pickers)
+- Calculates duration automatically
+- Shows sleep quality indicator (< 6h = poor, 6-7h = fair, 7-9h = good, > 9h = too much)
+- Weekly average display
+- Last 7 days mini bar chart
 
-### 3C. User Management (`/admin/users`)
+### 5. Sunnah Fasting Calendar (`/health/fasting`)
+- Monthly calendar grid
+- Recommended days highlighted: Monday (blue), Thursday (blue), White Days 13-15 (gold)
+- Tap a day to toggle "fasted" (green check)
+- Monthly summary: X days fasted, X recommended days hit
+- Streak counter for consecutive recommended days
 
-- Paginated user list with search
-- View user profile details
-- Assign/remove moderator role
-- Disable/enable accounts (set profile flag)
-- Last active timestamp
-
-### 3D. Analytics Dashboard (`/admin/analytics`)
-
-- User growth over time (line chart)
-- Module popularity pie chart
-- Daily active users bar chart
-- Feature adoption rates (% of users using each feature)
-- Retention metrics (7-day, 30-day approximation)
-
-### 3E. Announcements Manager (`/admin/announcements`)
-
-- Create/edit/delete announcements
-- Toggle active/inactive
-- Announcements display as a banner on the user dashboard
-
-### 3F. Admin Guard
-
-- `has_role()` security definer function (as per security guidelines)
-- Client-side: check role via Supabase query, redirect non-admins
-- Server-side: RLS policies enforce access
+### 6. Intermittent Fasting Timer (`/health/if-timer`)
+- Mode selector: 16:8, 18:6, 20:4, 24h, 36h, custom
+- Big circular countdown timer (CSS animated)
+- Start/Stop/Reset buttons
+- Shows fasting window and eating window times
+- History of completed fasts (last 10)
 
 ---
 
-## Part 4: Auth UI and Navigation Updates
+## Health Dashboard (`/health` - Hub Page)
 
-### 4A. Auth Pages
+Replaces the "Coming Soon" page with:
 
-- `/auth` page with login/signup tabs
-- Clean, minimal design matching app theme
-- Email + password fields with validation (zod)
-- "Forgot password?" link -> sends reset email
-- `/reset-password` page for setting new password
-
-### 4B. Navigation Updates
-
-- Landing page nav: "Get Started" -> `/auth` (instead of `/dashboard`)
-- Add user avatar/menu in Dashboard top nav when logged in
-- Profile dropdown: Profile, Settings, Admin (if admin), Logout
-- Bottom nav unchanged
-
-### 4C. Profile/Settings Page
-
-- `/settings` page accessible from user menu
-- Change display name, city, country
-- "Sync Data to Cloud" button
-- Logout button
+1. **Hero card** - "Body is an Amanah" tagline with today's quick stats (current BMI, water intake, sleep last night)
+2. **Quick stats row** - 3 cards: BMI value, glasses today, sleep hours last night
+3. **Feature cards** - 6 navigable cards (like Deen's "Spiritual Tools" section) linking to each sub-page
+4. **Sunnah reminder** - Small card: "The Prophet (SAW) fasted Mondays and Thursdays" if today is Mon/Thu
 
 ---
 
-## Technical Details
+## Data Storage (`src/lib/health-storage.ts`)
 
-### Files to Create
+All data persisted in localStorage with these keys:
 
-- `src/pages/Auth.tsx` -- Login/signup page
-- `src/pages/ResetPassword.tsx` -- Password reset page
-- `src/pages/Settings.tsx` -- User settings/profile
-- `src/pages/admin/AdminDashboard.tsx` -- Admin home
-- `src/pages/admin/AdminUsers.tsx` -- User management
-- `src/pages/admin/AdminAnalytics.tsx` -- Analytics charts
-- `src/pages/admin/AdminAnnouncements.tsx` -- Announcements CRUD
-- `src/pages/admin/AdminLayout.tsx` -- Admin sidebar/nav wrapper
-- `src/components/AuthGuard.tsx` -- Protected route wrapper
-- `src/components/AdminGuard.tsx` -- Admin role check wrapper
-- `src/hooks/useAuth.ts` -- Auth state hook
-- `src/hooks/useAdmin.ts` -- Admin role check hook
-- `src/integrations/supabase/client.ts` -- Supabase client (auto-generated)
-
-### Files to Edit
-
-- `src/pages/Landing.tsx` -- Complete redesign
-- `src/App.tsx` -- Add auth routes, admin routes, guards
-- `src/components/BottomNav.tsx` -- Minor updates
-- `src/pages/Dashboard.tsx` -- Add announcement banner, user greeting with real name
-
-### Database Migrations
-
-- Create `app_role` enum
-- Create `profiles` table with trigger
-- Create `user_roles` table with `has_role()` function
-- Create `user_activity` table
-- Create `app_stats` table
-- Create `announcements` table
-- RLS policies for all tables
-
-### Edge Functions
-
-- `aggregate-stats`: Cron-like function to compute app_stats from user_activity (called by admin)
+```text
+health_bmi         -> { weight, height, age, gender, activityLevel, bmi, tdee, date }
+health_weight_log  -> [{ date, weight }]
+health_weight_goal -> number
+health_hydration   -> { [dateKey]: { cups, goal } }
+health_sleep       -> [{ date, bedtime, wakeTime, duration }]
+health_fasting     -> { [dateKey]: boolean }  (sunnah fasting)
+health_if_sessions -> [{ mode, startTime, endTime, completed }]
+health_if_active   -> { mode, startTime } | null
+```
 
 ---
 
-## Execution Order
+## Routing
 
-1. Enable Lovable Cloud
-2. Run database migrations (schema + RLS + triggers)
-3. Build auth pages (login, signup, reset password)
-4. Build auth guards and hooks
-5. Redesign Landing page
-6. Build admin layout and dashboard
-7. Build admin user management
-8. Build admin analytics
-9. Build announcements system
-10. Update Dashboard with real user greeting + announcements
-11. Add Settings page with sync-to-cloud option
+New routes added to `App.tsx` inside the AuthGuard block (same pattern as Deen sub-pages):
+
+```text
+/health/bmi        -> HealthBMI
+/health/weight     -> HealthWeight
+/health/hydration  -> HealthHydration
+/health/sleep      -> HealthSleep
+/health/fasting    -> HealthFasting
+/health/if-timer   -> HealthIFTimer
+```
+
+All sub-pages use `SubPageLayout` with `backTo="/health"` and sibling route navigation between features.
 
 ---
 
-## What This Delivers
+## Technical Notes
 
-- A compelling homepage that sells the vision of "Life Optimization for Muslims"
-- Full user authentication (email/password)
-- Cloud-ready backend with Supabase
-- Admin panel with user management, analytics dashboards, and announcements
-- Smooth migration path from localStorage to cloud sync
-- Security best practices (RLS, role-based access, has_role() definer)
+- All calculations are client-side (no backend needed for MVP)
+- localStorage-only persistence (matches existing Deen pattern)
+- Recharts used for weight trend and sleep charts (already installed)
+- framer-motion for animations (already installed)
+- date-fns for date operations (already installed)
+- SubPageLayout component reused for consistent nav and swipe between health sub-pages
+- Responsive design matching existing app style (max-w-md, cards, rounded corners)
+
