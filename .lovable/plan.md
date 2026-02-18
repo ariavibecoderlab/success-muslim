@@ -87,7 +87,7 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 | Feature | Route | Status | Data Storage |
 |---------|-------|--------|--------------|
 | Salah Tracking | Dashboard | Done | localStorage + DB |
-| Prayer Times | `/deen/prayer-times` | Done | localStorage + DB (`prayer_settings`) |
+| Prayer Times | `/deen/prayer-times` | Done | JAKIM e-solat API for Malaysian users (zone-based), Aladhan API fallback for global users |
 | Prayer Settings | `/deen/prayer-times` (dialog) | Done | DB (`prayer_settings`) |
 | Mosque Sync | `/deen/prayer-times` | Done | DB (`prayer_settings`) |
 | Smart Adhan Config | `/deen/prayer-times` (dialog) | Done | DB (`prayer_settings`) |
