@@ -62,12 +62,12 @@
 | Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
 | Hijri Date | ✅ | Prominent Hijri date on Prayer Times page |
 | Quran Reader | ✅ | Full 114 surahs, Arabic text + translations (EN/MS/ID), per-ayah tafsir |
+| Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
+| Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |
 | Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
 | Quran Tracker (opt-in) | ✅ | Gentle onboarding prompt, auto-tracking, daily goal, streak |
+| Quran Reading Heatmap | ✅ | 90-day calendar heatmap on tracker dashboard |
 | Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
-| Quran Memorization | ✅ | Mark ayahs as memorized, memorization toggle in settings |
-| Quran Settings | ✅ | Font size, translation lang, daily goal, tracker toggle |
-| Quran Legacy Tracker | ✅ | Original page-based tracker at /deen/quran/legacy |
 
 ---
 

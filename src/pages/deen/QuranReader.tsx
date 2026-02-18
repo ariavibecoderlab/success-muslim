@@ -18,6 +18,7 @@ import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import SubPageLayout from '@/components/SubPageLayout';
+import ReadingHeatmap from '@/components/quran/ReadingHeatmap';
 import { useQuranPrefs, useQuranBookmarks, useQuranSessions } from '@/hooks/useQuranData';
 import { SURAH_NAMES, TOTAL_AYAHS, TRANSLATION_IDS } from '@/lib/quran-api';
 import { toast } from 'sonner';
@@ -207,6 +208,9 @@ const QuranReader = () => {
                 <Progress value={Math.min(100, (todayPages / prefs.daily_goal_pages) * 100)} className="h-1.5" />
               </CardContent>
             </Card>
+
+            {/* Reading Heatmap */}
+            <ReadingHeatmap sessions={sessions} />
           </>
         )}
 
