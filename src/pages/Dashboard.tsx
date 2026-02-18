@@ -19,7 +19,8 @@ import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { getTodaySalah, logSalah, getTodaySalahCount, type SalahStatus, type SalahName, SALAH_NAMES } from '@/lib/salah-storage';
 import { getHydration, addCup, getSleepLog, todayKey as healthTodayKey } from '@/lib/health-storage';
 import { getDailyTasks, getHabits, getHabitLog, getTodayKey as prodTodayKey } from '@/lib/productivity-storage';
-import { calculateLifeScore, getScoreColor, getScoreLabel } from '@/lib/life-score';
+import { calculateLifeScore, getScoreColor, getScoreLabel, saveCurrentDayScore, getWeeklyScores } from '@/lib/life-score';
+import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { motion } from 'framer-motion';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
@@ -81,7 +82,7 @@ const ScoreRing = ({ score, size = 120, strokeWidth = 8 }: { score: number; size
 };
 
 const Dashboard = () => {
-  const [, forceUpdate] = useState(0);
+  const [tick, forceUpdate] = useState(0);
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
   const { user } = useAuth();
   const { isAdmin } = useAdmin();
@@ -116,8 +117,16 @@ const Dashboard = () => {
     fetchPrayerTimes().then(data => { if (data) setPrayerData(data); });
   }, []);
 
-  // Life Score
-  const lifeScore = useMemo(() => calculateLifeScore(), [salahLog, forceUpdate]);
+  // Life Score — recalculates when tick changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const lifeScore = useMemo(() => calculateLifeScore(), [tick, salahLog]);
+
+  // Persist today's score for weekly trend
+  useEffect(() => {
+    saveCurrentDayScore(lifeScore);
+  }, [lifeScore]);
+
+  const weeklyScores = useMemo(() => getWeeklyScores(), [tick]);
 
   // Today's data
   const salahCount = getTodaySalahCount();
@@ -493,8 +502,32 @@ const Dashboard = () => {
           </motion.div>
         )}
 
-        {/* Inspirational Quote */}
+        {/* Weekly Score Trend */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={8}>
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                  <TrendingUp className="h-4 w-4 text-secondary-foreground" />
+                </div>
+                <h2 className="text-sm font-semibold">Weekly Score</h2>
+              </div>
+              <ResponsiveContainer width="100%" height={100}>
+                <BarChart data={weeklyScores}>
+                  <XAxis dataKey="date" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                  <Tooltip
+                    contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid hsl(var(--border))' }}
+                    formatter={(value: number) => [`${value}`, 'Score']}
+                  />
+                  <Bar dataKey="score" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Inspirational Quote */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={9}>
           <Card className="bg-primary/5 border-primary/10">
             <CardContent className="p-5 flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">

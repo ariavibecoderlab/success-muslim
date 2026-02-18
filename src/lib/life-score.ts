@@ -143,3 +143,61 @@ export function getScoreLabel(score: number): string {
   if (score >= 30) return 'Needs Work';
   return 'Getting Started';
 }
+
+/**
+ * Get weekly Life Score data for trend chart.
+ * Since we can't retroactively calculate past scores from localStorage snapshots,
+ * we store daily scores and return the last 7 days.
+ */
+const WEEKLY_SCORE_KEY = 'sm_life_score_history';
+
+interface DailyScoreEntry {
+  date: string;
+  score: number;
+  iman: number;
+  wellness: number;
+  productivity: number;
+}
+
+export function saveCurrentDayScore(score: LifeScore): void {
+  const today = new Date().toISOString().split('T')[0];
+  try {
+    const raw = localStorage.getItem(WEEKLY_SCORE_KEY);
+    const history: DailyScoreEntry[] = raw ? JSON.parse(raw) : [];
+    const idx = history.findIndex(e => e.date === today);
+    const entry: DailyScoreEntry = {
+      date: today,
+      score: score.total,
+      iman: score.pillars[0].score,
+      wellness: score.pillars[1].score,
+      productivity: score.pillars[2].score,
+    };
+    if (idx >= 0) history[idx] = entry;
+    else history.push(entry);
+    // Keep last 30 days
+    const trimmed = history.slice(-30);
+    localStorage.setItem(WEEKLY_SCORE_KEY, JSON.stringify(trimmed));
+  } catch {}
+}
+
+export function getWeeklyScores(): DailyScoreEntry[] {
+  try {
+    const raw = localStorage.getItem(WEEKLY_SCORE_KEY);
+    const history: DailyScoreEntry[] = raw ? JSON.parse(raw) : [];
+    // Return last 7 days, filling gaps with 0
+    const result: DailyScoreEntry[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().split('T')[0];
+      const dayName = d.toLocaleDateString('en', { weekday: 'short' });
+      const existing = history.find(e => e.date === key);
+      result.push(existing || { date: dayName, score: 0, iman: 0, wellness: 0, productivity: 0 });
+      // Replace date with short day name for chart
+      result[result.length - 1] = { ...result[result.length - 1], date: dayName };
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
