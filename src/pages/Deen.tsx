@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   BookOpen, Star, HandHeart, ListChecks, Moon, Sunrise, Sun, Sunset,
-  Settings2, MapPin, BarChart3, Droplets, Heart, Compass,
+  Settings2, MapPin, BarChart3, Droplets, Heart, Compass, Megaphone,
 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -383,6 +383,21 @@ const Iman = () => {
                   <p className="text-sm font-semibold">Hajj &amp; Umrah</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     Step-by-step guide
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Daily Da'wah */}
+            <Link to="/iman/dakwah">
+              <Card className="hover:border-primary/20 transition-all h-full">
+                <CardContent className="p-4">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                    <Megaphone className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Daily Da'wah</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Share daily reminders
                   </p>
                 </CardContent>
               </Card>

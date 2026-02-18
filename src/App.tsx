@@ -36,6 +36,7 @@ import SadaqahTracker from "./pages/deen/SadaqahTracker";
 import QiyamPlanner from "./pages/deen/QiyamPlanner";
 import RamadanOptimizer from "./pages/deen/RamadanOptimizer";
 import HajjUmrahPlanner from "./pages/deen/HajjUmrahPlanner";
+import DailyDakwah from "./pages/deen/DailyDakwah";
 import HealthBMI from "./pages/health/HealthBMI";
 import HealthWeight from "./pages/health/HealthWeight";
 import HealthHydration from "./pages/health/HealthHydration";
@@ -101,6 +102,7 @@ const App = () => (
               <Route path="/iman/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />
               <Route path="/iman/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
               <Route path="/iman/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
+              <Route path="/iman/dakwah" element={<AuthGuard><DailyDakwah /></AuthGuard>} />
               <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
               <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
               <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />

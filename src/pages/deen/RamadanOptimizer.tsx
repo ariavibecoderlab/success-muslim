@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Moon, Sun, BookOpen, HandHeart, Star, Flame, Settings2, Calendar, Trophy } from 'lucide-react';
+import { Moon, Sun, BookOpen, HandHeart, Star, Flame, Settings2, Calendar, Trophy, Check } from 'lucide-react';
 import SubPageLayout from '@/components/SubPageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
@@ -46,6 +47,8 @@ interface DailyLog {
   dhikr_count: number;
   charity_amount: number;
   notes: string | null;
+  selawat_count: number;
+  sunnah_solat: string[];
 }
 
 const DEFAULT_SETTINGS: RamadanSettings = {
@@ -56,6 +59,17 @@ const DEFAULT_SETTINGS: RamadanSettings = {
   suhoor_alarm: true,
   iftar_alarm: true,
 };
+
+const SUNNAH_SOLAT_LIST = [
+  { id: 'witir', label: 'Witir' },
+  { id: 'rawatib', label: 'Rawatib' },
+  { id: 'taubat', label: 'Taubat' },
+  { id: 'hajat', label: 'Hajat' },
+  { id: 'dhuha', label: 'Dhuha' },
+];
+
+const SELAWAT_TARGET = 1000;
+const DZIKIR_TARGET = 1000;
 
 const RamadanOptimizer = () => {
   const { user } = useAuth();
@@ -112,7 +126,13 @@ const RamadanOptimizer = () => {
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(30);
-      if (l) setLogs(l as DailyLog[]);
+      if (l) {
+        setLogs(l.map((row: any) => ({
+          ...row,
+          selawat_count: row.selawat_count ?? 0,
+          sunnah_solat: Array.isArray(row.sunnah_solat) ? row.sunnah_solat : [],
+        })));
+      }
     };
     load();
   }, [user]);
@@ -158,9 +178,23 @@ const RamadanOptimizer = () => {
     } else {
       const entry = { user_id: user.id, date: today, [field]: value };
       const { data } = await supabase.from('ramadan_daily_log').insert(entry).select().single();
-      if (data) setLogs(prev => [data as DailyLog, ...prev]);
+      if (data) {
+        setLogs(prev => [{
+          ...(data as any),
+          selawat_count: (data as any).selawat_count ?? 0,
+          sunnah_solat: Array.isArray((data as any).sunnah_solat) ? (data as any).sunnah_solat : [],
+        }, ...prev]);
+      }
     }
     toast.success('Updated!');
+  };
+
+  const toggleSunnahSolat = async (solatId: string) => {
+    const current = todayLog?.sunnah_solat ?? [];
+    const updated = current.includes(solatId)
+      ? current.filter((id: string) => id !== solatId)
+      : [...current, solatId];
+    await logToday('sunnah_solat', updated);
   };
 
   const saveSettings = async () => {
@@ -178,7 +212,8 @@ const RamadanOptimizer = () => {
     const totalTarawih = logs.filter(l => l.tarawih_rakaat > 0).length;
     const totalDhikr = logs.reduce((s, l) => s + l.dhikr_count, 0);
     const totalCharity = logs.reduce((s, l) => s + Number(l.charity_amount), 0);
-    return { totalFasts, totalQuran, totalTarawih, totalDhikr, totalCharity };
+    const totalSelawat = logs.reduce((s, l) => s + (l.selawat_count ?? 0), 0);
+    return { totalFasts, totalQuran, totalTarawih, totalDhikr, totalCharity, totalSelawat };
   }, [logs]);
 
   // Laylatul Qadr nights (odd nights of last 10)
@@ -282,6 +317,53 @@ const RamadanOptimizer = () => {
           </div>
         </motion.div>
 
+        {/* Selawat & Dzikir Counters */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
+          <Card>
+            <CardContent className="p-4 space-y-4">
+              <p className="text-sm font-semibold">Selawat & Dzikir Counter</p>
+
+              {/* Selawat */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    🤲 Selawat
+                  </span>
+                  <span className="text-xs font-bold">{todayLog?.selawat_count ?? 0}/{SELAWAT_TARGET}</span>
+                </div>
+                <Progress value={((todayLog?.selawat_count ?? 0) / SELAWAT_TARGET) * 100} className="h-2 mb-1.5" />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 10)}>+10</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 33)}>+33</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 100)}>+100</Button>
+                </div>
+              </div>
+
+              {/* Dzikir (target 1000) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    📿 Dzikir
+                  </span>
+                  <span className="text-xs font-bold">{todayLog?.dhikr_count ?? 0}/{DZIKIR_TARGET}</span>
+                </div>
+                <Progress value={((todayLog?.dhikr_count ?? 0) / DZIKIR_TARGET) * 100} className="h-2 mb-1.5" />
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 10)}>+10</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 33)}>+33</Button>
+                  <Button size="sm" variant="outline" className="h-7 text-xs px-3"
+                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 100)}>+100</Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Daily Ibadah Log */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Card>
@@ -310,13 +392,29 @@ const RamadanOptimizer = () => {
                 </div>
               </div>
 
-              {/* Tarawih */}
+              {/* Tarawih with 8/20 selection */}
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Star className="h-3 w-3" /> Tarawih
                   </span>
-                  <span className="text-xs font-bold">{todayLog?.tarawih_rakaat ?? 0}/{settings.tarawih_target} rakaat</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold">{todayLog?.tarawih_rakaat ?? 0}/{settings.tarawih_target} rakaat</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 mb-1.5">
+                  <Button size="sm" variant={settings.tarawih_target === 8 ? 'default' : 'outline'} className="h-6 text-xs px-2"
+                    onClick={async () => {
+                      setTempSettings(p => ({ ...p, tarawih_target: 8 }));
+                      setSettings(p => ({ ...p, tarawih_target: 8 }));
+                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 8 }, { onConflict: 'user_id' });
+                    }}>8 Rakaat</Button>
+                  <Button size="sm" variant={settings.tarawih_target === 20 ? 'default' : 'outline'} className="h-6 text-xs px-2"
+                    onClick={async () => {
+                      setTempSettings(p => ({ ...p, tarawih_target: 20 }));
+                      setSettings(p => ({ ...p, tarawih_target: 20 }));
+                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 20 }, { onConflict: 'user_id' });
+                    }}>20 Rakaat</Button>
                 </div>
                 <div className="flex gap-2">
                   <Progress value={((todayLog?.tarawih_rakaat ?? 0) / settings.tarawih_target) * 100} className="h-2 flex-1" />
@@ -324,21 +422,39 @@ const RamadanOptimizer = () => {
                     onClick={() => logToday('tarawih_rakaat', Math.min((todayLog?.tarawih_rakaat ?? 0) + 2, settings.tarawih_target))}>+2</Button>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-              {/* Dhikr */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <HandHeart className="h-3 w-3" /> Dhikr
-                  </span>
-                  <span className="text-xs font-bold">{todayLog?.dhikr_count ?? 0}/{settings.daily_dhikr_goal}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Progress value={((todayLog?.dhikr_count ?? 0) / settings.daily_dhikr_goal) * 100} className="h-2 flex-1" />
-                  <Button size="sm" variant="outline" className="h-6 text-xs px-2"
-                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 33)}>+33</Button>
-                </div>
+        {/* Solat Sunnah Checklist */}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-sm font-semibold">Solat Sunnah</p>
+              <div className="space-y-2">
+                {SUNNAH_SOLAT_LIST.map(solat => {
+                  const isChecked = (todayLog?.sunnah_solat ?? []).includes(solat.id);
+                  return (
+                    <button
+                      key={solat.id}
+                      onClick={() => toggleSunnahSolat(solat.id)}
+                      className={`flex items-center gap-3 w-full p-2.5 rounded-lg border transition-all ${
+                        isChecked ? 'border-primary/30 bg-primary/5' : 'border-border'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                        isChecked ? 'bg-primary border-primary' : 'border-muted-foreground/30'
+                      }`}>
+                        {isChecked && <Check className="h-3 w-3 text-primary-foreground" />}
+                      </div>
+                      <span className={`text-sm ${isChecked ? 'line-through text-muted-foreground' : ''}`}>{solat.label}</span>
+                    </button>
+                  );
+                })}
               </div>
+              <p className="text-[10px] text-muted-foreground text-center">
+                {(todayLog?.sunnah_solat ?? []).length}/{SUNNAH_SOLAT_LIST.length} completed today
+              </p>
             </CardContent>
           </Card>
         </motion.div>
@@ -379,12 +495,14 @@ const RamadanOptimizer = () => {
               <p className="text-sm font-semibold mb-3 flex items-center gap-1">
                 <Trophy className="h-4 w-4 text-primary" /> Ramadan Summary
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {[
                   { label: 'Days Fasted', value: summary.totalFasts, icon: '🌙' },
                   { label: 'Quran Pages', value: summary.totalQuran, icon: '📖' },
                   { label: 'Tarawih Nights', value: summary.totalTarawih, icon: '🕌' },
-                  { label: 'Total Dhikr', value: summary.totalDhikr, icon: '📿' },
+                  { label: 'Total Dzikir', value: summary.totalDhikr, icon: '📿' },
+                  { label: 'Total Selawat', value: summary.totalSelawat, icon: '🤲' },
+                  { label: 'Charity (RM)', value: summary.totalCharity, icon: '💝' },
                 ].map(stat => (
                   <div key={stat.label} className="bg-muted/50 rounded-lg p-3 text-center">
                     <p className="text-lg">{stat.icon}</p>

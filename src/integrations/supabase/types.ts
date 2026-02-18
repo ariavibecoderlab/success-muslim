@@ -125,6 +125,33 @@ export type Database = {
         }
         Relationships: []
       }
+      dakwah_posters: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          image_url: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          image_url: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          image_url?: string
+          title?: string
+        }
+        Relationships: []
+      }
       dhikr_sessions: {
         Row: {
           count: number
@@ -845,6 +872,8 @@ export type Database = {
           id: string
           notes: string | null
           quran_pages: number
+          selawat_count: number
+          sunnah_solat: Json
           tarawih_rakaat: number
           user_id: string
         }
@@ -857,6 +886,8 @@ export type Database = {
           id?: string
           notes?: string | null
           quran_pages?: number
+          selawat_count?: number
+          sunnah_solat?: Json
           tarawih_rakaat?: number
           user_id: string
         }
@@ -869,6 +900,8 @@ export type Database = {
           id?: string
           notes?: string | null
           quran_pages?: number
+          selawat_count?: number
+          sunnah_solat?: Json
           tarawih_rakaat?: number
           user_id?: string
         }
