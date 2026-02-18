@@ -53,8 +53,8 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Tap prayer → choose On Time / Late / Missed | ❌ | P0 |
-| Data stored: date, prayer_name, status, logged_timestamp | ❌ | P0 |
+| Tap prayer → choose On Time / Late / Missed | ✅ | Popover on each prayer in Dashboard widget |
+| Data stored: date, prayer_name, status, logged_timestamp | ✅ | `src/lib/salah-storage.ts` with localStorage |
 
 ### Quran Tracker
 
