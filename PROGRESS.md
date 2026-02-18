@@ -82,8 +82,8 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| BMI Calculator + TDEE | ✅ | DB sync |
-| Weight Tracker | ✅ | DB sync |
+| BMI Calculator + TDEE | ✅ | Visual arc gauge, body fat %, ideal weight range, lose/maintain/gain TDEE, auto-save profile |
+| Weight Tracker | ✅ | Hero weight display, goal progress bar, weekly trend arrow, area chart (7D/30D/All), milestone system (5 achievements), streak counter, +/- log dialog, auto-updates BMI |
 | Hydration Tracker | ✅ | DB sync |
 | Sleep Tracker | ✅ | DB sync |
 | Sunnah Fasting Calendar | ✅ | DB sync |
