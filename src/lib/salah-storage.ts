@@ -1,4 +1,5 @@
 import { getTodayKey } from './calculations';
+import { syncSalahLog } from './db-sync';
 
 export type SalahStatus = 'ontime' | 'late' | 'missed' | null;
 
@@ -44,12 +45,11 @@ export function logSalah(prayer: SalahName, status: SalahStatus): DailySalahLog 
   const all = getAll();
   if (!all[today]) all[today] = emptyDay(today);
 
-  all[today].prayers[prayer] = {
-    status,
-    loggedAt: status ? new Date().toISOString() : null,
-  };
+  const loggedAt = status ? new Date().toISOString() : null;
+  all[today].prayers[prayer] = { status, loggedAt };
 
   saveAll(all);
+  syncSalahLog(today, prayer, status, loggedAt);
   return all[today];
 }
 

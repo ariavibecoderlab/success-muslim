@@ -1,4 +1,5 @@
-import { format, subDays, differenceInCalendarDays } from 'date-fns';
+import { format, subDays } from 'date-fns';
+import { syncTaskAdd, syncTaskToggle, syncTaskDelete, syncHabitAdd, syncHabitDelete, syncHabitLogToggle, syncLifeAreaScores } from './db-sync';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -11,31 +12,31 @@ export interface Task {
 }
 
 export interface DailyTasks {
-  date: string; // YYYY-MM-DD
+  date: string;
   tasks: Task[];
 }
 
 export interface Habit {
   id: string;
   name: string;
-  icon: string; // lucide icon name
-  color: string; // tailwind color token
+  icon: string;
+  color: string;
   createdAt: string;
 }
 
 export interface HabitLog {
-  [date: string]: string[]; // date -> array of completed habit IDs
+  [date: string]: string[];
 }
 
 export type LifeAreaKey = 'iman' | 'health' | 'wealth' | 'family' | 'knowledge' | 'career';
 
 export interface LifeAreaScore {
   area: LifeAreaKey;
-  score: number; // 1-10
+  score: number;
 }
 
 export interface LifeAreaEntry {
-  date: string; // YYYY-MM-DD (month start)
+  date: string;
   scores: LifeAreaScore[];
 }
 
@@ -95,13 +96,17 @@ export function addTask(text: string, isMIT: boolean, date?: string): DailyTasks
   };
   d.tasks.push(task);
   saveDailyTasks(d);
+  syncTaskAdd(task.id, d.date, text, task.isMIT);
   return d;
 }
 
 export function toggleTask(taskId: string, date?: string): DailyTasks {
   const d = getDailyTasks(date);
   const task = d.tasks.find(t => t.id === taskId);
-  if (task) task.completed = !task.completed;
+  if (task) {
+    task.completed = !task.completed;
+    syncTaskToggle(taskId, task.completed);
+  }
   saveDailyTasks(d);
   return d;
 }
@@ -110,6 +115,7 @@ export function deleteTask(taskId: string, date?: string): DailyTasks {
   const d = getDailyTasks(date);
   d.tasks = d.tasks.filter(t => t.id !== taskId);
   saveDailyTasks(d);
+  syncTaskDelete(taskId);
   return d;
 }
 
@@ -141,20 +147,17 @@ export function saveHabits(habits: Habit[]) {
 
 export function addHabit(name: string, icon: string = 'Check', color: string = 'primary'): Habit[] {
   const habits = getHabits();
-  habits.push({
-    id: crypto.randomUUID(),
-    name,
-    icon,
-    color,
-    createdAt: new Date().toISOString(),
-  });
+  const id = crypto.randomUUID();
+  habits.push({ id, name, icon, color, createdAt: new Date().toISOString() });
   saveHabits(habits);
+  syncHabitAdd(id, name, icon, color);
   return habits;
 }
 
 export function deleteHabit(id: string): Habit[] {
   const habits = getHabits().filter(h => h.id !== id);
   saveHabits(habits);
+  syncHabitDelete(id);
   return habits;
 }
 
@@ -173,9 +176,11 @@ export function toggleHabitForDate(habitId: string, date?: string): HabitLog {
   const key = date || getTodayKey();
   if (!log[key]) log[key] = [];
   const idx = log[key].indexOf(habitId);
+  const isCompleted = idx < 0;
   if (idx >= 0) log[key].splice(idx, 1);
   else log[key].push(habitId);
   saveHabitLog(log);
+  syncHabitLogToggle(habitId, key, isCompleted);
   return log;
 }
 
@@ -217,6 +222,7 @@ export function saveLifeAreaEntry(entry: LifeAreaEntry) {
   else entries.push(entry);
   entries.sort((a, b) => b.date.localeCompare(a.date));
   localStorage.setItem(LIFE_AREAS_KEY, JSON.stringify(entries));
+  syncLifeAreaScores(entry.date, entry.scores);
 }
 
 export function getLatestLifeAreaEntry(): LifeAreaEntry | null {

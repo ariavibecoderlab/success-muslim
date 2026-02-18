@@ -62,6 +62,293 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_tasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          date: string
+          id: string
+          is_mit: boolean
+          text: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          date: string
+          id?: string
+          is_mit?: boolean
+          text: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          date?: string
+          id?: string
+          is_mit?: boolean
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dhikr_sessions: {
+        Row: {
+          count: number
+          created_at: string
+          date: string
+          id: string
+          preset_id: string
+          target: number
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          created_at?: string
+          date: string
+          id?: string
+          preset_id: string
+          target?: number
+          user_id: string
+        }
+        Update: {
+          count?: number
+          created_at?: string
+          date?: string
+          id?: string
+          preset_id?: string
+          target?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fasting_log: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      fidyah_history: {
+        Row: {
+          created_at: string
+          entry: Json
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry: Json
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry?: Json
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habit_log: {
+        Row: {
+          created_at: string
+          date: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habit_log_habit_id_fkey"
+            columns: ["habit_id"]
+            isOneToOne: false
+            referencedRelation: "habits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habits: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_bmi: {
+        Row: {
+          activity_level: string
+          age: number
+          bmi: number
+          gender: string
+          height: number
+          id: string
+          tdee: number
+          updated_at: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          activity_level?: string
+          age: number
+          bmi: number
+          gender: string
+          height: number
+          id?: string
+          tdee: number
+          updated_at?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          activity_level?: string
+          age?: number
+          bmi?: number
+          gender?: string
+          height?: number
+          id?: string
+          tdee?: number
+          updated_at?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: []
+      }
+      hydration_log: {
+        Row: {
+          created_at: string
+          cups: number
+          date: string
+          goal: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          cups?: number
+          date: string
+          goal?: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          cups?: number
+          date?: string
+          goal?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      if_sessions: {
+        Row: {
+          completed: boolean
+          created_at: string
+          end_time: string | null
+          fasting_hours: number
+          id: string
+          mode: string
+          start_time: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          end_time?: string | null
+          fasting_hours?: number
+          id?: string
+          mode: string
+          start_time: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          end_time?: string | null
+          fasting_hours?: number
+          id?: string
+          mode?: string
+          start_time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      life_area_scores: {
+        Row: {
+          area: string
+          created_at: string
+          date: string
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          area: string
+          created_at?: string
+          date: string
+          id?: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          area?: string
+          created_at?: string
+          date?: string
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       page_overrides: {
         Row: {
           element_key: string
@@ -102,6 +389,7 @@ export type Database = {
           id: string
           is_disabled: boolean
           updated_at: string
+          weight_goal: number | null
         }
         Insert: {
           city?: string | null
@@ -112,6 +400,7 @@ export type Database = {
           id: string
           is_disabled?: boolean
           updated_at?: string
+          weight_goal?: number | null
         }
         Update: {
           city?: string | null
@@ -122,6 +411,139 @@ export type Database = {
           id?: string
           is_disabled?: boolean
           updated_at?: string
+          weight_goal?: number | null
+        }
+        Relationships: []
+      }
+      qada_solat: {
+        Row: {
+          id: string
+          progress: Json
+          setup: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          progress?: Json
+          setup?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          progress?: Json
+          setup?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ramadhan_qada: {
+        Row: {
+          id: string
+          progress: Json
+          setup: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          progress?: Json
+          setup?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          progress?: Json
+          setup?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      salah_logs: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          logged_at: string | null
+          prayer_name: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          logged_at?: string | null
+          prayer_name: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          logged_at?: string | null
+          prayer_name?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sleep_log: {
+        Row: {
+          bedtime: string
+          created_at: string
+          date: string
+          duration: number
+          id: string
+          user_id: string
+          wake_time: string
+        }
+        Insert: {
+          bedtime: string
+          created_at?: string
+          date: string
+          duration: number
+          id?: string
+          user_id: string
+          wake_time: string
+        }
+        Update: {
+          bedtime?: string
+          created_at?: string
+          date?: string
+          duration?: number
+          id?: string
+          user_id?: string
+          wake_time?: string
+        }
+        Relationships: []
+      }
+      sunnah_log: {
+        Row: {
+          completed_items: Json
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_items?: Json
+          created_at?: string
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_items?: Json
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -167,6 +589,30 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weight_log: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          user_id: string
+          weight: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          user_id?: string
+          weight?: number
         }
         Relationships: []
       }

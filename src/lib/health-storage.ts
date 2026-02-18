@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { syncBMI, syncWeightEntry, syncHydration, syncSleepEntry, syncFastingToggle, syncIFStart, syncIFStop } from './db-sync';
 
 // ── Types ──────────────────────────────────────────
 
@@ -27,7 +28,7 @@ export interface SleepEntry {
   date: string;
   bedtime: string;
   wakeTime: string;
-  duration: number; // hours
+  duration: number;
 }
 
 export interface IFSession {
@@ -79,6 +80,7 @@ export function getBMI(): BMIData | null {
 
 export function saveBMI(data: BMIData) {
   set(KEYS.bmi, data);
+  syncBMI(data);
 }
 
 export function calculateBMI(weightKg: number, heightCm: number): number {
@@ -115,6 +117,7 @@ export function addWeightEntry(entry: WeightEntry) {
   log.push(entry);
   log.sort((a, b) => a.date.localeCompare(b.date));
   set(KEYS.weightLog, log);
+  syncWeightEntry(entry.date, entry.weight);
 }
 
 export function getWeightGoal(): number | null {
@@ -140,6 +143,7 @@ export function addCup(dateKey?: string) {
   day.cups += 1;
   all[key] = day;
   set(KEYS.hydration, all);
+  syncHydration(key, day.cups, day.goal);
 }
 
 export function removeCup(dateKey?: string) {
@@ -149,6 +153,7 @@ export function removeCup(dateKey?: string) {
   day.cups = Math.max(0, day.cups - 1);
   all[key] = day;
   set(KEYS.hydration, all);
+  syncHydration(key, day.cups, day.goal);
 }
 
 export function setHydrationGoal(goal: number) {
@@ -158,6 +163,7 @@ export function setHydrationGoal(goal: number) {
   day.goal = goal;
   all[key] = day;
   set(KEYS.hydration, all);
+  syncHydration(key, day.cups, day.goal);
 }
 
 export function getHydrationHistory(days: number = 7): { date: string; cups: number }[] {
@@ -183,6 +189,7 @@ export function addSleepEntry(entry: SleepEntry) {
   log.push(entry);
   log.sort((a, b) => a.date.localeCompare(b.date));
   set(KEYS.sleep, log);
+  syncSleepEntry(entry.date, entry.bedtime, entry.wakeTime, entry.duration);
 }
 
 export function calculateSleepDuration(bedtime: string, wakeTime: string): number {
@@ -208,9 +215,11 @@ export function getFastingLog(): Record<string, boolean> {
 
 export function toggleFasting(dateKey: string) {
   const log = getFastingLog();
+  const wasFasting = !!log[dateKey];
   log[dateKey] = !log[dateKey];
   if (!log[dateKey]) delete log[dateKey];
   set(KEYS.fasting, log);
+  syncFastingToggle(dateKey, !wasFasting);
 }
 
 // ── Intermittent Fasting ───────────────────────────
@@ -224,19 +233,23 @@ export function getActiveIF(): IFActive | null {
 }
 
 export function startIF(mode: string, fastingHours: number) {
-  set(KEYS.ifActive, { mode, startTime: new Date().toISOString(), fastingHours });
+  const startTime = new Date().toISOString();
+  set(KEYS.ifActive, { mode, startTime, fastingHours });
+  syncIFStart(mode, startTime, fastingHours);
 }
 
 export function stopIF(completed: boolean) {
   const active = getActiveIF();
   if (!active) return;
+  const endTime = new Date().toISOString();
   const sessions = getIFSessions();
   sessions.unshift({
     mode: active.mode,
     startTime: active.startTime,
-    endTime: new Date().toISOString(),
+    endTime,
     completed,
   });
   set(KEYS.ifSessions, sessions.slice(0, 10));
   localStorage.removeItem(KEYS.ifActive);
+  syncIFStop(active.startTime, endTime, completed);
 }
