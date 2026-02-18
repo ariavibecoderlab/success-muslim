@@ -107,6 +107,8 @@
 |---------|--------|-------|
 | Display name, city, country | ✅ | Settings page |
 | Replace Family tab → Profile tab | ✅ | Done |
+| Avatar upload | ✅ | Storage bucket + profile page |
+| Profile consolidation | ✅ | Account info, edit profile, sign out |
 
 ---
 
