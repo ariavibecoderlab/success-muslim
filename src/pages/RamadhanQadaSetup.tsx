@@ -31,7 +31,7 @@ const RamadhanQadaSetupPage = () => {
   };
 
   return (
-    <SubPageLayout title="Ramadhan Qada Setup" backTo="/deen">
+    <SubPageLayout title="Ramadhan Qada Setup" backTo="/iman">
       <div className="space-y-6">
         <div>
           <h2 className="text-xl font-bold mb-1">Track Your Missed Fasts</h2>

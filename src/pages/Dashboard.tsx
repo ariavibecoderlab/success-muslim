@@ -211,9 +211,9 @@ const Dashboard = () => {
   const hydration = getHydration();
 
   const QUICK_LOGS = [
-    { icon: Star, label: 'Prayer', to: '/deen/prayer-times', color: 'bg-primary/10 text-primary' },
-    { icon: BookOpen, label: 'Quran', to: '/deen/quran', color: 'bg-primary/10 text-primary' },
-    { icon: HandHeart, label: 'Dhikr', to: '/deen/dhikr', color: 'bg-accent/20 text-accent-foreground' },
+    { icon: Star, label: 'Prayer', to: '/iman/prayer-times', color: 'bg-primary/10 text-primary' },
+    { icon: BookOpen, label: 'Quran', to: '/iman/quran', color: 'bg-primary/10 text-primary' },
+    { icon: HandHeart, label: 'Dhikr', to: '/iman/dhikr', color: 'bg-accent/20 text-accent-foreground' },
     { icon: Moon, label: 'Fast', to: '/health/fasting', color: 'bg-secondary text-secondary-foreground' },
     { icon: Droplets, label: 'Water', to: '/health/hydration', color: 'bg-blue-500/10 text-blue-600' },
     { icon: BedDouble, label: 'Sleep', to: '/health/sleep', color: 'bg-secondary text-secondary-foreground' },

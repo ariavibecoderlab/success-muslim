@@ -12,15 +12,15 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Progress } from '@/components/ui/progress';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/prayer-times', label: 'Prayer Times' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/qiyam', label: 'Qiyam' },
-  { path: '/deen/ramadan', label: 'Ramadan' },
-  { path: '/deen/hajj', label: 'Hajj/Umrah' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/prayer-times', label: 'Prayer Times' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/qiyam', label: 'Qiyam' },
+  { path: '/iman/ramadan', label: 'Ramadan' },
+  { path: '/iman/hajj', label: 'Hajj/Umrah' },
 ];
 
 const UMRAH_STEPS = [
@@ -151,7 +151,7 @@ const HajjUmrahPlanner = () => {
     : [];
 
   return (
-    <SubPageLayout title="Hajj & Umrah" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/hajj">
+    <SubPageLayout title="Hajj & Umrah" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/hajj">
       <div className="space-y-5">
         {/* Tab Selector */}
         <Tabs value={tab} onValueChange={v => setTab(v as JourneyType)}>

@@ -17,15 +17,15 @@ import { gregorianToHijri } from '@/lib/hijri';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes, formatPrayerTime } from '@/lib/prayer-times';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/prayer-times', label: 'Prayer Times' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/qiyam', label: 'Qiyam' },
-  { path: '/deen/ramadan', label: 'Ramadan' },
-  { path: '/deen/hajj', label: 'Hajj/Umrah' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/prayer-times', label: 'Prayer Times' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/qiyam', label: 'Qiyam' },
+  { path: '/iman/ramadan', label: 'Ramadan' },
+  { path: '/iman/hajj', label: 'Hajj/Umrah' },
 ];
 
 interface RamadanSettings {
@@ -185,7 +185,7 @@ const RamadanOptimizer = () => {
   const lqNights = [21, 23, 25, 27, 29];
 
   return (
-    <SubPageLayout title="Ramadan Optimizer" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/ramadan"
+    <SubPageLayout title="Ramadan Optimizer" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/ramadan"
       headerRight={
         <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
           <DialogTrigger asChild>

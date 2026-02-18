@@ -14,7 +14,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
-import Deen from "./pages/Deen";
+import Iman from "./pages/Deen";
 import Health from "./pages/Health";
 import Wealth from "./pages/Wealth";
 import Productivity from "./pages/Productivity";
@@ -76,7 +76,7 @@ const App = () => (
               {/* Protected pillar pages with bottom nav */}
               <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/deen" element={<Deen />} />
+                <Route path="/iman" element={<Iman />} />
                 <Route path="/health" element={<Health />} />
                 <Route path="/wealth" element={<Wealth />} />
                 <Route path="/productivity" element={<Productivity />} />
@@ -89,18 +89,18 @@ const App = () => (
               <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
               <Route path="/ramadhan-qada/track" element={<AuthGuard><RamadhanQadaTrack /></AuthGuard>} />
               <Route path="/fidyah" element={<AuthGuard><Fidyah /></AuthGuard>} />
-              <Route path="/deen/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
-              <Route path="/deen/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
-              <Route path="/deen/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
-              <Route path="/deen/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
-              <Route path="/deen/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
-              <Route path="/deen/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
-              <Route path="/deen/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
-              <Route path="/deen/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
-              <Route path="/deen/sadaqah" element={<AuthGuard><SadaqahTracker /></AuthGuard>} />
-              <Route path="/deen/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />
-              <Route path="/deen/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
-              <Route path="/deen/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
+              <Route path="/iman/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
+              <Route path="/iman/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
+              <Route path="/iman/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
+              <Route path="/iman/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
+              <Route path="/iman/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
+              <Route path="/iman/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
+              <Route path="/iman/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
+              <Route path="/iman/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
+              <Route path="/iman/sadaqah" element={<AuthGuard><SadaqahTracker /></AuthGuard>} />
+              <Route path="/iman/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />
+              <Route path="/iman/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
+              <Route path="/iman/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
               <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
               <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
               <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />

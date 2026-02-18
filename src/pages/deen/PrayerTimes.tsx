@@ -35,12 +35,12 @@ import {
 } from '@/lib/prayer-times';
 import { toast } from 'sonner';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/prayer-times', label: 'Prayer' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/prayer-times', label: 'Prayer' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const PRAYER_ICONS: Record<string, React.ReactNode> = {
@@ -115,7 +115,7 @@ const PrayerTimes = () => {
   const prayerProgress = data ? ((currentIdx + 1) / data.timings.length) * 100 : 0;
 
   return (
-    <SubPageLayout title="Prayer Times" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/prayer-times">
+    <SubPageLayout title="Prayer Times" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/prayer-times">
       <div className="space-y-4">
 
         {/* Hijri Date Banner */}

@@ -3,7 +3,7 @@ import { Home, Moon, Heart, Wallet, ListChecks, UserCircle } from 'lucide-react'
 
 const tabs = [
   { icon: Home, label: 'Home', path: '/dashboard' },
-  { icon: Moon, label: 'Deen', path: '/deen' },
+  { icon: Moon, label: 'Iman', path: '/iman' },
   { icon: Heart, label: 'Health', path: '/health' },
   { icon: Wallet, label: 'Wealth', path: '/wealth' },
   { icon: ListChecks, label: 'Tasks', path: '/productivity' },

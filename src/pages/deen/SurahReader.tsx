@@ -179,7 +179,7 @@ const SurahReader = () => {
 
   // Navigation
   const goToSurah = (n: number) => {
-    if (n >= 1 && n <= 114) navigate(`/deen/quran/read/${n}`);
+    if (n >= 1 && n <= 114) navigate(`/iman/quran/read/${n}`);
   };
 
   // Bookmark toggle
@@ -199,7 +199,7 @@ const SurahReader = () => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/deen/quran')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/iman/quran')}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="text-center">
@@ -208,7 +208,7 @@ const SurahReader = () => {
               {surahInfo?.arabic} · {surahInfo?.ayahs} ayahs · {surahInfo?.type}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/deen/quran')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/iman/quran')}>
             <BookOpen className="h-4 w-4" />
           </Button>
         </div>

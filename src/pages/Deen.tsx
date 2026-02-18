@@ -41,7 +41,7 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
   Isha: <Moon className="h-3.5 w-3.5" />,
 };
 
-const Deen = () => {
+const Iman = () => {
   const [, forceUpdate] = useState(0);
   const { settings, loading: settingsLoading } = usePrayerSettings();
   const { prefs } = useQuranPrefs();
@@ -129,8 +129,8 @@ const Deen = () => {
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const nextPrayer = prayerData?.timings[nextIdx];
 
-  // Deen score (simple: salah weight 50, sunnah 20, quran 15, dhikr 15)
-  const deenScore = Math.round(
+  // Iman score (simple: salah weight 50, sunnah 20, quran 15, dhikr 15)
+  const imanScore = Math.round(
     (salahCount.logged / 5) * 50 +
     (sunnahItems.length > 0 ? (sunnahDone / sunnahItems.length) : 0) * 20 +
     Math.min(1, todayQuranPages / Math.max(1, prefs.daily_goal_pages)) * 15 +
@@ -163,7 +163,7 @@ const Deen = () => {
 
         {/* Prayer Times Hero Card */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}>
-          <Link to="/deen/prayer-times">
+          <Link to="/iman/prayer-times">
             <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden">
               <CardContent className="p-4">
                 {prayerData && nextPrayer ? (
@@ -219,14 +219,14 @@ const Deen = () => {
           </Link>
         </motion.div>
 
-        {/* Deen Summary Strip */}
+        {/* Iman Summary Strip */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
           <div className="flex items-center gap-1 overflow-x-auto pb-1 -mx-1 px-1">
             {[
               { icon: Star, label: `${salahCount.logged}/5`, sub: 'Salah', to: '/dashboard' },
-              { icon: HandHeart, label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/deen/dhikr' },
-              { icon: BookOpen, label: `${todayQuranPages.toFixed(1)}p`, sub: 'Quran', to: '/deen/quran' },
-              { icon: ListChecks, label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/deen/sunnah' },
+              { icon: HandHeart, label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/iman/dhikr' },
+              { icon: BookOpen, label: `${todayQuranPages.toFixed(1)}p`, sub: 'Quran', to: '/iman/quran' },
+              { icon: ListChecks, label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/iman/sunnah' },
             ].map(item => (
               <Link key={item.sub} to={item.to} className="flex-1 min-w-0">
                 <Card className="hover:border-primary/20 transition-all">
@@ -248,7 +248,7 @@ const Deen = () => {
           </h2>
           <div className="grid grid-cols-2 gap-3">
             {/* Quran */}
-            <Link to="/deen/quran">
+            <Link to="/iman/quran">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -265,7 +265,7 @@ const Deen = () => {
             </Link>
 
             {/* Dhikr */}
-            <Link to="/deen/dhikr">
+            <Link to="/iman/dhikr">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -282,7 +282,7 @@ const Deen = () => {
             </Link>
 
             {/* Sunnah */}
-            <Link to="/deen/sunnah">
+            <Link to="/iman/sunnah">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -299,7 +299,7 @@ const Deen = () => {
             </Link>
 
             {/* Prayer Times */}
-            <Link to="/deen/prayer-times">
+            <Link to="/iman/prayer-times">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -314,7 +314,7 @@ const Deen = () => {
             </Link>
 
             {/* Zakat */}
-            <Link to="/deen/zakat">
+            <Link to="/iman/zakat">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -329,7 +329,7 @@ const Deen = () => {
             </Link>
 
             {/* Sadaqah */}
-            <Link to="/deen/sadaqah">
+            <Link to="/iman/sadaqah">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -344,7 +344,7 @@ const Deen = () => {
             </Link>
 
             {/* Qiyam Planner */}
-            <Link to="/deen/qiyam">
+            <Link to="/iman/qiyam">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -359,7 +359,7 @@ const Deen = () => {
             </Link>
 
             {/* Ramadan Optimizer */}
-            <Link to="/deen/ramadan">
+            <Link to="/iman/ramadan">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -374,7 +374,7 @@ const Deen = () => {
             </Link>
 
             {/* Hajj/Umrah */}
-            <Link to="/deen/hajj">
+            <Link to="/iman/hajj">
               <Card className="hover:border-primary/20 transition-all h-full">
                 <CardContent className="p-4">
                   <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
@@ -388,17 +388,17 @@ const Deen = () => {
               </Card>
             </Link>
 
-            {/* Deen Score */}
+            {/* Iman Score */}
             <Card className="h-full">
               <CardContent className="p-4">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
                   <BarChart3 className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-sm font-semibold">Deen Score</p>
+                <p className="text-sm font-semibold">Iman Score</p>
                 <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {deenScore}/100 · {deenScore >= 80 ? 'Excellent' : deenScore >= 60 ? 'Good' : deenScore >= 40 ? 'Building' : 'Needs work'}
+                  {imanScore}/100 · {imanScore >= 80 ? 'Excellent' : imanScore >= 60 ? 'Good' : imanScore >= 40 ? 'Building' : 'Needs work'}
                 </p>
-                <Progress value={deenScore} className="h-1 mt-1.5" />
+                <Progress value={imanScore} className="h-1 mt-1.5" />
               </CardContent>
             </Card>
           </div>
@@ -524,4 +524,4 @@ const Deen = () => {
   );
 };
 
-export default Deen;
+export default Iman;

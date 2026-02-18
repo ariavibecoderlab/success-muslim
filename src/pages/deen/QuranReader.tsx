@@ -23,12 +23,12 @@ import { useQuranPrefs, useQuranBookmarks, useQuranSessions } from '@/hooks/useQ
 import { SURAH_NAMES, TOTAL_AYAHS, TRANSLATION_IDS } from '@/lib/quran-api';
 import { toast } from 'sonner';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/prayer-times', label: 'Prayer' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/prayer-times', label: 'Prayer' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const QuranReader = () => {
@@ -112,7 +112,7 @@ const QuranReader = () => {
 
   if (prefsLoading) {
     return (
-      <SubPageLayout title="Quran" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/quran">
+      <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
         <div className="space-y-4">
           {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
         </div>
@@ -121,7 +121,7 @@ const QuranReader = () => {
   }
 
   return (
-    <SubPageLayout title="Quran" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/quran">
+    <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
       <div className="space-y-4">
 
         {/* Onboarding Prompt */}
@@ -152,7 +152,7 @@ const QuranReader = () => {
             {prefs.last_surah > 0 && (
               <Card
                 className="cursor-pointer hover:border-primary/30 transition-all"
-                onClick={() => navigate(`/deen/quran/read/${prefs.last_surah}?ayah=${prefs.last_ayah}`)}
+                onClick={() => navigate(`/iman/quran/read/${prefs.last_surah}?ayah=${prefs.last_ayah}`)}
               >
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -299,7 +299,7 @@ const QuranReader = () => {
                   <Card
                     key={surah.number}
                     className="cursor-pointer hover:border-primary/20 transition-all"
-                    onClick={() => navigate(`/deen/quran/read/${surah.number}`)}
+                    onClick={() => navigate(`/iman/quran/read/${surah.number}`)}
                   >
                     <CardContent className="p-3 flex items-center justify-between">
                       <div className="flex items-center gap-3">
@@ -334,7 +334,7 @@ const QuranReader = () => {
                     onClick={() => {
                       // Navigate to first surah of juz
                       const juzStarts = [1,2,2,3,4,4,5,6,7,8,9,11,12,15,17,18,21,23,25,27,29,33,36,39,41,46,51,58,67,78];
-                      navigate(`/deen/quran/read/${juzStarts[juz.number - 1]}`);
+                      navigate(`/iman/quran/read/${juzStarts[juz.number - 1]}`);
                     }}
                   >
                     <CardContent className="p-3 flex items-center justify-between">
@@ -374,7 +374,7 @@ const QuranReader = () => {
                       <Card
                         key={bm.id}
                         className="cursor-pointer hover:border-primary/20 transition-all"
-                        onClick={() => navigate(`/deen/quran/read/${bm.surah_number}?ayah=${bm.ayah_number}`)}
+                        onClick={() => navigate(`/iman/quran/read/${bm.surah_number}?ayah=${bm.ayah_number}`)}
                       >
                         <CardContent className="p-3 flex items-center justify-between">
                           <div className="flex items-center gap-3">

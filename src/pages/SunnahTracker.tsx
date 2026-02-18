@@ -21,11 +21,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   other: 'Other',
 };
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const SunnahTracker = () => {
@@ -97,9 +97,9 @@ const SunnahTracker = () => {
   return (
     <SubPageLayout
       title="Sunnah Tracker"
-      backTo="/deen"
-      siblingRoutes={DEEN_SIBLINGS}
-      currentPath="/deen/sunnah"
+      backTo="/iman"
+      siblingRoutes={IMAN_SIBLINGS}
+      currentPath="/iman/sunnah"
       headerRight={
         <button onClick={() => setEditing(!editing)} className="text-muted-foreground hover:text-foreground transition-colors">
           <Settings2 className="h-5 w-5" />

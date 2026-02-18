@@ -9,11 +9,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset, getDhikrStreak, getDhikrHistory } from '@/lib/dhikr-storage';
 import SubPageLayout from '@/components/SubPageLayout';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const DhikrCounter = () => {
@@ -99,7 +99,7 @@ const DhikrCounter = () => {
   const completedSessions = daily.sessions.filter(s => s.count >= s.target).length;
 
   return (
-    <SubPageLayout title="Dhikr Counter" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/dhikr">
+    <SubPageLayout title="Dhikr Counter" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/dhikr">
       <div className="space-y-5">
 
         {/* Streak + Stats Bar */}

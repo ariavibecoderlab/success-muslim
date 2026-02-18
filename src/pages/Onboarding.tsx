@@ -25,7 +25,7 @@ const slideVariants = {
 };
 
 const FOCUS_AREAS = [
-  { id: 'ibadah', Icon: Moon, label: 'Ibadah & Deen' },
+  { id: 'ibadah', Icon: Moon, label: 'Ibadah & Iman' },
   { id: 'quran', Icon: BookOpen, label: 'Quran' },
   { id: 'health', Icon: Heart, label: 'Health & Wellness' },
   { id: 'wealth', Icon: Wallet, label: 'Wealth & Finance' },
@@ -371,7 +371,7 @@ const Onboarding = () => {
               {step === 4 && (
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">How's your deen consistency?</h1>
+                    <h1 className="text-2xl font-bold">How's your iman consistency?</h1>
                     <p className="text-sm text-muted-foreground mt-1">Be honest — this helps us personalize your journey.</p>
                   </div>
                   <div className="space-y-3">
@@ -575,7 +575,7 @@ const Onboarding = () => {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.2 }}>
                     <Card>
                       <CardContent className="p-4">
-                        <p className="text-xs text-muted-foreground">Deen Score</p>
+                        <p className="text-xs text-muted-foreground">Iman Score</p>
                         <p className="text-3xl font-bold text-primary">0<span className="text-lg text-muted-foreground">/100</span></p>
                         <p className="text-xs text-muted-foreground mt-1">Your score grows as you build habits</p>
                       </CardContent>
