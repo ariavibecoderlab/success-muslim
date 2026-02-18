@@ -8,7 +8,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import EditableText from '@/components/cms/EditableText';
 
 const fadeUp = {
@@ -47,6 +49,15 @@ const testimonials = [
 
 const Landing = () => {
   const [stats, setStats] = useState<Record<string, number>>({});
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      // Redirect authenticated users to onboarding (which handles completed check)
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     supabase.from('app_stats').select('stat_key, stat_value').then(({ data }) => {
