@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { getBMI, getHydration, getSleepLog, bmiCategory } from '@/lib/health-storage';
 import EditableText from '@/components/cms/EditableText';
@@ -25,6 +26,8 @@ const Health = () => {
   const isMonOrThu = today.getDay() === 1 || today.getDay() === 4;
 
   return (
+    <div className="min-h-screen bg-background">
+      <AppHeader title="Health & Wellness" icon={Heart} />
     <div className="max-w-md mx-auto w-full px-5 py-6 space-y-6">
       {/* Hero */}
       <div className="text-center space-y-2">
@@ -89,6 +92,7 @@ const Health = () => {
           </CardContent>
         </Card>
       )}
+    </div>
     </div>
   );
 };

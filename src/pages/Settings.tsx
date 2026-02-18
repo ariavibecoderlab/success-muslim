@@ -8,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { UserCircle, LogOut, Save, Camera, Mail, MapPin, User, Shield } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
@@ -105,14 +106,7 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-md mx-auto px-6 h-14 flex items-center">
-          <span className="text-lg font-bold text-primary flex items-center gap-2">
-            <UserCircle className="h-5 w-5" />
-            Profile
-          </span>
-        </div>
-      </nav>
+      <AppHeader title="Profile" icon={UserCircle} />
 
       <main className="max-w-md mx-auto px-6 py-8 space-y-6">
         {/* Avatar & Name Header */}

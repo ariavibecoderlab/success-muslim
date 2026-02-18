@@ -1,6 +1,7 @@
 import { Wallet, PiggyBank, TrendingDown, Calculator, HandCoins, BarChart3 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import EditableText from '@/components/cms/EditableText';
+import AppHeader from '@/components/AppHeader';
 
 const features = [
   { icon: Wallet, title: 'Budget Tracker', desc: 'Income, expenses & balance overview' },
@@ -13,14 +14,7 @@ const features = [
 
 const Wealth = () => (
   <div className="min-h-screen bg-background">
-    <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-        <span className="text-lg font-bold text-primary flex items-center gap-2">
-          <Wallet className="h-5 w-5" />
-          <EditableText elementKey="wealth.nav" defaultText="Wealth & Finance" tag="span" />
-        </span>
-      </div>
-    </nav>
+    <AppHeader title="Wealth & Finance" icon={Wallet} />
 
     <main className="max-w-4xl mx-auto px-6 py-8">
       <div className="flex flex-col items-center text-center mb-10">

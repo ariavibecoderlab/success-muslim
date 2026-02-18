@@ -3,6 +3,7 @@ import {
   Moon, Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   BookOpen, Star, HandHeart, ListChecks,
 } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
@@ -60,14 +61,7 @@ const Deen = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center">
-          <span className="text-lg font-bold text-primary flex items-center gap-2">
-            <Moon className="h-5 w-5" />
-            <EditableText elementKey="deen.nav" defaultText="Deen" tag="span" />
-          </span>
-        </div>
-      </nav>
+      <AppHeader title="Deen" />
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-5">
         {/* Hero */}

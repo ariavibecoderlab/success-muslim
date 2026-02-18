@@ -18,8 +18,6 @@ import {
   Star,
   Heart,
   Sparkles,
-  Settings,
-  Shield,
   Megaphone,
   CircleDot,
   CircleAlert,
@@ -29,6 +27,7 @@ import {
   ListChecks,
   HandHeart,
 } from "lucide-react";
+import AppHeader from "@/components/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -223,31 +222,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50 shadow-sm">
-        <div className="max-w-4xl mx-auto px-5 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-              <Moon className="h-[18px] w-[18px] text-primary" />
-            </div>
-            <div className="flex flex-col">
-              <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" className="text-base font-bold tracking-tight text-foreground leading-tight" />
-              <span className="text-[10px] text-muted-foreground leading-tight">{hijriDate}</span>
-            </div>
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground hidden sm:block">{gregorianDate}</span>
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center hover:bg-primary/15 transition-colors"
-                title="Admin Panel"
-              >
-                <Shield className="h-4 w-4 text-primary" />
-              </Link>
-            )}
-          </div>
-        </div>
-      </nav>
+      <AppHeader showHijriDate showGregorianDate />
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-5">
         {/* Announcements */}
