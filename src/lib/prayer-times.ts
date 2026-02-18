@@ -1,3 +1,5 @@
+import { isMalaysia, findZoneByCity, DEFAULT_ZONE } from './jakim-zones';
+
 export interface PrayerTime {
   name: string;
   time: string;
@@ -11,6 +13,7 @@ export interface PrayerTimesData {
   city: string;
   country: string;
   hijriDate?: string;
+  source?: 'jakim' | 'aladhan';
 }
 
 export interface PrayerSettings {
@@ -144,6 +147,96 @@ export async function reverseGeocode(lat: number, lng: number): Promise<{ city: 
 
 export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): Promise<PrayerTimesData | null> {
   const today = new Date().toISOString().split('T')[0];
+  const country = settings.country || 'Malaysia';
+  const city = settings.city || 'Kuala Lumpur';
+
+  // Check cache
+  const cacheKey = `${STORAGE_KEY}_${settings.calculation_method || 3}_${settings.madhab || 'shafi'}_${settings.latitude || city}`;
+  try {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) {
+      const data = JSON.parse(cached);
+      if (data.date === today) return data;
+    }
+  } catch {}
+
+  // Try JAKIM for Malaysian users
+  if (isMalaysia(country)) {
+    const jakimResult = await fetchFromJakim(city, settings);
+    if (jakimResult) {
+      jakimResult.date = today;
+      try { localStorage.setItem(cacheKey, JSON.stringify(jakimResult)); } catch {}
+      return jakimResult;
+    }
+  }
+
+  // Fallback to Aladhan
+  return fetchFromAladhan(settings, today, cacheKey);
+}
+
+async function fetchFromJakim(city: string, settings: Partial<PrayerSettings>): Promise<PrayerTimesData | null> {
+  const zone = findZoneByCity(city) || DEFAULT_ZONE;
+
+  try {
+    const res = await fetch(
+      `https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=${zone}`
+    );
+    const json = await res.json();
+
+    if (!json.prayerTime || json.prayerTime.length === 0) return null;
+
+    const pt = json.prayerTime[0];
+
+    const mosqueKeys: Record<string, string | null | undefined> = {
+      Fajr: settings.mosque_fajr,
+      Dhuhr: settings.mosque_dhuhr,
+      Asr: settings.mosque_asr,
+      Maghrib: settings.mosque_maghrib,
+      Isha: settings.mosque_isha,
+    };
+
+    // JAKIM returns times in HH:mm:ss format, strip seconds
+    const strip = (t: string) => t ? t.substring(0, 5) : '';
+
+    const timings: PrayerTime[] = [
+      { name: 'Subuh', time: strip(pt.fajr), key: 'Fajr', mosqueTime: settings.mosque_enabled ? mosqueKeys.Fajr || null : null },
+      { name: 'Zohor', time: strip(pt.dhuhr), key: 'Dhuhr', mosqueTime: settings.mosque_enabled ? mosqueKeys.Dhuhr || null : null },
+      { name: 'Asar', time: strip(pt.asr), key: 'Asr', mosqueTime: settings.mosque_enabled ? mosqueKeys.Asr || null : null },
+      { name: 'Maghrib', time: strip(pt.maghrib), key: 'Maghrib', mosqueTime: settings.mosque_enabled ? mosqueKeys.Maghrib || null : null },
+      { name: 'Isyak', time: strip(pt.isha), key: 'Isha', mosqueTime: settings.mosque_enabled ? mosqueKeys.Isha || null : null },
+    ];
+
+    // JAKIM provides hijri date
+    const hijriDate = pt.hijri || undefined;
+
+    return {
+      timings,
+      date: '',
+      city: settings.city || 'Kuala Lumpur',
+      country: settings.country || 'Malaysia',
+      hijriDate: hijriDate ? formatJakimHijri(hijriDate) : undefined,
+      source: 'jakim',
+    };
+  } catch {
+    return null;
+  }
+}
+
+function formatJakimHijri(hijri: string): string {
+  // JAKIM hijri format: "YYYY-MM-DD" e.g. "1447-08-19"
+  const HIJRI_MONTHS = [
+    'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
+    'Jumada al-Ula', 'Jumada al-Thani', 'Rajab', 'Sha\'ban',
+    'Ramadhan', 'Shawwal', 'Dhul Qa\'dah', 'Dhul Hijjah',
+  ];
+  const parts = hijri.split('-');
+  if (parts.length !== 3) return hijri;
+  const [year, month, day] = parts.map(Number);
+  const monthName = HIJRI_MONTHS[month - 1] || '';
+  return `${day} ${monthName} ${year} H`;
+}
+
+async function fetchFromAladhan(settings: Partial<PrayerSettings>, today: string, cacheKey: string): Promise<PrayerTimesData | null> {
   const method = settings.calculation_method ?? 3;
   const school = settings.madhab === 'hanafi' ? 1 : 0;
 
@@ -155,16 +248,6 @@ export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): 
     const country = settings.country || 'Malaysia';
     apiUrl = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&school=${school}`;
   }
-
-  // Check cache
-  const cacheKey = `${STORAGE_KEY}_${method}_${school}_${settings.latitude || settings.city}`;
-  try {
-    const cached = localStorage.getItem(cacheKey);
-    if (cached) {
-      const data = JSON.parse(cached);
-      if (data.date === today) return data;
-    }
-  } catch {}
 
   try {
     const res = await fetch(apiUrl);
@@ -197,6 +280,7 @@ export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): 
       city: settings.city || json.data.meta?.timezone || '',
       country: settings.country || '',
       hijriDate,
+      source: 'aladhan',
     };
     try { localStorage.setItem(cacheKey, JSON.stringify(result)); } catch {}
     return result;

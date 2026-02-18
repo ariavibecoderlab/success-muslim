@@ -60,11 +60,12 @@
 | Fidyah Calculator | ✅ | Display only + DB sync |
 | Zakat Calculator | ✅ | DB persistence + mark as paid |
 | Sadaqah Tracker | ✅ | `sadaqah_donations` + `sadaqah_goals` tables, monthly goal, category breakdown |
-| Prayer Times | ✅ | Aladhan API, GPS + manual location, 20+ calculation methods |
+| Prayer Times | ✅ | JAKIM e-solat API (auto for Malaysia), Aladhan fallback (global), GPS + manual location, 20+ calculation methods |
+| JAKIM Zone Mapping | ✅ | Full Malaysian zone codes (JHR/KDH/KTN/MLK/NGS/PHG/PLS/PNG/PRK/SBH/SGR/SWK/TRG/WLY) |
 | Prayer Settings | ✅ | Madhab (Shafi/Hanafi), method selection, persisted to DB |
 | Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
 | Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
-| Hijri Date | ✅ | Prominent Hijri date on Prayer Times page |
+| Hijri Date | ✅ | JAKIM API (Malaysia) with algorithmic fallback (global) |
 | Quran Reader | ✅ | Full 114 surahs, Arabic text + translations (EN/MS/ID), per-ayah tafsir |
 | Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
 | Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |

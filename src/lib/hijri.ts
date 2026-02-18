@@ -1,27 +1,50 @@
+import { format } from 'date-fns';
+
 const HIJRI_MONTHS = [
   'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
   'Jumada al-Ula', 'Jumada al-Thani', 'Rajab', 'Sha\'ban',
   'Ramadhan', 'Shawwal', 'Dhul Qa\'dah', 'Dhul Hijjah',
 ];
 
+/**
+ * Fetch Hijri date from JAKIM e-solat API (most accurate for Malaysia)
+ */
+export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
+  try {
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const res = await fetch(
+      `https://www.e-solat.gov.my/index.php?r=esolatApi/tarikhtakwim&period=today&datetype=miladi&date=${dateStr}`
+    );
+    const json = await res.json();
+
+    if (json.takwim && json.takwim.length > 0) {
+      const entry = json.takwim[0];
+      // JAKIM returns hijri in format like "1447-08-19"
+      if (entry.hijri) {
+        const parts = entry.hijri.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(Number);
+          const monthName = HIJRI_MONTHS[month - 1] || '';
+          return `${day} ${monthName} ${year} H`;
+        }
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Local algorithmic Gregorian-to-Hijri conversion (Kuwaiti algorithm).
+ * Used as fallback when JAKIM API is unavailable.
+ */
 export function gregorianToHijri(date: Date): { day: number; month: number; year: number; monthName: string } {
-  // Kuwaiti algorithm for Gregorian to Hijri conversion
   const d = date.getDate();
   const m = date.getMonth();
   const y = date.getFullYear();
 
-  let jd = Math.floor((11 * y + 3) / 30) + 354 * y + 30 * m
-    - Math.floor((m - 1) / 2) + d + 1948440 - 385;
-
-  if (m < 2) {
-    jd = jd;
-  } else if (m < 8) {
-    jd -= Math.floor((m + 1) / 2);
-  } else {
-    jd -= Math.floor(m / 2);
-  }
-
-  // Recalculate using proper Julian Day Number
+  // Proper Julian Day Number
   const a = Math.floor((14 - (m + 1)) / 12);
   const yy = y + 4800 - a;
   const mm = (m + 1) + 12 * a - 3;
