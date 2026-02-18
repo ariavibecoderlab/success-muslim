@@ -85,8 +85,9 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Weighted scoring (Iman 40%, Wellness 30%, Prod 30%) | ❌ | P0 |
-| Life Score card on Home | ❌ | P0 |
+| Weighted scoring (Iman 40%, Wellness 30%, Prod 30%) | ✅ | `src/lib/life-score.ts` |
+| Life Score card on Home | ✅ | Circular ring + pillar bars |
+| Weekly score trend chart | ✅ | Bar chart with 7-day history |
 
 ---
 
@@ -94,9 +95,9 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Life Score Card | ❌ | P0 |
-| Today Overview cards | ❌ | P0 |
-| Quick Log buttons | ❌ | P1 |
+| Life Score Card | ✅ | Ring gauge + pillar breakdowns |
+| Today Overview cards | ✅ | Water, MITs, Habits, Sleep |
+| Quick Log buttons | ✅ | 8 buttons (Prayer, Quran, Dhikr, Fast, Water, Sleep, Tasks, Habits) |
 
 ---
 
@@ -114,12 +115,11 @@
 ### P0 — Core Loop
 1. ~~Salah Tracking~~ ✅
 2. ~~Database sync for all modules~~ ✅
-3. Life Score Engine
-4. Home Dashboard overhaul
+3. ~~Life Score Engine~~ ✅
+4. ~~Home Dashboard overhaul~~ ✅
 
 ### P1 — Key Features
 5. Quran Tracker
 6. Profile/Settings consolidation
 7. Sleep & Wake targets
-8. Quick Log buttons on Home
-9. Replace Family tab → Profile tab
+8. Replace Family tab → Profile tab
