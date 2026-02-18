@@ -37,7 +37,7 @@
 | Bottom tab: Iman | ✅ | Deen route |
 | Bottom tab: Wellness | ✅ | Health route |
 | Bottom tab: Tasks | ✅ | Productivity route |
-| Bottom tab: Profile | ❌ | Currently "Family" — needs replacement |
+| Bottom tab: Profile | ✅ | Replaced Family → Profile/Settings |
 
 ---
 
@@ -106,7 +106,7 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Display name, city, country | ✅ | Settings page |
-| Replace Family tab → Profile tab | ❌ | P1 |
+| Replace Family tab → Profile tab | ✅ | Done |
 
 ---
 

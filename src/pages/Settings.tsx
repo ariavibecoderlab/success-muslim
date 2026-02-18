@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, LogOut, Save } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { UserCircle, LogOut, Save } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import EditableText from '@/components/cms/EditableText';
 
 const Settings = () => {
@@ -56,12 +56,12 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="max-w-md mx-auto px-6 h-14 flex items-center">
-          <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm">Back</span>
-          </Link>
+          <span className="text-lg font-bold text-primary flex items-center gap-2">
+            <UserCircle className="h-5 w-5" />
+            Profile
+          </span>
         </div>
       </nav>
 
@@ -103,6 +103,7 @@ const Settings = () => {
           Sign Out
         </Button>
       </main>
+      <div className="h-20" />
     </div>
   );
 };
