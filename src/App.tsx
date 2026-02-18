@@ -28,6 +28,8 @@ import DhikrCounter from "./pages/DhikrCounter";
 import ZakatCalculator from "./pages/ZakatCalculator";
 import SunnahTracker from "./pages/SunnahTracker";
 import QuranTracker from "./pages/QuranTracker";
+import QuranReader from "./pages/deen/QuranReader";
+import SurahReader from "./pages/deen/SurahReader";
 import PrayerTimes from "./pages/deen/PrayerTimes";
 import HealthBMI from "./pages/health/HealthBMI";
 import HealthWeight from "./pages/health/HealthWeight";
@@ -83,7 +85,9 @@ const App = () => (
               <Route path="/deen/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
               <Route path="/deen/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
               <Route path="/deen/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
-              <Route path="/deen/quran" element={<AuthGuard><QuranTracker /></AuthGuard>} />
+              <Route path="/deen/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
+              <Route path="/deen/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
+              <Route path="/deen/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
               <Route path="/deen/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
               <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
               <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
