@@ -105,6 +105,9 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 | Surah Reader | `/deen/quran/read/:num` | Done | DB (API + `quran_reading_sessions`) |
 | Quran Memorization | `/deen/quran/read/:num` | Done | DB (`quran_memorization`) |
 | Quran Tracker (opt-in) | `/deen/quran` | Done | DB (`quran_preferences`, `quran_reading_sessions`) |
+| Qiyam Planner | `/deen/qiyam` | Done | DB (`qiyam_log`, `qiyam_settings`) |
+| Ramadan Optimizer | `/deen/ramadan` | Done | DB (`ramadan_settings`, `ramadan_daily_log`) |
+| Hajj/Umrah Planner | `/deen/hajj` | Done | DB (`hajj_umrah_progress`) |
 
 ---
 

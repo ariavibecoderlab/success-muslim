@@ -72,6 +72,9 @@
 | Quran Tracker (opt-in) | ✅ | Gentle onboarding prompt, auto-tracking, daily goal, streak |
 | Quran Reading Heatmap | ✅ | 90-day calendar heatmap on tracker dashboard |
 | Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
+| Qiyam Planner | ✅ | Tahajjud window calc, sleep/wake settings, streak, alarm, DB synced |
+| Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals, Laylatul Qadr, summary |
+| Hajj/Umrah Planner | ✅ | Step-by-step guides with duas, packing checklist, progress tracking, DB synced |
 
 ---
 
