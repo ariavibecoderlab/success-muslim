@@ -31,6 +31,7 @@ import QuranTracker from "./pages/QuranTracker";
 import QuranReader from "./pages/deen/QuranReader";
 import SurahReader from "./pages/deen/SurahReader";
 import PrayerTimes from "./pages/deen/PrayerTimes";
+import DeenFasting from "./pages/deen/DeenFasting";
 import HealthBMI from "./pages/health/HealthBMI";
 import HealthWeight from "./pages/health/HealthWeight";
 import HealthHydration from "./pages/health/HealthHydration";
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/deen/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
               <Route path="/deen/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
               <Route path="/deen/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
+              <Route path="/deen/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
               <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
               <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
               <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />

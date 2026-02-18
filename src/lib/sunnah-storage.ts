@@ -5,6 +5,7 @@ export interface SunnahItem {
   label: string;
   category: 'prayer' | 'dhikr' | 'quran' | 'other';
   enabled: boolean;
+  isCustom?: boolean;
 }
 
 export interface SunnahDayLog {
@@ -28,6 +29,9 @@ export const DEFAULT_SUNNAH_ITEMS: SunnahItem[] = [
   { id: 'tahajjud', label: 'Tahajjud / Qiyamullail', category: 'prayer', enabled: false },
   { id: 'witr', label: 'Solat Witr', category: 'prayer', enabled: true },
   { id: 'sadaqah', label: 'Daily Sadaqah', category: 'other', enabled: false },
+  { id: 'miswak', label: 'Use Miswak', category: 'other', enabled: false },
+  { id: 'sleep-wudu', label: 'Sleep with Wudu', category: 'other', enabled: false },
+  { id: 'ayat-kursi', label: 'Ayat Kursi after Fard', category: 'dhikr', enabled: false },
 ];
 
 export function getSunnahItems(): SunnahItem[] {
@@ -103,4 +107,24 @@ export function getSunnahStreak(): number {
   } catch {
     return 0;
   }
+}
+
+/** Get week consistency data for the sunnah tracker */
+export function getSunnahWeekData(): { label: string; percentage: number }[] {
+  const items = getSunnahItems().filter(i => i.enabled);
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const result: { label: string; percentage: number }[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().split('T')[0];
+    const log = getDayLog(key);
+    const doneCount = items.length > 0
+      ? log.completed.filter(id => items.find(item => item.id === id)).length
+      : 0;
+    const pct = items.length > 0 ? Math.round((doneCount / items.length) * 100) : 0;
+    result.push({ label: dayLabels[d.getDay()], percentage: pct });
+  }
+  return result;
 }

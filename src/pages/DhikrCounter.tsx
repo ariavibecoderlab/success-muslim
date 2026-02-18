@@ -1,21 +1,23 @@
-import { useState, useCallback } from 'react';
-import { RotateCcw, Check } from 'lucide-react';
+import { useState, useCallback, useRef } from 'react';
+import { RotateCcw, Check, Plus, Flame, Trash2, X, History } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getPresets, getDailyDhikr, saveDhikrCount, type DhikrPreset } from '@/lib/dhikr-storage';
+import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset, getDhikrStreak, getDhikrHistory } from '@/lib/dhikr-storage';
 import SubPageLayout from '@/components/SubPageLayout';
-import EditableText from '@/components/cms/EditableText';
 
 const DEEN_SIBLINGS = [
   { path: '/deen/dhikr', label: 'Dhikr' },
   { path: '/deen/sunnah', label: 'Sunnah' },
+  { path: '/deen/fasting', label: 'Fasting' },
   { path: '/deen/zakat', label: 'Zakat' },
 ];
 
 const DhikrCounter = () => {
-  const presets = getPresets();
+  const [presets, setPresetsState] = useState(getPresets);
   const [selectedPreset, setSelectedPreset] = useState<DhikrPreset>(presets[0]);
   const [count, setCount] = useState(() => {
     const daily = getDailyDhikr();
@@ -23,6 +25,16 @@ const DhikrCounter = () => {
     return session?.count || 0;
   });
   const [pulse, setPulse] = useState(false);
+  const [ripples, setRipples] = useState<number[]>([]);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newArabic, setNewArabic] = useState('');
+  const [newTarget, setNewTarget] = useState('33');
+  const rippleId = useRef(0);
+
+  const streak = getDhikrStreak();
+  const history = getDhikrHistory(7);
 
   const selectPreset = useCallback((preset: DhikrPreset) => {
     setSelectedPreset(preset);
@@ -31,12 +43,22 @@ const DhikrCounter = () => {
     setCount(session?.count || 0);
   }, []);
 
+  const triggerHaptic = () => {
+    if (navigator.vibrate) navigator.vibrate(15);
+  };
+
   const handleTap = useCallback(() => {
     const newCount = count + 1;
     setCount(newCount);
     setPulse(true);
+    triggerHaptic();
     setTimeout(() => setPulse(false), 200);
     saveDhikrCount(selectedPreset.id, newCount, selectedPreset.target);
+    
+    // Add ripple
+    const id = ++rippleId.current;
+    setRipples(prev => [...prev, id]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r !== id)), 600);
   }, [count, selectedPreset]);
 
   const handleReset = useCallback(() => {
@@ -44,77 +66,165 @@ const DhikrCounter = () => {
     saveDhikrCount(selectedPreset.id, 0, selectedPreset.target);
   }, [selectedPreset]);
 
+  const handleAddPreset = () => {
+    if (!newName.trim()) return;
+    const id = newName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const newPreset: DhikrPreset = {
+      id,
+      name: newName.trim(),
+      arabic: newArabic.trim() || newName.trim(),
+      target: parseInt(newTarget) || 33,
+      isCustom: true,
+    };
+    const updated = [...presets, newPreset];
+    savePresets(updated);
+    setPresetsState(updated);
+    setNewName('');
+    setNewArabic('');
+    setNewTarget('33');
+    setShowAddDialog(false);
+    selectPreset(newPreset);
+  };
+
+  const handleDeletePreset = (id: string) => {
+    const updated = presets.filter(p => p.id !== id);
+    savePresets(updated);
+    setPresetsState(updated);
+    if (selectedPreset.id === id) selectPreset(updated[0]);
+  };
+
   const progress = Math.min((count / selectedPreset.target) * 100, 100);
   const completed = count >= selectedPreset.target;
   const daily = getDailyDhikr();
+  const completedSessions = daily.sessions.filter(s => s.count >= s.target).length;
 
   return (
     <SubPageLayout title="Dhikr Counter" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/dhikr">
-      <div className="space-y-6">
+      <div className="space-y-5">
+
+        {/* Streak + Stats Bar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-primary/10 rounded-full px-3 py-1.5">
+              <Flame className="h-4 w-4 text-primary" />
+              <span className="text-sm font-bold">{streak}</span>
+              <span className="text-[10px] text-muted-foreground">day streak</span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowHistoryDialog(true)}>
+              <History className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
         {/* Preset Selector */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
           {presets.map(p => (
             <button
               key={p.id}
               onClick={() => selectPreset(p)}
-              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                 selectedPreset.id === p.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary text-secondary-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-md'
+                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
               }`}
             >
               {p.name}
             </button>
           ))}
+          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+            <DialogTrigger asChild>
+              <button className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/50 text-muted-foreground hover:bg-secondary transition-colors border border-dashed border-border">
+                <Plus className="h-3 w-3 inline mr-1" />Custom
+              </button>
+            </DialogTrigger>
+            <DialogContent className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle>Add Custom Dhikr</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <Input placeholder="Name (e.g. Salawat)" value={newName} onChange={e => setNewName(e.target.value)} />
+                <Input placeholder="Arabic text (optional)" value={newArabic} onChange={e => setNewArabic(e.target.value)} dir="rtl" className="font-arabic text-lg" />
+                <Input type="number" placeholder="Target count" value={newTarget} onChange={e => setNewTarget(e.target.value)} />
+                <Button onClick={handleAddPreset} className="w-full" disabled={!newName.trim()}>Add Dhikr</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Arabic Display */}
         <div className="text-center space-y-1">
           <p className="text-3xl font-arabic leading-relaxed" dir="rtl">{selectedPreset.arabic}</p>
-          <p className="text-sm text-muted-foreground">{selectedPreset.name}</p>
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-sm text-muted-foreground">{selectedPreset.name}</p>
+            {selectedPreset.isCustom && (
+              <button onClick={() => handleDeletePreset(selectedPreset.id)} className="text-muted-foreground/50 hover:text-destructive transition-colors">
+                <Trash2 className="h-3 w-3" />
+              </button>
+            )}
+          </div>
         </div>
 
-        {/* Counter Circle */}
+        {/* Giant Tap Counter Circle */}
         <div className="flex justify-center">
           <motion.button
             onClick={handleTap}
-            animate={pulse ? { scale: [1, 1.05, 1] } : {}}
-            transition={{ duration: 0.2 }}
-            className="relative w-48 h-48 rounded-full flex flex-col items-center justify-center select-none active:scale-95 transition-transform"
+            animate={pulse ? { scale: [1, 1.03, 1] } : {}}
+            transition={{ duration: 0.15 }}
+            className="relative w-56 h-56 rounded-full flex flex-col items-center justify-center select-none touch-manipulation"
             style={{
               background: `conic-gradient(hsl(var(--primary)) ${progress * 3.6}deg, hsl(var(--secondary)) ${progress * 3.6}deg)`,
             }}
           >
-            <div className="absolute inset-2 rounded-full bg-background flex flex-col items-center justify-center">
+            {/* Ripple effects */}
+            {ripples.map(id => (
+              <motion.div
+                key={id}
+                initial={{ scale: 0.8, opacity: 0.5 }}
+                animate={{ scale: 1.5, opacity: 0 }}
+                transition={{ duration: 0.6 }}
+                className="absolute inset-0 rounded-full border-2 border-primary/30"
+              />
+            ))}
+
+            <div className={`absolute inset-2 rounded-full flex flex-col items-center justify-center transition-colors duration-300 ${
+              completed ? 'bg-primary/10' : 'bg-background'
+            }`}>
               <AnimatePresence mode="popLayout">
                 <motion.span
                   key={count}
                   initial={{ y: -10, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   exit={{ y: 10, opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="text-4xl font-bold"
+                  transition={{ duration: 0.12 }}
+                  className={`text-5xl font-bold tabular-nums ${completed ? 'text-primary' : ''}`}
                 >
                   {count}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-muted-foreground">/ {selectedPreset.target}</span>
-              {completed && <Check className="h-5 w-5 text-primary mt-1" />}
+              <span className="text-xs text-muted-foreground mt-0.5">/ {selectedPreset.target}</span>
+              {completed && (
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-1">
+                  <Check className="h-6 w-6 text-primary" />
+                </motion.div>
+              )}
             </div>
           </motion.button>
         </div>
 
-        {/* Controls */}
-        <div className="flex justify-center gap-3">
-          <Button variant="outline" size="sm" onClick={handleReset} className="gap-1.5">
-            <RotateCcw className="h-4 w-4" /> Reset
+        {/* Tap hint + Reset */}
+        <div className="flex items-center justify-center gap-4">
+          <p className="text-[10px] text-muted-foreground">Tap the circle to count</p>
+          <Button variant="ghost" size="sm" onClick={handleReset} className="gap-1 text-xs h-7">
+            <RotateCcw className="h-3 w-3" /> Reset
           </Button>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <EditableText elementKey="dhikr.progress" defaultText="Progress" tag="span" />
+            <span>Progress</span>
             <span>{Math.round(progress)}%</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -123,31 +233,93 @@ const DhikrCounter = () => {
         {/* Today's Summary */}
         <Card>
           <CardContent className="p-4">
-            <EditableText elementKey="dhikr.summary" defaultText="Today's Summary" tag="h3" className="text-sm font-semibold mb-3" />
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold">Today's Summary</h3>
+              <span className="text-xs text-muted-foreground">{completedSessions} of {presets.length} complete</span>
+            </div>
             <div className="space-y-2">
               {daily.sessions.filter(s => s.count > 0).map(s => {
                 const preset = presets.find(p => p.id === s.presetId);
+                const pct = Math.min(100, (s.count / s.target) * 100);
                 return (
-                  <div key={s.presetId} className="flex items-center justify-between text-sm">
-                    <span>{preset?.name || s.presetId}</span>
-                    <span className="text-muted-foreground">
-                      {s.count}/{s.target}
-                      {s.count >= s.target && <Check className="inline h-3 w-3 text-primary ml-1" />}
-                    </span>
+                  <div key={s.presetId} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-xs">{preset?.name || s.presetId}</span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        {s.count}/{s.target}
+                        {s.count >= s.target && <Check className="h-3 w-3 text-primary" />}
+                      </span>
+                    </div>
+                    <Progress value={pct} className="h-1" />
                   </div>
                 );
               })}
               {daily.sessions.filter(s => s.count > 0).length === 0 && (
-                <EditableText elementKey="dhikr.empty" defaultText="No dhikr recorded today. Tap the circle to start!" tag="p" className="text-xs text-muted-foreground" />
+                <p className="text-xs text-muted-foreground text-center py-2">No dhikr recorded today. Tap the circle to start!</p>
               )}
             </div>
             {daily.totalCount > 0 && (
-              <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
-                Total today: <span className="font-semibold text-foreground">{daily.totalCount}</span> counts
+              <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                <span>Total today</span>
+                <span className="font-bold text-foreground text-base">{daily.totalCount}</span>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* 7-Day History Mini Chart */}
+        {history.some(h => h.total > 0) && (
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="text-sm font-semibold mb-3">7-Day History</h3>
+              <div className="flex items-end gap-1 h-16">
+                {history.map((h, i) => {
+                  const max = Math.max(...history.map(x => x.total), 1);
+                  const height = (h.total / max) * 100;
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="w-full rounded-t-sm bg-primary/20 relative" style={{ height: `${Math.max(height, 4)}%` }}>
+                        {h.total > 0 && (
+                          <div
+                            className="absolute bottom-0 w-full rounded-t-sm bg-primary transition-all"
+                            style={{ height: '100%' }}
+                          />
+                        )}
+                      </div>
+                      <span className="text-[8px] text-muted-foreground">{h.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* History Dialog */}
+        <Dialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Session History</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {history.map((h, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-secondary/30">
+                  <div>
+                    <p className="text-sm font-medium">{h.date}</p>
+                    <p className="text-[10px] text-muted-foreground">{h.sessions} sessions</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold">{h.total}</p>
+                    <p className="text-[10px] text-muted-foreground">counts</p>
+                  </div>
+                </div>
+              ))}
+              {history.every(h => h.total === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">No history yet</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </SubPageLayout>
   );

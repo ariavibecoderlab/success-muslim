@@ -52,8 +52,9 @@
 | Deen Page Revamp | ✅ | Prayer hero card, summary strip, live tool grid, deen score |
 |---------|--------|-------|
 | Salah Tracking (On Time/Late/Missed) | ✅ | Dashboard popover + DB sync |
-| Dhikr Counter | ✅ | Presets + DB sync |
-| Sunnah Tracker | ✅ | Daily checklist + DB sync |
+| Dhikr Counter | ✅ | Presets + custom dhikr + haptic feedback + streak + 7-day history + DB sync |
+| Sunnah Tracker | ✅ | Daily checklist + custom items + completion ring + week dots + celebration + DB sync |
+| Deen Fasting Tracker | ✅ | Sunnah fasting calendar, suhoor/iftar times, streak, recommended days, Mon/Thu/White days |
 | Qada Solat (setup + tracking) | ✅ | Full flow + DB sync |
 | Ramadhan Qada (setup + tracking) | ✅ | Full flow + DB sync |
 | Fidyah Calculator | ✅ | Display only + DB sync |
