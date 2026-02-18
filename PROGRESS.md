@@ -150,6 +150,25 @@
 
 ---
 
+## 🚀 ONBOARDING
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Landing page hero CTA | ✅ | "Start Your Journey" → auth flow |
+| Google Sign-In | ✅ | One-tap OAuth via Lovable Cloud |
+| Email/password auth | ✅ | With email verification |
+| Multi-step onboarding (7 steps) | ✅ | Slide transitions, progress bar, back button |
+| Step 2: Name collection | ✅ | Pre-fills from Google profile |
+| Step 3: Focus areas selection | ✅ | 6 areas, multi-select, saved to profiles |
+| Step 4: Consistency level | ✅ | 3 tiers, saved to profiles |
+| Step 5: Location permission | ✅ | GPS or manual city/country, saved to prayer_settings |
+| Step 6: Notification permission | ✅ | Web Notifications API |
+| Step 7: Celebration screen | ✅ | Confetti, Hijri date, next prayer countdown, motivational quote |
+| Resume from last step | ✅ | onboarding_step persisted to profiles |
+| First-time dashboard tooltips | ✅ | 3-step tour (Life Score, Quick Log, Deen tab) |
+
+---
+
 ## 🚀 IMPLEMENTATION PRIORITY
 
 ### P0 — Core Loop
@@ -163,6 +182,8 @@
 6. ~~Profile/Settings consolidation~~ ✅
 7. ~~Sleep & Wake targets~~ ✅
 8. ~~Replace Family tab → Profile tab~~ ✅
+9. ~~Onboarding flow (7-step + Google OAuth)~~ ✅
+10. ~~First-time dashboard tooltips~~ ✅
 
 ### P2 — Wealth Module
 9. ~~Budget Tracker~~ ✅

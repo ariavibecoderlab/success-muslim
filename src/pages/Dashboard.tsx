@@ -57,6 +57,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import EditableText from "@/components/cms/EditableText";
+import OnboardingTooltips from "@/components/OnboardingTooltips";
 import { calculateLifeScore, saveCurrentDayScore, getScoreColor, getScoreLabel, getWeeklyScores } from "@/lib/life-score";
 import { getHydration } from "@/lib/health-storage";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
@@ -222,6 +223,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <OnboardingTooltips />
       <AppHeader showHijriDate showGregorianDate />
 
       <main className="max-w-4xl mx-auto px-5 py-6 space-y-5">

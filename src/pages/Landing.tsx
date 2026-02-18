@@ -103,18 +103,24 @@ const Landing = () => {
           </motion.div>
 
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
-            <EditableText elementKey="hero.subtitle" defaultText="Track your prayers, health, wealth, productivity, and family — all in one beautiful app. Get a daily Life Score and build consistent habits that matter." tag="p" className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10" />
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
+              Your all-in-one companion for deen, health, and life.
+            </p>
           </motion.div>
 
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}
             className="flex flex-col sm:flex-row items-center justify-center gap-4"
           >
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shadow-lg">
-              <Link to="/auth"><EditableText elementKey="hero.cta" defaultText="Start Free" tag="span" /> <ArrowRight className="ml-2 h-5 w-5" /></Link>
+              <Link to="/auth">Start Your Journey <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="text-base px-8 py-6 rounded-xl">
-              <a href="#how-it-works"><EditableText elementKey="hero.cta2" defaultText="See How It Works" tag="span" /></a>
-            </Button>
+          </motion.div>
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}
+            className="text-center mt-4"
+          >
+            <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Already have an account? <span className="text-primary font-medium">Sign in</span>
+            </Link>
           </motion.div>
         </div>
       </section>

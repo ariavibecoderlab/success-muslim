@@ -153,10 +153,13 @@ Current state: "Coming Soon" page at `/family`.
 | Component | Status |
 |-----------|--------|
 | Email/password auth | Done |
+| Google OAuth (Lovable Cloud) | Done |
 | User profiles table | Done |
 | Role-based access (RBAC) | Done |
 | AuthGuard + AdminGuard | Done |
 | Admin Dashboard/Users/Analytics/Announcements | Done |
+| Onboarding Flow (7-step) | Done |
+| First-time Dashboard Tooltips | Done |
 
 ### B. CMS Visual Editor -- BUILT
 
