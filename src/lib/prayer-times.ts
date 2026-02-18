@@ -1,4 +1,5 @@
 import { isMalaysia, findZoneByCity, DEFAULT_ZONE } from './jakim-zones';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PrayerTime {
   name: string;
@@ -150,8 +151,8 @@ export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): 
   const country = settings.country || 'Malaysia';
   const city = settings.city || 'Kuala Lumpur';
 
-  // Check cache
-  const cacheKey = `${STORAGE_KEY}_${settings.calculation_method || 3}_${settings.madhab || 'shafi'}_${settings.latitude || city}`;
+  // Check cache - include city, country, lat/lng in key for proper invalidation
+  const cacheKey = `${STORAGE_KEY}_${settings.calculation_method || 3}_${settings.madhab || 'shafi'}_${city}_${country}_${settings.latitude || ''}_${settings.longitude || ''}`;
   try {
     const cached = localStorage.getItem(cacheKey);
     if (cached) {
@@ -178,8 +179,21 @@ async function fetchFromJakim(city: string, settings: Partial<PrayerSettings>): 
   const zone = findZoneByCity(city) || DEFAULT_ZONE;
 
   try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    const headers: Record<string, string> = {
+      'apikey': anonKey,
+      'Content-Type': 'application/json',
+    };
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(
-      `https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=${zone}`
+      `${supabaseUrl}/functions/v1/jakim-proxy?zone=${zone}&endpoint=takwimsolat`,
+      { headers }
     );
     const json = await res.json();
 

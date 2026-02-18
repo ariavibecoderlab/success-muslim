@@ -1,4 +1,5 @@
 import { format } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 const HIJRI_MONTHS = [
   'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
@@ -7,13 +8,26 @@ const HIJRI_MONTHS = [
 ];
 
 /**
- * Fetch Hijri date from JAKIM e-solat API (most accurate for Malaysia)
+ * Fetch Hijri date from JAKIM e-solat API via proxy (most accurate for Malaysia)
  */
 export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
   try {
     const dateStr = format(date, 'yyyy-MM-dd');
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+    
+    const { data: { session } } = await supabase.auth.getSession();
+    const headers: Record<string, string> = {
+      'apikey': anonKey,
+      'Content-Type': 'application/json',
+    };
+    if (session?.access_token) {
+      headers['Authorization'] = `Bearer ${session.access_token}`;
+    }
+
     const res = await fetch(
-      `https://www.e-solat.gov.my/index.php?r=esolatApi/tarikhtakwim&period=today&datetype=miladi&date=${dateStr}`
+      `${supabaseUrl}/functions/v1/jakim-proxy?endpoint=tarikhtakwim&date=${dateStr}`,
+      { headers }
     );
     const json = await res.json();
 
