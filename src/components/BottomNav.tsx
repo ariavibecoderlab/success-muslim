@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Moon, Heart, Wallet, ListChecks, UserCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const tabs = [
   { icon: Home, label: 'Home', path: '/dashboard' },
@@ -17,15 +18,22 @@ const BottomNav = () => {
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border">
       <div className="max-w-lg mx-auto flex items-center justify-around h-16 pb-[env(safe-area-inset-bottom)]">
         {tabs.map(tab => {
-          const active = pathname === tab.path;
+          const active = pathname === tab.path || pathname.startsWith(tab.path + '/');
           return (
             <Link
               key={tab.path}
               to={tab.path}
-              className={`flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
+              {active && (
+                <motion.span
+                  layoutId="bottomnav-indicator"
+                  className="absolute -top-px left-2 right-2 h-[2px] rounded-full bg-primary"
+                  transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                />
+              )}
               <tab.icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : ''}`} />
               <span className="text-[10px] font-medium leading-none">{tab.label}</span>
             </Link>
