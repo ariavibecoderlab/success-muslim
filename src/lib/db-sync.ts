@@ -425,6 +425,38 @@ export async function pullFidyahHistory(): Promise<any[] | null> {
 }
 
 // =============================================
+// QURAN
+// =============================================
+
+export function syncQuranLog(date: string, pagesRead: number, juzNumber: number | null, surahName: string, notes: string) {
+  syncAsync(async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+    await (supabase.from('quran_log') as any).upsert({
+      user_id: userId, date, pages_read: pagesRead,
+      juz_number: juzNumber, surah_name: surahName, notes,
+    }, { onConflict: 'user_id,date' });
+  });
+}
+
+export async function pullQuranLog(): Promise<Record<string, any> | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data } = await (supabase.from('quran_log') as any).select('date, pages_read, juz_number, surah_name, notes').eq('user_id', userId);
+  if (!data || data.length === 0) return null;
+  const result: Record<string, any> = {};
+  for (const r of data) {
+    result[r.date] = {
+      pagesRead: r.pages_read,
+      juzNumber: r.juz_number,
+      surahName: r.surah_name || '',
+      notes: r.notes || '',
+    };
+  }
+  return result;
+}
+
+// =============================================
 // USER ACTIVITY LOGGING
 // =============================================
 
@@ -445,7 +477,7 @@ export async function hydrateFromDatabase(): Promise<void> {
   if (!userId) return;
 
   try {
-    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, tasks, habits, habitLog, lifeAreas, sunnah, qada, ramadhan, fidyah] = await Promise.all([
+    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, tasks, habits, habitLog, lifeAreas, sunnah, qada, ramadhan, fidyah, quran] = await Promise.all([
       pullSalahLogs(),
       pullDhikrSessions(),
       pullBMI(),
@@ -462,6 +494,7 @@ export async function hydrateFromDatabase(): Promise<void> {
       pullQadaSolat(),
       pullRamadhanQada(),
       pullFidyahHistory(),
+      pullQuranLog(),
     ]);
 
     if (salah) localStorage.setItem('salah_tracking', JSON.stringify(salah));
@@ -486,6 +519,7 @@ export async function hydrateFromDatabase(): Promise<void> {
       if (ramadhan.progress && Object.keys(ramadhan.progress).length > 0) localStorage.setItem('ramadhan_qada_progress', JSON.stringify(ramadhan.progress));
     }
     if (fidyah) localStorage.setItem('fidyah_history', JSON.stringify(fidyah));
+    if (quran) localStorage.setItem('quran_log', JSON.stringify(quran));
 
     console.log('[db-sync] Hydration from database complete');
   } catch (err) {

@@ -53,7 +53,7 @@
 | Fidyah Calculator | ✅ | Display only + DB sync |
 | Zakat Calculator | ✅ | No persistence needed |
 | Prayer Times | ⚠️ | API-based, no dedicated page |
-| Quran Tracker | ❌ | P1 |
+| Quran Tracker | ✅ | Daily pages, juz tracking, khatam progress, weekly chart, DB sync |
 
 ---
 
@@ -119,7 +119,7 @@
 4. ~~Home Dashboard overhaul~~ ✅
 
 ### P1 — Key Features
-5. Quran Tracker
+5. ~~Quran Tracker~~ ✅
 6. Profile/Settings consolidation
 7. Sleep & Wake targets
 8. Replace Family tab → Profile tab
