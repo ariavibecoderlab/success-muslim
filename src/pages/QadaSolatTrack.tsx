@@ -11,7 +11,7 @@ import SubPageLayout from '@/components/SubPageLayout';
 
 const PRAYERS: PrayerType[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
-const DEEN_TRACKERS = [
+const IMAN_TRACKERS = [
   { path: '/qada-solat/track', label: 'Qada Solat' },
   { path: '/ramadhan-qada/track', label: 'Ramadhan' },
   { path: '/fidyah', label: 'Fidyah' },
@@ -34,7 +34,7 @@ const QadaSolatTrack = () => {
 
   if (!setup) {
     return (
-      <SubPageLayout title="Qada Solat" backTo="/deen">
+      <SubPageLayout title="Qada Solat" backTo="/iman">
         <div className="flex items-center justify-center min-h-[50vh]">
           <Card>
             <CardContent className="p-8 text-center">
@@ -58,7 +58,7 @@ const QadaSolatTrack = () => {
     : "Bismillah, start your qada for today";
 
   return (
-    <SubPageLayout title="Qada Solat" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/qada-solat/track">
+    <SubPageLayout title="Qada Solat" backTo="/iman" siblingRoutes={IMAN_TRACKERS} currentPath="/qada-solat/track">
       <div className="space-y-6">
         {/* Overall progress */}
         <Card>

@@ -11,7 +11,7 @@ import EditableText from '@/components/cms/EditableText';
 
 const CURRENCIES = ['MYR', 'USD', 'GBP', 'EUR', 'SAR', 'IDR', 'SGD'];
 
-const DEEN_TRACKERS = [
+const IMAN_TRACKERS = [
   { path: '/qada-solat/track', label: 'Qada Solat' },
   { path: '/ramadhan-qada/track', label: 'Ramadhan' },
   { path: '/fidyah', label: 'Fidyah' },
@@ -37,7 +37,7 @@ const FidyahPage = () => {
   };
 
   return (
-    <SubPageLayout title="Fidyah Calculator" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/fidyah">
+    <SubPageLayout title="Fidyah Calculator" backTo="/iman" siblingRoutes={IMAN_TRACKERS} currentPath="/fidyah">
       <div className="space-y-6">
         <div>
           <EditableText elementKey="fidyah.title" defaultText="Calculate Fidyah" tag="h2" className="text-xl font-bold mb-1" />

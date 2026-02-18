@@ -15,15 +15,15 @@ import { motion } from 'framer-motion';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes } from '@/lib/prayer-times';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/prayer-times', label: 'Prayer Times' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/qiyam', label: 'Qiyam' },
-  { path: '/deen/ramadan', label: 'Ramadan' },
-  { path: '/deen/hajj', label: 'Hajj/Umrah' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/prayer-times', label: 'Prayer Times' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/qiyam', label: 'Qiyam' },
+  { path: '/iman/ramadan', label: 'Ramadan' },
+  { path: '/iman/hajj', label: 'Hajj/Umrah' },
 ];
 
 interface QiyamSettings {
@@ -190,7 +190,7 @@ const QiyamPlanner = () => {
   }, [logs, today]);
 
   return (
-    <SubPageLayout title="Qiyam Planner" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/qiyam">
+    <SubPageLayout title="Qiyam Planner" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/qiyam">
       <div className="space-y-5">
         {/* Tahajjud Window Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>

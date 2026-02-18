@@ -15,8 +15,8 @@ const TOOLTIPS = [
     desc: 'Tap any button to quickly log prayers, Quran reading, water intake, and more.',
   },
   {
-    id: 'deen-tab',
-    title: 'Explore Deen',
+    id: 'iman-tab',
+    title: 'Explore Iman',
     desc: 'Your spiritual command center — prayer times, Quran, dhikr, and advanced planners all in one place.',
   },
 ];

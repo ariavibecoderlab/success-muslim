@@ -43,7 +43,7 @@ const QadaSolatSetupPage = () => {
   };
 
   return (
-    <SubPageLayout title="Qada Solat Setup" backTo="/deen">
+    <SubPageLayout title="Qada Solat Setup" backTo="/iman">
       <div>
         {/* Progress */}
         <div className="flex items-center gap-2 mb-2">

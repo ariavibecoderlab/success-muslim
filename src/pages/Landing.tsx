@@ -115,7 +115,7 @@ const Landing = () => {
 
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10">
-              Your all-in-one companion for deen, health, and life.
+              Your all-in-one companion for iman, health, and life.
             </p>
           </motion.div>
 

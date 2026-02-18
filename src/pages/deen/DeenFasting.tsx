@@ -11,11 +11,11 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths,
 import { useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/fasting', label: 'Fasting' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/fasting', label: 'Fasting' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -116,7 +116,7 @@ const DeenFasting = () => {
   }, [fastingLog]);
 
   return (
-    <SubPageLayout title="Fasting Tracker" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/fasting">
+    <SubPageLayout title="Fasting Tracker" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/fasting">
       <div className="space-y-5">
 
         {/* Suhoor & Iftar Card */}

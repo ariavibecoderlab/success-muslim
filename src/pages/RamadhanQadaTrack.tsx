@@ -8,7 +8,7 @@ import { isRecommendedFastingDay } from '@/lib/calculations';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
 
-const DEEN_TRACKERS = [
+const IMAN_TRACKERS = [
   { path: '/qada-solat/track', label: 'Qada Solat' },
   { path: '/ramadhan-qada/track', label: 'Ramadhan' },
   { path: '/fidyah', label: 'Fidyah' },
@@ -35,7 +35,7 @@ const RamadhanQadaTrack = () => {
 
   if (!setup) {
     return (
-      <SubPageLayout title="Ramadhan Qada" backTo="/deen">
+      <SubPageLayout title="Ramadhan Qada" backTo="/iman">
         <div className="flex items-center justify-center min-h-[50vh]">
           <Card>
             <CardContent className="p-8 text-center">
@@ -61,7 +61,7 @@ const RamadhanQadaTrack = () => {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <SubPageLayout title="Ramadhan Qada" backTo="/deen" siblingRoutes={DEEN_TRACKERS} currentPath="/ramadhan-qada/track">
+    <SubPageLayout title="Ramadhan Qada" backTo="/iman" siblingRoutes={IMAN_TRACKERS} currentPath="/ramadhan-qada/track">
       <div className="space-y-6">
         <Card>
           <CardContent className="p-6">

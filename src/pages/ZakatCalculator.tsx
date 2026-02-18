@@ -11,11 +11,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import SubPageLayout from '@/components/SubPageLayout';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/sadaqah', label: 'Sadaqah' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/sadaqah', label: 'Sadaqah' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 interface ZakatRecord {
@@ -115,7 +115,7 @@ const ZakatCalculator = () => {
   ];
 
   return (
-    <SubPageLayout title="Zakat Calculator" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/zakat">
+    <SubPageLayout title="Zakat Calculator" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/zakat">
       <div className="space-y-5">
         {/* Currency Selector */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">

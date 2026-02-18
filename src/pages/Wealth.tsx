@@ -10,7 +10,7 @@ import { format, startOfMonth, endOfMonth } from 'date-fns';
 const features = [
   { icon: Receipt, title: 'Budget Tracker', desc: 'Income, expenses & balance overview', path: '/wealth/budget', ready: true },
   { icon: PiggyBank, title: 'Savings Goals', desc: 'Hajj, Umrah, Qurban & more', path: '/wealth/savings', ready: true },
-  { icon: Calculator, title: 'Zakat Calculator', desc: 'Nisab, gold, silver & savings', path: '/deen/zakat', ready: true },
+  { icon: Calculator, title: 'Zakat Calculator', desc: 'Nisab, gold, silver & savings', path: '/iman/zakat', ready: true },
   { icon: HandCoins, title: 'Sadaqah Goals', desc: 'Monthly & yearly donation targets', path: '', ready: false },
 ];
 

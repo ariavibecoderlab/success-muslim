@@ -13,11 +13,11 @@ import {
   getEstimatedKhatamDays, TOTAL_PAGES,
 } from '@/lib/quran-storage';
 
-const DEEN_SIBLINGS = [
-  { path: '/deen/dhikr', label: 'Dhikr' },
-  { path: '/deen/sunnah', label: 'Sunnah' },
-  { path: '/deen/quran', label: 'Quran' },
-  { path: '/deen/zakat', label: 'Zakat' },
+const IMAN_SIBLINGS = [
+  { path: '/iman/dhikr', label: 'Dhikr' },
+  { path: '/iman/sunnah', label: 'Sunnah' },
+  { path: '/iman/quran', label: 'Quran' },
+  { path: '/iman/zakat', label: 'Zakat' },
 ];
 
 const QuranTracker = () => {
@@ -57,7 +57,7 @@ const QuranTracker = () => {
   const dashOffset = circumference - (khatamPercent / 100) * circumference;
 
   return (
-    <SubPageLayout title="Quran Tracker" backTo="/deen" siblingRoutes={DEEN_SIBLINGS} currentPath="/deen/quran">
+    <SubPageLayout title="Quran Tracker" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
       <div className="space-y-5">
 
         {/* Khatam Progress Ring */}
