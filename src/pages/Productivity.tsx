@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { ListChecks, Target, Flame, CheckCircle2, Star } from 'lucide-react';
+import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
@@ -53,14 +54,7 @@ const Productivity = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-4xl mx-auto px-6 h-16 flex items-center">
-          <span className="text-lg font-bold text-primary flex items-center gap-2">
-            <ListChecks className="h-5 w-5" />
-            Productivity
-          </span>
-        </div>
-      </nav>
+      <AppHeader title="Productivity" icon={ListChecks} />
 
       <main className="max-w-4xl mx-auto px-6 py-8">
         {/* Hero stats */}
