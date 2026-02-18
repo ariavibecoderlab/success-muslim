@@ -61,7 +61,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
 
       {/* Bottom navigation bar */}
       <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
-        <div className="max-w-md mx-auto h-14 flex items-center justify-between rounded-none px-[12px]">
+        <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
           {/* Left: prev page indicator */}
           <button
             onClick={() => prevRoute && navigate(prevRoute.path)}
@@ -74,7 +74,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
           {/* Center: back button */}
           <button
             onClick={() => navigate(backTo)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors text-sm font-medium text-card-foreground">
+            className="gap-2 py-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium px-[12px] items-center justify-end flex flex-row text-center border-muted-foreground">
 
             <ArrowLeft className="h-4 w-4" />
             Back
