@@ -68,11 +68,10 @@ const App = () => (
                 <Route path="/health" element={<Health />} />
                 <Route path="/wealth" element={<Wealth />} />
                 <Route path="/productivity" element={<Productivity />} />
-                <Route path="/family" element={<Family />} />
+                <Route path="/settings" element={<Settings />} />
               </Route>
 
               {/* Protected feature sub-pages (no bottom nav) */}
-              <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
               <Route path="/qada-solat/setup" element={<AuthGuard><QadaSolatSetup /></AuthGuard>} />
               <Route path="/qada-solat/track" element={<AuthGuard><QadaSolatTrack /></AuthGuard>} />
               <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
