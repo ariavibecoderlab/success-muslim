@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BedDouble, Moon } from 'lucide-react';
+import { BedDouble, Moon, Target } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,32 @@ import { getSleepLog, addSleepEntry, calculateSleepDuration, sleepQuality, today
 import { format, parseISO } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 
+const SLEEP_TARGETS_KEY = 'health_sleep_targets';
+
+interface SleepTargets {
+  bedtime: string;
+  wakeTime: string;
+}
+
+function getSleepTargets(): SleepTargets {
+  try {
+    const raw = localStorage.getItem(SLEEP_TARGETS_KEY);
+    return raw ? JSON.parse(raw) : { bedtime: '22:30', wakeTime: '05:30' };
+  } catch { return { bedtime: '22:30', wakeTime: '05:30' }; }
+}
+
+function saveSleepTargets(t: SleepTargets) {
+  localStorage.setItem(SLEEP_TARGETS_KEY, JSON.stringify(t));
+}
+
+function timeDiffMinutes(actual: string, target: string): number {
+  const [ah, am] = actual.split(':').map(Number);
+  const [th, tm] = target.split(':').map(Number);
+  let diff = (ah * 60 + am) - (th * 60 + tm);
+  if (diff > 720) diff -= 1440;
+  if (diff < -720) diff += 1440;
+  return diff;
+}
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
   { path: '/health/weight', label: 'Weight' },
@@ -23,6 +49,10 @@ const HealthSleep = () => {
   const [log, setLog] = useState(getSleepLog);
   const [bedtime, setBedtime] = useState('23:00');
   const [wakeTime, setWakeTime] = useState('06:00');
+  const [targets, setTargets] = useState(getSleepTargets);
+  const [editTargets, setEditTargets] = useState(false);
+  const [targetBed, setTargetBed] = useState(targets.bedtime);
+  const [targetWake, setTargetWake] = useState(targets.wakeTime);
 
   const handleAdd = () => {
     const duration = calculateSleepDuration(bedtime, wakeTime);
@@ -60,7 +90,7 @@ const HealthSleep = () => {
           </CardContent>
         </Card>
 
-        {/* Last night */}
+        {/* Last night + target comparison */}
         {lastEntry && quality && (
           <Card>
             <CardContent className="p-4 text-center space-y-2">
@@ -68,6 +98,23 @@ const HealthSleep = () => {
               <p className="text-4xl font-bold">{lastEntry.duration}h</p>
               <p className={`text-sm font-medium ${quality.color}`}>{quality.label}</p>
               <p className="text-xs text-muted-foreground">{lastEntry.bedtime} → {lastEntry.wakeTime}</p>
+              {/* Target comparison */}
+              <div className="flex justify-center gap-4 pt-1">
+                {(() => {
+                  const bedDiff = timeDiffMinutes(lastEntry.bedtime, targets.bedtime);
+                  const wakeDiff = timeDiffMinutes(lastEntry.wakeTime, targets.wakeTime);
+                  return (
+                    <>
+                      <span className={`text-[11px] ${Math.abs(bedDiff) <= 15 ? 'text-primary' : 'text-amber-500'}`}>
+                        Bed: {bedDiff === 0 ? 'On target' : bedDiff > 0 ? `${bedDiff}m late` : `${-bedDiff}m early`}
+                      </span>
+                      <span className={`text-[11px] ${Math.abs(wakeDiff) <= 15 ? 'text-primary' : 'text-amber-500'}`}>
+                        Wake: {wakeDiff === 0 ? 'On target' : wakeDiff > 0 ? `${wakeDiff}m late` : `${-wakeDiff}m early`}
+                      </span>
+                    </>
+                  );
+                })()}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -99,6 +146,57 @@ const HealthSleep = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Sleep & Wake Targets */}
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <EditableText elementKey="sleep.targets.title" defaultText="Sleep & Wake Targets" tag="p" className="text-sm font-semibold" />
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setEditTargets(!editTargets)}>
+                {editTargets ? 'Done' : 'Edit'}
+              </Button>
+            </div>
+            {editTargets ? (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Target Bedtime</Label>
+                  <Input type="time" value={targetBed} onChange={e => {
+                    setTargetBed(e.target.value);
+                    const t = { bedtime: e.target.value, wakeTime: targetWake };
+                    saveSleepTargets(t);
+                    setTargets(t);
+                  }} />
+                </div>
+                <div>
+                  <Label className="text-xs">Target Wake</Label>
+                  <Input type="time" value={targetWake} onChange={e => {
+                    setTargetWake(e.target.value);
+                    const t = { bedtime: targetBed, wakeTime: e.target.value };
+                    saveSleepTargets(t);
+                    setTargets(t);
+                  }} />
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3 text-center">
+                <div className="bg-secondary/50 rounded-lg p-3">
+                  <p className="text-[10px] text-muted-foreground">Bedtime</p>
+                  <p className="text-sm font-bold">{targets.bedtime}</p>
+                </div>
+                <div className="bg-secondary/50 rounded-lg p-3">
+                  <p className="text-[10px] text-muted-foreground">Wake Up</p>
+                  <p className="text-sm font-bold">{targets.wakeTime}</p>
+                </div>
+                <p className="col-span-2 text-[10px] text-muted-foreground">
+                  Target: {calculateSleepDuration(targets.bedtime, targets.wakeTime)}h of sleep
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </SubPageLayout>
   );
