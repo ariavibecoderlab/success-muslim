@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Separator } from '@/components/ui/separator';
 import SubPageLayout from '@/components/SubPageLayout';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
+import { usePrayerNotifications, getNotificationPermission, requestNotificationPermission } from '@/hooks/usePrayerNotifications';
 import { formatHijriDate } from '@/lib/hijri';
 import {
   fetchPrayerTimes,
@@ -59,6 +60,10 @@ const PrayerTimes = () => {
   const [countdown, setCountdown] = useState('');
   const [detectingGps, setDetectingGps] = useState(false);
   const [settingsTab, setSettingsTab] = useState('location');
+  const [notifPermission, setNotifPermission] = useState<string>(getNotificationPermission);
+
+  // Schedule prayer notifications
+  usePrayerNotifications(data?.timings ?? null, settings);
 
   // Load prayer times whenever settings change
   const load = useCallback(async () => {
@@ -121,6 +126,39 @@ const PrayerTimes = () => {
             <p className="text-[10px] text-muted-foreground mt-0.5">{data.hijriDate}</p>
           )}
         </div>
+
+        {/* Notification Permission Banner */}
+        {notifPermission === 'default' && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <Bell className="h-4 w-4 text-primary shrink-0" />
+                <p className="text-xs text-foreground">Enable adhan notifications?</p>
+              </div>
+              <Button
+                size="sm"
+                variant="default"
+                className="shrink-0 text-xs h-7"
+                onClick={async () => {
+                  const result = await requestNotificationPermission();
+                  setNotifPermission(result);
+                  if (result === 'granted') toast.success('Adhan notifications enabled!');
+                  else if (result === 'denied') toast.error('Notifications blocked. Enable in browser settings.');
+                }}
+              >
+                Enable
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+        {notifPermission === 'denied' && (
+          <Card className="border-destructive/20 bg-destructive/5">
+            <CardContent className="p-3 flex items-center gap-2">
+              <BellOff className="h-4 w-4 text-destructive shrink-0" />
+              <p className="text-[11px] text-muted-foreground">Notifications blocked. Enable in your browser settings to receive adhan alerts.</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Location + Settings Row */}
         <div className="flex items-center justify-between gap-2">
