@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { ReactNode } from 'react';
 
 interface SubPageLayoutProps {
@@ -20,12 +19,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
   const nextRoute = currentIndex >= 0 && currentIndex < (siblingRoutes?.length ?? 0) - 1 ? siblingRoutes![currentIndex + 1] : null;
 
   return (
-    <motion.div
-      className="min-h-screen bg-background flex flex-col"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.2, ease: 'easeOut' }}
-    >
+    <div className="min-h-screen bg-background flex flex-col animate-fade-in">
       <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <span className="text-lg font-bold">{title}</span>
@@ -68,7 +62,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
