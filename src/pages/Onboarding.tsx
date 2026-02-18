@@ -25,18 +25,18 @@ const slideVariants = {
 };
 
 const FOCUS_AREAS = [
-  { id: 'ibadah', icon: '🕌', label: 'Ibadah & Deen' },
-  { id: 'quran', icon: '📖', label: 'Quran' },
-  { id: 'health', icon: '💪', label: 'Health & Wellness' },
-  { id: 'wealth', icon: '💰', label: 'Wealth & Finance' },
-  { id: 'productivity', icon: '✅', label: 'Tasks & Productivity' },
-  { id: 'fasting', icon: '🌙', label: 'Fasting & Ramadan' },
+  { id: 'ibadah', Icon: Moon, label: 'Ibadah & Deen' },
+  { id: 'quran', Icon: BookOpen, label: 'Quran' },
+  { id: 'health', Icon: Heart, label: 'Health & Wellness' },
+  { id: 'wealth', Icon: Wallet, label: 'Wealth & Finance' },
+  { id: 'productivity', Icon: ListChecks, label: 'Tasks & Productivity' },
+  { id: 'fasting', Icon: Star, label: 'Fasting & Ramadan' },
 ];
 
 const CONSISTENCY_LEVELS = [
-  { id: 'beginner', emoji: '🌱', title: 'Just getting started', desc: 'I want to build better habits from scratch' },
-  { id: 'building', emoji: '🔥', title: 'Building momentum', desc: "I'm consistent but want to improve" },
-  { id: 'advanced', emoji: '⚡', title: 'Ready to level up', desc: 'I have strong habits and want to optimize' },
+  { id: 'beginner', Icon: Compass, title: 'Just getting started', desc: 'I want to build better habits from scratch' },
+  { id: 'building', Icon: Zap, title: 'Building momentum', desc: "I'm consistent but want to improve" },
+  { id: 'advanced', Icon: Sparkles, title: 'Ready to level up', desc: 'I have strong habits and want to optimize' },
 ];
 
 const MOTIVATIONAL_QUOTES = [
@@ -354,7 +354,7 @@ const Onboarding = () => {
                               <Check className="h-3 w-3 text-primary-foreground" />
                             </div>
                           )}
-                          <span className="text-2xl">{area.icon}</span>
+                          <area.Icon className="h-6 w-6 text-primary mx-auto" />
                           <p className="text-sm font-medium mt-1">{area.label}</p>
                         </button>
                       );
@@ -386,7 +386,9 @@ const Onboarding = () => {
                         }`}
                       >
                         <div className="flex items-start gap-3">
-                          <span className="text-2xl">{level.emoji}</span>
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                            <level.Icon className="h-5 w-5 text-primary" />
+                          </div>
                           <div>
                             <p className="font-semibold">{level.title}</p>
                             <p className="text-sm text-muted-foreground">{level.desc}</p>
