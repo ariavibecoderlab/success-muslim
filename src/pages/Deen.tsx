@@ -22,11 +22,11 @@ const DEEN_FEATURES = [
   { icon: HandHeart, title: 'Dhikr Counter', desc: 'Tasbih & daily counting', to: '/deen/dhikr' },
   { icon: Calculator, title: 'Zakat Calculator', desc: 'Calculate your zakat', to: '/deen/zakat' },
   { icon: ListChecks, title: 'Sunnah Tracker', desc: 'Daily sunnah checklist', to: '/deen/sunnah' },
+  { icon: BookOpen, title: 'Quran Tracker', desc: 'Daily tilawah & khatam', to: '/deen/quran' },
 ];
 
 const COMING_SOON = [
   { icon: Star, title: 'Prayer Times', desc: 'Azan times by location' },
-  { icon: BookOpen, title: 'Quran Tracker', desc: 'Daily tilawah & khatam' },
 ];
 
 const Deen = () => {

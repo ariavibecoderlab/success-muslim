@@ -439,6 +439,39 @@ export type Database = {
         }
         Relationships: []
       }
+      quran_log: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          juz_number: number | null
+          notes: string | null
+          pages_read: number
+          surah_name: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          juz_number?: number | null
+          notes?: string | null
+          pages_read?: number
+          surah_name?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          juz_number?: number | null
+          notes?: string | null
+          pages_read?: number
+          surah_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ramadhan_qada: {
         Row: {
           id: string

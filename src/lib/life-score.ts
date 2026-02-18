@@ -12,6 +12,7 @@ import { getDailyDhikr } from './dhikr-storage';
 import { getHydration, getSleepLog, getFastingLog, todayKey } from './health-storage';
 import { getDailyTasks, getHabits, getHabitLog, getTodayKey } from './productivity-storage';
 import { getDayLog, getSunnahItems } from './sunnah-storage';
+import { getQuranDay } from './quran-storage';
 
 export interface SubScore {
   label: string;
@@ -40,11 +41,15 @@ function calcIman(): PillarScore {
   const salah = getTodaySalahCount();
   const prayerScore = salah.logged === 0 ? 0 : ((salah.onTime * 100 + salah.late * 50) / 5);
 
-  // Quran / Sunnah checklist
+  // Quran: target 4 pages/day
+  const quranDay = getQuranDay();
+  const quranScore = Math.min(quranDay.pagesRead / 4, 1) * 100;
+
+  // Sunnah checklist
   const sunnahItems = getSunnahItems().filter(i => i.enabled);
   const sunnahLog = getDayLog();
   const sunnahDone = sunnahLog.completed.filter(id => sunnahItems.find(i => i.id === id)).length;
-  const quranScore = sunnahItems.length > 0 ? (sunnahDone / sunnahItems.length) * 100 : 0;
+  const sunnahScore = sunnahItems.length > 0 ? (sunnahDone / sunnahItems.length) * 100 : 0;
 
   // Dhikr: target 100 per day
   const dhikr = getDailyDhikr();
@@ -56,8 +61,9 @@ function calcIman(): PillarScore {
   const fastingScore = fastingLog[tk] ? 100 : 0;
 
   const subs: SubScore[] = [
-    { label: 'Prayers', score: clamp(prayerScore), weight: 0.6 },
-    { label: 'Sunnah', score: clamp(quranScore), weight: 0.2 },
+    { label: 'Prayers', score: clamp(prayerScore), weight: 0.5 },
+    { label: 'Quran', score: clamp(quranScore), weight: 0.2 },
+    { label: 'Sunnah', score: clamp(sunnahScore), weight: 0.1 },
     { label: 'Dhikr', score: clamp(dhikrScore), weight: 0.1 },
     { label: 'Fasting', score: clamp(fastingScore), weight: 0.1 },
   ];
