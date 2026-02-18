@@ -33,6 +33,9 @@ import HealthHydration from "./pages/health/HealthHydration";
 import HealthSleep from "./pages/health/HealthSleep";
 import HealthFasting from "./pages/health/HealthFasting";
 import HealthIFTimer from "./pages/health/HealthIFTimer";
+import DailyTasks from "./pages/productivity/DailyTasks";
+import HabitStreaks from "./pages/productivity/HabitStreaks";
+import LifeAreas from "./pages/productivity/LifeAreas";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -83,6 +86,9 @@ const App = () => (
               <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
               <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
               <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
+              <Route path="/productivity/tasks" element={<AuthGuard><DailyTasks /></AuthGuard>} />
+              <Route path="/productivity/habits" element={<AuthGuard><HabitStreaks /></AuthGuard>} />
+              <Route path="/productivity/life-areas" element={<AuthGuard><LifeAreas /></AuthGuard>} />
 
               {/* Admin routes */}
               <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
