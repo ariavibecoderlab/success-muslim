@@ -23,10 +23,7 @@ const DEEN_FEATURES = [
   { icon: Calculator, title: 'Zakat Calculator', desc: 'Calculate your zakat', to: '/deen/zakat' },
   { icon: ListChecks, title: 'Sunnah Tracker', desc: 'Daily sunnah checklist', to: '/deen/sunnah' },
   { icon: BookOpen, title: 'Quran Tracker', desc: 'Daily tilawah & khatam', to: '/deen/quran' },
-];
-
-const COMING_SOON = [
-  { icon: Star, title: 'Prayer Times', desc: 'Azan times by location' },
+  { icon: Star, title: 'Prayer Times', desc: 'Azan times by location', to: '/deen/prayer-times' },
 ];
 
 const Deen = () => {
@@ -232,27 +229,7 @@ const Deen = () => {
           </div>
         </motion.div>
 
-        {/* Coming Soon */}
-        {COMING_SOON.length > 0 && (
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}>
-            <EditableText elementKey="deen.coming.title" defaultText="Coming Soon" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
-            <div className="grid grid-cols-2 gap-3">
-              {COMING_SOON.map((f, i) => (
-                <Card key={f.title} className="border-dashed opacity-70">
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                      <f.icon className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <EditableText elementKey={`deen.coming.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
-                      <EditableText elementKey={`deen.coming.${i}.desc`} defaultText={f.desc} tag="p" className="text-[11px] text-muted-foreground" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </motion.div>
-        )}
+        {/* spacer */}
 
         <div className="h-4" />
       </main>

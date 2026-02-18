@@ -52,7 +52,7 @@
 | Ramadhan Qada (setup + tracking) | ✅ | Full flow + DB sync |
 | Fidyah Calculator | ✅ | Display only + DB sync |
 | Zakat Calculator | ✅ | No persistence needed |
-| Prayer Times | ⚠️ | API-based, no dedicated page |
+| Prayer Times | ✅ | Dedicated page with Aladhan API, countdown, location config |
 | Quran Tracker | ✅ | Daily pages, juz tracking, khatam progress, weekly chart, DB sync |
 
 ---
@@ -67,7 +67,7 @@
 | Sleep Tracker | ✅ | DB sync |
 | Sunnah Fasting Calendar | ✅ | DB sync |
 | IF Timer | ✅ | DB sync |
-| Sleep & Wake targets | ❌ | P1 |
+| Sleep & Wake targets | ✅ | Configurable targets with vs-actual comparison |
 
 ---
 
@@ -122,6 +122,6 @@
 
 ### P1 — Key Features
 5. ~~Quran Tracker~~ ✅
-6. Profile/Settings consolidation
-7. Sleep & Wake targets
-8. Replace Family tab → Profile tab
+6. ~~Profile/Settings consolidation~~ ✅
+7. ~~Sleep & Wake targets~~ ✅
+8. ~~Replace Family tab → Profile tab~~ ✅
