@@ -223,15 +223,15 @@ const Deen = () => {
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
           <div className="flex items-center gap-1 overflow-x-auto pb-1 -mx-1 px-1">
             {[
-              { icon: '🕌', label: `${salahCount.logged}/5`, sub: 'Salah', to: '/dashboard' },
-              { icon: '📿', label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/deen/dhikr' },
-              { icon: '📖', label: `${todayQuranPages.toFixed(1)}p`, sub: 'Quran', to: '/deen/quran' },
-              { icon: '✅', label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/deen/sunnah' },
+              { icon: Star, label: `${salahCount.logged}/5`, sub: 'Salah', to: '/dashboard' },
+              { icon: HandHeart, label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/deen/dhikr' },
+              { icon: BookOpen, label: `${todayQuranPages.toFixed(1)}p`, sub: 'Quran', to: '/deen/quran' },
+              { icon: ListChecks, label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/deen/sunnah' },
             ].map(item => (
               <Link key={item.sub} to={item.to} className="flex-1 min-w-0">
                 <Card className="hover:border-primary/20 transition-all">
                   <CardContent className="p-2.5 text-center">
-                    <span className="text-base">{item.icon}</span>
+                    <item.icon className="h-4 w-4 text-primary mx-auto" />
                     <p className="text-sm font-bold leading-tight mt-0.5">{item.label}</p>
                     <p className="text-[9px] text-muted-foreground">{item.sub}</p>
                   </CardContent>
