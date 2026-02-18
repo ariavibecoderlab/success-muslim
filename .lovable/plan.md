@@ -99,7 +99,10 @@ Hub page: `/deen` with hero, active trackers, quick-start cards, and spiritual t
 | Dhikr Counter | `/deen/dhikr` | Done | localStorage + DB |
 | Zakat Calculator | `/deen/zakat` | Done | localStorage (no persistence needed) |
 | Sunnah Tracker | `/deen/sunnah` | Done | localStorage + DB |
-| Quran Tracker | `/deen/quran` | Done | localStorage + DB |
+| Quran Reader | `/deen/quran` | Done | DB (`quran_preferences`, `quran_bookmarks`) |
+| Surah Reader | `/deen/quran/read/:num` | Done | DB (API + `quran_reading_sessions`) |
+| Quran Memorization | `/deen/quran/read/:num` | Done | DB (`quran_memorization`) |
+| Quran Tracker (opt-in) | `/deen/quran` | Done | DB (`quran_preferences`, `quran_reading_sessions`) |
 
 ---
 

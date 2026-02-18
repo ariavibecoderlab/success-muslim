@@ -538,6 +538,33 @@ export type Database = {
         }
         Relationships: []
       }
+      quran_bookmarks: {
+        Row: {
+          ayah_number: number
+          created_at: string
+          id: string
+          note: string | null
+          surah_number: number
+          user_id: string
+        }
+        Insert: {
+          ayah_number: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          surah_number: number
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       quran_log: {
         Row: {
           created_at: string
@@ -567,6 +594,120 @@ export type Database = {
           notes?: string | null
           pages_read?: number
           surah_name?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quran_memorization: {
+        Row: {
+          ayah_number: number
+          id: string
+          memorized_at: string
+          surah_number: number
+          user_id: string
+        }
+        Insert: {
+          ayah_number: number
+          id?: string
+          memorized_at?: string
+          surah_number: number
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number
+          id?: string
+          memorized_at?: string
+          surah_number?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quran_preferences: {
+        Row: {
+          created_at: string
+          daily_goal_pages: number | null
+          daily_memo_goal: number | null
+          font_size: number | null
+          id: string
+          last_ayah: number | null
+          last_surah: number | null
+          memorization_enabled: boolean | null
+          night_mode: boolean | null
+          tracker_enabled: boolean | null
+          translation_lang: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_goal_pages?: number | null
+          daily_memo_goal?: number | null
+          font_size?: number | null
+          id?: string
+          last_ayah?: number | null
+          last_surah?: number | null
+          memorization_enabled?: boolean | null
+          night_mode?: boolean | null
+          tracker_enabled?: boolean | null
+          translation_lang?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_goal_pages?: number | null
+          daily_memo_goal?: number | null
+          font_size?: number | null
+          id?: string
+          last_ayah?: number | null
+          last_surah?: number | null
+          memorization_enabled?: boolean | null
+          night_mode?: boolean | null
+          tracker_enabled?: boolean | null
+          translation_lang?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quran_reading_sessions: {
+        Row: {
+          ayahs_read: number | null
+          created_at: string
+          date: string
+          duration_seconds: number | null
+          end_ayah: number
+          end_surah: number
+          id: string
+          pages_read: number | null
+          start_ayah: number
+          start_surah: number
+          user_id: string
+        }
+        Insert: {
+          ayahs_read?: number | null
+          created_at?: string
+          date?: string
+          duration_seconds?: number | null
+          end_ayah: number
+          end_surah: number
+          id?: string
+          pages_read?: number | null
+          start_ayah: number
+          start_surah: number
+          user_id: string
+        }
+        Update: {
+          ayahs_read?: number | null
+          created_at?: string
+          date?: string
+          duration_seconds?: number | null
+          end_ayah?: number
+          end_surah?: number
+          id?: string
+          pages_read?: number | null
+          start_ayah?: number
+          start_surah?: number
           user_id?: string
         }
         Relationships: []

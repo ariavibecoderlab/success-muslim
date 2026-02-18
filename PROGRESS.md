@@ -61,7 +61,13 @@
 | Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
 | Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
 | Hijri Date | ✅ | Prominent Hijri date on Prayer Times page |
-| Quran Tracker | ✅ | Daily pages, juz tracking, khatam progress, weekly chart, DB sync |
+| Quran Reader | ✅ | Full 114 surahs, Arabic text + translations (EN/MS/ID), per-ayah tafsir |
+| Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
+| Quran Tracker (opt-in) | ✅ | Gentle onboarding prompt, auto-tracking, daily goal, streak |
+| Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
+| Quran Memorization | ✅ | Mark ayahs as memorized, memorization toggle in settings |
+| Quran Settings | ✅ | Font size, translation lang, daily goal, tracker toggle |
+| Quran Legacy Tracker | ✅ | Original page-based tracker at /deen/quran/legacy |
 
 ---
 
