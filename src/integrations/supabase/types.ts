@@ -256,6 +256,45 @@ export type Database = {
         }
         Relationships: []
       }
+      hajj_umrah_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          journey_type: string
+          notes: string | null
+          packing_checklist: Json
+          started_at: string | null
+          steps: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          journey_type?: string
+          notes?: string | null
+          packing_checklist?: Json
+          started_at?: string | null
+          steps?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          journey_type?: string
+          notes?: string | null
+          packing_checklist?: Json
+          started_at?: string | null
+          steps?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       health_bmi: {
         Row: {
           activity_level: string
@@ -538,6 +577,75 @@ export type Database = {
         }
         Relationships: []
       }
+      qiyam_log: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          notes: string | null
+          performed: boolean
+          sleep_time: string | null
+          tahajjud_start: string | null
+          user_id: string
+          wake_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          notes?: string | null
+          performed?: boolean
+          sleep_time?: string | null
+          tahajjud_start?: string | null
+          user_id: string
+          wake_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          performed?: boolean
+          sleep_time?: string | null
+          tahajjud_start?: string | null
+          user_id?: string
+          wake_time?: string | null
+        }
+        Relationships: []
+      }
+      qiyam_settings: {
+        Row: {
+          alarm_enabled: boolean
+          alarm_minutes_before_fajr: number
+          created_at: string
+          default_sleep_time: string
+          default_wake_time: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          alarm_enabled?: boolean
+          alarm_minutes_before_fajr?: number
+          created_at?: string
+          default_sleep_time?: string
+          default_wake_time?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          alarm_enabled?: boolean
+          alarm_minutes_before_fajr?: number
+          created_at?: string
+          default_sleep_time?: string
+          default_wake_time?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quran_bookmarks: {
         Row: {
           ayah_number: number
@@ -708,6 +816,84 @@ export type Database = {
           pages_read?: number | null
           start_ayah?: number
           start_surah?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ramadan_daily_log: {
+        Row: {
+          charity_amount: number
+          created_at: string
+          date: string
+          dhikr_count: number
+          fasted: boolean
+          id: string
+          notes: string | null
+          quran_pages: number
+          tarawih_rakaat: number
+          user_id: string
+        }
+        Insert: {
+          charity_amount?: number
+          created_at?: string
+          date: string
+          dhikr_count?: number
+          fasted?: boolean
+          id?: string
+          notes?: string | null
+          quran_pages?: number
+          tarawih_rakaat?: number
+          user_id: string
+        }
+        Update: {
+          charity_amount?: number
+          created_at?: string
+          date?: string
+          dhikr_count?: number
+          fasted?: boolean
+          id?: string
+          notes?: string | null
+          quran_pages?: number
+          tarawih_rakaat?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ramadan_settings: {
+        Row: {
+          created_at: string
+          daily_dhikr_goal: number
+          daily_quran_goal: number
+          id: string
+          iftar_alarm: boolean
+          suhoor_alarm: boolean
+          suhoor_minutes_before_fajr: number
+          tarawih_target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_dhikr_goal?: number
+          daily_quran_goal?: number
+          id?: string
+          iftar_alarm?: boolean
+          suhoor_alarm?: boolean
+          suhoor_minutes_before_fajr?: number
+          tarawih_target?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_dhikr_goal?: number
+          daily_quran_goal?: number
+          id?: string
+          iftar_alarm?: boolean
+          suhoor_alarm?: boolean
+          suhoor_minutes_before_fajr?: number
+          tarawih_target?: number
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

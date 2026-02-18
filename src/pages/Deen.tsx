@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   BookOpen, Star, HandHeart, ListChecks, Moon, Sunrise, Sun, Sunset,
-  Settings2, MapPin, BarChart3, Droplets, Heart,
+  Settings2, MapPin, BarChart3, Droplets, Heart, Compass,
 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -338,6 +338,51 @@ const Deen = () => {
                   <p className="text-sm font-semibold">Sadaqah</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     Track your giving
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Qiyam Planner */}
+            <Link to="/deen/qiyam">
+              <Card className="hover:border-primary/20 transition-all h-full">
+                <CardContent className="p-4">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                    <Moon className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Qiyam Planner</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Tahajjud scheduler
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Ramadan Optimizer */}
+            <Link to="/deen/ramadan">
+              <Card className="hover:border-primary/20 transition-all h-full">
+                <CardContent className="p-4">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                    <Star className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Ramadan</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Optimizer &amp; tracker
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Hajj/Umrah */}
+            <Link to="/deen/hajj">
+              <Card className="hover:border-primary/20 transition-all h-full">
+                <CardContent className="p-4">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                    <Compass className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Hajj &amp; Umrah</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Step-by-step guide
                   </p>
                 </CardContent>
               </Card>
