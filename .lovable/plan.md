@@ -1,79 +1,45 @@
 
 
-# Plan: Custom Fasting Timer + Ramadan Feature Enhancements
+# Custom Fasting Timer Redesign
 
-This is a large feature set covering 4 major additions. Here's the breakdown:
+## What Changes
 
----
+The custom fasting mode currently requires picking both a **start** and **end** time upfront. Instead, it should work like a stopwatch:
 
-## 1. Custom Fasting with Date/Time Picker (like the reference image)
-
-Redesign the IF Timer page (`src/pages/health/HealthIFTimer.tsx`) to support custom start/end date+time selection:
-
-- Add a "Fasting Custom" mode where users pick a **Start date+time** and **End date+time** using scroll-wheel style pickers (similar to the reference screenshot)
-- Show "Total Fasting Time" at the top with a live countdown timer
-- Include **Delete** and **Save** buttons at the bottom
-- The timer runs based on the selected start/end rather than just "start now"
-- Reuse the existing circular progress ring for the active timer display
-
-**Files:** `src/pages/health/HealthIFTimer.tsx`, `src/lib/health-storage.ts` (update to store custom start/end times)
+1. **Start only** -- User picks a start date/time (or starts now), and the timer begins counting **up** (elapsed time)
+2. **End button** -- User taps "End Fast" whenever they're done. The total duration is calculated automatically
+3. **Delete button** -- User can remove/cancel the active fast entirely (no record saved)
 
 ---
 
-## 2. Selawat & Dzikir Counter (Target: 1,000 each)
+## How It Will Work
 
-Enhance the Ramadan Optimizer page (`src/pages/deen/RamadanOptimizer.tsx`):
-
-- Add **Selawat counter** with target 1,000 and **Dzikir counter** with target 1,000
-- Show progress bars with daily tracking
-- Add +10, +33 increment buttons
-- Store in `ramadan_daily_log` table (add `selawat_count` and extra fields via migration)
-
-**Database migration:** Add `selawat_count integer NOT NULL DEFAULT 0` to `ramadan_daily_log` table.
+- When user taps "Custom", they see a date/time picker for the **start time only** (no end picker)
+- A "Start Fast" button begins the custom fast
+- While active, the circular timer shows **elapsed time** counting up (no predetermined end)
+- Two buttons appear during an active custom fast:
+  - **End Fast** (green) -- stops the timer, saves the session with the actual duration
+  - **Delete** (red/outline) -- cancels and removes the fast completely, no record saved
 
 ---
 
-## 3. Tarawih Tracking + Solat Sunnah Tracker
+## Technical Details
 
-Enhance Ramadan Optimizer with:
+### File: `src/pages/health/HealthIFTimer.tsx`
 
-- **Tarawih selection**: Choose between 8 or 20 rakaat, track completion
-- **Solat Sunnah checklist**: Witir, Rawatib, Taubat, Hajat, Dhuha -- daily tick/check system
-- Store sunnah solat completions in `ramadan_daily_log` (add `sunnah_solat jsonb DEFAULT '[]'` column)
+- Remove the **end date/time picker** section from the custom fasting card
+- Remove "Total Fasting Time" preview (since there's no predetermined end)
+- Keep the start date/time picker (date, hour, minute, AM/PM)
+- Change "Save & Start" to just "Start Fast"
+- When custom fast is active:
+  - Timer counts up (elapsed) with no "remaining" -- show elapsed as the main display
+  - Show **"End Fast"** button that saves the session with `completed: true`
+  - Show **"Delete"** button that removes the active fast without saving (`stopIF(false)` or just clear localStorage)
+- For the circular progress ring during custom fast: show a pulsing/spinning animation since there's no fixed end, or simply show elapsed time without the ring progress
 
-**Database migration:** Add `sunnah_solat jsonb NOT NULL DEFAULT '[]'::jsonb` to `ramadan_daily_log` table.
+### File: `src/lib/health-storage.ts`
 
----
-
-## 4. Daily Da'wah Tab
-
-Create a new dedicated page at `/iman/dakwah`:
-
-- New page `src/pages/deen/DailyDakwah.tsx`
-- Tagline: "Deliver even from 1 ayat"
-- Display a daily da'wah poster (admin-uploadable via a new `dakwah_posters` table)
-- Users can **download** the poster and **share** to social media (Web Share API)
-- Clean, motivating Ramadan-themed UI
-- Add link to the Iman page grid and route in `App.tsx`
-
-**Database migration:** Create `dakwah_posters` table with columns: `id`, `user_id` (uploader), `image_url`, `title`, `date`, `created_at`. Enable Storage bucket for poster images.
-
----
-
-## Technical Summary
-
-### Database Migrations (3 total):
-1. `ALTER TABLE ramadan_daily_log ADD COLUMN selawat_count integer NOT NULL DEFAULT 0;`
-2. `ALTER TABLE ramadan_daily_log ADD COLUMN sunnah_solat jsonb NOT NULL DEFAULT '[]'::jsonb;`
-3. Create `dakwah_posters` table with RLS policies
-
-### New Files:
-- `src/pages/deen/DailyDakwah.tsx`
-
-### Modified Files:
-- `src/pages/health/HealthIFTimer.tsx` -- custom date/time fasting
-- `src/pages/deen/RamadanOptimizer.tsx` -- selawat, dzikir 1000, tarawih 8/20, sunnah solat checklist
-- `src/pages/Deen.tsx` -- add Da'wah card to grid
-- `src/App.tsx` -- add `/iman/dakwah` route
-- `src/lib/health-storage.ts` -- support custom start/end time for fasting
+- Update `startIF` to allow `fastingHours = 0` or `Infinity` to indicate open-ended custom fasts
+- `stopIF` already calculates end time, so it will naturally record the actual duration
+- Add a `deleteIF()` function that clears the active fast without saving any session record
 
