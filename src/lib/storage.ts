@@ -1,4 +1,5 @@
 import { QadaSolatSetup, QadaSolatProgress, RamadhanQadaSetup, RamadhanQadaProgress, FidyahEntry, PrayerType } from './types';
+import { syncQadaSolat, syncRamadhanQada, syncFidyahEntry } from './db-sync';
 
 const KEYS = {
   qadaSolatSetup: 'qada_solat_setup',
@@ -21,7 +22,10 @@ function set<T>(key: string, value: T): void {
 
 // Qada Solat
 export const getQadaSetup = () => get<QadaSolatSetup>(KEYS.qadaSolatSetup);
-export const saveQadaSetup = (data: QadaSolatSetup) => set(KEYS.qadaSolatSetup, data);
+export const saveQadaSetup = (data: QadaSolatSetup) => {
+  set(KEYS.qadaSolatSetup, data);
+  syncQadaSolat(data, getQadaProgress());
+};
 
 export const getQadaProgress = (): QadaSolatProgress => {
   return get<QadaSolatProgress>(KEYS.qadaSolatProgress) || {
@@ -33,7 +37,10 @@ export const getQadaProgress = (): QadaSolatProgress => {
     dailyLogs: {},
   };
 };
-export const saveQadaProgress = (data: QadaSolatProgress) => set(KEYS.qadaSolatProgress, data);
+export const saveQadaProgress = (data: QadaSolatProgress) => {
+  set(KEYS.qadaSolatProgress, data);
+  syncQadaSolat(getQadaSetup(), data);
+};
 
 export const logQadaPrayer = (prayer: PrayerType, count: number = 1) => {
   const progress = getQadaProgress();
@@ -47,7 +54,6 @@ export const logQadaPrayer = (prayer: PrayerType, count: number = 1) => {
   progress.completedByPrayer[prayer] += count;
   progress.totalCompleted += count;
   
-  // Update streak
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayKey = yesterday.toISOString().split('T')[0];
@@ -80,7 +86,10 @@ export const undoQadaPrayer = (prayer: PrayerType) => {
 
 // Ramadhan Qada
 export const getRamadhanSetup = () => get<RamadhanQadaSetup>(KEYS.ramadhanSetup);
-export const saveRamadhanSetup = (data: RamadhanQadaSetup) => set(KEYS.ramadhanSetup, data);
+export const saveRamadhanSetup = (data: RamadhanQadaSetup) => {
+  set(KEYS.ramadhanSetup, data);
+  syncRamadhanQada(data, getRamadhanProgress());
+};
 
 export const getRamadhanProgress = (): RamadhanQadaProgress => {
   return get<RamadhanQadaProgress>(KEYS.ramadhanProgress) || {
@@ -89,7 +98,10 @@ export const getRamadhanProgress = (): RamadhanQadaProgress => {
     longestStreak: 0,
   };
 };
-export const saveRamadhanProgress = (data: RamadhanQadaProgress) => set(KEYS.ramadhanProgress, data);
+export const saveRamadhanProgress = (data: RamadhanQadaProgress) => {
+  set(KEYS.ramadhanProgress, data);
+  syncRamadhanQada(getRamadhanSetup(), data);
+};
 
 export const toggleRamadhanDay = (date: string) => {
   const progress = getRamadhanProgress();
@@ -101,7 +113,6 @@ export const toggleRamadhanDay = (date: string) => {
   }
   progress.completedDates.sort();
 
-  // Calculate streaks from sorted dates
   const { current, longest } = calculateFastingStreak(progress.completedDates);
   progress.currentStreak = current;
   progress.longestStreak = Math.max(longest, progress.longestStreak);
@@ -128,7 +139,6 @@ function calculateFastingStreak(dates: string[]): { current: number; longest: nu
     }
   }
 
-  // Current streak: count backwards from last date, only if last date is today or yesterday
   const today = new Date().toISOString().split('T')[0];
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
@@ -179,4 +189,5 @@ export const saveFidyahEntry = (entry: FidyahEntry) => {
   const history = getFidyahHistory();
   history.unshift(entry);
   set(KEYS.fidyahHistory, history);
+  syncFidyahEntry(entry);
 };

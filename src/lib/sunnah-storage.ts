@@ -1,3 +1,5 @@
+import { syncSunnahLog } from './db-sync';
+
 export interface SunnahItem {
   id: string;
   label: string;
@@ -6,7 +8,7 @@ export interface SunnahItem {
 }
 
 export interface SunnahDayLog {
-  completed: string[]; // item IDs
+  completed: string[];
   date: string;
 }
 
@@ -68,6 +70,7 @@ export function toggleSunnahItem(itemId: string, date?: string) {
     }
     all[key] = log;
     localStorage.setItem(LOG_KEY, JSON.stringify(all));
+    syncSunnahLog(key, log.completed);
     return log;
   } catch {
     return { completed: [], date: key };
@@ -87,7 +90,6 @@ export function getSunnahStreak(): number {
       const key = date.toISOString().split('T')[0];
       const log: SunnahDayLog = all[key];
       if (!log || log.completed.length === 0) break;
-      // Count as a day if at least 50% of enabled items are done
       const enabledIds = items.map(i => i.id);
       const doneCount = log.completed.filter(id => enabledIds.includes(id)).length;
       if (doneCount / items.length >= 0.5) {

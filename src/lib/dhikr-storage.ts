@@ -1,3 +1,5 @@
+import { syncDhikrSession } from './db-sync';
+
 export interface DhikrPreset {
   id: string;
   name: string;
@@ -72,5 +74,6 @@ export function saveDhikrCount(presetId: string, count: number, target: number) 
 
     all[key] = daily;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+    syncDhikrSession(key, presetId, count, target);
   } catch {}
 }

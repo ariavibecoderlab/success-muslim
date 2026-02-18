@@ -1,8 +1,18 @@
+import { useEffect, useRef } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { hydrateFromDatabase } from '@/lib/db-sync';
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const hydrated = useRef(false);
+
+  useEffect(() => {
+    if (user && !hydrated.current) {
+      hydrated.current = true;
+      hydrateFromDatabase();
+    }
+  }, [user]);
 
   if (loading) {
     return (
