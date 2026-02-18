@@ -120,7 +120,7 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 | Hydration Tracker | `/health/hydration` | Done | localStorage + DB |
 | Sleep Tracker | `/health/sleep` | Done | localStorage + DB |
 | Sunnah Fasting Calendar | `/health/fasting` | Done | localStorage + DB |
-| Intermittent Fasting Timer | `/health/if-timer` | Done | localStorage + DB |
+| Intermittent Fasting Timer | `/health/if-timer` | Done | localStorage + DB — Custom duration picker (h+m), presets (16:8/18:6/20:4/24h/36h), live countdown widget on /health hub with Break Fast button |
 
 ---
 
