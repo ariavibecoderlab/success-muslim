@@ -9,7 +9,7 @@ interface SubPageLayoutProps {
   children: ReactNode;
   headerRight?: ReactNode;
   /** Ordered list of sibling routes for swipe navigation */
-  siblingRoutes?: { path: string; label: string }[];
+  siblingRoutes?: {path: string;label: string;}[];
   currentPath?: string;
 }
 
@@ -20,7 +20,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, 0, 200], [0.5, 1, 0.5]);
 
-  const currentIndex = siblingRoutes?.findIndex(r => r.path === currentPath) ?? -1;
+  const currentIndex = siblingRoutes?.findIndex((r) => r.path === currentPath) ?? -1;
   const prevRoute = currentIndex > 0 ? siblingRoutes![currentIndex - 1] : null;
   const nextRoute = currentIndex >= 0 && currentIndex < (siblingRoutes?.length ?? 0) - 1 ? siblingRoutes![currentIndex + 1] : null;
 
@@ -54,19 +54,19 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.3}
-        onDragEnd={handleDragEnd}
-      >
+        onDragEnd={handleDragEnd}>
+
         {children}
       </motion.main>
 
       {/* Bottom navigation bar */}
       <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-md border-t border-border">
-        <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-md mx-auto h-14 flex items-center justify-between rounded-none px-[12px]">
           {/* Left: prev page indicator */}
           <button
             onClick={() => prevRoute && navigate(prevRoute.path)}
-            className={`flex items-center gap-1 text-xs transition-colors ${prevRoute ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'}`}
-          >
+            className={`flex items-center gap-1 text-xs transition-colors ${prevRoute ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'}`}>
+
             <ChevronLeft className="h-4 w-4" />
             <span className="max-w-[80px] truncate">{prevRoute?.label || ''}</span>
           </button>
@@ -74,8 +74,8 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
           {/* Center: back button */}
           <button
             onClick={() => navigate(backTo)}
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium"
-          >
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary hover:bg-secondary/80 transition-colors text-sm font-medium text-card-foreground">
+
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
@@ -83,15 +83,15 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
           {/* Right: next page indicator */}
           <button
             onClick={() => nextRoute && navigate(nextRoute.path)}
-            className={`flex items-center gap-1 text-xs transition-colors ${nextRoute ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'}`}
-          >
+            className={`flex items-center gap-1 text-xs transition-colors ${nextRoute ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'}`}>
+
             <span className="max-w-[80px] truncate">{nextRoute?.label || ''}</span>
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default SubPageLayout;
