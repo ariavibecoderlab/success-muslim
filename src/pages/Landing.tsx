@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { 
   ArrowRight, Moon, Heart, Wallet, ListChecks, Users, Star,
   Clock, BookOpen, Calculator, Sparkles, Target, TrendingUp,
-  ChevronRight, Zap, Shield
+  ChevronRight, Zap, Shield, Download
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -86,6 +86,9 @@ const Landing = () => {
             <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" className="text-lg font-bold text-foreground tracking-tight" />
           </Link>
           <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <Link to="/install"><Download className="mr-1 h-3.5 w-3.5" /> Install</Link>
+            </Button>
             <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               <Link to="/auth"><EditableText elementKey="nav.signin" defaultText="Sign In" tag="span" /></Link>
             </Button>
