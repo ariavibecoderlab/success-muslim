@@ -53,6 +53,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import NotFound from "./pages/NotFound";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/onboarding" element={<Onboarding />} />
 
               {/* Protected pillar pages with bottom nav */}
               <Route element={<AuthGuard><AppLayout /></AuthGuard>}>

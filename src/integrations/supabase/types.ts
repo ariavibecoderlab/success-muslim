@@ -518,36 +518,51 @@ export type Database = {
         Row: {
           avatar_url: string | null
           city: string | null
+          consistency_level: string | null
           country: string | null
           created_at: string
           display_name: string | null
+          focus_areas: Json | null
           gender: string | null
           id: string
           is_disabled: boolean
+          notification_enabled: boolean | null
+          onboarding_completed: boolean | null
+          onboarding_step: number | null
           updated_at: string
           weight_goal: number | null
         }
         Insert: {
           avatar_url?: string | null
           city?: string | null
+          consistency_level?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
+          focus_areas?: Json | null
           gender?: string | null
           id: string
           is_disabled?: boolean
+          notification_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           updated_at?: string
           weight_goal?: number | null
         }
         Update: {
           avatar_url?: string | null
           city?: string | null
+          consistency_level?: string | null
           country?: string | null
           created_at?: string
           display_name?: string | null
+          focus_areas?: Json | null
           gender?: string | null
           id?: string
           is_disabled?: boolean
+          notification_enabled?: boolean | null
+          onboarding_completed?: boolean | null
+          onboarding_step?: number | null
           updated_at?: string
           weight_goal?: number | null
         }
