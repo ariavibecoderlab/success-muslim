@@ -1,20 +1,39 @@
-import { useState } from 'react';
-import { Calculator, History, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calculator, History, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { calculateZakat, getZakatHistory, saveZakatResult, CURRENCIES, type ZakatInput, type ZakatResult } from '@/lib/zakat';
+import { calculateZakat, CURRENCIES, type ZakatInput, type ZakatResult } from '@/lib/zakat';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import SubPageLayout from '@/components/SubPageLayout';
 
 const DEEN_SIBLINGS = [
   { path: '/deen/dhikr', label: 'Dhikr' },
   { path: '/deen/sunnah', label: 'Sunnah' },
+  { path: '/deen/sadaqah', label: 'Sadaqah' },
   { path: '/deen/zakat', label: 'Zakat' },
 ];
 
+interface ZakatRecord {
+  id: string;
+  input: any;
+  total_wealth: number;
+  net_zakatable: number;
+  zakat_amount: number;
+  nisab_gold: number;
+  nisab_silver: number;
+  meets_nisab: boolean;
+  is_paid: boolean;
+  paid_date: string | null;
+  date: string;
+}
+
 const ZakatCalculator = () => {
+  const { user } = useAuth();
   const [currency, setCurrency] = useState('MYR');
   const [cash, setCash] = useState('');
   const [goldGrams, setGoldGrams] = useState('');
@@ -24,9 +43,24 @@ const ZakatCalculator = () => {
   const [debts, setDebts] = useState('');
   const [result, setResult] = useState<ZakatResult | null>(null);
   const [showHistory, setShowHistory] = useState(false);
-  const history = getZakatHistory();
+  const [history, setHistory] = useState<ZakatRecord[]>([]);
 
-  const handleCalculate = () => {
+  useEffect(() => {
+    if (user) loadHistory();
+  }, [user]);
+
+  const loadHistory = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('zakat_history')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('date', { ascending: false })
+      .limit(20);
+    if (data) setHistory(data as ZakatRecord[]);
+  };
+
+  const handleCalculate = async () => {
     const input: ZakatInput = {
       cash: parseFloat(cash) || 0,
       goldGrams: parseFloat(goldGrams) || 0,
@@ -38,7 +72,37 @@ const ZakatCalculator = () => {
     };
     const res = calculateZakat(input);
     setResult(res);
-    saveZakatResult(res);
+
+    // Save to DB
+    if (user) {
+      await supabase.from('zakat_history').insert({
+        user_id: user.id,
+        input: input as any,
+        total_wealth: res.totalWealth,
+        net_zakatable: res.netZakatable,
+        zakat_amount: res.zakatAmount,
+        nisab_gold: res.nisabGold,
+        nisab_silver: res.nisabSilver,
+        meets_nisab: res.meetsNisab,
+        date: res.date,
+      });
+      loadHistory();
+    }
+  };
+
+  const markPaid = async (id: string) => {
+    await supabase.from('zakat_history').update({
+      is_paid: true,
+      paid_date: new Date().toISOString().split('T')[0],
+    }).eq('id', id);
+    toast.success('Marked as paid');
+    loadHistory();
+  };
+
+  const deleteRecord = async (id: string) => {
+    await supabase.from('zakat_history').delete().eq('id', id);
+    toast.success('Deleted');
+    loadHistory();
   };
 
   const fields = [
@@ -67,6 +131,15 @@ const ZakatCalculator = () => {
             </button>
           ))}
         </div>
+
+        {/* Nisab Info */}
+        <Card className="border-primary/10 bg-primary/5">
+          <CardContent className="p-3">
+            <p className="text-xs text-muted-foreground">
+              <strong>Nisab threshold:</strong> You must pay zakat if your net wealth exceeds the nisab value (equivalent to 85g gold or 595g silver). The lower threshold applies.
+            </p>
+          </CardContent>
+        </Card>
 
         {/* Input Fields */}
         <Card>
@@ -107,11 +180,11 @@ const ZakatCalculator = () => {
                     <p className="font-semibold">{currency} {result.netZakatable.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Gold)</p>
+                    <p className="text-xs text-muted-foreground">Nisab (Gold 85g)</p>
                     <p className="font-medium">{currency} {result.nisabGold.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Silver)</p>
+                    <p className="text-xs text-muted-foreground">Nisab (Silver 595g)</p>
                     <p className="font-medium">{currency} {result.nisabSilver.toLocaleString()}</p>
                   </div>
                 </div>
@@ -139,13 +212,33 @@ const ZakatCalculator = () => {
             </button>
             {showHistory && (
               <div className="space-y-2">
-                {history.slice(0, 5).map(h => (
+                {history.slice(0, 10).map(h => (
                   <Card key={h.id}>
-                    <CardContent className="p-3 flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">{h.date}</span>
-                      <span className="font-medium">
-                        {h.input.currency} {h.zakatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                      </span>
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <div>
+                          <span className="text-muted-foreground text-xs">{h.date}</span>
+                          <p className="font-medium">
+                            {(h.input as any)?.currency || 'MYR'} {h.zakat_amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {h.is_paid ? (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium flex items-center gap-1">
+                              <Check className="h-3 w-3" /> Paid {h.paid_date}
+                            </span>
+                          ) : h.meets_nisab ? (
+                            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => markPaid(h.id)}>
+                              Mark Paid
+                            </Button>
+                          ) : (
+                            <span className="text-[10px] text-muted-foreground">Below nisab</span>
+                          )}
+                          <button onClick={() => deleteRecord(h.id)} className="text-muted-foreground hover:text-destructive p-1">
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
                     </CardContent>
                   </Card>
                 ))}

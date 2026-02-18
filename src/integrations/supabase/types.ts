@@ -736,6 +736,69 @@ export type Database = {
         }
         Relationships: []
       }
+      sadaqah_donations: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          currency: string
+          date: string
+          id: string
+          notes: string | null
+          recipient: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          recipient?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          id?: string
+          notes?: string | null
+          recipient?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sadaqah_goals: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          monthly_target: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_target?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          monthly_target?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       salah_logs: {
         Row: {
           created_at: string
@@ -1013,6 +1076,54 @@ export type Database = {
           id?: string
           user_id?: string
           weight?: number
+        }
+        Relationships: []
+      }
+      zakat_history: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          input: Json
+          is_paid: boolean
+          meets_nisab: boolean
+          net_zakatable: number
+          nisab_gold: number
+          nisab_silver: number
+          paid_date: string | null
+          total_wealth: number
+          user_id: string
+          zakat_amount: number
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          input?: Json
+          is_paid?: boolean
+          meets_nisab?: boolean
+          net_zakatable?: number
+          nisab_gold?: number
+          nisab_silver?: number
+          paid_date?: string | null
+          total_wealth?: number
+          user_id: string
+          zakat_amount?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          input?: Json
+          is_paid?: boolean
+          meets_nisab?: boolean
+          net_zakatable?: number
+          nisab_gold?: number
+          nisab_silver?: number
+          paid_date?: string | null
+          total_wealth?: number
+          user_id?: string
+          zakat_amount?: number
         }
         Relationships: []
       }
