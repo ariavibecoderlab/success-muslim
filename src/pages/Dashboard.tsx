@@ -3,17 +3,20 @@ import {
   Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   Moon, BookOpen, Droplets, Sun, Sunrise, Sunset, CloudSun,
   TrendingUp, CheckCircle2, Star, Heart, Sparkles, Settings, Shield, Megaphone,
+  CircleDot, CircleAlert, CircleX,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
 import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
 import { fetchPrayerTimes, formatPrayerTime, getNextPrayerIndex, getCurrentPrayerIndex, type PrayerTimesData } from '@/lib/prayer-times';
 import { formatHijriDate } from '@/lib/hijri';
 import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
 import { getDailyDhikr } from '@/lib/dhikr-storage';
+import { getTodaySalah, logSalah, getTodaySalahCount, type SalahStatus, type SalahName, SALAH_NAMES } from '@/lib/salah-storage';
 import { motion } from 'framer-motion';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdmin } from '@/hooks/useAdmin';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +28,18 @@ const fadeUp = {
 };
 
 const PRAYER_ICONS = [Sunrise, Sun, CloudSun, Sunset, Moon];
+
+const STATUS_OPTIONS: { value: SalahStatus; label: string; icon: typeof CheckCircle2; colorClass: string }[] = [
+  { value: 'ontime', label: 'On Time', icon: CheckCircle2, colorClass: 'text-primary' },
+  { value: 'late', label: 'Late', icon: CircleDot, colorClass: 'text-accent-foreground' },
+  { value: 'missed', label: 'Missed', icon: CircleX, colorClass: 'text-destructive' },
+  { value: null, label: 'Clear', icon: CircleAlert, colorClass: 'text-muted-foreground' },
+];
+
+// Map API prayer keys to our SalahName type
+const API_TO_SALAH: Record<string, SalahName> = {
+  Fajr: 'Fajr', Dhuhr: 'Dhuhr', Asr: 'Asr', Maghrib: 'Maghrib', Isha: 'Isha',
+};
 
 const DUMMY_HABITS = [
   { label: 'Morning Adhkar', streak: 12, done: true },
@@ -46,6 +61,12 @@ const Dashboard = () => {
   const { isAdmin } = useAdmin();
   const [displayName, setDisplayName] = useState('');
   const [announcements, setAnnouncements] = useState<{ id: string; title: string; content: string }[]>([]);
+  const [salahLog, setSalahLog] = useState(getTodaySalah());
+
+  const handleSalahStatus = useCallback((prayer: SalahName, status: SalahStatus) => {
+    const updated = logSalah(prayer, status);
+    setSalahLog(updated);
+  }, []);
 
   useEffect(() => {
     const onFocus = () => forceUpdate(n => n + 1);
@@ -104,20 +125,24 @@ const Dashboard = () => {
   const prayers = prayerData
     ? prayerData.timings.map((t, i) => ({
         name: t.name,
+        key: t.key as SalahName,
         time: formatPrayerTime(t.time),
         icon: PRAYER_ICONS[i],
-        done: i <= getCurrentPrayerIndex(prayerData.timings),
+        passed: i <= getCurrentPrayerIndex(prayerData.timings),
         current: i === getNextPrayerIndex(prayerData.timings),
+        status: salahLog.prayers[API_TO_SALAH[t.key]]?.status ?? null,
       }))
-    : [
-        { name: 'Subuh', time: '—', icon: Sunrise, done: false, current: false },
-        { name: 'Zohor', time: '—', icon: Sun, done: false, current: false },
-        { name: 'Asar', time: '—', icon: CloudSun, done: false, current: false },
-        { name: 'Maghrib', time: '—', icon: Sunset, done: false, current: false },
-        { name: 'Isyak', time: '—', icon: Moon, done: false, current: false },
-      ];
+    : SALAH_NAMES.map((key, i) => ({
+        name: ['Subuh', 'Zohor', 'Asar', 'Maghrib', 'Isyak'][i],
+        key,
+        time: '—',
+        icon: PRAYER_ICONS[i],
+        passed: false,
+        current: false,
+        status: salahLog.prayers[key]?.status ?? null,
+      }));
 
-  const prayersDone = prayers.filter(p => p.done).length;
+  const salahCount = getTodaySalahCount();
   const hijriDate = formatHijriDate(new Date());
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
@@ -179,7 +204,12 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <EditableText elementKey="prayer.title" defaultText="Today's Prayers" tag="h2" className="text-sm font-semibold" />
-                    <p className="text-xs text-muted-foreground">{prayersDone}/5 passed</p>
+                    <p className="text-xs text-muted-foreground">
+                      {salahCount.logged}/5 logged
+                      {salahCount.onTime > 0 && <span className="text-primary"> · {salahCount.onTime} on time</span>}
+                      {salahCount.late > 0 && <span className="text-accent-foreground"> · {salahCount.late} late</span>}
+                      {salahCount.missed > 0 && <span className="text-destructive"> · {salahCount.missed} missed</span>}
+                    </p>
                   </div>
                 </div>
                 {prayerData && (
@@ -187,23 +217,50 @@ const Dashboard = () => {
                 )}
               </div>
               <div className="flex items-center gap-1">
-                {prayers.map(p => (
-                  <div
-                    key={p.name}
-                    className={`flex-1 flex flex-col items-center gap-1.5 py-2 rounded-xl transition-colors ${
-                      p.current
-                        ? 'bg-primary/10 ring-1 ring-primary/20'
-                        : p.done
-                        ? 'bg-secondary'
-                        : ''
-                    }`}
-                  >
-                    <p.icon className={`h-4 w-4 ${p.done ? 'text-primary' : p.current ? 'text-primary' : 'text-muted-foreground'}`} />
-                    <span className={`text-[10px] font-medium ${p.done ? 'text-primary' : 'text-muted-foreground'}`}>{p.name}</span>
-                    <span className="text-[9px] text-muted-foreground">{p.time}</span>
-                    {p.done && <CheckCircle2 className="h-3 w-3 text-primary" />}
-                  </div>
-                ))}
+                {prayers.map(p => {
+                  const statusColor = p.status === 'ontime' ? 'text-primary' : p.status === 'late' ? 'text-accent-foreground' : p.status === 'missed' ? 'text-destructive' : 'text-muted-foreground';
+                  const StatusIcon = p.status === 'ontime' ? CheckCircle2 : p.status === 'late' ? CircleDot : p.status === 'missed' ? CircleX : null;
+
+                  return (
+                    <Popover key={p.name}>
+                      <PopoverTrigger asChild>
+                        <button
+                          className={`flex-1 flex flex-col items-center gap-1.5 py-2 rounded-xl transition-colors cursor-pointer hover:bg-secondary/80 ${
+                            p.status === 'ontime'
+                              ? 'bg-primary/10 ring-1 ring-primary/20'
+                              : p.status === 'late'
+                              ? 'bg-accent/10 ring-1 ring-accent/20'
+                              : p.status === 'missed'
+                              ? 'bg-destructive/5 ring-1 ring-destructive/20'
+                              : p.current
+                              ? 'bg-primary/5 ring-1 ring-primary/10'
+                              : ''
+                          }`}
+                        >
+                          <p.icon className={`h-4 w-4 ${p.status ? statusColor : p.current ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <span className={`text-[10px] font-medium ${p.status ? statusColor : 'text-muted-foreground'}`}>{p.name}</span>
+                          <span className="text-[9px] text-muted-foreground">{p.time}</span>
+                          {StatusIcon && <StatusIcon className={`h-3 w-3 ${statusColor}`} />}
+                        </button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-36 p-1.5" align="center" side="bottom">
+                        <p className="text-[10px] font-medium text-muted-foreground px-2 py-1">{p.name}</p>
+                        {STATUS_OPTIONS.map(opt => (
+                          <button
+                            key={String(opt.value)}
+                            onClick={() => handleSalahStatus(p.key, opt.value)}
+                            className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs hover:bg-secondary transition-colors ${
+                              p.status === opt.value ? 'bg-secondary font-medium' : ''
+                            }`}
+                          >
+                            <opt.icon className={`h-3.5 w-3.5 ${opt.colorClass}`} />
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                      </PopoverContent>
+                    </Popover>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
