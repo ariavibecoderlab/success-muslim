@@ -97,7 +97,8 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 | Ramadhan Qada Tracker | `/ramadhan-qada/track` | Done | localStorage + DB |
 | Fidyah Calculator | `/fidyah` | Done | localStorage + DB |
 | Dhikr Counter | `/deen/dhikr` | Done | localStorage + DB |
-| Zakat Calculator | `/deen/zakat` | Done | localStorage (no persistence needed) |
+| Zakat Calculator | `/deen/zakat` | Done | DB (`zakat_history`) |
+| Sadaqah Tracker | `/deen/sadaqah` | Done | DB (`sadaqah_donations`, `sadaqah_goals`) |
 | Sunnah Tracker | `/deen/sunnah` | Done | localStorage + DB |
 | Fasting Tracker | `/deen/fasting` | Done | localStorage + DB |
 | Quran Reader | `/deen/quran` | Done | DB (`quran_preferences`, `quran_bookmarks`) |

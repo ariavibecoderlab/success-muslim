@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   Clock, CalendarCheck, Calculator, ChevronRight, Flame, Target,
   BookOpen, Star, HandHeart, ListChecks, Moon, Sunrise, Sun, Sunset,
-  Settings2, MapPin, BarChart3, Droplets,
+  Settings2, MapPin, BarChart3, Droplets, Heart,
 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -323,6 +323,21 @@ const Deen = () => {
                   <p className="text-sm font-semibold">Zakat</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     Calculate your zakat
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+
+            {/* Sadaqah */}
+            <Link to="/deen/sadaqah">
+              <Card className="hover:border-primary/20 transition-all h-full">
+                <CardContent className="p-4">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                    <Heart className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold">Sadaqah</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Track your giving
                   </p>
                 </CardContent>
               </Card>

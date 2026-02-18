@@ -58,7 +58,8 @@
 | Qada Solat (setup + tracking) | ✅ | Full flow + DB sync |
 | Ramadhan Qada (setup + tracking) | ✅ | Full flow + DB sync |
 | Fidyah Calculator | ✅ | Display only + DB sync |
-| Zakat Calculator | ✅ | No persistence needed |
+| Zakat Calculator | ✅ | DB persistence + mark as paid |
+| Sadaqah Tracker | ✅ | `sadaqah_donations` + `sadaqah_goals` tables, monthly goal, category breakdown |
 | Prayer Times | ✅ | Aladhan API, GPS + manual location, 20+ calculation methods |
 | Prayer Settings | ✅ | Madhab (Shafi/Hanafi), method selection, persisted to DB |
 | Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
