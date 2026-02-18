@@ -56,7 +56,11 @@
 | Ramadhan Qada (setup + tracking) | ✅ | Full flow + DB sync |
 | Fidyah Calculator | ✅ | Display only + DB sync |
 | Zakat Calculator | ✅ | No persistence needed |
-| Prayer Times | ✅ | Dedicated page with Aladhan API, countdown, location config |
+| Prayer Times | ✅ | Aladhan API, GPS + manual location, 20+ calculation methods |
+| Prayer Settings | ✅ | Madhab (Shafi/Hanafi), method selection, persisted to DB |
+| Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
+| Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
+| Hijri Date | ✅ | Prominent Hijri date on Prayer Times page |
 | Quran Tracker | ✅ | Daily pages, juz tracking, khatam progress, weekly chart, DB sync |
 
 ---

@@ -412,6 +412,69 @@ export type Database = {
         }
         Relationships: []
       }
+      prayer_settings: {
+        Row: {
+          adhan_settings: Json | null
+          calculation_method: number | null
+          city: string | null
+          country: string | null
+          created_at: string
+          id: string
+          latitude: number | null
+          location_method: string | null
+          longitude: number | null
+          madhab: string | null
+          mosque_asr: string | null
+          mosque_dhuhr: string | null
+          mosque_enabled: boolean | null
+          mosque_fajr: string | null
+          mosque_isha: string | null
+          mosque_maghrib: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          adhan_settings?: Json | null
+          calculation_method?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          location_method?: string | null
+          longitude?: number | null
+          madhab?: string | null
+          mosque_asr?: string | null
+          mosque_dhuhr?: string | null
+          mosque_enabled?: boolean | null
+          mosque_fajr?: string | null
+          mosque_isha?: string | null
+          mosque_maghrib?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          adhan_settings?: Json | null
+          calculation_method?: number | null
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          id?: string
+          latitude?: number | null
+          location_method?: string | null
+          longitude?: number | null
+          madhab?: string | null
+          mosque_asr?: string | null
+          mosque_dhuhr?: string | null
+          mosque_enabled?: boolean | null
+          mosque_fajr?: string | null
+          mosque_isha?: string | null
+          mosque_maghrib?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

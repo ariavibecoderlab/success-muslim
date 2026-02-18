@@ -87,6 +87,10 @@ Hub page: `/deen` with hero, active trackers, quick-start cards, and spiritual t
 | Feature | Route | Status | Data Storage |
 |---------|-------|--------|--------------|
 | Salah Tracking | Dashboard | Done | localStorage + DB |
+| Prayer Times | `/deen/prayer-times` | Done | localStorage + DB (`prayer_settings`) |
+| Prayer Settings | `/deen/prayer-times` (dialog) | Done | DB (`prayer_settings`) |
+| Mosque Sync | `/deen/prayer-times` | Done | DB (`prayer_settings`) |
+| Smart Adhan Config | `/deen/prayer-times` (dialog) | Done | DB (`prayer_settings`) |
 | Qada Solat Setup | `/qada-solat/setup` | Done | localStorage + DB |
 | Qada Solat Tracker | `/qada-solat/track` | Done | localStorage + DB |
 | Ramadhan Qada Setup | `/ramadhan-qada/setup` | Done | localStorage + DB |
@@ -95,6 +99,7 @@ Hub page: `/deen` with hero, active trackers, quick-start cards, and spiritual t
 | Dhikr Counter | `/deen/dhikr` | Done | localStorage + DB |
 | Zakat Calculator | `/deen/zakat` | Done | localStorage (no persistence needed) |
 | Sunnah Tracker | `/deen/sunnah` | Done | localStorage + DB |
+| Quran Tracker | `/deen/quran` | Done | localStorage + DB |
 
 ---
 
