@@ -66,18 +66,20 @@ const Landing = () => {
       }} />
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-primary/10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-lg font-bold text-primary flex items-center gap-2">
-            <Moon className="h-5 w-5" />
-            <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" />
-          </span>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+              <Moon className="h-4.5 w-4.5 text-primary" />
+            </div>
+            <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" className="text-lg font-bold text-foreground tracking-tight" />
+          </Link>
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               <Link to="/auth"><EditableText elementKey="nav.signin" defaultText="Sign In" tag="span" /></Link>
             </Button>
-            <Button asChild size="sm">
-              <Link to="/auth"><EditableText elementKey="nav.getstarted" defaultText="Get Started" tag="span" /></Link>
+            <Button asChild size="sm" className="rounded-lg shadow-sm">
+              <Link to="/auth"><EditableText elementKey="nav.getstarted" defaultText="Get Started" tag="span" /> <ArrowRight className="ml-1 h-3.5 w-3.5" /></Link>
             </Button>
           </div>
         </div>
