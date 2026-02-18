@@ -253,3 +253,7 @@ export function stopIF(completed: boolean) {
   localStorage.removeItem(KEYS.ifActive);
   syncIFStop(active.startTime, endTime, completed);
 }
+
+export function deleteIF() {
+  localStorage.removeItem(KEYS.ifActive);
+}

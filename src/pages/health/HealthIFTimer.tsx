@@ -1,11 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { Timer, Play, Square, RotateCcw, Settings2, Trash2, Save, ChevronUp, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Timer, Play, Square, Trash2, ChevronUp, ChevronDown, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getActiveIF, getIFSessions, startIF, stopIF } from '@/lib/health-storage';
+import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF } from '@/lib/health-storage';
 import { format, addDays, subDays } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 
@@ -26,17 +24,11 @@ const MODES = [
   { label: '36h', hours: 36 },
 ];
 
-const CUSTOM_KEY = 'health_if_custom';
-
-// Generate date options around today
 const generateDates = () => {
   const dates: { label: string; value: Date }[] = [];
   for (let i = -3; i <= 7; i++) {
     const d = i === 0 ? new Date() : i > 0 ? addDays(new Date(), i) : subDays(new Date(), Math.abs(i));
-    dates.push({
-      label: i === 0 ? 'Today' : format(d, 'EEE dd MMM'),
-      value: d,
-    });
+    dates.push({ label: i === 0 ? 'Today' : format(d, 'EEE dd MMM'), value: d });
   }
   return dates;
 };
@@ -101,25 +93,17 @@ const ScrollPicker = ({ items, selectedIndex, onSelect, className = '' }: Scroll
 
 const HealthIFTimer = () => {
   const [active, setActive] = useState(getActiveIF);
-  const savedCustom = (() => { try { const r = localStorage.getItem(CUSTOM_KEY); return r ? JSON.parse(r) : null; } catch { return null; } })();
-  const [selectedMode, setSelectedMode] = useState(savedCustom ? { label: 'Custom', hours: savedCustom.hours + savedCustom.minutes / 60 } : MODES[0]);
+  const [selectedMode, setSelectedMode] = useState(MODES[0]);
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState(getIFSessions);
   const [showCustom, setShowCustom] = useState(false);
-  const [customHours, setCustomHours] = useState(savedCustom?.hours ?? 13);
-  const [customMinutes, setCustomMinutes] = useState(savedCustom?.minutes ?? 30);
 
-  // Custom fasting date/time picker state
+  // Custom start date/time picker state
   const dateOptions = generateDates();
-  const [editingField, setEditingField] = useState<'start' | 'end' | null>(null);
   const [startDateIdx, setStartDateIdx] = useState(3); // Today
   const [startHour, setStartHour] = useState(new Date().getHours() % 12 || 12);
   const [startMinute, setStartMinute] = useState(new Date().getMinutes());
   const [startAmPm, setStartAmPm] = useState<'AM' | 'PM'>(new Date().getHours() >= 12 ? 'PM' : 'AM');
-  const [endDateIdx, setEndDateIdx] = useState(3); // Today
-  const [endHour, setEndHour] = useState((new Date().getHours() + 1) % 12 || 12);
-  const [endMinute, setEndMinute] = useState(new Date().getMinutes());
-  const [endAmPm, setEndAmPm] = useState<'AM' | 'PM'>(new Date().getHours() + 1 >= 12 ? 'PM' : 'AM');
 
   useEffect(() => {
     if (!active) return;
@@ -135,44 +119,34 @@ const HealthIFTimer = () => {
     return d;
   };
 
-  const getCustomEndDate = () => {
-    const d = new Date(dateOptions[endDateIdx].value);
-    let h = endHour % 12;
-    if (endAmPm === 'PM') h += 12;
-    d.setHours(h, endMinute, 0, 0);
-    return d;
-  };
-
-  const customDurationMs = getCustomEndDate().getTime() - getCustomStartDate().getTime();
-  const customDurationHours = Math.max(0, customDurationMs / 3600000);
-
-  const formatDuration = (ms: number) => {
-    if (ms <= 0) return '0 min';
-    const totalMin = Math.floor(ms / 60000);
-    const h = Math.floor(totalMin / 60);
-    const m = totalMin % 60;
-    if (h === 0) return `${m} min`;
-    if (m === 0) return `${h} hr`;
-    return `${h} hr ${m} min`;
-  };
+  const isCustomFast = active?.fastingHours === 0;
 
   const handleStart = () => {
-    startIF(selectedMode.label === 'Custom' ? 'My Custom Fast' : selectedMode.label, selectedMode.hours);
+    startIF(selectedMode.label, selectedMode.hours);
     setActive(getActiveIF());
   };
 
   const handleCustomStart = () => {
-    if (customDurationMs <= 0) return;
-    // Save custom start/end to localStorage and start
     const startTime = getCustomStartDate().toISOString();
-    const fastingHours = customDurationHours;
+    // Store with fastingHours=0 to indicate open-ended custom fast
     localStorage.setItem('health_if_active', JSON.stringify({
       mode: 'Custom',
       startTime,
-      fastingHours,
+      fastingHours: 0,
     }));
-    setActive({ mode: 'Custom', startTime, fastingHours });
+    setActive({ mode: 'Custom', startTime, fastingHours: 0 });
     setShowCustom(false);
+  };
+
+  const handleEndFast = () => {
+    stopIF(true);
+    setActive(null);
+    setSessions(getIFSessions());
+  };
+
+  const handleDeleteFast = () => {
+    deleteIF();
+    setActive(null);
   };
 
   const handleStop = (completed: boolean) => {
@@ -186,18 +160,6 @@ const HealthIFTimer = () => {
     setShowCustom(false);
   };
 
-  const handleCustomConfirm = () => {
-    const totalHours = customHours + customMinutes / 60;
-    if (totalHours <= 0) return;
-    localStorage.setItem(CUSTOM_KEY, JSON.stringify({ hours: customHours, minutes: customMinutes }));
-    setSelectedMode({ label: 'Custom', hours: totalHours });
-  };
-
-  const handleShowCustom = () => {
-    setShowCustom(true);
-    setEditingField('start');
-  };
-
   let elapsed = 0;
   let total = 0;
   let remaining = 0;
@@ -205,10 +167,15 @@ const HealthIFTimer = () => {
 
   if (active) {
     const start = new Date(active.startTime).getTime();
-    total = active.fastingHours * 3600 * 1000;
-    elapsed = now - start;
-    remaining = Math.max(0, total - elapsed);
-    progress = Math.min((elapsed / total) * 100, 100);
+    elapsed = Math.max(0, now - start);
+    if (isCustomFast) {
+      // Open-ended: no total, no remaining
+      progress = 0;
+    } else {
+      total = active.fastingHours * 3600 * 1000;
+      remaining = Math.max(0, total - elapsed);
+      progress = Math.min((elapsed / total) * 100, 100);
+    }
   }
 
   const formatTime = (ms: number) => {
@@ -245,10 +212,8 @@ const HealthIFTimer = () => {
                 </button>
               ))}
               <button
-                onClick={handleShowCustom}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                  showCustom ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                }`}
+                onClick={() => setShowCustom(true)}
+                className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 bg-secondary text-secondary-foreground"
               >
                 <Settings2 className="h-3.5 w-3.5" /> Custom
               </button>
@@ -256,109 +221,63 @@ const HealthIFTimer = () => {
           </div>
         )}
 
-        {/* Custom Fasting Mode - like reference image */}
+        {/* Custom Fasting - Start time only */}
         {!active && showCustom && (
           <div className="space-y-4">
-            {/* Total Fasting Time display */}
-            <div className="text-center py-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Fasting Time</p>
-              <p className="text-3xl font-bold mt-1">{formatDuration(customDurationMs)}</p>
-            </div>
-
-            {/* Fasting Custom Card */}
             <Card>
               <CardContent className="p-4 space-y-4">
                 <div className="flex items-center gap-2">
                   <Timer className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">Fasting Custom</span>
+                  <span className="text-sm font-semibold">Custom Fast</span>
                 </div>
 
-                {/* Start row */}
-                <button
-                  onClick={() => setEditingField(editingField === 'start' ? null : 'start')}
-                  className="flex items-center justify-between w-full py-2 border-b border-border"
-                >
+                {/* Start time display */}
+                <div className="flex items-center justify-between w-full py-2 border-b border-border">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span className="text-sm">Start</span>
+                    <span className="text-sm">Start Time</span>
                   </div>
                   <span className="text-sm font-medium text-primary">
-                    {dateOptions[startDateIdx].label}, {startHour}:{String(startMinute).padStart(2, '0')} {startAmPm} ✏️
+                    {dateOptions[startDateIdx].label}, {startHour}:{String(startMinute).padStart(2, '0')} {startAmPm}
                   </span>
-                </button>
+                </div>
 
-                {/* End row */}
-                <button
-                  onClick={() => setEditingField(editingField === 'end' ? null : 'end')}
-                  className="flex items-center justify-between w-full py-2 border-b border-border"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-destructive" />
-                    <span className="text-sm">End</span>
-                  </div>
-                  <span className="text-sm font-medium text-primary">
-                    {dateOptions[endDateIdx].label}, {endHour}:{String(endMinute).padStart(2, '0')} {endAmPm} ✏️
-                  </span>
-                </button>
-
-                {/* Scroll pickers */}
-                {editingField && (
-                  <div className="grid grid-cols-4 gap-1">
-                    <ScrollPicker
-                      items={dateOptions.map(d => ({ label: d.label, value: d.value }))}
-                      selectedIndex={editingField === 'start' ? startDateIdx : endDateIdx}
-                      onSelect={idx => editingField === 'start' ? setStartDateIdx(idx) : setEndDateIdx(idx)}
-                    />
-                    <ScrollPicker
-                      items={hourItems}
-                      selectedIndex={
-                        editingField === 'start'
-                          ? HOURS_12.indexOf(startHour)
-                          : HOURS_12.indexOf(endHour)
-                      }
-                      onSelect={idx => editingField === 'start' ? setStartHour(HOURS_12[idx]) : setEndHour(HOURS_12[idx])}
-                    />
-                    <ScrollPicker
-                      items={minuteItems}
-                      selectedIndex={editingField === 'start' ? startMinute : endMinute}
-                      onSelect={idx => editingField === 'start' ? setStartMinute(idx) : setEndMinute(idx)}
-                    />
-                    <ScrollPicker
-                      items={ampmItems}
-                      selectedIndex={
-                        editingField === 'start'
-                          ? (startAmPm === 'AM' ? 0 : 1)
-                          : (endAmPm === 'AM' ? 0 : 1)
-                      }
-                      onSelect={idx => {
-                        const val = idx === 0 ? 'AM' : 'PM';
-                        editingField === 'start' ? setStartAmPm(val as 'AM' | 'PM') : setEndAmPm(val as 'AM' | 'PM');
-                      }}
-                    />
-                  </div>
-                )}
+                {/* Scroll pickers for start only */}
+                <div className="grid grid-cols-4 gap-1">
+                  <ScrollPicker
+                    items={dateOptions.map(d => ({ label: d.label, value: d.value }))}
+                    selectedIndex={startDateIdx}
+                    onSelect={setStartDateIdx}
+                  />
+                  <ScrollPicker
+                    items={hourItems}
+                    selectedIndex={HOURS_12.indexOf(startHour)}
+                    onSelect={idx => setStartHour(HOURS_12[idx])}
+                  />
+                  <ScrollPicker
+                    items={minuteItems}
+                    selectedIndex={startMinute}
+                    onSelect={setStartMinute}
+                  />
+                  <ScrollPicker
+                    items={ampmItems}
+                    selectedIndex={startAmPm === 'AM' ? 0 : 1}
+                    onSelect={idx => setStartAmPm(idx === 0 ? 'AM' : 'PM')}
+                  />
+                </div>
 
                 <p className="text-[10px] text-muted-foreground">
-                  * Please select the time you stop fasting (start eating)
+                  * Select when your fast starts. Tap "Start Fast" to begin.
                 </p>
               </CardContent>
             </Card>
 
-            {/* Delete / Save buttons */}
             <div className="grid grid-cols-2 gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setShowCustom(false)}
-                className="gap-2"
-              >
-                <Trash2 className="h-4 w-4" /> Cancel
+              <Button variant="outline" onClick={() => setShowCustom(false)} className="gap-2">
+                Cancel
               </Button>
-              <Button
-                onClick={handleCustomStart}
-                disabled={customDurationMs <= 0}
-                className="gap-2"
-              >
-                <Save className="h-4 w-4" /> Save & Start
+              <Button onClick={handleCustomStart} className="gap-2">
+                <Play className="h-4 w-4" /> Start Fast
               </Button>
             </div>
           </div>
@@ -370,7 +289,7 @@ const HealthIFTimer = () => {
             <div className="relative w-52 h-52">
               <svg className="w-52 h-52 -rotate-90" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r="70" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
-                {active && (
+                {active && !isCustomFast && (
                   <circle
                     cx="80" cy="80" r="70" fill="none"
                     stroke="hsl(var(--primary))"
@@ -381,23 +300,38 @@ const HealthIFTimer = () => {
                     className="transition-all duration-1000"
                   />
                 )}
+                {active && isCustomFast && (
+                  <circle
+                    cx="80" cy="80" r="70" fill="none"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray="12 8"
+                    className="animate-spin"
+                    style={{ animationDuration: '8s' }}
+                  />
+                )}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 {active ? (
-                  <>
-                    <EditableText elementKey="iftimer.remaining" defaultText="Remaining" tag="p" className="text-xs text-muted-foreground" />
-                    <p className="text-2xl font-bold font-mono">{formatTime(remaining)}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{active.mode} fast</p>
-                  </>
+                  isCustomFast ? (
+                    <>
+                      <EditableText elementKey="iftimer.elapsed" defaultText="Elapsed" tag="p" className="text-xs text-muted-foreground" />
+                      <p className="text-2xl font-bold font-mono">{formatTime(elapsed)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Custom fast</p>
+                    </>
+                  ) : (
+                    <>
+                      <EditableText elementKey="iftimer.remaining" defaultText="Remaining" tag="p" className="text-xs text-muted-foreground" />
+                      <p className="text-2xl font-bold font-mono">{formatTime(remaining)}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{active.mode} fast</p>
+                    </>
+                  )
                 ) : (
                   <>
                     <Timer className="h-8 w-8 text-primary mb-2" />
-                    <p className="text-lg font-bold">{selectedMode.label === 'Custom' ? 'My Custom Fast' : selectedMode.label}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {selectedMode.label === 'Custom'
-                        ? `${customHours}h ${customMinutes}m fast`
-                        : `${selectedMode.hours}h fast`}
-                    </p>
+                    <p className="text-lg font-bold">{selectedMode.label}</p>
+                    <p className="text-xs text-muted-foreground">{selectedMode.hours}h fast</p>
                   </>
                 )}
               </div>
@@ -412,10 +346,26 @@ const HealthIFTimer = () => {
               <Button onClick={handleStart} className="gap-2 px-8">
                 <Play className="h-4 w-4" /> Start Fast
               </Button>
+            ) : isCustomFast ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteFast}
+                  className="gap-2 border-destructive text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-4 w-4" /> Delete
+                </Button>
+                <Button
+                  onClick={handleEndFast}
+                  className="gap-2 bg-green-600 hover:bg-green-700 text-white"
+                >
+                  <Square className="h-4 w-4" /> End Fast
+                </Button>
+              </>
             ) : (
               <>
                 <Button variant="outline" onClick={() => handleStop(false)} className="gap-2">
-                  <RotateCcw className="h-4 w-4" /> Cancel
+                  <Trash2 className="h-4 w-4" /> Cancel
                 </Button>
                 {remaining === 0 && (
                   <Button onClick={() => handleStop(true)} className="gap-2">
@@ -427,14 +377,23 @@ const HealthIFTimer = () => {
           </div>
         )}
 
-        {active && (
+        {active && !showCustom && (
           <Card>
             <CardContent className="p-4 text-center space-y-1">
-              <EditableText elementKey="iftimer.elapsed" defaultText="Elapsed" tag="p" className="text-xs text-muted-foreground" />
-              <p className="text-lg font-bold font-mono">{formatTime(elapsed)}</p>
-              <p className="text-xs text-muted-foreground">
-                Started {format(new Date(active.startTime), 'HH:mm, dd MMM')}
-              </p>
+              {isCustomFast ? (
+                <>
+                  <p className="text-xs text-muted-foreground">Fasting since</p>
+                  <p className="text-lg font-bold">{format(new Date(active.startTime), 'HH:mm, dd MMM')}</p>
+                </>
+              ) : (
+                <>
+                  <EditableText elementKey="iftimer.elapsed" defaultText="Elapsed" tag="p" className="text-xs text-muted-foreground" />
+                  <p className="text-lg font-bold font-mono">{formatTime(elapsed)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Started {format(new Date(active.startTime), 'HH:mm, dd MMM')}
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
         )}
