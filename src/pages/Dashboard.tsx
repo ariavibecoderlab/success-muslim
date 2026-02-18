@@ -24,6 +24,10 @@ import {
   CircleDot,
   CircleAlert,
   CircleX,
+  BedDouble,
+  Dumbbell,
+  ListChecks,
+  HandHeart,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -54,6 +58,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import EditableText from "@/components/cms/EditableText";
+import { calculateLifeScore, saveCurrentDayScore, getScoreColor, getScoreLabel, getWeeklyScores } from "@/lib/life-score";
+import { getHydration } from "@/lib/health-storage";
+import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -197,6 +204,23 @@ const Dashboard = () => {
   const gregorianDate = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
 
+  // Life Score
+  const lifeScore = useMemo(() => calculateLifeScore(), [salahLog, forceUpdate]);
+  useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
+  const weeklyScores = useMemo(() => getWeeklyScores(), []);
+  const hydration = getHydration();
+
+  const QUICK_LOGS = [
+    { icon: Star, label: 'Prayer', to: '/deen/prayer-times', color: 'bg-primary/10 text-primary' },
+    { icon: BookOpen, label: 'Quran', to: '/deen/quran', color: 'bg-primary/10 text-primary' },
+    { icon: HandHeart, label: 'Dhikr', to: '/deen/dhikr', color: 'bg-accent/20 text-accent-foreground' },
+    { icon: Moon, label: 'Fast', to: '/health/fasting', color: 'bg-secondary text-secondary-foreground' },
+    { icon: Droplets, label: 'Water', to: '/health/hydration', color: 'bg-blue-500/10 text-blue-600' },
+    { icon: BedDouble, label: 'Sleep', to: '/health/sleep', color: 'bg-secondary text-secondary-foreground' },
+    { icon: ListChecks, label: 'Tasks', to: '/productivity/tasks', color: 'bg-accent/20 text-accent-foreground' },
+    { icon: Dumbbell, label: 'Habits', to: '/productivity/habits', color: 'bg-primary/10 text-primary' },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
       <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -252,6 +276,97 @@ const Dashboard = () => {
             tag="p"
             className="text-muted-foreground text-sm"
           />
+        </motion.div>
+
+        {/* Life Score Card */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.5}>
+          <Card className="bg-primary/5 border-primary/10">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <EditableText elementKey="lifescore.card.title" defaultText="Life Score" tag="h2" className="text-sm font-semibold" />
+                    <p className={`text-xs ${getScoreColor(lifeScore.total)}`}>{getScoreLabel(lifeScore.total)}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className={`text-3xl font-bold ${getScoreColor(lifeScore.total)}`}>{lifeScore.total}</p>
+                  <p className="text-[10px] text-muted-foreground">/ 100</p>
+                </div>
+              </div>
+              {/* Pillar bars */}
+              <div className="space-y-2">
+                {lifeScore.pillars.map(p => (
+                  <div key={p.label} className="flex items-center gap-3">
+                    <span className="text-[10px] text-muted-foreground w-20">{p.label} ({Math.round(p.weight * 100)}%)</span>
+                    <div className="flex-1">
+                      <Progress value={p.score} className="h-1.5" />
+                    </div>
+                    <span className="text-xs font-medium w-8 text-right">{p.score}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Weekly trend */}
+              {weeklyScores.length > 1 && (
+                <div className="mt-4">
+                  <p className="text-[10px] text-muted-foreground mb-2">7-Day Trend</p>
+                  <ResponsiveContainer width="100%" height={60}>
+                    <BarChart data={weeklyScores}>
+                      <XAxis dataKey="date" tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
+                      <Tooltip />
+                      <Bar dataKey="score" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Quick Log Buttons */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.8}>
+          <EditableText elementKey="quicklog.title" defaultText="Quick Log" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
+          <div className="grid grid-cols-4 gap-2">
+            {QUICK_LOGS.map(q => (
+              <Link key={q.label} to={q.to}>
+                <Card className="hover:shadow-sm transition-shadow active:scale-[0.97]">
+                  <CardContent className="p-3 flex flex-col items-center gap-1.5">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${q.color}`}>
+                      <q.icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-[10px] font-medium">{q.label}</span>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Today Overview */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.9} className="grid grid-cols-4 gap-2">
+          <Card><CardContent className="p-3 text-center">
+            <Droplets className="h-3.5 w-3.5 mx-auto text-blue-500 mb-1" />
+            <p className="text-sm font-bold">{hydration.cups}/{hydration.goal}</p>
+            <p className="text-[9px] text-muted-foreground">Water</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-3 text-center">
+            <ListChecks className="h-3.5 w-3.5 mx-auto text-accent-foreground mb-1" />
+            <p className="text-sm font-bold">{salahCount.logged}/5</p>
+            <p className="text-[9px] text-muted-foreground">Prayers</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-3 text-center">
+            <HandHeart className="h-3.5 w-3.5 mx-auto text-primary mb-1" />
+            <p className="text-sm font-bold">{dailyDhikr.totalCount}</p>
+            <p className="text-[9px] text-muted-foreground">Dhikr</p>
+          </CardContent></Card>
+          <Card><CardContent className="p-3 text-center">
+            <Flame className="h-3.5 w-3.5 mx-auto text-accent-foreground mb-1" />
+            <p className="text-sm font-bold">{sunnahStreak}</p>
+            <p className="text-[9px] text-muted-foreground">Streak</p>
+          </CardContent></Card>
         </motion.div>
 
         {/* Daily Prayer Widget */}
