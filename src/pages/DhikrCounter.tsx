@@ -1,10 +1,11 @@
 import { useState, useCallback, useRef } from 'react';
-import { RotateCcw, Check, Plus, Flame, Trash2, X, History } from 'lucide-react';
+import { RotateCcw, Check, Plus, Flame, Trash2, X, History, Pencil } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset, getDhikrStreak, getDhikrHistory } from '@/lib/dhikr-storage';
 import SubPageLayout from '@/components/SubPageLayout';
@@ -31,6 +32,8 @@ const DhikrCounter = () => {
   const [newName, setNewName] = useState('');
   const [newArabic, setNewArabic] = useState('');
   const [newTarget, setNewTarget] = useState('33');
+  const [editingTarget, setEditingTarget] = useState(false);
+  const [editTargetValue, setEditTargetValue] = useState('');
   const rippleId = useRef(0);
 
   const streak = getDhikrStreak();
@@ -91,6 +94,18 @@ const DhikrCounter = () => {
     savePresets(updated);
     setPresetsState(updated);
     if (selectedPreset.id === id) selectPreset(updated[0]);
+  };
+
+  const handleUpdateTarget = (newTargetVal: number) => {
+    if (newTargetVal < 1) return;
+    const updatedPreset = { ...selectedPreset, target: newTargetVal };
+    const updated = presets.map(p => p.id === selectedPreset.id ? updatedPreset : p);
+    savePresets(updated);
+    setPresetsState(updated);
+    setSelectedPreset(updatedPreset);
+    setEditingTarget(false);
+    // Re-save current count with new target
+    saveDhikrCount(selectedPreset.id, count, newTargetVal);
   };
 
   const progress = Math.min((count / selectedPreset.target) * 100, 100);
@@ -203,7 +218,43 @@ const DhikrCounter = () => {
                   {count}
                 </motion.span>
               </AnimatePresence>
-              <span className="text-xs text-muted-foreground mt-0.5">/ {selectedPreset.target}</span>
+              <Popover open={editingTarget} onOpenChange={(open) => {
+                setEditingTarget(open);
+                if (open) setEditTargetValue(String(selectedPreset.target));
+              }}>
+                <PopoverTrigger asChild>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setEditingTarget(true); setEditTargetValue(String(selectedPreset.target)); }}
+                    className="text-xs text-muted-foreground mt-0.5 hover:text-primary transition-colors flex items-center gap-0.5"
+                  >
+                    / {selectedPreset.target} <Pencil className="h-2.5 w-2.5 opacity-50" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-3" onClick={(e) => e.stopPropagation()}>
+                  <p className="text-xs font-medium mb-2">Set target count</p>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={editTargetValue}
+                      onChange={(e) => setEditTargetValue(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                      onKeyDown={(e) => { if (e.key === 'Enter') handleUpdateTarget(parseInt(editTargetValue) || 33); }}
+                    />
+                    <Button size="sm" className="h-8 px-3" onClick={() => handleUpdateTarget(parseInt(editTargetValue) || 33)}>
+                      <Check className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-1 mt-2 flex-wrap">
+                    {[33, 99, 100, 500, 1000].map(n => (
+                      <button key={n} onClick={() => handleUpdateTarget(n)} className="text-[10px] px-2 py-0.5 rounded-full bg-secondary hover:bg-secondary/80 transition-colors">
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
               {completed && (
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="mt-1">
                   <Check className="h-6 w-6 text-primary" />
