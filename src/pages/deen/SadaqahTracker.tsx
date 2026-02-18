@@ -25,8 +25,6 @@ const CATEGORIES = [
   { value: 'sadaqah', label: 'Sadaqah' },
   { value: 'infaq', label: 'Infaq' },
   { value: 'wakaf', label: 'Wakaf' },
-  { value: 'zakat_fitrah', label: 'Zakat Fitrah' },
-  { value: 'fidyah', label: 'Fidyah' },
   { value: 'other', label: 'Other' },
 ];
 
