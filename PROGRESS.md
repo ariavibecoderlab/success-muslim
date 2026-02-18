@@ -87,7 +87,8 @@
 | Hydration Tracker | ✅ | DB sync |
 | Sleep Tracker | ✅ | DB sync |
 | Sunnah Fasting Calendar | ✅ | DB sync |
-| IF Timer | ✅ | DB sync |
+| IF Timer | ✅ | DB sync, custom duration picker (hours+minutes), saved as default |
+| IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button when fasting active |
 | Sleep & Wake targets | ✅ | Configurable targets with vs-actual comparison |
 
 ---

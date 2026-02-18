@@ -1,8 +1,10 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
-import { getBMI, getHydration, getSleepLog, bmiCategory } from '@/lib/health-storage';
+import { Button } from '@/components/ui/button';
+import { getBMI, getHydration, getSleepLog, bmiCategory, getActiveIF, stopIF } from '@/lib/health-storage';
 import EditableText from '@/components/cms/EditableText';
 
 const features = [
@@ -21,6 +23,34 @@ const Health = () => {
   const sleepLog = getSleepLog();
   const lastSleep = sleepLog[sleepLog.length - 1];
   const cat = bmi ? bmiCategory(bmi.bmi) : null;
+
+  const [activeIF, setActiveIF] = useState(getActiveIF);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    if (!activeIF) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [activeIF]);
+
+  const handleBreakFast = () => {
+    stopIF(false);
+    setActiveIF(null);
+  };
+
+  let ifRemaining = 0;
+  if (activeIF) {
+    const start = new Date(activeIF.startTime).getTime();
+    const total = activeIF.fastingHours * 3600 * 1000;
+    ifRemaining = Math.max(0, total - (now - start));
+  }
+
+  const formatCountdown = (ms: number) => {
+    const totalMin = Math.floor(ms / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${h}h ${m.toString().padStart(2, '0')}m remaining`;
+  };
 
   const today = new Date();
   const isMonOrThu = today.getDay() === 1 || today.getDay() === 4;
@@ -56,6 +86,28 @@ const Health = () => {
           <p className="text-[10px] text-muted-foreground">hours</p>
         </CardContent></Card>
       </div>
+
+      {/* Active IF Widget */}
+      {activeIF && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Timer className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-primary">IF Fasting Active</p>
+                  <p className="text-sm font-bold">{formatCountdown(ifRemaining)}</p>
+                </div>
+              </div>
+              <Button size="sm" variant="outline" onClick={handleBreakFast} className="text-xs">
+                Break Fast
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Feature cards */}
       <div>
