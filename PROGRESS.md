@@ -49,6 +49,8 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
+| Deen Page Revamp | ✅ | Prayer hero card, summary strip, live tool grid, deen score |
+|---------|--------|-------|
 | Salah Tracking (On Time/Late/Missed) | ✅ | Dashboard popover + DB sync |
 | Dhikr Counter | ✅ | Presets + DB sync |
 | Sunnah Tracker | ✅ | Daily checklist + DB sync |

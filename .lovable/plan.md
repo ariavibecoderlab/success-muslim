@@ -82,7 +82,7 @@ Key file: `src/lib/db-sync.ts` — contains all sync functions + `hydrateFromDat
 
 ## PILLAR 1: Iman / Deen -- FULLY BUILT
 
-Hub page: `/deen` with hero, active trackers, quick-start cards, and spiritual tools section.
+Hub page: `/deen` — full spiritual command center with live prayer countdown hero, today's ibadah summary strip, 2-column tool grid with live data, active trackers with progress bars, and daily deen score.
 
 | Feature | Route | Status | Data Storage |
 |---------|-------|--------|--------------|
