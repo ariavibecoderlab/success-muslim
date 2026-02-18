@@ -99,6 +99,7 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 | Dhikr Counter | `/deen/dhikr` | Done | localStorage + DB |
 | Zakat Calculator | `/deen/zakat` | Done | localStorage (no persistence needed) |
 | Sunnah Tracker | `/deen/sunnah` | Done | localStorage + DB |
+| Fasting Tracker | `/deen/fasting` | Done | localStorage + DB |
 | Quran Reader | `/deen/quran` | Done | DB (`quran_preferences`, `quran_bookmarks`) |
 | Surah Reader | `/deen/quran/read/:num` | Done | DB (API + `quran_reading_sessions`) |
 | Quran Memorization | `/deen/quran/read/:num` | Done | DB (`quran_memorization`) |
