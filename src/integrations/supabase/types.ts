@@ -381,6 +381,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           city: string | null
           country: string | null
           created_at: string
@@ -392,6 +393,7 @@ export type Database = {
           weight_goal: number | null
         }
         Insert: {
+          avatar_url?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
@@ -403,6 +405,7 @@ export type Database = {
           weight_goal?: number | null
         }
         Update: {
+          avatar_url?: string | null
           city?: string | null
           country?: string | null
           created_at?: string
