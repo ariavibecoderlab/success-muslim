@@ -547,7 +547,7 @@ const Onboarding = () => {
                   <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2, duration: 0.5, type: 'spring' }}>
                     <h1 className="text-3xl font-bold">
-                      Assalamualaikum, {displayName || 'there'}! 👋
+                      Assalamualaikum, {displayName || 'there'}!
                     </h1>
                   </motion.div>
 
