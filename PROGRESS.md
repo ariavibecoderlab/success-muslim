@@ -26,6 +26,9 @@
 | Fidyah history → DB | ✅ | `fidyah_history` table |
 | User activity logging | ✅ | `user_activity` table + `logActivity()` |
 | Hydrate from DB on login | ✅ | `hydrateFromDatabase()` in AuthGuard |
+| Transactions → DB | ✅ | `transactions` table with recurring support |
+| Savings goals → DB | ✅ | `savings_goals` + `savings_contributions` tables |
+| Budget periods → DB | ✅ | `budget_periods` table |
 
 ---
 
@@ -36,6 +39,7 @@
 | Bottom tab: Home | ✅ | Dashboard route |
 | Bottom tab: Iman | ✅ | Deen route |
 | Bottom tab: Wellness | ✅ | Health route |
+| Bottom tab: Wealth | ✅ | Wealth hub with sub-pages |
 | Bottom tab: Tasks | ✅ | Productivity route |
 | Bottom tab: Profile | ✅ | Replaced Family → Profile/Settings |
 
@@ -68,6 +72,23 @@
 | Sunnah Fasting Calendar | ✅ | DB sync |
 | IF Timer | ✅ | DB sync |
 | Sleep & Wake targets | ✅ | Configurable targets with vs-actual comparison |
+
+---
+
+## 💰 WEALTH MODULE
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Wealth hub page | ✅ | Links to Budget, Savings, Zakat |
+| Budget Tracker | ✅ | Income/expense tracking with Islamic-themed categories |
+| Spending Pie Chart | ✅ | Donut chart with category breakdown + color-coded legend |
+| Recurring Transactions | ✅ | Weekly/biweekly/monthly/yearly with toggle in add dialog |
+| Savings Goals | ✅ | Islamic milestones (Hajj, Umrah, Qurban, Emergency, Education, Wedding) |
+| Savings Contributions | ✅ | Add contributions with progress bar + deadline countdown |
+| Zakat Calculator | ✅ | Linked from Iman module |
+| Sadaqah Goals | ❌ | Planned for future phase |
+| Debt-Free Planner | ❌ | Planned for future phase |
+| Shariah Investment Tracking | ❌ | Planned for future phase |
 
 ---
 
@@ -125,3 +146,9 @@
 6. ~~Profile/Settings consolidation~~ ✅
 7. ~~Sleep & Wake targets~~ ✅
 8. ~~Replace Family tab → Profile tab~~ ✅
+
+### P2 — Wealth Module
+9. ~~Budget Tracker~~ ✅
+10. ~~Savings Goals~~ ✅
+11. ~~Spending Charts~~ ✅
+12. ~~Recurring Transactions~~ ✅

@@ -701,6 +701,9 @@ export type Database = {
           date: string
           description: string | null
           id: string
+          is_recurring: boolean
+          recurrence_interval: string | null
+          recurring_parent_id: string | null
           type: string
           user_id: string
         }
@@ -711,6 +714,9 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean
+          recurrence_interval?: string | null
+          recurring_parent_id?: string | null
           type: string
           user_id: string
         }
@@ -721,10 +727,21 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
+          is_recurring?: boolean
+          recurrence_interval?: string | null
+          recurring_parent_id?: string | null
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_recurring_parent_id_fkey"
+            columns: ["recurring_parent_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_activity: {
         Row: {

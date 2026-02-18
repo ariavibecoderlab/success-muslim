@@ -1,31 +1,33 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Receipt, Plus, TrendingUp, TrendingDown, Wallet, Trash2 } from 'lucide-react';
+import { Receipt, Plus, TrendingUp, TrendingDown, Wallet, Trash2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import SubPageLayout from '@/components/SubPageLayout';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 const EXPENSE_CATEGORIES = [
-  { value: 'food', label: 'Food & Groceries', emoji: '🍽️' },
-  { value: 'housing', label: 'Housing & Rent', emoji: '🏠' },
-  { value: 'transport', label: 'Transport', emoji: '🚗' },
-  { value: 'sadaqah', label: 'Sadaqah', emoji: '🤲' },
-  { value: 'zakat', label: 'Zakat', emoji: '💎' },
-  { value: 'education', label: 'Education', emoji: '📚' },
-  { value: 'healthcare', label: 'Healthcare', emoji: '🏥' },
-  { value: 'entertainment', label: 'Entertainment', emoji: '🎬' },
-  { value: 'utilities', label: 'Utilities', emoji: '💡' },
-  { value: 'clothing', label: 'Clothing', emoji: '👕' },
-  { value: 'other', label: 'Other', emoji: '📦' },
+  { value: 'food', label: 'Food & Groceries', emoji: '🍽️', color: 'hsl(25, 95%, 53%)' },
+  { value: 'housing', label: 'Housing & Rent', emoji: '🏠', color: 'hsl(210, 70%, 50%)' },
+  { value: 'transport', label: 'Transport', emoji: '🚗', color: 'hsl(45, 90%, 50%)' },
+  { value: 'sadaqah', label: 'Sadaqah', emoji: '🤲', color: 'hsl(120, 61%, 34%)' },
+  { value: 'zakat', label: 'Zakat', emoji: '💎', color: 'hsl(160, 60%, 40%)' },
+  { value: 'education', label: 'Education', emoji: '📚', color: 'hsl(270, 60%, 55%)' },
+  { value: 'healthcare', label: 'Healthcare', emoji: '🏥', color: 'hsl(0, 70%, 55%)' },
+  { value: 'entertainment', label: 'Entertainment', emoji: '🎬', color: 'hsl(300, 50%, 55%)' },
+  { value: 'utilities', label: 'Utilities', emoji: '💡', color: 'hsl(50, 80%, 50%)' },
+  { value: 'clothing', label: 'Clothing', emoji: '👕', color: 'hsl(190, 60%, 50%)' },
+  { value: 'other', label: 'Other', emoji: '📦', color: 'hsl(0, 0%, 55%)' },
 ];
 
 const INCOME_CATEGORIES = [
@@ -35,6 +37,13 @@ const INCOME_CATEGORIES = [
   { value: 'investment', label: 'Investment Returns', emoji: '📈' },
   { value: 'gift', label: 'Gift / Hadiah', emoji: '🎁' },
   { value: 'other', label: 'Other', emoji: '📦' },
+];
+
+const RECURRENCE_OPTIONS = [
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'biweekly', label: 'Bi-weekly' },
+  { value: 'monthly', label: 'Monthly' },
+  { value: 'yearly', label: 'Yearly' },
 ];
 
 const WEALTH_SIBLINGS = [
@@ -49,6 +58,8 @@ interface Transaction {
   category: string;
   description: string | null;
   date: string;
+  is_recurring: boolean;
+  recurrence_interval: string | null;
 }
 
 const BudgetTracker = () => {
@@ -61,6 +72,8 @@ const BudgetTracker = () => {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceInterval, setRecurrenceInterval] = useState('monthly');
 
   const fetchTransactions = async () => {
     if (!user) return;
@@ -88,10 +101,12 @@ const BudgetTracker = () => {
       category,
       description: description || null,
       date,
+      is_recurring: isRecurring,
+      recurrence_interval: isRecurring ? recurrenceInterval : null,
     });
     if (error) { toast.error('Failed to add transaction'); return; }
-    toast.success(`${txType === 'income' ? 'Income' : 'Expense'} added`);
-    setAmount(''); setCategory(''); setDescription(''); setDialogOpen(false);
+    toast.success(`${txType === 'income' ? 'Income' : 'Expense'} added${isRecurring ? ' (recurring)' : ''}`);
+    setAmount(''); setCategory(''); setDescription(''); setIsRecurring(false); setDialogOpen(false);
     fetchTransactions();
   };
 
@@ -101,14 +116,20 @@ const BudgetTracker = () => {
     toast.success('Deleted');
   };
 
-  const { totalIncome, totalExpense, balance, categoryBreakdown } = useMemo(() => {
+  const { totalIncome, totalExpense, balance, categoryBreakdown, pieData } = useMemo(() => {
     const inc = transactions.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
     const exp = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
     const breakdown: Record<string, number> = {};
     transactions.filter(t => t.type === 'expense').forEach(t => {
       breakdown[t.category] = (breakdown[t.category] || 0) + Number(t.amount);
     });
-    return { totalIncome: inc, totalExpense: exp, balance: inc - exp, categoryBreakdown: breakdown };
+    const pie = Object.entries(breakdown)
+      .sort(([, a], [, b]) => b - a)
+      .map(([cat, value]) => {
+        const catInfo = EXPENSE_CATEGORIES.find(c => c.value === cat);
+        return { name: catInfo ? `${catInfo.emoji} ${catInfo.label}` : cat, value, color: catInfo?.color || 'hsl(0,0%,55%)' };
+      });
+    return { totalIncome: inc, totalExpense: exp, balance: inc - exp, categoryBreakdown: breakdown, pieData: pie };
   }, [transactions]);
 
   const categories = txType === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
@@ -145,20 +166,45 @@ const BudgetTracker = () => {
         </Card>
       </div>
 
-      {/* Category breakdown */}
-      {Object.keys(categoryBreakdown).length > 0 && (
+      {/* Spending pie chart */}
+      {pieData.length > 0 && (
         <Card className="mb-5">
-          <CardHeader className="pb-2 pt-4 px-4">
-            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Spending by Category</CardTitle>
+          <CardHeader className="pb-1 pt-4 px-4">
+            <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Spending Breakdown</CardTitle>
           </CardHeader>
-          <CardContent className="px-4 pb-4 flex flex-wrap gap-1.5">
-            {Object.entries(categoryBreakdown)
-              .sort(([, a], [, b]) => b - a)
-              .map(([cat, amt]) => (
-                <Badge key={cat} variant="secondary" className="text-xs font-normal gap-1">
-                  {getCategoryLabel(cat)} · {amt.toLocaleString()}
+          <CardContent className="px-4 pb-4">
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={45}
+                    outerRadius={75}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => value.toLocaleString()}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontSize: '12px' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="flex flex-wrap gap-1.5 mt-2">
+              {pieData.map((item) => (
+                <Badge key={item.name} variant="secondary" className="text-[10px] font-normal gap-1">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: item.color }} />
+                  {item.name} · {item.value.toLocaleString()}
                 </Badge>
               ))}
+            </div>
           </CardContent>
         </Card>
       )}
@@ -204,6 +250,26 @@ const BudgetTracker = () => {
               <Label>Date</Label>
               <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
             </div>
+            <div className="flex items-center justify-between py-1">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 text-muted-foreground" />
+                <Label className="cursor-pointer">Recurring</Label>
+              </div>
+              <Switch checked={isRecurring} onCheckedChange={setIsRecurring} />
+            </div>
+            {isRecurring && (
+              <div>
+                <Label>Frequency</Label>
+                <Select value={recurrenceInterval} onValueChange={setRecurrenceInterval}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {RECURRENCE_OPTIONS.map(o => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <Button className="w-full" onClick={handleAdd} disabled={!amount || !category}>
               Add {txType === 'income' ? 'Income' : 'Expense'}
             </Button>
@@ -229,9 +295,15 @@ const BudgetTracker = () => {
                     {tx.type === 'income' ? <TrendingUp className="h-4 w-4 text-primary" /> : <TrendingDown className="h-4 w-4 text-destructive" />}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{getCategoryLabel(tx.category)}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-sm font-medium truncate">{getCategoryLabel(tx.category)}</p>
+                      {tx.is_recurring && <RefreshCw className="h-3 w-3 text-muted-foreground flex-shrink-0" />}
+                    </div>
                     {tx.description && <p className="text-[11px] text-muted-foreground truncate">{tx.description}</p>}
-                    <p className="text-[10px] text-muted-foreground">{format(parseISO(tx.date), 'd MMM')}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {format(parseISO(tx.date), 'd MMM')}
+                      {tx.recurrence_interval && ` · ${tx.recurrence_interval}`}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
