@@ -111,12 +111,12 @@ Hub page: `/deen` — full spiritual command center with live prayer countdown h
 
 ---
 
-## PILLAR 2: Health / Wellness -- FULLY BUILT
+## PILLAR 2: Health / Wellness -- FULLY BUILT (Redesigned)
 
 | Feature | Route | Status | Data Storage |
 |---------|-------|--------|--------------|
-| BMI Calculator + TDEE | `/health/bmi` | Done | localStorage + DB |
-| Weight Tracker | `/health/weight` | Done | localStorage + DB |
+| BMI Calculator + TDEE | `/health/bmi` | Done (v2) | localStorage + DB — Visual arc gauge, body fat %, ideal weight, TDEE breakdown (lose/maintain/gain), saved profile |
+| Weight Tracker | `/health/weight` | Done (v2) | localStorage + DB — Hero display, goal progress, weekly trend, area chart (7D/30D/All), 5 milestones, streak, quick log dialog, auto-updates BMI |
 | Hydration Tracker | `/health/hydration` | Done | localStorage + DB |
 | Sleep Tracker | `/health/sleep` | Done | localStorage + DB |
 | Sunnah Fasting Calendar | `/health/fasting` | Done | localStorage + DB |
