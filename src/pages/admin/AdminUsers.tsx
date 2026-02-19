@@ -4,9 +4,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield } from 'lucide-react';
+import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAudit } from '@/hooks/useAdminAudit';
 import { formatDistanceToNow } from 'date-fns';
@@ -62,6 +63,8 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [userActivity, setUserActivity] = useState<UserActivityEntry[]>([]);
   const [loadingActivity, setLoadingActivity] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const { toast } = useToast();
   const { logAction } = useAdminAudit();
 
@@ -119,22 +122,33 @@ const AdminUsers = () => {
 
   const assignRole = async (userId: string, newRole: string) => {
     const existing = roles.find(r => r.user_id === userId);
+    let error: any = null;
+
     if (newRole === 'user') {
-      // Remove role entry (default = user)
       if (existing) {
-        await supabase.from('user_roles').delete().eq('id', existing.id);
-        await logAction('remove_role', 'user', userId, { old_role: existing.role });
+        const res = await supabase.from('user_roles').delete().eq('id', existing.id);
+        error = res.error;
+        if (!error) await logAction('remove_role', 'user', userId, { old_role: existing.role });
       }
     } else {
+      const roleValue = newRole as 'admin' | 'moderator';
       if (existing) {
-        await (supabase as any).from('user_roles').update({ role: newRole }).eq('id', existing.id);
-        await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
+        const res = await supabase.from('user_roles').update({ role: roleValue }).eq('id', existing.id);
+        error = res.error;
+        if (!error) await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
       } else {
-        await (supabase as any).from('user_roles').insert({ user_id: userId, role: newRole });
-        await logAction('assign_role', 'user', userId, { new_role: newRole });
+        const res = await supabase.from('user_roles').insert({ user_id: userId, role: roleValue });
+        error = res.error;
+        if (!error) await logAction('assign_role', 'user', userId, { new_role: newRole });
       }
     }
-    loadData();
+
+    if (error) {
+      toast({ title: 'Error assigning role', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Role updated' });
+      loadData();
+    }
   };
 
   const filtered = useMemo(() => {
@@ -214,6 +228,70 @@ const AdminUsers = () => {
     return 'secondary' as const;
   };
 
+  // Bulk selection
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paged.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paged.map(p => p.id)));
+    }
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  const bulkToggleDisable = async (disable: boolean) => {
+    setBulkProcessing(true);
+    const ids = Array.from(selectedIds);
+    for (const id of ids) {
+      await supabase.from('profiles').update({ is_disabled: disable }).eq('id', id);
+      await logAction(disable ? 'disable_user' : 'enable_user', 'user', id);
+    }
+    toast({ title: `${ids.length} user(s) ${disable ? 'disabled' : 'enabled'}` });
+    clearSelection();
+    await loadData();
+    setBulkProcessing(false);
+  };
+
+  const bulkAssignRole = async (newRole: string) => {
+    setBulkProcessing(true);
+    const ids = Array.from(selectedIds);
+    for (const userId of ids) {
+      await assignRoleSilent(userId, newRole);
+    }
+    toast({ title: `Role set to "${newRole}" for ${ids.length} user(s)` });
+    clearSelection();
+    await loadData();
+    setBulkProcessing(false);
+  };
+
+  const assignRoleSilent = async (userId: string, newRole: string) => {
+    const existing = roles.find(r => r.user_id === userId);
+    if (newRole === 'user') {
+      if (existing) {
+        await supabase.from('user_roles').delete().eq('id', existing.id);
+        await logAction('remove_role', 'user', userId, { old_role: existing.role });
+      }
+    } else {
+      const roleValue = newRole as 'admin' | 'moderator';
+      if (existing) {
+        await supabase.from('user_roles').update({ role: roleValue }).eq('id', existing.id);
+        await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
+      } else {
+        await supabase.from('user_roles').insert({ user_id: userId, role: roleValue });
+        await logAction('assign_role', 'user', userId, { new_role: newRole });
+      }
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -243,6 +321,39 @@ const AdminUsers = () => {
           <div><p className="text-2xl font-bold">{disabledCount}</p><p className="text-xs text-muted-foreground">Disabled</p></div>
         </CardContent></Card>
       </div>
+
+      {/* Bulk Action Toolbar */}
+      {selectedIds.size > 0 && (
+        <Card className="border-primary">
+          <CardContent className="p-3 flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium">{selectedIds.size} selected</span>
+              <Button size="sm" variant="ghost" onClick={clearSelection} className="h-7 px-2">
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+            <div className="h-4 w-px bg-border" />
+            <Button size="sm" variant="outline" onClick={() => bulkToggleDisable(true)} disabled={bulkProcessing}>
+              <ShieldOff className="h-3.5 w-3.5 mr-1" />Disable
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => bulkToggleDisable(false)} disabled={bulkProcessing}>
+              <UserCheck className="h-3.5 w-3.5 mr-1" />Enable
+            </Button>
+            <div className="h-4 w-px bg-border" />
+            <Select onValueChange={v => bulkAssignRole(v)} disabled={bulkProcessing}>
+              <SelectTrigger className="w-[150px] h-8 text-xs">
+                <SelectValue placeholder="Assign role..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="moderator">Moderator</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search + Filters */}
       <div className="space-y-3">
@@ -293,6 +404,12 @@ const AdminUsers = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
+                  <th className="p-3 w-10">
+                    <Checkbox
+                      checked={paged.length > 0 && selectedIds.size === paged.length}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="text-left p-3 cursor-pointer" onClick={() => handleSort('display_name')}>Name {sortBy === 'display_name' && (sortAsc ? '↑' : '↓')}</th>
                   <th className="text-left p-3 hidden md:table-cell">Role</th>
                   <th className="text-left p-3 hidden md:table-cell">Country</th>
@@ -308,6 +425,12 @@ const AdminUsers = () => {
                   const la = lastActiveMap[p.id];
                   return (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/20 cursor-pointer" onClick={() => openUserDetail(p)}>
+                      <td className="p-3" onClick={e => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(p.id)}
+                          onCheckedChange={() => toggleSelect(p.id)}
+                        />
+                      </td>
                       <td className="p-3">
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{p.display_name || 'Unknown'}</span>
@@ -336,7 +459,7 @@ const AdminUsers = () => {
                   );
                 })}
                 {paged.length === 0 && (
-                  <tr><td colSpan={7} className="p-6 text-center text-muted-foreground">No users found</td></tr>
+                  <tr><td colSpan={8} className="p-6 text-center text-muted-foreground">No users found</td></tr>
                 )}
               </tbody>
             </table>
