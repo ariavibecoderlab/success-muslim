@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -27,6 +27,7 @@ const DEFAULT_PREFS: QuranPrefs = {
 };
 
 const LOCAL_KEY = 'quran_prefs_v2';
+const PROMPTED_KEY = 'quran_prompted';
 
 export function useQuranPrefs() {
   const { user } = useAuth();
@@ -37,7 +38,18 @@ export function useQuranPrefs() {
     } catch { return { ...DEFAULT_PREFS }; }
   });
   const [loading, setLoading] = useState(true);
-  const [prompted, setPrompted] = useState(false);
+  // Initialize prompted from localStorage so it persists across refreshes even without DB
+  const [prompted, setPrompted] = useState(() => {
+    try {
+      return localStorage.getItem(PROMPTED_KEY) === 'true';
+    } catch { return false; }
+  });
+
+  // Persist prompted to localStorage whenever it changes
+  const setPromptedPersist = useCallback((val: boolean) => {
+    setPrompted(val);
+    try { localStorage.setItem(PROMPTED_KEY, String(val)); } catch {}
+  }, []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -61,11 +73,12 @@ export function useQuranPrefs() {
         };
         setPrefsState(p);
         localStorage.setItem(LOCAL_KEY, JSON.stringify(p));
-        setPrompted(true); // Already has prefs = already prompted
+        // Row exists in DB = user has already been prompted
+        setPromptedPersist(true);
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, setPromptedPersist]);
 
   const savePrefs = useCallback(async (updates: Partial<QuranPrefs>) => {
     const merged = { ...prefs, ...updates };
@@ -75,11 +88,19 @@ export function useQuranPrefs() {
     if (!user) return;
     await supabase.from('quran_preferences').upsert({
       user_id: user.id,
-      ...merged,
+      tracker_enabled: merged.tracker_enabled,
+      daily_goal_pages: merged.daily_goal_pages,
+      font_size: merged.font_size,
+      translation_lang: merged.translation_lang,
+      last_surah: merged.last_surah,
+      last_ayah: merged.last_ayah,
+      night_mode: merged.night_mode,
+      memorization_enabled: merged.memorization_enabled,
+      daily_memo_goal: merged.daily_memo_goal,
     } as any, { onConflict: 'user_id' });
   }, [prefs, user]);
 
-  return { prefs, savePrefs, loading, prompted, setPrompted };
+  return { prefs, savePrefs, loading, prompted, setPrompted: setPromptedPersist };
 }
 
 // Bookmarks hook
@@ -133,7 +154,7 @@ export function useQuranBookmarks() {
 export function useQuranSessions() {
   const { user } = useAuth();
 
-  const logSession = async (
+  const logSession = useCallback(async (
     startSurah: number, startAyah: number,
     endSurah: number, endAyah: number,
     ayahsRead: number, durationSeconds: number
@@ -150,9 +171,9 @@ export function useQuranSessions() {
       ayahs_read: ayahsRead,
       duration_seconds: durationSeconds,
     } as any);
-  };
+  }, [user]);
 
-  const getSessions = async (days: number = 30) => {
+  const getSessions = useCallback(async (days: number = 30) => {
     if (!user) return [];
     const since = new Date();
     since.setDate(since.getDate() - days);
@@ -163,7 +184,7 @@ export function useQuranSessions() {
       .gte('date', since.toISOString().split('T')[0])
       .order('created_at', { ascending: false });
     return (data || []) as any[];
-  };
+  }, [user]);
 
   return { logSession, getSessions };
 }
