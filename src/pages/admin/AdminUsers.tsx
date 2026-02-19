@@ -7,7 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X } from 'lucide-react';
+import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAudit } from '@/hooks/useAdminAudit';
 import { formatDistanceToNow } from 'date-fns';
@@ -65,6 +66,9 @@ const AdminUsers = () => {
   const [loadingActivity, setLoadingActivity] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
   const { logAction } = useAdminAudit();
 
@@ -292,6 +296,34 @@ const AdminUsers = () => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    setDeleting(true);
+    const { error } = await (supabase.rpc as any)('admin_delete_user', { target_user_id: userId });
+    if (error) {
+      toast({ title: 'Error deleting user', description: error.message, variant: 'destructive' });
+    } else {
+      await logAction('delete_user', 'user', userId);
+      toast({ title: 'User deleted' });
+      setSelectedUser(null);
+    }
+    setDeleting(false);
+    await loadData();
+  };
+
+  const bulkDeleteUsers = async () => {
+    setBulkProcessing(true);
+    const ids = Array.from(selectedIds);
+    for (const id of ids) {
+      const { error } = await (supabase.rpc as any)('admin_delete_user', { target_user_id: id });
+      if (!error) await logAction('delete_user', 'user', id);
+    }
+    toast({ title: `${ids.length} user(s) deleted` });
+    clearSelection();
+    await loadData();
+    setBulkProcessing(false);
+    setBulkDeleteConfirmOpen(false);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -351,6 +383,24 @@ const AdminUsers = () => {
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
             </Select>
+            <div className="h-4 w-px bg-border" />
+            <AlertDialog open={bulkDeleteConfirmOpen} onOpenChange={setBulkDeleteConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive" disabled={bulkProcessing}>
+                  <Trash2 className="h-3.5 w-3.5 mr-1" />Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {selectedIds.size} user(s)?</AlertDialogTitle>
+                  <AlertDialogDescription>This action cannot be undone. All selected users and their data will be permanently deleted.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={bulkDeleteUsers} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete All</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       )}
@@ -542,6 +592,29 @@ const AdminUsers = () => {
                 <ShieldOff className="h-4 w-4 mr-2" />
                 {selectedUser.is_disabled ? 'Enable Account' : 'Disable Account'}
               </Button>
+
+              {/* Delete User */}
+              <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" className="w-full" disabled={deleting}>
+                    <Trash2 className="h-4 w-4 mr-2" />Delete User
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete <strong>{selectedUser.display_name || 'this user'}</strong> and all their data. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => deleteUser(selectedUser.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Delete
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               {/* Activity Log */}
               <div>
