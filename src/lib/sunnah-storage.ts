@@ -1,9 +1,11 @@
 import { syncSunnahLog } from './db-sync';
 
+export type SunnahCategory = 'intention' | 'morning-routine' | 'morning-dhikr' | 'selawat' | 'quran' | 'afternoon-dhikr' | 'prayer' | 'other';
+
 export interface SunnahItem {
   id: string;
   label: string;
-  category: 'prayer' | 'dhikr' | 'quran' | 'other';
+  category: SunnahCategory;
   enabled: boolean;
   isCustom?: boolean;
 }
@@ -13,26 +15,55 @@ export interface SunnahDayLog {
   date: string;
 }
 
+export const DEFAULT_SUNNAH_ITEMS: SunnahItem[] = [
+  // Daily Intentions
+  { id: 'niat-allah', label: 'To please Allah', category: 'intention', enabled: true },
+  { id: 'niat-sunnah', label: 'To follow Prophet Muhammad ﷺ', category: 'intention', enabled: true },
+  { id: 'niat-benefit', label: 'To be beneficial to others', category: 'intention', enabled: true },
+  { id: 'niat-halal', label: 'To earn halal income', category: 'intention', enabled: true },
+  { id: 'niat-learn', label: 'To learn to be the best Muslim', category: 'intention', enabled: true },
+
+  // Early Morning Routine
+  { id: 'wake-early', label: 'Wake up at 4am / 5am', category: 'morning-routine', enabled: true },
+  { id: 'tahajjud', label: 'Tahajjud prayer', category: 'morning-routine', enabled: true },
+  { id: 'rawatib-fajr', label: '2 Rakaat before Fajr', category: 'morning-routine', enabled: true },
+  { id: 'subuh-masjid', label: 'Solat Subuh at masjid', category: 'morning-routine', enabled: true },
+
+  // Morning Dhikr (100x each)
+  { id: 'morning-subhanallah', label: 'SubhanAllah – 100x', category: 'morning-dhikr', enabled: true },
+  { id: 'morning-alhamdulillah', label: 'Alhamdulillah – 100x', category: 'morning-dhikr', enabled: true },
+  { id: 'morning-allahuakbar', label: 'Allahu Akbar – 100x', category: 'morning-dhikr', enabled: true },
+  { id: 'morning-lailaha', label: 'La ilaha illallah – 100x', category: 'morning-dhikr', enabled: true },
+  { id: 'morning-istighfar', label: 'Istighfar – 100x', category: 'morning-dhikr', enabled: true },
+
+  // Morning Selawat
+  { id: 'selawat-morning', label: 'Selawat – min 100, target 1,000', category: 'selawat', enabled: true },
+
+  // Quran & Recitations
+  { id: 'yasin-morning', label: 'Recite Surah Yasin (morning)', category: 'quran', enabled: true },
+  { id: 'quran-tilawah', label: 'Quran reading (min 1 ayat)', category: 'quran', enabled: true },
+  { id: 'al-ikhlas-3x', label: 'Al-Ikhlas 3 times', category: 'quran', enabled: true },
+  { id: 'al-mulk-sleep', label: 'Surah Al-Mulk before sleeping', category: 'quran', enabled: true },
+
+  // Afternoon Dhikr (100x each)
+  { id: 'afternoon-subhanallah', label: 'SubhanAllah – 100x', category: 'afternoon-dhikr', enabled: true },
+  { id: 'afternoon-alhamdulillah', label: 'Alhamdulillah – 100x', category: 'afternoon-dhikr', enabled: true },
+  { id: 'afternoon-allahuakbar', label: 'Allahu Akbar – 100x', category: 'afternoon-dhikr', enabled: true },
+  { id: 'afternoon-lailaha', label: 'La ilaha illallah – 100x', category: 'afternoon-dhikr', enabled: true },
+  { id: 'afternoon-istighfar', label: 'Istighfar – 100x', category: 'afternoon-dhikr', enabled: true },
+
+  // Legacy items (kept for backwards compat, disabled by default)
+  { id: 'rawatib-dhuhr-before', label: '4 Rakaat before Dhuhr', category: 'prayer', enabled: false },
+  { id: 'rawatib-dhuhr-after', label: '2 Rakaat after Dhuhr', category: 'prayer', enabled: false },
+  { id: 'rawatib-maghrib', label: '2 Rakaat after Maghrib', category: 'prayer', enabled: false },
+  { id: 'rawatib-isha', label: '2 Rakaat after Isha', category: 'prayer', enabled: false },
+  { id: 'dhuha', label: 'Solat Dhuha', category: 'prayer', enabled: false },
+  { id: 'witr', label: 'Solat Witr', category: 'prayer', enabled: false },
+  { id: 'sadaqah', label: 'Daily Sadaqah', category: 'other', enabled: false },
+];
+
 const ITEMS_KEY = 'sunnah_items';
 const LOG_KEY = 'sunnah_logs';
-
-export const DEFAULT_SUNNAH_ITEMS: SunnahItem[] = [
-  { id: 'rawatib-fajr', label: '2 Rakaat before Fajr', category: 'prayer', enabled: true },
-  { id: 'rawatib-dhuhr-before', label: '4 Rakaat before Dhuhr', category: 'prayer', enabled: true },
-  { id: 'rawatib-dhuhr-after', label: '2 Rakaat after Dhuhr', category: 'prayer', enabled: true },
-  { id: 'rawatib-maghrib', label: '2 Rakaat after Maghrib', category: 'prayer', enabled: true },
-  { id: 'rawatib-isha', label: '2 Rakaat after Isha', category: 'prayer', enabled: true },
-  { id: 'dhuha', label: 'Solat Dhuha', category: 'prayer', enabled: true },
-  { id: 'morning-adhkar', label: 'Morning Adhkar', category: 'dhikr', enabled: true },
-  { id: 'evening-adhkar', label: 'Evening Adhkar', category: 'dhikr', enabled: true },
-  { id: 'quran-tilawah', label: 'Quran Tilawah', category: 'quran', enabled: true },
-  { id: 'tahajjud', label: 'Tahajjud / Qiyamullail', category: 'prayer', enabled: false },
-  { id: 'witr', label: 'Solat Witr', category: 'prayer', enabled: true },
-  { id: 'sadaqah', label: 'Daily Sadaqah', category: 'other', enabled: false },
-  { id: 'miswak', label: 'Use Miswak', category: 'other', enabled: false },
-  { id: 'sleep-wudu', label: 'Sleep with Wudu', category: 'other', enabled: false },
-  { id: 'ayat-kursi', label: 'Ayat Kursi after Fard', category: 'dhikr', enabled: false },
-];
 
 export function getSunnahItems(): SunnahItem[] {
   try {

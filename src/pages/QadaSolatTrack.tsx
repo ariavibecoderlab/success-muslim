@@ -24,11 +24,13 @@ const QadaSolatTrack = () => {
   const todayLog = progress.dailyLogs[today] || { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
   const todayTotal = Object.values(todayLog).reduce((s, v) => s + v, 0);
 
-  const handleToggle = (prayer: PrayerType) => {
+  const handleIncrement = (prayer: PrayerType) => {
+    setProgress(logQadaPrayer(prayer));
+  };
+
+  const handleDecrement = (prayer: PrayerType) => {
     if (todayLog[prayer] > 0) {
       setProgress(undoQadaPrayer(prayer));
-    } else {
-      setProgress(logQadaPrayer(prayer));
     }
   };
 
@@ -104,16 +106,16 @@ const QadaSolatTrack = () => {
             <span className="text-sm text-muted-foreground">{todayTotal} / {setup.dailyTarget}</span>
           </div>
           <div className="space-y-2">
-            {PRAYERS.map((prayer, i) => {
-              const done = todayLog[prayer] > 0;
+          {PRAYERS.map((prayer, i) => {
+              const count = todayLog[prayer] || 0;
+              const done = count > 0;
               return (
-                <motion.button
+                <motion.div
                   key={prayer}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  onClick={() => handleToggle(prayer)}
-                  className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${done ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl border transition-all ${done ? 'border-primary bg-primary/5' : 'border-border'}`}
                 >
                   {done ? (
                     <CheckCircle2 className="h-6 w-6 text-primary flex-shrink-0" />
@@ -121,8 +123,19 @@ const QadaSolatTrack = () => {
                     <Circle className="h-6 w-6 text-muted-foreground flex-shrink-0" />
                   )}
                   <span className={`font-medium text-sm ${done ? 'text-primary' : ''}`}>{PRAYER_NAMES[prayer]}</span>
-                  {done && <span className="ml-auto text-xs text-primary font-medium">Done</span>}
-                </motion.button>
+                  <div className="ml-auto flex items-center gap-2">
+                    <button
+                      onClick={() => handleDecrement(prayer)}
+                      disabled={count === 0}
+                      className="w-7 h-7 rounded-full border border-border flex items-center justify-center text-sm font-bold hover:bg-muted disabled:opacity-30 transition-all"
+                    >−</button>
+                    <span className={`text-sm font-bold w-6 text-center ${done ? 'text-primary' : 'text-muted-foreground'}`}>{count}</span>
+                    <button
+                      onClick={() => handleIncrement(prayer)}
+                      className="w-7 h-7 rounded-full border border-primary/30 bg-primary/10 flex items-center justify-center text-sm font-bold text-primary hover:bg-primary/20 transition-all"
+                    >+</button>
+                  </div>
+                </motion.div>
               );
             })}
           </div>

@@ -38,6 +38,9 @@ interface QiyamEntry {
   date: string;
   performed: boolean;
   notes: string | null;
+  sleep_time: string | null;
+  wake_time: string | null;
+  tahajjud_start: string | null;
 }
 
 const DEFAULT_SETTINGS: QiyamSettings = {
@@ -105,7 +108,7 @@ const QiyamPlanner = () => {
       }
       const { data: l } = await supabase
         .from('qiyam_log')
-        .select('id, date, performed, notes')
+        .select('id, date, performed, notes, sleep_time, wake_time, tahajjud_start')
         .eq('user_id', user.id)
         .order('date', { ascending: false })
         .limit(90);
@@ -144,20 +147,43 @@ const QiyamPlanner = () => {
     return count;
   }, [logs]);
 
+  // Log Qiyam with time fields
+  const [logSleepTime, setLogSleepTime] = useState(settings.default_sleep_time);
+  const [logWakeTime, setLogWakeTime] = useState(settings.default_wake_time);
+  const [logTahajjudStart, setLogTahajjudStart] = useState(tahajjud.start);
+  const [showLogDialog, setShowLogDialog] = useState(false);
+
+  useEffect(() => {
+    setLogSleepTime(settings.default_sleep_time);
+    setLogWakeTime(settings.default_wake_time);
+    setLogTahajjudStart(tahajjud.start);
+  }, [settings, tahajjud]);
+
   const logQiyam = async () => {
     if (!user) return;
     if (todayLog) {
+      // Toggle off
       await supabase.from('qiyam_log').update({ performed: !todayLog.performed }).eq('id', todayLog.id);
       setLogs(prev => prev.map(l => l.id === todayLog.id ? { ...l, performed: !l.performed } : l));
+      toast.success(todayLog.performed ? 'Unmarked qiyam' : 'Qiyam logged! 🌙');
     } else {
-      const { data } = await supabase
-        .from('qiyam_log')
-        .insert({ user_id: user.id, date: today, performed: true, sleep_time: settings.default_sleep_time, wake_time: settings.default_wake_time, tahajjud_start: tahajjud.start })
-        .select()
-        .single();
-      if (data) setLogs(prev => [data, ...prev]);
+      setShowLogDialog(true);
     }
-    toast.success(todayLog?.performed ? 'Unmarked qiyam' : 'Qiyam logged! 🌙');
+  };
+
+  const confirmLogQiyam = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('qiyam_log')
+      .insert({
+        user_id: user.id, date: today, performed: true,
+        sleep_time: logSleepTime, wake_time: logWakeTime, tahajjud_start: logTahajjudStart,
+      })
+      .select('id, date, performed, notes, sleep_time, wake_time, tahajjud_start')
+      .single();
+    if (data) setLogs(prev => [data, ...prev]);
+    setShowLogDialog(false);
+    toast.success('Qiyam logged! 🌙');
   };
 
   const saveSettings = async () => {
@@ -214,6 +240,32 @@ const QiyamPlanner = () => {
                   <><Plus className="h-4 w-4 mr-2" /> Log Tonight's Qiyam</>
                 )}
               </Button>
+
+              {/* Log Qiyam Dialog with time inputs */}
+              <Dialog open={showLogDialog} onOpenChange={setShowLogDialog}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Log Tonight's Qiyam</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 pt-2">
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label className="text-xs">Sleep Time</Label>
+                        <Input type="time" value={logSleepTime} onChange={e => setLogSleepTime(e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Tahajjud Start</Label>
+                        <Input type="time" value={logTahajjudStart} onChange={e => setLogTahajjudStart(e.target.value)} />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Wake Time</Label>
+                        <Input type="time" value={logWakeTime} onChange={e => setLogWakeTime(e.target.value)} />
+                      </div>
+                    </div>
+                    <Button onClick={confirmLogQiyam} className="w-full">Confirm & Log</Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
         </motion.div>
@@ -336,9 +388,16 @@ const QiyamPlanner = () => {
                 <p className="text-sm text-muted-foreground text-center py-4">No qiyam logged yet. Start tonight!</p>
               ) : (
                 <div className="space-y-2">
-                  {logs.slice(0, 14).map(entry => (
-                    <div key={entry.id} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                      <span className="text-sm">{new Date(entry.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                {logs.slice(0, 14).map(entry => (
+                    <div key={entry.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                      <div>
+                        <span className="text-sm">{new Date(entry.date + 'T00:00:00').toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+                        {entry.performed && entry.tahajjud_start && (
+                          <p className="text-[10px] text-muted-foreground">
+                            🛏 {entry.sleep_time || '–'} → 🌙 {entry.tahajjud_start} → ⏰ {entry.wake_time || '–'}
+                          </p>
+                        )}
+                      </div>
                       <span className={`text-xs font-medium ${entry.performed ? 'text-primary' : 'text-muted-foreground'}`}>
                         {entry.performed ? '🌙 Performed' : 'Missed'}
                       </span>
