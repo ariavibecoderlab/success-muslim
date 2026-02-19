@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
 
 const HIJRI_MONTHS = [
   'Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani',
@@ -8,40 +7,29 @@ const HIJRI_MONTHS = [
 ];
 
 /**
- * Fetch Hijri date from JAKIM e-solat API via proxy (most accurate for Malaysia)
+ * Fetch Hijri date from Aladhan API (accurate, CORS-enabled, no proxy needed).
+ * Falls back to JAKIM proxy if available.
  */
 export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
   try {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-    
-    const { data: { session } } = await supabase.auth.getSession();
-    const headers: Record<string, string> = {
-      'apikey': anonKey,
-      'Content-Type': 'application/json',
-    };
-    if (session?.access_token) {
-      headers['Authorization'] = `Bearer ${session.access_token}`;
-    }
+    const d = date.getDate();
+    const m = date.getMonth() + 1;
+    const y = date.getFullYear();
 
+    // Use Aladhan API directly (supports CORS)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(
-      `${supabaseUrl}/functions/v1/jakim-proxy?endpoint=tarikhtakwim&date=${dateStr}`,
-      { headers }
+      `https://api.aladhan.com/v1/gpiToH/${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}-${y}`,
+      { signal: controller.signal }
     );
+    clearTimeout(timeoutId);
     const json = await res.json();
 
-    if (json.takwim && json.takwim.length > 0) {
-      const entry = json.takwim[0];
-      // JAKIM returns hijri in format like "1447-08-19"
-      if (entry.hijri) {
-        const parts = entry.hijri.split('-');
-        if (parts.length === 3) {
-          const [year, month, day] = parts.map(Number);
-          const monthName = HIJRI_MONTHS[month - 1] || '';
-          return `${day} ${monthName} ${year} H`;
-        }
-      }
+    if (json.code === 200 && json.data?.hijri) {
+      const h = json.data.hijri;
+      const monthName = HIJRI_MONTHS[h.month.number - 1] || h.month.en;
+      return `${parseInt(h.day)} ${monthName} ${h.year} H`;
     }
     return null;
   } catch {

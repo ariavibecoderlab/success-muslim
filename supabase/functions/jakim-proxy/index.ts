@@ -23,20 +23,52 @@ serve(async (req) => {
       jakimUrl = `https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=${zone}`;
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    let data: string | null = null;
 
-    const res = await fetch(jakimUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "application/json",
-      },
-      signal: controller.signal,
-    });
+    // Try JAKIM first with short timeout
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(jakimUrl, {
+        headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      data = await res.text();
+    } catch {
+      console.log("JAKIM API timed out, trying Aladhan fallback");
+    }
 
-    clearTimeout(timeoutId);
+    // If JAKIM failed and this is a hijri date request, try Aladhan API
+    if (!data && endpoint === "tarikhtakwim") {
+      const dateParam = url.searchParams.get("date") || "";
+      const [y, m, d] = dateParam.split("-");
+      if (y && m && d) {
+        try {
+          const aladhanUrl = `https://api.aladhan.com/v1/gpiToH/${d}-${m}-${y}`;
+          const aladhanRes = await fetch(aladhanUrl, {
+            signal: AbortSignal.timeout(5000),
+          });
+          const aladhanJson = await aladhanRes.json();
+          if (aladhanJson.code === 200 && aladhanJson.data?.hijri) {
+            const h = aladhanJson.data.hijri;
+            // Return in JAKIM-compatible format
+            data = JSON.stringify({
+              takwim: [{ hijri: `${h.year}-${String(h.month.number).padStart(2, "0")}-${String(h.day).padStart(2, "0")}` }],
+            });
+          }
+        } catch {
+          console.log("Aladhan API also failed");
+        }
+      }
+    }
 
-    const data = await res.text();
+    if (!data) {
+      return new Response(
+        JSON.stringify({ error: "All upstream APIs failed" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     return new Response(data, {
       headers: {
