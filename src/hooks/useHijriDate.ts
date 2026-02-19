@@ -15,7 +15,7 @@ interface HijriDateResult {
  */
 export function useHijriDate(): HijriDateResult {
   const today = new Date();
-  const todayKey = today.toISOString().split('T')[0];
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const fallback = gregorianToHijri(today);
   const fallbackStr = formatHijriDate(today);
 
