@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Trash2, Upload, Plus } from 'lucide-react';
+import { Trash2, Upload, Plus, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 import { useAdminAudit } from '@/hooks/useAdminAudit';
@@ -21,52 +21,120 @@ const AdminDawah = () => {
   const [title, setTitle] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { logAction } = useAdminAudit();
 
   const loadPosters = async () => {
-    const { data } = await supabase.from('dakwah_posters').select('*').order('date', { ascending: false });
+    const { data, error } = await supabase.from('dakwah_posters').select('*').order('date', { ascending: false });
+    if (error) {
+      console.error('Failed to load posters:', error);
+      return;
+    }
     if (data) setPosters(data);
   };
 
   useEffect(() => { loadPosters(); }, []);
 
+  // Generate preview when file changes
+  useEffect(() => {
+    if (!file) { setPreview(null); return; }
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] || null;
+    setFile(selected);
+  };
+
   const handleUpload = async () => {
-    if (!file || !title || !user) return;
+    if (!file || !title.trim() || !user) {
+      toast({ title: 'Missing fields', description: 'Please enter a title and select an image.', variant: 'destructive' });
+      return;
+    }
+
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `${Date.now()}.${ext}`;
-      const { error: uploadErr } = await supabase.storage.from('dakwah-posters').upload(path, file);
-      if (uploadErr) throw uploadErr;
+      // 1. Upload file to storage
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from('dakwah-posters')
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type,
+        });
+
+      if (uploadErr) {
+        console.error('Storage upload error:', uploadErr);
+        throw new Error(`Upload failed: ${uploadErr.message}`);
+      }
+
+      // 2. Get public URL
       const { data: { publicUrl } } = supabase.storage.from('dakwah-posters').getPublicUrl(path);
 
+      if (!publicUrl) {
+        throw new Error('Failed to get public URL for uploaded file');
+      }
+
+      // 3. Insert record into database
       const { error: insertErr } = await supabase.from('dakwah_posters').insert({
-        title,
+        title: title.trim(),
         image_url: publicUrl,
         date,
         created_by: user.id,
       });
-      if (insertErr) throw insertErr;
 
-      await logAction('upload_poster', 'dakwah_poster', path, { title });
-      toast({ title: 'Poster uploaded' });
-      setTitle(''); setFile(null);
+      if (insertErr) {
+        console.error('DB insert error:', insertErr);
+        // Clean up uploaded file if DB insert fails
+        await supabase.storage.from('dakwah-posters').remove([path]);
+        throw new Error(`Database save failed: ${insertErr.message}`);
+      }
+
+      // 4. Log audit action
+      await logAction('upload_poster', 'dakwah_poster', path, { title: title.trim() });
+
+      toast({ title: 'Poster uploaded successfully!' });
+      setTitle('');
+      setFile(null);
+      setPreview(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       loadPosters();
     } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+      console.error('Upload flow error:', err);
+      toast({ title: 'Upload Error', description: err.message || 'Something went wrong', variant: 'destructive' });
     }
     setUploading(false);
   };
 
   const handleDelete = async (poster: Poster) => {
-    const { error } = await supabase.from('dakwah_posters').delete().eq('id', poster.id);
-    if (!error) {
+    try {
+      // Extract file path from URL to delete from storage too
+      const urlParts = poster.image_url.split('/dakwah-posters/');
+      const filePath = urlParts[urlParts.length - 1];
+
+      // Delete from database first
+      const { error } = await supabase.from('dakwah_posters').delete().eq('id', poster.id);
+      if (error) throw error;
+
+      // Delete from storage (best effort)
+      if (filePath) {
+        await supabase.storage.from('dakwah-posters').remove([filePath]);
+      }
+
       await logAction('delete_poster', 'dakwah_poster', poster.id);
+      toast({ title: 'Poster deleted' });
       loadPosters();
+    } catch (err: any) {
+      toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -75,18 +143,37 @@ const AdminDawah = () => {
       <h1 className="text-2xl font-bold">Da'wah Posters</h1>
 
       <Card>
-        <CardContent className="p-5 space-y-3">
+        <CardContent className="p-5 space-y-4">
           <h2 className="font-semibold flex items-center gap-2"><Plus className="h-4 w-4" /> Upload New Poster</h2>
-          <div className="grid sm:grid-cols-3 gap-3">
+          <div className="grid sm:grid-cols-2 gap-3">
             <Input placeholder="Poster title" value={title} onChange={e => setTitle(e.target.value)} />
             <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
-            <div className="flex gap-2">
-              <Input type="file" accept="image/*" onChange={e => setFile(e.target.files?.[0] || null)} className="flex-1" />
-              <Button onClick={handleUpload} disabled={uploading || !file || !title} size="sm">
-                <Upload className="h-4 w-4 mr-1" />{uploading ? '...' : 'Upload'}
-              </Button>
-            </div>
           </div>
+          <div className="flex gap-3 items-end">
+            <div className="flex-1 space-y-2">
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+              />
+              {file && (
+                <p className="text-xs text-muted-foreground">
+                  {file.name} ({(file.size / 1024).toFixed(0)} KB)
+                </p>
+              )}
+            </div>
+            <Button onClick={handleUpload} disabled={uploading || !file || !title.trim()} size="sm">
+              <Upload className="h-4 w-4 mr-1" />{uploading ? 'Uploading...' : 'Upload'}
+            </Button>
+          </div>
+          {/* Preview */}
+          {preview && (
+            <div className="mt-2">
+              <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+              <img src={preview} alt="Preview" className="w-40 h-40 object-cover rounded-lg border" />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -105,7 +192,12 @@ const AdminDawah = () => {
             </CardContent>
           </Card>
         ))}
-        {posters.length === 0 && <p className="text-sm text-muted-foreground col-span-full">No posters uploaded yet.</p>}
+        {posters.length === 0 && (
+          <div className="col-span-full text-center py-8">
+            <ImageIcon className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No posters uploaded yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );
