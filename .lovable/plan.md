@@ -1,41 +1,28 @@
 
 
-# Universal Widget System for Dashboard — IMPLEMENTED ✅
+# Fix: WidgetShell.tsx crashes the app
 
-## Overview
-The dashboard now uses a modular, customizable widget system. Users can toggle, reorder, and resize 12 widgets from any module (Iman, Health, Wealth, Tasks, Da'wah).
+## Problem
+The dashboard shows a blank white page because `WidgetShell.tsx` has `import React from 'react'` on line 58, but the `WidgetErrorBoundary` class component references `React.Component` on line 46. ES module imports are not hoisted like `var` declarations -- they must appear before usage. This causes:
 
-## What Was Built
+```
+ReferenceError: Cannot access 'React' before initialization
+```
 
-### Database
-- `widget_preferences` table with RLS (user_id, widget_id, enabled, position, size)
-- Auto-updating `updated_at` trigger
+## Fix
+Move `import React from 'react'` to the top of the file (line 1), before any usage.
 
-### Files Created
-- `src/lib/widget-registry.ts` — Central registry of 12 widgets with lazy loading
-- `src/hooks/useWidgetPreferences.ts` — DB persistence hook with optimistic local updates
-- `src/components/widgets/WidgetShell.tsx` — Skeleton loader + error boundary wrapper
-- `src/components/widgets/WidgetCustomizer.tsx` — Bottom sheet for toggle/reorder/resize
-- 12 widget components in `src/components/widgets/`
+### File: `src/components/widgets/WidgetShell.tsx`
 
-### Files Modified
-- `src/pages/Dashboard.tsx` — Refactored from 739 lines of hardcoded cards to dynamic widget loop
-- `PROGRESS.md` — Updated with widget system entries
+1. Move `import React from 'react'` from line 58 to line 1 (before the other imports)
+2. Remove the duplicate line 58
 
-### Widget List
-| ID | Module | Smart Behavior |
-|----|--------|----------------|
-| next_prayer | Iman | Always |
-| dhikr_selawat | Iman | Always |
-| quran_today | Iman | Always |
-| solat_sunat | Iman | Always |
-| tarawih | Iman | Ramadan only |
-| if_fasting | Health | Active fast only |
-| ramadan_fasting | Health | Ramadan only |
-| hydration | Health | Always |
-| sleep | Health | Always |
-| sadaqah | Wealth | Always |
-| tasks_today | Tasks | Always |
-| dakwah | Da'wah | Always |
+This is a one-line move that unblocks the entire dashboard and widget system.
 
-### Default Enabled: next_prayer, dhikr_selawat, quran_today, hydration, tasks_today
+## After the fix
+The dashboard will render correctly with:
+- Greeting, Life Score, Quick Log buttons
+- Dynamic widget grid with all enabled widgets
+- Settings button to open the WidgetCustomizer drawer
+- First-time dialog for new users
+
