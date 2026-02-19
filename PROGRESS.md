@@ -1,6 +1,6 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-18
+> **Last Updated:** 2026-02-19
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
 
 ---
@@ -65,7 +65,7 @@
 | Prayer Settings | ✅ | Madhab (Shafi/Hanafi), method selection, persisted to DB |
 | Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
 | Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
-| Hijri Date | ✅ | JAKIM API (Malaysia) with algorithmic fallback (global) |
+| Hijri Date | ✅ | JAKIM API (Malaysia) with Aladhan fallback (global), object format parity fixed |
 | Quran Reader | ✅ | Full 114 surahs, Arabic text + translations (EN/MS/ID), per-ayah tafsir |
 | Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
 | Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |

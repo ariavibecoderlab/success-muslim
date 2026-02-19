@@ -53,8 +53,9 @@ serve(async (req) => {
           if (aladhanJson.code === 200 && aladhanJson.data?.hijri) {
             const h = aladhanJson.data.hijri;
             // Return in JAKIM-compatible format
+            const dateKey = `${y}-${m}-${d}`;
             data = JSON.stringify({
-              takwim: [{ hijri: `${h.year}-${String(h.month.number).padStart(2, "0")}-${String(h.day).padStart(2, "0")}` }],
+              takwim: { [dateKey]: `${h.year}-${String(h.month.number).padStart(2, "0")}-${String(h.day).padStart(2, "0")}` },
             });
           }
         } catch {
