@@ -69,6 +69,14 @@ const SurahReader = () => {
 
   const sessionStart = useRef(Date.now());
   const firstAyahRead = useRef(1);
+  const prefsRef = useRef(prefs);
+  const ayahsRef = useRef(ayahs);
+  const numRef = useRef(num);
+
+  // Keep refs in sync
+  useEffect(() => { prefsRef.current = prefs; }, [prefs]);
+  useEffect(() => { ayahsRef.current = ayahs; }, [ayahs]);
+  useEffect(() => { numRef.current = num; }, [num]);
 
   // Calculate initial page from targetAyah
   useEffect(() => {
@@ -107,19 +115,29 @@ const SurahReader = () => {
     }
   }, [targetAyah, ayahs]);
 
-  // Save last read position + log session on unmount
+  // Save position whenever ayahs load (i.e. on every page/surah change)
+  useEffect(() => {
+    if (prefs.tracker_enabled && ayahs.length > 0) {
+      const lastAyah = ayahs[ayahs.length - 1]?.verse_number || 1;
+      savePrefs({ last_surah: num, last_ayah: lastAyah });
+    }
+  }, [ayahs, num, prefs.tracker_enabled]);
+
+  // Log session on unmount using refs to avoid stale closures
   useEffect(() => {
     return () => {
-      if (prefs.tracker_enabled && ayahs.length > 0) {
-        const lastAyah = ayahs[ayahs.length - 1]?.verse_number || 1;
-        savePrefs({ last_surah: num, last_ayah: lastAyah });
+      const p = prefsRef.current;
+      const a = ayahsRef.current;
+      const n = numRef.current;
+      if (p.tracker_enabled && a.length > 0) {
+        const lastAyah = a[a.length - 1]?.verse_number || 1;
         const duration = Math.round((Date.now() - sessionStart.current) / 1000);
         if (duration > 10) {
-          logSession(num, firstAyahRead.current, num, lastAyah, ayahs.length, duration);
+          logSession(n, firstAyahRead.current, n, lastAyah, a.length, duration);
         }
       }
     };
-  }, [ayahs.length, num, prefs.tracker_enabled]);
+  }, [logSession]);
 
   // Cleanup audio on unmount
   useEffect(() => {

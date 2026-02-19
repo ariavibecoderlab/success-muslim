@@ -55,7 +55,7 @@ const QuranReader = () => {
 
   const handleTrackerChoice = async (enable: boolean) => {
     await savePrefs({ tracker_enabled: enable });
-    setPrompted(true);
+    setPrompted(true); // This now persists to localStorage
     setShowOnboarding(false);
     toast.success(enable ? 'Tracker enabled! Your reading will be tracked automatically.' : 'Got it! You can enable tracking later in settings.');
   };
