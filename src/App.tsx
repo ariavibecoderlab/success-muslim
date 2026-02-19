@@ -53,6 +53,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
+import AdminDawah from "./pages/admin/AdminDawah";
+import AdminSystem from "./pages/admin/AdminSystem";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Install from "./pages/Install";
@@ -122,7 +124,9 @@ const App = () => (
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/users" element={<AdminUsers />} />
                 <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                <Route path="/admin/dawah" element={<AdminDawah />} />
                 <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                <Route path="/admin/system" element={<AdminSystem />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />

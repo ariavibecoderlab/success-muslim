@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           content: string
@@ -1399,6 +1429,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_module_usage: {
+        Args: never
+        Returns: {
+          module: string
+          unique_users: number
+          usage_count: number
+        }[]
+      }
+      admin_overview_stats: { Args: never; Returns: Json }
+      admin_retention_cohorts: {
+        Args: never
+        Returns: {
+          cohort_size: number
+          cohort_week: string
+          d1: number
+          d14: number
+          d3: number
+          d30: number
+          d7: number
+        }[]
+      }
+      admin_signup_chart: {
+        Args: { _days?: number }
+        Returns: {
+          signup_count: number
+          signup_date: string
+        }[]
+      }
+      admin_user_breakdown: { Args: never; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

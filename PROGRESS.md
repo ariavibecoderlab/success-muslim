@@ -198,3 +198,23 @@
 10. ~~Savings Goals~~ ✅
 11. ~~Spending Charts~~ ✅
 12. ~~Recurring Transactions~~ ✅
+
+---
+
+## 🛡️ ADMIN PANEL
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Admin role-based access | ✅ | `user_roles` table + `has_role` RPC + AdminGuard |
+| 30-min session timeout | ✅ | `useAdminTimeout` hook with warning at 25min |
+| Audit logging | ✅ | `admin_audit_log` table, logged on user disable/poster actions |
+| Overview stats (8 cards) | ✅ | `admin_overview_stats()` RPC — users, DAU, MAU, onboarding |
+| User growth chart | ✅ | `admin_signup_chart()` RPC + recharts ComposedChart |
+| Module usage chart | ✅ | `admin_module_usage()` RPC + horizontal bar chart |
+| User breakdown analytics | ✅ | `admin_user_breakdown()` RPC — focus areas, consistency, geo |
+| Retention cohorts | ✅ | `admin_retention_cohorts()` RPC — D1/D3/D7/D14/D30 table |
+| User management table | ✅ | Search, sort, paginate (25/page), CSV export, disable toggle |
+| Da'wah poster management | ✅ | Upload, delete, grid view with existing storage bucket |
+| System health monitor | ✅ | DB/Auth/Storage status + recent error log |
+| Announcements management | ✅ | Pre-existing, kept as-is |
+| Auto-refresh (60s) | ✅ | All dashboard/analytics data |
