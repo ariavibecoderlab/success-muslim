@@ -1,74 +1,59 @@
 
 
-# Enhanced Admin User Management
+# Add Bulk Delete and Single Delete to Admin User Management
 
-## Current State
-The AdminUsers page is basic: a table with name, country, focus areas, onboarding status, join date, and a disable/enable toggle. No filters, no user detail view, no role management, no activity data.
+## Overview
+Add the ability for admins to delete individual users (from the detail panel) and bulk delete selected users (from the toolbar). Since deleting a user requires removing them from the authentication system as well as their profile data, this needs a secure backend function.
 
-## Enhancements
+## Implementation
 
-### 1. User Detail Panel (Slide-out Sheet)
-Click any user row to open a side panel showing:
-- Avatar + display name + ID (copyable)
-- Gender, city, country
-- Consistency level, focus areas (all displayed)
-- Onboarding status + step number
-- Join date + last activity date (from `user_activity` table)
-- Role badge (admin/moderator/user) with ability to assign/remove roles
-- Disable/enable toggle inside the panel
-- Activity log: last 10 actions from `user_activity` for that user
+### 1. Database: Create a SECURITY DEFINER function for user deletion
+A new RPC function `admin_delete_user(target_user_id uuid)` that:
+- Verifies the caller is an admin via `has_role(auth.uid(), 'admin')`
+- Deletes the user from `auth.users` (which cascades to `profiles`, `user_roles`, and all tables with foreign key references)
+- Uses `SECURITY DEFINER` to have the necessary privileges to delete from `auth.users`
 
-### 2. Filters Bar
-Add filter dropdowns above the table:
-- **Country filter**: dropdown of distinct countries from profiles
-- **Onboarding status**: All / Completed / Not completed
-- **Role filter**: All / Admin / Moderator / User (no role)
-- **Status filter**: All / Active / Disabled
+### 2. Frontend: Single Delete (User Detail Sheet)
+- Add a red "Delete User" button at the bottom of the user detail sheet
+- Wrap it in an `AlertDialog` confirmation ("Are you sure? This action cannot be undone.")
+- On confirm, call the `admin_delete_user` RPC, log the action to audit, close the sheet, and reload data
 
-### 3. Role Management
-- Show role badge in the table (admin/moderator/user)
-- In the detail panel: dropdown to assign or remove a role
-- Inserts/deletes from `user_roles` table
-- All role changes logged to `admin_audit_log`
+### 3. Frontend: Bulk Delete (Toolbar)
+- Add a red "Delete" button to the existing bulk action toolbar (next to Disable/Enable)
+- Wrap in an `AlertDialog` confirmation showing the count of users to be deleted
+- On confirm, loop through selected IDs calling the RPC, log each action, clear selection, and reload
 
-### 4. Last Active Column
-- Query `user_activity` to get each user's most recent activity timestamp
-- Display as relative time ("2h ago", "3 days ago") in the table
-- Sortable column
-
-### 5. Bulk Summary Stats
-Above the table, show quick stat cards:
-- Total users
-- Active today (from user_activity)
-- Onboarding completion rate
-- Disabled users count
-
-### 6. Enhanced CSV Export
-Add columns to export: Gender, Consistency Level, Role, Last Active
+### 4. UI Imports
+- Import `AlertDialog` components and `Trash2` icon (already available in the project)
 
 ## Technical Details
 
 ### Files Modified
-- `src/pages/admin/AdminUsers.tsx` -- full rewrite with all enhancements above
+- `src/pages/admin/AdminUsers.tsx` -- add delete button in detail sheet, bulk delete in toolbar, AlertDialog confirmations
 
-### Data Fetching
-- Profiles: `supabase.from('profiles').select('*')` (admin RLS allows reading all)
-- Roles: `supabase.from('user_roles').select('*')` -- join client-side with profiles by user_id
-- Last active: use a new RPC `admin_user_last_active()` that returns `user_id, last_active` from `user_activity` (avoids N+1 queries)
+### New Database Migration
+```sql
+CREATE OR REPLACE FUNCTION public.admin_delete_user(target_user_id uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.has_role(auth.uid(), 'admin') THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+  -- Deleting from auth.users cascades to profiles and user_roles
+  DELETE FROM auth.users WHERE id = target_user_id;
+END;
+$$;
+```
 
-### New Database Function
-- `admin_user_last_active()` -- SECURITY DEFINER function that returns the max `created_at` per user from `user_activity`, restricted to admin callers
-
-### UI Components Used
-- Sheet (slide-out panel) from existing `@/components/ui/sheet`
-- Select for filters from existing `@/components/ui/select`
-- Badge for roles
-- Card for summary stats
-- Existing table markup (enhanced)
-
-### Implementation Sequence
-1. Create `admin_user_last_active()` database function
-2. Rewrite AdminUsers with filters, role column, last active column, summary stats
-3. Add user detail Sheet with role management and activity log
-4. Audit log all role changes
+### Frontend Changes
+- Add `Trash2` icon import
+- Add `AlertDialog` imports
+- Add state: `deleteConfirmOpen`, `bulkDeleteConfirmOpen`, `deleting`
+- Single delete: button in sheet calls `supabase.rpc('admin_delete_user', { target_user_id: id })`
+- Bulk delete: button in toolbar iterates selected IDs calling the same RPC
+- Both wrapped in confirmation dialogs with clear warning text
 
