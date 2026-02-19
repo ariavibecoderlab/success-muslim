@@ -7,29 +7,42 @@ const HIJRI_MONTHS = [
 ];
 
 /**
- * Fetch Hijri date from Aladhan API (accurate, CORS-enabled, no proxy needed).
- * Falls back to JAKIM proxy if available.
+ * Fetch Hijri date from JAKIM API via edge function proxy.
+ * The proxy tries JAKIM first, then Aladhan as fallback.
  */
 export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
   try {
-    const d = date.getDate();
-    const m = date.getMonth() + 1;
-    const y = date.getFullYear();
+    const dateStr = format(date, 'yyyy-MM-dd');
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
-    // Use Aladhan API directly (supports CORS)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
+    const timeoutId = setTimeout(() => controller.abort(), 12000);
     const res = await fetch(
-      `https://api.aladhan.com/v1/gpiToH/${String(d).padStart(2, '0')}-${String(m).padStart(2, '0')}-${y}`,
-      { signal: controller.signal }
+      `${supabaseUrl}/functions/v1/jakim-proxy?endpoint=tarikhtakwim&date=${dateStr}`,
+      {
+        headers: {
+          'apikey': anonKey,
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      }
     );
     clearTimeout(timeoutId);
+
+    if (!res.ok) return null;
     const json = await res.json();
 
-    if (json.code === 200 && json.data?.hijri) {
-      const h = json.data.hijri;
-      const monthName = HIJRI_MONTHS[h.month.number - 1] || h.month.en;
-      return `${parseInt(h.day)} ${monthName} ${h.year} H`;
+    if (json.takwim && json.takwim.length > 0) {
+      const entry = json.takwim[0];
+      if (entry.hijri) {
+        const parts = entry.hijri.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(Number);
+          const monthName = HIJRI_MONTHS[month - 1] || '';
+          return `${day} ${monthName} ${year} H`;
+        }
+      }
     }
     return null;
   } catch {
