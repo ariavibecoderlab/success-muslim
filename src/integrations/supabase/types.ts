@@ -1458,6 +1458,13 @@ export type Database = {
         }[]
       }
       admin_user_breakdown: { Args: never; Returns: Json }
+      admin_user_last_active: {
+        Args: never
+        Returns: {
+          last_active: string
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
