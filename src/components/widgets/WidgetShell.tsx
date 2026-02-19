@@ -1,4 +1,4 @@
-import { Suspense, type ReactNode } from 'react';
+import React, { Suspense, type ReactNode } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -55,7 +55,7 @@ class WidgetErrorBoundary extends React.Component<
   get fallback() { return this.props.fallback; }
 }
 
-import React from 'react';
+
 
 export default function WidgetShell({ size, index, children, className }: WidgetShellProps) {
   return (
