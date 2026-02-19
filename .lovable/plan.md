@@ -1,40 +1,74 @@
 
-# Admin Dashboard - Full Revamp
 
-## Status: ✅ IMPLEMENTED
+# Enhanced Admin User Management
 
-## What Was Built
+## Current State
+The AdminUsers page is basic: a table with name, country, focus areas, onboarding status, join date, and a disable/enable toggle. No filters, no user detail view, no role management, no activity data.
 
-### Database
-- `admin_audit_log` table with RLS (admin-only)
-- `admin_overview_stats()` — total users, DAU, MAU, onboarding rates
-- `admin_signup_chart(days)` — daily signup counts
-- `admin_module_usage()` — module usage from user_activity
-- `admin_user_breakdown()` — focus areas, consistency, geo breakdown
-- `admin_retention_cohorts()` — D1/D3/D7/D14/D30 by signup week
-- All functions use SECURITY DEFINER with admin role check
+## Enhancements
 
-### Frontend
-- `AdminLayout` — header with admin name, auto-refresh timestamp, logout, 6-tab nav, mobile responsive
-- `AdminDashboard` — 8 stat cards, user growth chart (7/30/90d), module usage bar chart
-- `AdminAnalytics` — focus area bars, consistency donut, top countries/cities, retention cohort table
-- `AdminUsers` — searchable/sortable table, pagination (25/page), CSV export, disable toggle, audit logging
-- `AdminDawah` — poster upload/delete with storage bucket integration
-- `AdminSystem` — DB/Auth/Storage health checks, recent error log
-- `useAdminTimeout` — 30-min inactivity logout with 25-min warning
-- `useAdminAudit` — audit log helper for admin actions
+### 1. User Detail Panel (Slide-out Sheet)
+Click any user row to open a side panel showing:
+- Avatar + display name + ID (copyable)
+- Gender, city, country
+- Consistency level, focus areas (all displayed)
+- Onboarding status + step number
+- Join date + last activity date (from `user_activity` table)
+- Role badge (admin/moderator/user) with ability to assign/remove roles
+- Disable/enable toggle inside the panel
+- Activity log: last 10 actions from `user_activity` for that user
 
-### Routes
-- /admin → Overview dashboard
-- /admin/users → User management
-- /admin/analytics → Detailed breakdown + retention
-- /admin/dawah → Poster management
-- /admin/announcements → Announcement broadcasting
-- /admin/system → System health
+### 2. Filters Bar
+Add filter dropdowns above the table:
+- **Country filter**: dropdown of distinct countries from profiles
+- **Onboarding status**: All / Completed / Not completed
+- **Role filter**: All / Admin / Moderator / User (no role)
+- **Status filter**: All / Active / Disabled
 
-### Security
-- All RPCs restricted to admin role via has_role() check
-- AdminGuard redirects non-admins to /dashboard
-- 30-minute session timeout
-- No admin links in user-facing UI
-- Audit trail for all admin actions
+### 3. Role Management
+- Show role badge in the table (admin/moderator/user)
+- In the detail panel: dropdown to assign or remove a role
+- Inserts/deletes from `user_roles` table
+- All role changes logged to `admin_audit_log`
+
+### 4. Last Active Column
+- Query `user_activity` to get each user's most recent activity timestamp
+- Display as relative time ("2h ago", "3 days ago") in the table
+- Sortable column
+
+### 5. Bulk Summary Stats
+Above the table, show quick stat cards:
+- Total users
+- Active today (from user_activity)
+- Onboarding completion rate
+- Disabled users count
+
+### 6. Enhanced CSV Export
+Add columns to export: Gender, Consistency Level, Role, Last Active
+
+## Technical Details
+
+### Files Modified
+- `src/pages/admin/AdminUsers.tsx` -- full rewrite with all enhancements above
+
+### Data Fetching
+- Profiles: `supabase.from('profiles').select('*')` (admin RLS allows reading all)
+- Roles: `supabase.from('user_roles').select('*')` -- join client-side with profiles by user_id
+- Last active: use a new RPC `admin_user_last_active()` that returns `user_id, last_active` from `user_activity` (avoids N+1 queries)
+
+### New Database Function
+- `admin_user_last_active()` -- SECURITY DEFINER function that returns the max `created_at` per user from `user_activity`, restricted to admin callers
+
+### UI Components Used
+- Sheet (slide-out panel) from existing `@/components/ui/sheet`
+- Select for filters from existing `@/components/ui/select`
+- Badge for roles
+- Card for summary stats
+- Existing table markup (enhanced)
+
+### Implementation Sequence
+1. Create `admin_user_last_active()` database function
+2. Rewrite AdminUsers with filters, role column, last active column, summary stats
+3. Add user detail Sheet with role management and activity log
+4. Audit log all role changes
+
