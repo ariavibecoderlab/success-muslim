@@ -1,1 +1,4 @@
 project_id = "tdjxnlhewdrajrffdsnh"
+
+[functions.jakim-proxy]
+verify_jwt = false
