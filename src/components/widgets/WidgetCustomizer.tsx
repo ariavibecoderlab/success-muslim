@@ -72,6 +72,7 @@ export default function WidgetCustomizer({
             <Settings2 className="h-5 w-5" />
             Customize Widgets
           </DrawerTitle>
+          <p className="sr-only">Toggle, reorder, and resize your dashboard widgets</p>
         </DrawerHeader>
 
         <div className="px-4 pb-4 overflow-y-auto max-h-[60vh] space-y-5">
