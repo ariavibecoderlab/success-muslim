@@ -33,10 +33,10 @@ export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
     if (!res.ok) return null;
     const json = await res.json();
 
-    if (json.takwim && json.takwim.length > 0) {
-      const entry = json.takwim[0];
-      if (entry.hijri) {
-        const parts = entry.hijri.split('-');
+    if (json.takwim && typeof json.takwim === 'object') {
+      const hijriStr = Object.values(json.takwim)[0] as string;
+      if (hijriStr) {
+        const parts = hijriStr.split('-');
         if (parts.length === 3) {
           const [year, month, day] = parts.map(Number);
           const monthName = HIJRI_MONTHS[month - 1] || '';
