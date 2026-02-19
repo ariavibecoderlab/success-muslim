@@ -23,12 +23,18 @@ serve(async (req) => {
       jakimUrl = `https://www.e-solat.gov.my/index.php?r=esolatApi/takwimsolat&period=today&zone=${zone}`;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const res = await fetch(jakimUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/json",
       },
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     const data = await res.text();
 
