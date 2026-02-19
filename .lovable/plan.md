@@ -1,82 +1,88 @@
 
 
-# Full QA Audit - Findings and Fixes
+# Landing Page Premium Revamp
 
-## QA Summary
+## Vision
+Strip the page down to its essence. No fake stats, no testimonials, no feature overload. Instead: a cinematic hero, a singular product showcase (Life Score), a tight value proposition section, and a closing CTA. Think Linear's clarity meets Headspace's warmth.
 
-After a systematic review of every page, widget, console log, and code path, the app is in **good shape overall**. The widget system works end-to-end: toggle, resize, reorder, and persistence all function correctly. Below are the issues found, ranked by severity.
+## What Gets Removed
+- Testimonials section (fake social proof)
+- Stats section (fake counters from `app_stats`)
+- Feature Highlights section (6-card grid -- redundant with pillars)
+- `app_stats` DB query and `stats` state
+- Geometric cross pattern overlay (dated)
+- Excessive icon imports no longer needed
 
----
+## What Stays (Refined)
+- Nav (simplified, more breathing room)
+- Hero (tighter copy, bigger presence, subtle gradient glow)
+- Life Score preview (the hero product shot -- elevated visually)
+- Pillars (reduced from 5 cards to a clean bento-style grid)
+- How It Works (kept but elevated with a horizontal timeline feel)
+- Bottom CTA (hadith quote -- refined typography)
+- Footer (minimal, clean)
 
-## Issues Found
+## New Design Language
 
-### 1. CRITICAL: Aladhan Fallback Returns Incompatible Format
-**File:** `supabase/functions/jakim-proxy/index.ts` (line 57)
+### Hero Section
+- Remove the badge pill ("The All-in-One Life System...") -- too generic
+- Headline: larger, tighter leading, with a subtle animated gradient on the accent line
+- Subheadline: one crisp sentence, not a tagline dump
+- Single CTA button with soft glow shadow
+- Below CTA: "Free forever. No credit card." trust line
+- Subtle radial gradient glow behind the hero area (CSS only, no SVG pattern)
 
-The edge function's Aladhan fallback returns `takwim` as an **array** (`[{ hijri: "..." }]`), but the frontend (`src/lib/hijri.ts` line 36) was just fixed to parse `takwim` as an **object** (`{ "2026-02-19": "1447-09-01" }`).
+### Life Score Section
+- Rename to "One score. Whole life."
+- Card gets a subtle floating shadow + slight scale on hover
+- Add a soft animated ring stroke on scroll (the circle progressively fills)
+- Clean white card on a soft warm background
 
-When JAKIM is down (which is currently happening - 502 errors in console), the Aladhan fallback data is silently ignored, falling through to the inaccurate local algorithm.
+### Pillars Section (Bento Grid)
+- Reduce from 5 separate cards to a 2x2 + 1 bento layout
+- Each cell: icon + title + one-line description (no paragraph)
+- Trim descriptions to max 8 words each
+- Subtle border, no heavy gradients
 
-**Fix:** Update the Aladhan fallback in the edge function to return the same object format as JAKIM:
-```typescript
-// Change line 57 from:
-data = JSON.stringify({ takwim: [{ hijri: `${h.year}-...` }] });
-// To:
-const dateKey = `${y}-${m}-${d}`;
-data = JSON.stringify({ takwim: { [dateKey]: `${h.year}-${String(h.month.number).padStart(2,'0')}-${String(h.day).padStart(2,'0')}` } });
-```
+### How It Works
+- Keep the 3 steps but render as a horizontal connected timeline on desktop
+- Each step: number in a circle + title + one-line desc
+- Connected by a thin line between circles
+- On mobile: vertical with connecting line
 
-### 2. MINOR: DrawerFooter ref warning in WidgetCustomizer
-**File:** `src/components/widgets/WidgetCustomizer.tsx`
+### Bottom CTA
+- Keep the hadith quote -- it's authentic and powerful
+- Larger typography, more vertical padding
+- Simplify: remove the Shield icon, let the words speak
 
-The `DrawerClose` wrapping a `Button` triggers a React ref warning because `DrawerFooter` tries to forward a ref to a function component. This is cosmetic but noisy.
+### Footer
+- Minimal: brand + copyright on one line
+- Remove Privacy/Terms/Contact links (they go nowhere)
 
-**Fix:** No code change needed -- this is a known Vaul/Radix quirk and does not affect functionality. The warning only appears in development.
+## Technical Details
 
-### 3. MINOR: Missing aria-describedby on Drawer
-**File:** `src/components/widgets/WidgetCustomizer.tsx`
+### Files Modified
+- `src/pages/Landing.tsx` -- full rewrite of the component
+- `PROGRESS.md` -- update with landing page revamp status
 
-The Drawer content lacks a description for screen readers.
+### Implementation Notes
+- Remove `useState` for stats and the `useEffect` that fetches `app_stats`
+- Remove unused imports: `Star`, `Calculator`, `Sparkles`, `Target`, `TrendingUp`, `ChevronRight`, `Zap`, `Shield`, `Download`, `Card`, `CardContent`
+- Keep: `motion` from framer-motion for scroll animations
+- Keep: `EditableText` for CMS editability
+- Keep: `useAuth` + redirect logic for authenticated users
+- Add a CSS radial gradient glow behind the hero (pure Tailwind, no external assets)
+- Life Score ring animation: use framer-motion `useInView` + animated `strokeDasharray`
+- Bento grid: CSS grid with `grid-template-areas` for the asymmetric layout
+- Timeline connector: simple `div` with `h-px bg-border` between steps on desktop
+- Total page length target: ~200 lines (down from 348)
 
-**Fix:** Add a visually-hidden description text inside the DrawerHeader.
-
-### 4. HOUSEKEEPING: PROGRESS.md outdated
-**File:** `PROGRESS.md`
-
-The widget system, Hijri date fix, and widget customizer are all complete but not reflected in PROGRESS.md.
-
-**Fix:** Update PROGRESS.md with:
-- Widget system: done
-- Widget customizer: done
-- Widget preferences DB: done
-- Smart widget visibility: done
-- First-time widget onboarding: done
-- JAKIM Hijri date fix: done
-- Last Updated date: 2026-02-19
-
-### 5. COSMETIC: Empty lines in WidgetShell.tsx
-**File:** `src/components/widgets/WidgetShell.tsx` (lines 57-58)
-
-Two blank lines left from the previous fix where `import React` was removed.
-
-**Fix:** Remove the extra blank lines.
-
----
-
-## Pages Verified (No Issues Found)
-
-- `/dashboard` -- Widgets render, customizer works, life score displays, quick log buttons link correctly
-- `/iman` -- Prayer hero card, summary strip, spiritual tools grid all functional
-- `/health` -- BMI, hydration, sleep stats, feature cards, IF active widget all working
-- `/wealth` -- Income/expense stats, feature cards, zakat/savings links working
-- `/productivity` -- MITs, streaks, life areas all functional
-- `/settings` -- Profile display, edit form, avatar all working
-- Bottom navigation -- All 6 tabs route correctly with active indicator
-
-## Implementation Sequence
-
-1. Fix the Aladhan fallback format in `jakim-proxy/index.ts` and redeploy
-2. Add aria-describedby to WidgetCustomizer
-3. Clean up blank lines in WidgetShell.tsx
-4. Update PROGRESS.md with current status
+### Section Order (Final)
+1. Nav (fixed, glassmorphism)
+2. Hero (headline + subheadline + CTA + trust line)
+3. Life Score showcase ("One score. Whole life.")
+4. Pillars bento grid (4 pillars -- merge Family into Productivity since Family module is not built yet)
+5. How It Works (3-step horizontal timeline)
+6. Bottom CTA (hadith quote + button)
+7. Footer (one-line minimal)
 
