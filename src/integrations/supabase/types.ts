@@ -1313,6 +1313,39 @@ export type Database = {
         }
         Relationships: []
       }
+      widget_preferences: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          position: number
+          size: string
+          updated_at: string
+          user_id: string
+          widget_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          position?: number
+          size?: string
+          updated_at?: string
+          user_id: string
+          widget_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          position?: number
+          size?: string
+          updated_at?: string
+          user_id?: string
+          widget_id?: string
+        }
+        Relationships: []
+      }
       zakat_history: {
         Row: {
           created_at: string

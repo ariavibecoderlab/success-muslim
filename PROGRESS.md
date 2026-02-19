@@ -138,6 +138,11 @@
 | Life Score Card | ✅ | Ring gauge + pillar breakdowns |
 | Today Overview cards | ✅ | Water, MITs, Habits, Sleep |
 | Quick Log buttons | ✅ | 8 buttons (Prayer, Quran, Dhikr, Fast, Water, Sleep, Tasks, Habits) |
+| Universal Widget System | ✅ | 12 widgets (Prayer, Dhikr, Quran, Solat Sunat, Tarawih, IF, Ramadan, Hydration, Sleep, Sadaqah, Tasks, Da'wah) |
+| Widget Customizer | ✅ | Bottom sheet with toggle, reorder, resize (S/M/L) per widget |
+| Widget Preferences DB | ✅ | `widget_preferences` table with RLS, per-user persistence |
+| Smart Widget Visibility | ✅ | Auto-hide Tarawih/Ramadan outside Ramadan, IF when no active fast |
+| First-Time Widget Onboarding | ✅ | Dialog prompt with Customize Now / Maybe Later |
 
 ---
 
