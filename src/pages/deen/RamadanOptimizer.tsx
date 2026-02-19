@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
-import { gregorianToHijri } from '@/lib/hijri';
+import { useHijriDate } from '@/hooks/useHijriDate';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes, formatPrayerTime } from '@/lib/prayer-times';
 
@@ -81,10 +81,8 @@ const RamadanOptimizer = () => {
   const [fajrTime, setFajrTime] = useState('05:30');
   const [maghribTime, setMaghribTime] = useState('19:15');
   const today = new Date().toISOString().split('T')[0];
-  const hijri = gregorianToHijri(new Date());
-  const isRamadan = hijri.month === 9;
-  const ramadanDay = isRamadan ? hijri.day : 0;
-  const isLastTenNights = isRamadan && hijri.day >= 21;
+  const { isRamadan, ramadanDay } = useHijriDate();
+  const isLastTenNights = isRamadan && ramadanDay >= 21;
 
   // Load prayer times
   useEffect(() => {

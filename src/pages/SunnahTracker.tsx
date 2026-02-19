@@ -15,9 +15,13 @@ import {
 import SubPageLayout from '@/components/SubPageLayout';
 
 const CATEGORY_LABELS: Record<string, string> = {
+  intention: '🌙 Daily Intentions',
+  'morning-routine': '🌅 Early Morning Routine',
+  'morning-dhikr': '📿 Morning Dhikr',
+  selawat: '🤲 Morning Selawat',
+  quran: '📖 Quran & Recitations',
+  'afternoon-dhikr': '🌇 Afternoon Dhikr',
   prayer: 'Sunnah Prayers',
-  dhikr: 'Dhikr & Adhkar',
-  quran: 'Quran',
   other: 'Other',
 };
 

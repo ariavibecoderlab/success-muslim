@@ -24,13 +24,13 @@ const STORAGE_KEY = 'dhikr_data';
 const PRESETS_KEY = 'dhikr_presets';
 
 export const DEFAULT_PRESETS: DhikrPreset[] = [
-  { id: 'subhanallah', name: 'SubhanAllah', arabic: 'سُبْحَانَ ٱللَّهِ', target: 33 },
-  { id: 'alhamdulillah', name: 'Alhamdulillah', arabic: 'ٱلْحَمْدُ لِلَّهِ', target: 33 },
-  { id: 'allahuakbar', name: 'Allahu Akbar', arabic: 'ٱللَّهُ أَكْبَرُ', target: 33 },
-  { id: 'lailahaillallah', name: 'La ilaha illallah', arabic: 'لَا إِلَٰهَ إِلَّا ٱللَّهُ', target: 99 },
-  { id: 'astaghfirullah', name: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ ٱللَّهَ', target: 33 },
-  { id: 'salawat', name: 'Salawat', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', target: 33 },
-  { id: 'hawqala', name: 'Hawqala', arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِٱللَّهِ', target: 33 },
+  { id: 'subhanallah', name: 'SubhanAllah', arabic: 'سُبْحَانَ ٱللَّهِ', target: 100 },
+  { id: 'alhamdulillah', name: 'Alhamdulillah', arabic: 'ٱلْحَمْدُ لِلَّهِ', target: 100 },
+  { id: 'allahuakbar', name: 'Allahu Akbar', arabic: 'ٱللَّهُ أَكْبَرُ', target: 100 },
+  { id: 'lailahaillallah', name: 'La ilaha illallah', arabic: 'لَا إِلَٰهَ إِلَّا ٱللَّهُ', target: 100 },
+  { id: 'astaghfirullah', name: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ ٱللَّهَ', target: 100 },
+  { id: 'salawat', name: 'Salawat', arabic: 'اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ', target: 100 },
+  { id: 'hawqala', name: 'Hawqala', arabic: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِٱللَّهِ', target: 100 },
 ];
 
 export function getPresets(): DhikrPreset[] {

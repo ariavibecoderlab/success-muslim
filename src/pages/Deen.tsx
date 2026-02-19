@@ -13,7 +13,8 @@ import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
 import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
 import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { getTodaySalahCount } from '@/lib/salah-storage';
-import { formatHijriDate } from '@/lib/hijri';
+import { useHijriDate } from '@/hooks/useHijriDate';
+import { calcIman } from '@/lib/life-score';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { useQuranPrefs, useQuranSessions } from '@/hooks/useQuranData';
 import {
@@ -125,17 +126,13 @@ const Iman = () => {
   const totalAyahsRead = quranSessions.reduce((s: number, r: any) => s + (r.ayahs_read || 0), 0);
   const quranCompletion = Math.min(100, Math.round((totalAyahsRead / 6236) * 100));
 
-  const hijriDate = formatHijriDate(new Date());
+  const { hijriDate } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const nextPrayer = prayerData?.timings[nextIdx];
 
-  // Iman score (simple: salah weight 50, sunnah 20, quran 15, dhikr 15)
-  const imanScore = Math.round(
-    (salahCount.logged / 5) * 50 +
-    (sunnahItems.length > 0 ? (sunnahDone / sunnahItems.length) : 0) * 20 +
-    Math.min(1, todayQuranPages / Math.max(1, prefs.daily_goal_pages)) * 15 +
-    Math.min(1, dailyDhikr.totalCount / 100) * 15
-  );
+  // Iman score from unified Life Score engine
+  const imanPillar = calcIman();
+  const imanScore = imanPillar.score;
 
   return (
     <div className="min-h-screen bg-background">

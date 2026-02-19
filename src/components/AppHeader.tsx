@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Moon, Shield } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
-import { formatHijriDate } from '@/lib/hijri';
+import { useHijriDate } from '@/hooks/useHijriDate';
 import type { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
 
@@ -26,7 +26,7 @@ const AppHeader = ({
   showGregorianDate = false,
 }: AppHeaderProps) => {
   const { isAdmin } = useAdmin();
-  const hijriDate = formatHijriDate(new Date());
+  const { hijriDate } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',

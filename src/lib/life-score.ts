@@ -36,7 +36,7 @@ function clamp(v: number): number {
   return Math.max(0, Math.min(100, Math.round(v)));
 }
 
-function calcIman(): PillarScore {
+export function calcIman(): PillarScore {
   // Prayers: 5 prayers, each on-time=100, late=50, missed=0
   const salah = getTodaySalahCount();
   const prayerScore = salah.logged === 0 ? 0 : ((salah.onTime * 100 + salah.late * 50) / 5);
