@@ -162,6 +162,7 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Landing page hero CTA | ✅ | "Start Your Journey" → auth flow |
+| Landing page premium revamp | ✅ | Removed fake stats/testimonials, cinematic hero, animated Life Score ring, bento pillars, horizontal timeline, minimal footer |
 | Google Sign-In | ✅ | One-tap OAuth via Lovable Cloud |
 | Email/password auth | ✅ | With email verification |
 | Multi-step onboarding (7 steps) | ✅ | Slide transitions, progress bar, back button |
