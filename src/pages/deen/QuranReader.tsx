@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Search, BookMarked, ChevronRight, Settings2,
   CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
-  Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal,
+  Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal, RotateCcw,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -512,6 +512,20 @@ const QuranReader = () => {
                       </Button>
                     ))}
                   </div>
+                </div>
+                <div className="border-t pt-4">
+                  <Label className="text-xs text-muted-foreground mb-2 block">Danger Zone</Label>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                    onClick={() => savePrefs({ daily_target_type: null as any, target_selected_at: null as any })}
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1.5" /> Reset My Target
+                  </Button>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1.5 text-center">
+                    Returns you to target selection. Your reading history is kept.
+                  </p>
                 </div>
               </div>
             </DialogContent>
