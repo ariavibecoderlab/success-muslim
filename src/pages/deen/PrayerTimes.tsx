@@ -1,23 +1,43 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 import {
-  Clock, MapPin, RefreshCw, ChevronDown, Settings2, Building2, Bell,
-  BellOff, Vibrate, Navigation, Globe, Moon, Sun, Sunrise, Sunset,
-  Volume2, ChevronRight, Check, Search,
-} from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Separator } from '@/components/ui/separator';
-import SubPageLayout from '@/components/SubPageLayout';
-import { usePrayerSettings } from '@/hooks/usePrayerSettings';
-import { usePrayerNotifications, getNotificationPermission, requestNotificationPermission } from '@/hooks/usePrayerNotifications';
-import { formatHijriDate } from '@/lib/hijri';
+  Clock,
+  MapPin,
+  RefreshCw,
+  ChevronDown,
+  Settings2,
+  Building2,
+  Bell,
+  BellOff,
+  Vibrate,
+  Navigation,
+  Globe,
+  Moon,
+  Sun,
+  Sunrise,
+  Sunset,
+  Volume2,
+  ChevronRight,
+  Check,
+  Search,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import SubPageLayout from "@/components/SubPageLayout";
+import { usePrayerSettings } from "@/hooks/usePrayerSettings";
+import {
+  usePrayerNotifications,
+  getNotificationPermission,
+  requestNotificationPermission,
+} from "@/hooks/usePrayerNotifications";
+import { formatHijriDate } from "@/lib/hijri";
 import {
   fetchPrayerTimes,
   getCurrentPrayerIndex,
@@ -32,15 +52,15 @@ import {
   type PrayerTimesData,
   type PrayerTime as PrayerTimeType,
   type AdhanConfig,
-} from '@/lib/prayer-times';
-import { toast } from 'sonner';
+} from "@/lib/prayer-times";
+import { toast } from "sonner";
 
 const IMAN_SIBLINGS = [
-  { path: '/iman/dhikr', label: 'Dhikr' },
-  { path: '/iman/sunnah', label: 'Sunnah' },
-  { path: '/iman/quran', label: 'Quran' },
-  { path: '/iman/prayer-times', label: 'Prayer' },
-  { path: '/iman/zakat', label: 'Zakat' },
+  { path: "/iman/dhikr", label: "Dhikr" },
+  { path: "/iman/sunnah", label: "Sunnah" },
+  { path: "/iman/quran", label: "Quran" },
+  { path: "/iman/prayer-times", label: "Prayer" },
+  { path: "/iman/zakat", label: "Zakat" },
 ];
 
 const PRAYER_ICONS: Record<string, React.ReactNode> = {
@@ -57,9 +77,9 @@ const PrayerTimes = () => {
   const { settings, saveSettings, loading: settingsLoading } = usePrayerSettings();
   const [data, setData] = useState<PrayerTimesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState('');
+  const [countdown, setCountdown] = useState("");
   const [detectingGps, setDetectingGps] = useState(false);
-  const [settingsTab, setSettingsTab] = useState('location');
+  const [settingsTab, setSettingsTab] = useState("location");
   const [notifPermission, setNotifPermission] = useState<string>(getNotificationPermission);
 
   // Schedule prayer notifications
@@ -94,7 +114,7 @@ const PrayerTimes = () => {
     setDetectingGps(true);
     const loc = await detectLocation();
     if (!loc) {
-      toast.error('Unable to detect location. Please enable GPS or enter manually.');
+      toast.error("Unable to detect location. Please enable GPS or enter manually.");
       setDetectingGps(false);
       return;
     }
@@ -104,9 +124,9 @@ const PrayerTimes = () => {
       longitude: loc.lng,
       city: geo?.city || settings.city,
       country: geo?.country || settings.country,
-      location_method: 'gps',
+      location_method: "gps",
     });
-    toast.success(`Location detected: ${geo?.city || 'Unknown'}`);
+    toast.success(`Location detected: ${geo?.city || "Unknown"}`);
     setDetectingGps(false);
   };
 
@@ -117,18 +137,17 @@ const PrayerTimes = () => {
   return (
     <SubPageLayout title="Prayer Times" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/prayer-times">
       <div className="space-y-4">
-
         {/* Hijri Date Banner */}
-        <div className="text-center py-2">
+        {/* <div className="text-center py-2">
           <p className="text-xs text-muted-foreground uppercase tracking-widest">Today</p>
           <p className="text-sm font-semibold text-primary">{hijriDate}</p>
           {data?.hijriDate && data.hijriDate !== hijriDate && (
             <p className="text-[10px] text-muted-foreground mt-0.5">{data.hijriDate}</p>
           )}
-        </div>
+        </div> */}
 
         {/* Notification Permission Banner */}
-        {notifPermission === 'default' && (
+        {notifPermission === "default" && (
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
@@ -142,8 +161,8 @@ const PrayerTimes = () => {
                 onClick={async () => {
                   const result = await requestNotificationPermission();
                   setNotifPermission(result);
-                  if (result === 'granted') toast.success('Adhan notifications enabled!');
-                  else if (result === 'denied') toast.error('Notifications blocked. Enable in browser settings.');
+                  if (result === "granted") toast.success("Adhan notifications enabled!");
+                  else if (result === "denied") toast.error("Notifications blocked. Enable in browser settings.");
                 }}
               >
                 Enable
@@ -151,11 +170,13 @@ const PrayerTimes = () => {
             </CardContent>
           </Card>
         )}
-        {notifPermission === 'denied' && (
+        {notifPermission === "denied" && (
           <Card className="border-destructive/20 bg-destructive/5">
             <CardContent className="p-3 flex items-center gap-2">
               <BellOff className="h-4 w-4 text-destructive shrink-0" />
-              <p className="text-[11px] text-muted-foreground">Notifications blocked. Enable in your browser settings to receive adhan alerts.</p>
+              <p className="text-[11px] text-muted-foreground">
+                Notifications blocked. Enable in your browser settings to receive adhan alerts.
+              </p>
             </CardContent>
           </Card>
         )}
@@ -164,8 +185,10 @@ const PrayerTimes = () => {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
             <MapPin className="h-4 w-4 text-primary shrink-0" />
-            <span className="text-sm font-medium truncate">{settings.city}, {settings.country}</span>
-            {settings.location_method === 'gps' && <Navigation className="h-3 w-3 text-muted-foreground" />}
+            <span className="text-sm font-medium truncate">
+              {settings.city}, {settings.country}
+            </span>
+            {settings.location_method === "gps" && <Navigation className="h-3 w-3 text-muted-foreground" />}
           </div>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={load}>
@@ -190,14 +213,9 @@ const PrayerTimes = () => {
 
                   {/* LOCATION TAB */}
                   <TabsContent value="location" className="space-y-4 mt-4">
-                    <Button
-                      onClick={handleDetectGps}
-                      disabled={detectingGps}
-                      className="w-full"
-                      variant="outline"
-                    >
+                    <Button onClick={handleDetectGps} disabled={detectingGps} className="w-full" variant="outline">
                       <Navigation className="h-4 w-4 mr-2" />
-                      {detectingGps ? 'Detecting...' : 'Auto-detect Location (GPS)'}
+                      {detectingGps ? "Detecting..." : "Auto-detect Location (GPS)"}
                     </Button>
 
                     <Separator />
@@ -209,7 +227,14 @@ const PrayerTimes = () => {
                           <Label className="text-xs">City</Label>
                           <Input
                             value={settings.city}
-                            onChange={e => saveSettings({ city: e.target.value, location_method: 'manual', latitude: undefined, longitude: undefined })}
+                            onChange={(e) =>
+                              saveSettings({
+                                city: e.target.value,
+                                location_method: "manual",
+                                latitude: undefined,
+                                longitude: undefined,
+                              })
+                            }
                             placeholder="Kuala Lumpur"
                           />
                         </div>
@@ -217,7 +242,7 @@ const PrayerTimes = () => {
                           <Label className="text-xs">Country</Label>
                           <Input
                             value={settings.country}
-                            onChange={e => saveSettings({ country: e.target.value, location_method: 'manual' })}
+                            onChange={(e) => saveSettings({ country: e.target.value, location_method: "manual" })}
                             placeholder="Malaysia"
                           />
                         </div>
@@ -231,13 +256,13 @@ const PrayerTimes = () => {
                       <Label className="text-xs font-medium">Calculation Method</Label>
                       <Select
                         value={String(settings.calculation_method)}
-                        onValueChange={v => saveSettings({ calculation_method: Number(v) })}
+                        onValueChange={(v) => saveSettings({ calculation_method: Number(v) })}
                       >
                         <SelectTrigger className="mt-1">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="max-h-64">
-                          {CALCULATION_METHODS.map(m => (
+                          {CALCULATION_METHODS.map((m) => (
                             <SelectItem key={m.id} value={String(m.id)}>
                               <div>
                                 <span className="text-sm">{m.name}</span>
@@ -253,7 +278,7 @@ const PrayerTimes = () => {
                       <Label className="text-xs font-medium">Madhab (Asr Calculation)</Label>
                       <Select
                         value={settings.madhab}
-                        onValueChange={v => saveSettings({ madhab: v as 'shafi' | 'hanafi' })}
+                        onValueChange={(v) => saveSettings({ madhab: v as "shafi" | "hanafi" })}
                       >
                         <SelectTrigger className="mt-1">
                           <SelectValue />
@@ -264,15 +289,17 @@ const PrayerTimes = () => {
                         </SelectContent>
                       </Select>
                       <p className="text-[10px] text-muted-foreground mt-1">
-                        {settings.madhab === 'hanafi' ? 'Asr begins when shadow is 2× object length' : 'Asr begins when shadow equals object length'}
+                        {settings.madhab === "hanafi"
+                          ? "Asr begins when shadow is 2× object length"
+                          : "Asr begins when shadow equals object length"}
                       </p>
                     </div>
                   </TabsContent>
 
                   {/* ADHAN TAB */}
                   <TabsContent value="adhan" className="space-y-4 mt-4">
-                    {['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map(key => {
-                      const config = settings.adhan_settings[key] || { mode: 'full', audio: 'makkah', preReminder: 0 };
+                    {["fajr", "dhuhr", "asr", "maghrib", "isha"].map((key) => {
+                      const config = settings.adhan_settings[key] || { mode: "full", audio: "makkah", preReminder: 0 };
                       const updateAdhan = (patch: Partial<AdhanConfig>) => {
                         saveSettings({
                           adhan_settings: {
@@ -288,29 +315,31 @@ const PrayerTimes = () => {
                             <div className="flex items-center justify-between">
                               <span className="text-sm font-semibold">{displayName}</span>
                               <div className="flex gap-1">
-                                {(['full', 'vibrate', 'silent'] as const).map(mode => (
+                                {(["full", "vibrate", "silent"] as const).map((mode) => (
                                   <Button
                                     key={mode}
-                                    variant={config.mode === mode ? 'default' : 'outline'}
+                                    variant={config.mode === mode ? "default" : "outline"}
                                     size="icon"
                                     className="h-7 w-7"
                                     onClick={() => updateAdhan({ mode })}
                                   >
-                                    {mode === 'full' && <Volume2 className="h-3.5 w-3.5" />}
-                                    {mode === 'vibrate' && <Vibrate className="h-3.5 w-3.5" />}
-                                    {mode === 'silent' && <BellOff className="h-3.5 w-3.5" />}
+                                    {mode === "full" && <Volume2 className="h-3.5 w-3.5" />}
+                                    {mode === "vibrate" && <Vibrate className="h-3.5 w-3.5" />}
+                                    {mode === "silent" && <BellOff className="h-3.5 w-3.5" />}
                                   </Button>
                                 ))}
                               </div>
                             </div>
-                            {config.mode === 'full' && (
-                              <Select value={config.audio} onValueChange={v => updateAdhan({ audio: v })}>
+                            {config.mode === "full" && (
+                              <Select value={config.audio} onValueChange={(v) => updateAdhan({ audio: v })}>
                                 <SelectTrigger className="h-8 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {ADHAN_OPTIONS.map(a => (
-                                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                                  {ADHAN_OPTIONS.map((a) => (
+                                    <SelectItem key={a.id} value={a.id}>
+                                      {a.name}
+                                    </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -319,14 +348,16 @@ const PrayerTimes = () => {
                               <span className="text-[11px] text-muted-foreground">Pre-reminder</span>
                               <Select
                                 value={String(config.preReminder)}
-                                onValueChange={v => updateAdhan({ preReminder: Number(v) })}
+                                onValueChange={(v) => updateAdhan({ preReminder: Number(v) })}
                               >
                                 <SelectTrigger className="h-7 w-24 text-xs">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  {PRE_REMINDER_OPTIONS.map(m => (
-                                    <SelectItem key={m} value={String(m)}>{m === 0 ? 'Off' : `${m} min`}</SelectItem>
+                                  {PRE_REMINDER_OPTIONS.map((m) => (
+                                    <SelectItem key={m} value={String(m)}>
+                                      {m === 0 ? "Off" : `${m} min`}
+                                    </SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
@@ -355,7 +386,8 @@ const PrayerTimes = () => {
                 {formatPrayerTime(getEffectiveTime(nextPrayer))}
                 {nextPrayer.mosqueTime && (
                   <span className="ml-2 text-[10px] bg-primary/10 px-1.5 py-0.5 rounded-full">
-                    <Building2 className="h-2.5 w-2.5 inline mr-0.5" />Mosque
+                    <Building2 className="h-2.5 w-2.5 inline mr-0.5" />
+                    Mosque
                   </span>
                 )}
               </p>
@@ -366,7 +398,7 @@ const PrayerTimes = () => {
                   <div
                     key={i}
                     className={`h-1.5 w-6 rounded-full transition-all ${
-                      i <= currentIdx ? 'bg-primary' : i === nextIdx ? 'bg-primary/40' : 'bg-muted'
+                      i <= currentIdx ? "bg-primary" : i === nextIdx ? "bg-primary/40" : "bg-muted"
                     }`}
                   />
                 ))}
@@ -385,10 +417,7 @@ const PrayerTimes = () => {
                 <p className="text-[10px] text-muted-foreground">Override with local mosque schedule</p>
               </div>
             </div>
-            <Switch
-              checked={settings.mosque_enabled}
-              onCheckedChange={v => saveSettings({ mosque_enabled: v })}
-            />
+            <Switch checked={settings.mosque_enabled} onCheckedChange={(v) => saveSettings({ mosque_enabled: v })} />
           </CardContent>
         </Card>
 
@@ -397,7 +426,7 @@ const PrayerTimes = () => {
           <Card>
             <CardContent className="p-3 space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Mosque Prayer Times (24h format)</p>
-              {(['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map(key => {
+              {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
                 const field = `mosque_${key}` as keyof typeof settings;
                 return (
                   <div key={key} className="flex items-center gap-3">
@@ -405,8 +434,8 @@ const PrayerTimes = () => {
                     <Input
                       type="time"
                       className="h-8 text-xs flex-1"
-                      value={(settings[field] as string) || ''}
-                      onChange={e => saveSettings({ [field]: e.target.value || null })}
+                      value={(settings[field] as string) || ""}
+                      onChange={(e) => saveSettings({ [field]: e.target.value || null })}
                     />
                   </div>
                 );
@@ -420,9 +449,9 @@ const PrayerTimes = () => {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today's Schedule</h2>
             <span className="text-[10px] text-muted-foreground">
-              {CALCULATION_METHODS.find(m => m.id === settings.calculation_method)?.name || 'MWL'}
-              {' · '}
-              {settings.madhab === 'hanafi' ? 'Hanafi' : "Shafi'i"}
+              {CALCULATION_METHODS.find((m) => m.id === settings.calculation_method)?.name || "MWL"}
+              {" · "}
+              {settings.madhab === "hanafi" ? "Hanafi" : "Shafi'i"}
             </span>
           </div>
 
@@ -444,36 +473,40 @@ const PrayerTimes = () => {
                   <Card
                     key={prayer.key}
                     className={`transition-all ${
-                      isCurrent ? 'bg-primary/10 border-primary/30 shadow-sm ring-1 ring-primary/20' :
-                      isNext ? 'border-primary/20' : ''
+                      isCurrent
+                        ? "bg-primary/10 border-primary/30 shadow-sm ring-1 ring-primary/20"
+                        : isNext
+                          ? "border-primary/20"
+                          : ""
                     }`}
                   >
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                          isCurrent ? 'bg-primary text-primary-foreground' :
-                          isNext ? 'bg-primary/10 text-primary' : 'bg-secondary'
-                        }`}>
+                        <div
+                          className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                            isCurrent
+                              ? "bg-primary text-primary-foreground"
+                              : isNext
+                                ? "bg-primary/10 text-primary"
+                                : "bg-secondary"
+                          }`}
+                        >
                           {PRAYER_ICONS[prayer.key] || <Clock className="h-4 w-4" />}
                         </div>
                         <div>
-                          <p className={`text-sm font-semibold ${isCurrent ? 'text-primary' : ''}`}>
-                            {prayer.name}
-                          </p>
+                          <p className={`text-sm font-semibold ${isCurrent ? "text-primary" : ""}`}>{prayer.name}</p>
                           <div className="flex items-center gap-1.5">
                             <p className="text-[11px] text-muted-foreground">{prayer.key}</p>
                             {prayer.mosqueTime && (
-                              <span className="text-[9px] bg-primary/10 text-primary px-1 py-0.5 rounded">
-                                Mosque
-                              </span>
+                              <span className="text-[9px] bg-primary/10 text-primary px-1 py-0.5 rounded">Mosque</span>
                             )}
-                            {adhanMode === 'silent' && <BellOff className="h-2.5 w-2.5 text-muted-foreground" />}
-                            {adhanMode === 'vibrate' && <Vibrate className="h-2.5 w-2.5 text-muted-foreground" />}
+                            {adhanMode === "silent" && <BellOff className="h-2.5 w-2.5 text-muted-foreground" />}
+                            {adhanMode === "vibrate" && <Vibrate className="h-2.5 w-2.5 text-muted-foreground" />}
                           </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className={`text-sm font-bold tabular-nums ${isCurrent ? 'text-primary' : ''}`}>
+                        <p className={`text-sm font-bold tabular-nums ${isCurrent ? "text-primary" : ""}`}>
                           {formatPrayerTime(effectiveTime)}
                         </p>
                         {prayer.mosqueTime && prayer.mosqueTime !== prayer.time && (
