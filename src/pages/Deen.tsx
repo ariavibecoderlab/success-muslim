@@ -16,7 +16,7 @@ import { getTodaySalahCount } from '@/lib/salah-storage';
 import { useHijriDate } from '@/hooks/useHijriDate';
 import { calcIman } from '@/lib/life-score';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
-import { useQuranPrefs, useQuranSessions } from '@/hooks/useQuranData';
+import { useQuranDailyTarget } from '@/hooks/useQuranData';
 import {
   fetchPrayerTimes,
   getNextPrayerIndex,
@@ -45,11 +45,9 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 const Iman = () => {
   const [, forceUpdate] = useState(0);
   const { settings, loading: settingsLoading } = usePrayerSettings();
-  const { prefs } = useQuranPrefs();
-  const { getSessions } = useQuranSessions();
+  const { isDoneToday, streak: quranStreak, daysDone } = useQuranDailyTarget();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
   const [countdown, setCountdown] = useState('');
-  const [quranSessions, setQuranSessions] = useState<any[]>([]);
 
   useEffect(() => {
     const onFocus = () => forceUpdate(n => n + 1);
@@ -67,10 +65,6 @@ const Iman = () => {
     if (!settingsLoading) loadPrayer();
   }, [settingsLoading, loadPrayer]);
 
-  // Load Quran sessions
-  useEffect(() => {
-    getSessions(30).then(s => setQuranSessions(s || []));
-  }, []);
 
   // Countdown timer
   const nextIdx = prayerData ? getNextPrayerIndex(prayerData.timings) : 0;
@@ -108,23 +102,10 @@ const Iman = () => {
   const dailyDhikr = getDailyDhikr();
   const salahCount = getTodaySalahCount();
 
-  // Quran stats
-  const todayQuranPages = quranSessions
-    .filter(s => s.date === new Date().toISOString().split('T')[0])
-    .reduce((sum: number, s: any) => sum + Number(s.pages_read || 0), 0);
-  const quranStreak = (() => {
-    const dates = new Set(quranSessions.map((s: any) => s.date));
-    let count = 0;
-    const d = new Date();
+  // Quran stats — real data from useQuranDailyTarget (isDoneToday, quranStreak, daysDone injected above)
     for (let i = 0; i < 365; i++) {
       if (dates.has(d.toISOString().split('T')[0])) count++;
       else if (i > 0) break;
-      d.setDate(d.getDate() - 1);
-    }
-    return count;
-  })();
-  const totalAyahsRead = quranSessions.reduce((s: number, r: any) => s + (r.ayahs_read || 0), 0);
-  const quranCompletion = Math.min(100, Math.round((totalAyahsRead / 6236) * 100));
 
   const { hijriDate } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -222,7 +203,7 @@ const Iman = () => {
             {[
               { icon: Star, label: `${salahCount.logged}/5`, sub: 'Salah', to: '/dashboard' },
               { icon: HandHeart, label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/iman/dhikr' },
-              { icon: BookOpen, label: `${todayQuranPages.toFixed(1)}p`, sub: 'Quran', to: '/iman/quran' },
+              { icon: BookOpen, label: isDoneToday ? '✓ Done' : 'Pending', sub: 'Quran', to: '/iman/quran' },
               { icon: ListChecks, label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/iman/sunnah' },
             ].map(item => (
               <Link key={item.sub} to={item.to} className="flex-1 min-w-0">
@@ -253,9 +234,9 @@ const Iman = () => {
                   </div>
                   <p className="text-sm font-semibold">Quran</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {quranCompletion > 0
-                      ? `${quranCompletion}% complete${quranStreak > 0 ? ` · ${quranStreak}d streak` : ''}`
-                      : 'Start reading'}
+                    {isDoneToday
+                      ? `${daysDone} days done${quranStreak > 0 ? ` · 🔥 ${quranStreak}d streak` : ''}`
+                      : quranStreak > 0 ? `🔥 ${quranStreak}d streak · read today?` : 'Start reading'}
                   </p>
                 </CardContent>
               </Card>
