@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Search, BookMarked, ChevronRight, Settings2,
   CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
+  Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,7 @@ const IMAN_SIBLINGS = [
 
 interface TargetOption {
   key: string;
-  emoji: string;
+  icon: React.ReactNode;
   label: string;
   sublabel: string;
   dailyAmount: string;
@@ -40,14 +41,14 @@ interface TargetOption {
 }
 
 const TARGETS: TargetOption[] = [
-  { key: 'khatam_30',  emoji: '🏆', label: 'Khatam 30 Juz',  sublabel: 'Complete in 30 days',   dailyAmount: '1 juz/day',        completionDays: 30   },
-  { key: 'khatam_60',  emoji: '⭐', label: 'Khatam 15 Juz',  sublabel: 'Complete in 60 days',   dailyAmount: '½ juz/day',        completionDays: 60   },
-  { key: 'khatam_90',  emoji: '📖', label: 'Khatam 10 Juz',  sublabel: 'Complete in 90 days',   dailyAmount: '~3 pages/day',     completionDays: 90   },
-  { key: 'khatam_180', emoji: '📄', label: 'Khatam 5 Juz',   sublabel: 'Complete in 180 days',  dailyAmount: '~1.5 pages/day',   completionDays: 180  },
-  { key: 'khatam_365', emoji: '📃', label: 'Khatam 1 Juz',   sublabel: 'Complete in 1 year',    dailyAmount: '~⅓ page/day',      completionDays: 365  },
-  { key: 'page_10',    emoji: '📝', label: '10 Pages/day',   sublabel: 'Complete in ~60 days',  dailyAmount: '10 pages',         completionDays: 60   },
-  { key: 'page_1',     emoji: '🌱', label: '1 Page/day',     sublabel: 'Complete in ~600 days', dailyAmount: '1 page',           completionDays: 600  },
-  { key: 'ayah_1',     emoji: '✨', label: '1 Ayah/day',     sublabel: 'Small but consistent',  dailyAmount: '1 ayah',           completionDays: null },
+  { key: 'khatam_30',  icon: <Crown className="h-5 w-5 text-primary" />,   label: 'Khatam 30 Juz',  sublabel: 'Complete in 30 days',   dailyAmount: '1 juz/day',      completionDays: 30   },
+  { key: 'khatam_60',  icon: <Star className="h-5 w-5 text-primary" />,    label: 'Khatam 15 Juz',  sublabel: 'Complete in 60 days',   dailyAmount: '½ juz/day',      completionDays: 60   },
+  { key: 'khatam_90',  icon: <BookOpen className="h-5 w-5 text-primary" />, label: 'Khatam 10 Juz', sublabel: 'Complete in 90 days',   dailyAmount: '~3 pages/day',   completionDays: 90   },
+  { key: 'khatam_180', icon: <Layers className="h-5 w-5 text-primary" />,  label: 'Khatam 5 Juz',   sublabel: 'Complete in 180 days',  dailyAmount: '~1.5 pages/day', completionDays: 180  },
+  { key: 'khatam_365', icon: <FileText className="h-5 w-5 text-primary" />, label: 'Khatam 1 Juz',  sublabel: 'Complete in 1 year',    dailyAmount: '~⅓ page/day',    completionDays: 365  },
+  { key: 'page_10',    icon: <Zap className="h-5 w-5 text-primary" />,     label: '10 Pages/day',   sublabel: 'Complete in ~60 days',  dailyAmount: '10 pages',       completionDays: 60   },
+  { key: 'page_1',     icon: <Leaf className="h-5 w-5 text-primary" />,    label: '1 Page/day',     sublabel: 'Complete in ~600 days', dailyAmount: '1 page',         completionDays: 600  },
+  { key: 'ayah_1',     icon: <Hash className="h-5 w-5 text-primary" />,    label: '1 Ayah/day',     sublabel: 'Small but consistent',  dailyAmount: '1 ayah',         completionDays: null },
 ];
 
 function getEstimatedDate(days: number | null): string {
@@ -198,10 +199,10 @@ const QuranReader = () => {
 
   // Achievements
   const achievements = [
-    { label: 'First Day', emoji: '✅', earned: daysDone >= 1 },
-    { label: '7 Day Streak', emoji: '🔥', earned: streak >= 7 },
-    { label: '30 Day Streak', emoji: '💎', earned: streak >= 30 },
-    { label: 'Khatam Complete', emoji: '🏆', earned: targetDays !== null && daysDone >= (targetDays ?? Infinity) },
+    { label: 'First Day',     icon: <CheckCircle2 className="h-5 w-5" />, earned: daysDone >= 1 },
+    { label: '7 Day Streak',  icon: <Flame className="h-5 w-5" />,        earned: streak >= 7 },
+    { label: '30 Day Streak', icon: <Award className="h-5 w-5" />,        earned: streak >= 30 },
+    { label: 'Khatam',        icon: <Medal className="h-5 w-5" />,        earned: targetDays !== null && daysDone >= (targetDays ?? Infinity) },
   ];
 
   const handleBeginJourney = async () => {
@@ -268,7 +269,7 @@ const QuranReader = () => {
                 onClick={() => setSelectedTarget(t.key)}
               >
                 <CardContent className="p-3 text-center space-y-1">
-                  <div className="text-2xl">{t.emoji}</div>
+                  <div className="flex justify-center">{t.icon}</div>
                   <p className="text-xs font-semibold leading-tight">{t.label}</p>
                   <p className="text-[10px] text-muted-foreground">{t.dailyAmount}</p>
                   <p className="text-[9px] text-muted-foreground/70">{getEstimatedDate(t.completionDays)}</p>
@@ -277,8 +278,8 @@ const QuranReader = () => {
             ))}
           </div>
 
-          <p className="text-[10px] text-center text-muted-foreground">
-            ✨ Small but consistent is beloved by Allah
+          <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
+            <Sparkles className="h-3 w-3" /> Small but consistent is beloved by Allah
           </p>
 
           <Button
@@ -358,13 +359,13 @@ const QuranReader = () => {
                 <div>
                   <p className="text-sm font-semibold">Barakallah! See you tomorrow.</p>
                   {streak > 0 && (
-                    <p className="text-xs text-muted-foreground">🔥 {streak} day streak</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3" /> {streak} day streak</p>
                   )}
                 </div>
               </div>
             ) : (
-              <Button className="w-full" size="lg" onClick={() => setMarkSheetOpen(true)}>
-                ✅ Mark Today as Done
+              <Button className="w-full flex items-center gap-2" size="lg" onClick={() => setMarkSheetOpen(true)}>
+                <CheckCircle2 className="h-4 w-4" /> Mark Today as Done
               </Button>
             )}
           </CardContent>
@@ -448,8 +449,8 @@ const QuranReader = () => {
             </p>
             <div className="grid grid-cols-4 gap-2">
               {achievements.map(a => (
-                <div key={a.label} className={`text-center p-2 rounded-lg ${a.earned ? 'bg-primary/10' : 'bg-secondary/50 opacity-50'}`}>
-                  <div className="text-xl">{a.emoji}</div>
+                <div key={a.label} className={`text-center p-2 rounded-lg ${a.earned ? 'bg-primary/10 text-primary' : 'bg-secondary/50 text-muted-foreground opacity-50'}`}>
+                  <div className="flex justify-center">{a.icon}</div>
                   <p className="text-[9px] mt-1 leading-tight font-medium">{a.label}</p>
                 </div>
               ))}
@@ -496,10 +497,10 @@ const QuranReader = () => {
                         key={t.key}
                         variant={prefs.daily_target_type === t.key ? 'default' : 'outline'}
                         size="sm"
-                        className="text-xs h-auto py-1.5 justify-start"
+                        className="text-xs h-auto py-1.5 justify-start gap-1.5"
                         onClick={() => savePrefs({ daily_target_type: t.key })}
                       >
-                        {t.emoji} {t.label}
+                        {t.icon} {t.label}
                       </Button>
                     ))}
                   </div>
@@ -665,8 +666,8 @@ const QuranReader = () => {
                 />
               </div>
             </div>
-            <Button className="w-full" size="lg" onClick={handleMarkDone}>
-              ✅ Done — Mark Today as Complete
+            <Button className="w-full flex items-center gap-2" size="lg" onClick={handleMarkDone}>
+              <CheckCircle2 className="h-4 w-4" /> Done — Mark Today as Complete
             </Button>
           </SheetContent>
         </Sheet>
