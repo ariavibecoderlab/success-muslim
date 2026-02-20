@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '@/hooks/useFamily';
 import { Users, Plus, UserPlus, Loader2 } from 'lucide-react';
@@ -12,13 +11,6 @@ const Family = () => {
   const navigate = useNavigate();
   const { families, loading } = useFamily();
 
-  // If user already has families, redirect to the first one's dashboard
-  useEffect(() => {
-    if (!loading && families.length === 1) {
-      navigate(`/family/${families[0].id}/dashboard`, { replace: true });
-    }
-  }, [loading, families, navigate]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -27,8 +19,8 @@ const Family = () => {
     );
   }
 
-  // If user is in 2 families, show selection
-  if (families.length >= 2) {
+  // If user is in 1 or more families, show selection list
+  if (families.length >= 1) {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader title="Family" icon={Users} />
@@ -56,6 +48,16 @@ const Family = () => {
               </CardContent>
             </Card>
           ))}
+          {families.length < 2 && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate('/family/join')}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Join Another Group
+            </Button>
+          )}
         </main>
         <div className="h-20" />
       </div>
