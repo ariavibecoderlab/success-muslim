@@ -29,6 +29,11 @@ function getVerseAudioUrl(_reciterId: number, surahNum: number, ayahNum: number)
   return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${SURAH_NAMES.slice(0, surahNum - 1).reduce((sum, su) => sum + su.ayahs, 0) + ayahNum}.mp3`;
 }
 
+// Module-level session token — survives React Strict Mode double-mount.
+// Each real navigation to this page gets a new token; the cleanup
+// checks the token it captured at mount time against the current one.
+let _sessionToken = 0;
+
 const SurahReader = () => {
   const { surahNum } = useParams<{ surahNum: string }>();
   const [searchParams] = useSearchParams();
@@ -62,6 +67,7 @@ const SurahReader = () => {
   const lastVisibleAyahRef = useRef<number | null>(null);
   const sessionStartRef = useRef<{ surah: number; ayah: number; time: number } | null>(null);
   const hasSavedSessionRef = useRef(false); // prevent duplicate inserts
+  const mountTokenRef = useRef(0); // matches module-level token to detect Strict Mode re-mounts
 
   // Resume banner: show if saved position is in this surah and no explicit ?ayah param
   const savedLastAyah = prefs.last_surah === num ? prefs.last_ayah : null;
@@ -78,11 +84,15 @@ const SurahReader = () => {
   }, [num, savedLastAyah, targetAyah, resumeDismissed]);
 
   // Record session start position — always start from ayah 1 (or explicit targetAyah)
-  // so that ayahs_read is calculated correctly. The saved last position is for resuming, not for the session start.
+  // Increment module token so THIS mount owns the session insert.
   useEffect(() => {
+    _sessionToken += 1;
+    const myToken = _sessionToken;
+    mountTokenRef.current = myToken;
+    hasSavedSessionRef.current = false;
     const startAyah = targetAyah || 1;
     sessionStartRef.current = { surah: num, ayah: startAyah, time: Date.now() };
-    hasSavedSessionRef.current = false; // reset guard for this new session
+    // Return nothing — cleanup handled in the separate unmount effect
   }, [num, targetAyah]);
 
   // Calculate initial page from targetAyah
@@ -167,9 +177,15 @@ const SurahReader = () => {
   numRef.current = num;
 
   useEffect(() => {
+    // Capture the token at mount time. In React Strict Mode, the first
+    // (discarded) mount will have an older token; only the real mount's
+    // cleanup will see mountTokenRef.current === _sessionToken.
+    const capturedToken = _sessionToken;
+
     return () => {
-      // Guard: only write once per component mount lifetime
+      // Only the most-recent real mount should write the session.
       if (hasSavedSessionRef.current) return;
+      if (mountTokenRef.current !== capturedToken) return; // Strict Mode ghost mount
       hasSavedSessionRef.current = true;
 
       const endAyah = lastVisibleAyahRef.current || 1;
