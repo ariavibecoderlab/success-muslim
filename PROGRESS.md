@@ -29,7 +29,7 @@
 | Transactions → DB | ✅ | `transactions` table with recurring support |
 | Savings goals → DB | ✅ | `savings_goals` + `savings_contributions` tables |
 | Budget periods → DB | ✅ | `budget_periods` table |
-| Family module → DB | ✅ | 6 new tables: `families`, `family_members`, `family_activity_feed`, `family_reactions`, `family_announcements`, `family_privacy_settings` |
+| Family module → DB | ✅ | 6 tables: `families`, `family_members`, `family_activity_feed`, `family_reactions`, `family_announcements`, `family_privacy_settings` |
 
 ---
 
@@ -52,7 +52,6 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Deen Page Revamp | ✅ | Prayer hero card, summary strip, live tool grid, deen score |
-|---------|--------|-------|
 | Salah Tracking (On Time/Late/Missed) | ✅ | Dashboard popover + DB sync |
 | Dhikr Counter | ✅ | Presets + custom dhikr + haptic feedback + streak + 7-day history + DB sync |
 | Sunnah Tracker | ✅ | Daily checklist + custom items + completion ring + week dots + celebration + DB sync |
@@ -63,23 +62,21 @@
 | Zakat Calculator | ✅ | DB persistence + mark as paid |
 | Sadaqah Tracker | ✅ | `sadaqah_donations` + `sadaqah_goals` tables, monthly goal, category breakdown |
 | Prayer Times | ✅ | JAKIM e-solat API (auto for Malaysia), Aladhan fallback (global), GPS + manual location, 20+ calculation methods |
-| JAKIM Zone Mapping | ✅ | Full Malaysian zone codes (JHR/KDH/KTN/MLK/NGS/PHG/PLS/PNG/PRK/SBH/SGR/SWK/TRG/WLY) |
+| JAKIM Zone Mapping | ✅ | Full Malaysian zone codes |
 | Prayer Settings | ✅ | Madhab (Shafi/Hanafi), method selection, persisted to DB |
 | Mosque Sync | ✅ | Manual mosque time overrides per prayer, toggle on/off |
 | Smart Adhan | ✅ | Per-prayer mode (full/vibrate/silent), audio selection, pre-reminder |
-| Hijri Date | ✅ | JAKIM API (Malaysia) with Aladhan fallback (global), object format parity fixed |
+| Hijri Date | ✅ | JAKIM API (Malaysia) with Aladhan fallback (global) |
 | Quran Reader | ✅ | Full 114 surahs, Arabic text + translations (EN/MS/ID), per-ayah tafsir |
-| Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
-| Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |
+| Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) |
+| Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters |
 | Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
-| Quran Tracker (Daily Target) | ✅ | Replaced complex opt-in system with simple daily target picker (8 options). One-time onboarding, "Mark Today as Done" check-in, streak tracking, 28-day calendar heatmap, achievements |
-| Quran Daily Log | ✅ | `quran_daily_log` table — user_id, date, target_met, surah, ayah. Streak computed from consecutive target_met days |
-| Quran Reading Calendar | ✅ | 28-day weekly-format calendar (7 cols, day headers S M T W T F S, green = done) |
-| Quran Reset Target | ✅ | "Reset My Target" in Settings danger zone clears onboarding so user can re-pick |
-| Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
-| Qiyam Planner | ✅ | Tahajjud window calc, sleep/wake settings, streak, alarm, DB synced |
-| Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals, Laylatul Qadr, summary |
-| Hajj/Umrah Planner | ✅ | Step-by-step guides with duas, packing checklist, progress tracking, DB synced |
+| Quran Tracker (Daily Target) | ✅ | Simple daily target picker, "Mark Today as Done", streak, 28-day calendar heatmap, achievements |
+| Quran Daily Log | ✅ | `quran_daily_log` table |
+| Quran Bookmarks | ✅ | DB synced |
+| Qiyam Planner | ✅ | Tahajjud window calc, streak, alarm, DB synced |
+| Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals |
+| Hajj/Umrah Planner | ✅ | Step-by-step guides with duas, packing checklist, DB synced |
 
 ---
 
@@ -87,14 +84,14 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| BMI Calculator + TDEE | ✅ | Visual arc gauge, body fat %, ideal weight range, lose/maintain/gain TDEE, auto-save profile |
-| Weight Tracker | ✅ | Hero weight display, goal progress bar, weekly trend arrow, area chart (7D/30D/All), milestone system (5 achievements), streak counter, +/- log dialog, auto-updates BMI |
+| BMI Calculator + TDEE | ✅ | Visual arc gauge, body fat %, ideal weight range |
+| Weight Tracker | ✅ | Hero display, goal progress, trend arrow, area chart, milestones |
 | Hydration Tracker | ✅ | DB sync |
 | Sleep Tracker | ✅ | DB sync |
 | Sunnah Fasting Calendar | ✅ | DB sync |
-| IF Timer | ✅ | DB sync, custom duration picker (hours+minutes), saved as default |
-| IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button when fasting active |
-| Sleep & Wake targets | ✅ | Configurable targets with vs-actual comparison |
+| IF Timer | ✅ | DB sync, custom duration picker |
+| IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button |
+| Sleep & Wake targets | ✅ | Configurable targets |
 
 ---
 
@@ -104,14 +101,13 @@
 |---------|--------|-------|
 | Wealth hub page | ✅ | Links to Budget, Savings, Zakat |
 | Budget Tracker | ✅ | Income/expense tracking with Islamic-themed categories |
-| Spending Pie Chart | ✅ | Donut chart with category breakdown + color-coded legend |
-| Recurring Transactions | ✅ | Weekly/biweekly/monthly/yearly with toggle in add dialog |
-| Savings Goals | ✅ | Islamic milestones (Hajj, Umrah, Qurban, Emergency, Education, Wedding) |
-| Savings Contributions | ✅ | Add contributions with progress bar + deadline countdown |
+| Spending Pie Chart | ✅ | Donut chart with category breakdown |
+| Recurring Transactions | ✅ | Weekly/biweekly/monthly/yearly |
+| Savings Goals | ✅ | Islamic milestones (Hajj, Umrah, Qurban, etc.) |
+| Savings Contributions | ✅ | Progress bar + deadline countdown |
 | Zakat Calculator | ✅ | Linked from Iman module |
 | Sadaqah Goals | ❌ | Planned for future phase |
 | Debt-Free Planner | ❌ | Planned for future phase |
-| Shariah Investment Tracking | ❌ | Planned for future phase |
 
 ---
 
@@ -129,29 +125,40 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Create family group | ✅ | Name input → 6-char invite code generated → saved to DB |
-| Invite system | ✅ | Unique invite code + shareable link (success-muslim.lovable.app/family/join/:code) |
+| Create family group | ✅ | Name input → 6-char invite code → saved to DB |
+| Invite system | ✅ | Unique invite code + shareable link |
 | Join via code | ✅ | Code lookup with preview (name + member count) before confirming |
 | Join via link | ✅ | URL param pre-fills code, same join flow |
-| Max 20 members | ✅ | Enforced server-side before insert |
-| Max 2 families per user | ✅ | Enforced server-side before create/join |
-| Family Hub page | ✅ | Empty state → create/join CTA; 1 family → auto-redirect to dashboard; 2 → selection |
+| Max 20 members | ✅ | Enforced before insert |
+| Max 2 families per user | ✅ | Enforced before create/join |
+| Family Hub page | ✅ | Empty state → create/join CTA; 1+ families → list with nav |
 | Family Dashboard | ✅ | Leaderboard + Today's Snapshot + Activity Feed + Announcement banner |
 | Weekly Leaderboard | ✅ | `get_family_leaderboard` RPC — Iman score based on prayers + quran + fasting |
-| Leaderboard cards | ✅ | Medal icons 🥇🥈🥉, streak, prayer/quran counts, Iman score |
-| Today's Snapshot | ✅ | Per-member prayer/quran/fasting status row |
-| Activity Feed | ✅ | 30 most recent events, reactions 🤲❤️🔥 per item |
+| Leaderboard cards | ✅ | Trophy/Medal/Award icons (no emojis), streak, prayer/quran counts, Iman score |
+| Today's Snapshot | ✅ | Per-member prayer/quran/fasting status row with Lucide icons |
+| Activity Feed | ✅ | 30 most recent events, reactions (HandHelping/Heart/Flame icons) per item |
+| Activity Feed auto-population | ✅ | Auto-posts when: all 5 prayers logged, Quran target met, fasting toggled, streak milestones (7/14/21/30/60/100) |
 | Feed reactions | ✅ | Toggle reaction (one per type per user), optimistic UI update |
 | Member Profile | ✅ | Individual expanded view: score, stats grid, streak, privacy-gated sections |
 | Family Settings | ✅ | Admin: rename, remove members, transfer admin; all: leave group |
 | Announcements | ✅ | Admin can post, shown as banner on dashboard |
 | Privacy controls | ✅ | Toggle prayer/quran/fasting/health/streaks/leaderboard per user |
 | Ghost mode | ✅ | Completely hides user from family view |
-| Privacy Settings in Profile | ✅ | FamilyPrivacySettings card added to Settings page |
-| Bottom nav Family tab | ✅ | Added between Tasks and Profile (7 tabs, 9px labels) |
+| Privacy Settings in Profile | ✅ | FamilyPrivacySettings card in Settings page |
+| Bottom nav Family tab | ✅ | 7 tabs, 9px labels, spring animation |
 | RLS on all family tables | ✅ | Full row-level security with SECURITY DEFINER helper functions |
-| Back button navigation fix | ✅ | All `navigate(-1)` replaced with explicit routes (no more history loops) |
-| Family Module — Phase 2 (Class Mode, CSV export) | ❌ | Planned |
+| Back button navigation fix | ✅ | All back buttons use explicit routes (no history loops) |
+| No hardcoded emojis | ✅ | All icons replaced with Lucide: Trophy, Medal, Award, CheckCircle2, Moon, Flame, HandHelping, Heart, BookOpen, BarChart2 |
+
+## 👨‍👩‍👧 FAMILY MODULE — Phase 2 (Planned)
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Class Mode | ❌ | Teacher controls, "Class" terminology, teacher sees all regardless of privacy |
+| Teacher announcements (push) | ❌ | Notification to all members |
+| Weekly progress CSV export | ❌ | Admin exports prayer %, quran target, streaks |
+| Family notifications | ❌ | Streak milestones, leaderboard reset, social nudges |
+| Notification mute setting | ❌ | Per-user mute for family notifications |
 
 ---
 
@@ -171,12 +178,12 @@
 |---------|--------|-------|
 | Life Score Card | ✅ | Ring gauge + pillar breakdowns |
 | Today Overview cards | ✅ | Water, MITs, Habits, Sleep |
-| Quick Log buttons | ✅ | 8 buttons (Prayer, Quran, Dhikr, Fast, Water, Sleep, Tasks, Habits) |
-| Universal Widget System | ✅ | 12 widgets (Prayer, Dhikr, Quran, Solat Sunat, Tarawih, IF, Ramadan, Hydration, Sleep, Sadaqah, Tasks, Da'wah) |
-| Widget Customizer | ✅ | Bottom sheet with toggle, reorder, resize (S/M/L) per widget |
-| Widget Preferences DB | ✅ | `widget_preferences` table with RLS, per-user persistence |
-| Smart Widget Visibility | ✅ | Auto-hide Tarawih/Ramadan outside Ramadan, IF when no active fast |
-| First-Time Widget Onboarding | ✅ | Dialog prompt with Customize Now / Maybe Later |
+| Quick Log buttons | ✅ | 8 buttons |
+| Universal Widget System | ✅ | 12 widgets |
+| Widget Customizer | ✅ | Toggle, reorder, resize (S/M/L) per widget |
+| Widget Preferences DB | ✅ | `widget_preferences` table with RLS |
+| Smart Widget Visibility | ✅ | Auto-hide seasonal widgets |
+| First-Time Widget Onboarding | ✅ | Dialog prompt |
 
 ---
 
@@ -185,9 +192,8 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Display name, city, country | ✅ | Settings page |
-| Avatar upload | ✅ | Storage bucket + profile page |
-| Profile consolidation | ✅ | Account info, edit profile, sign out |
-| Family Privacy Settings | ✅ | Toggle card added to Settings page |
+| Avatar upload | ✅ | Storage bucket |
+| Family Privacy Settings | ✅ | Toggle card in Settings page |
 
 ---
 
@@ -195,43 +201,12 @@
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Landing page hero CTA | ✅ | "Start Your Journey" → auth flow |
-| Landing page premium revamp | ✅ | Removed fake stats/testimonials, cinematic hero, animated Life Score ring, bento pillars, horizontal timeline, minimal footer |
+| Landing page premium revamp | ✅ | Cinematic hero, animated Life Score ring, bento pillars |
 | Google Sign-In | ✅ | One-tap OAuth via Lovable Cloud |
 | Email/password auth | ✅ | With email verification |
-| Multi-step onboarding (7 steps) | ✅ | Slide transitions, progress bar, back button |
-| Step 2: Name collection | ✅ | Pre-fills from Google profile |
-| Step 3: Focus areas selection | ✅ | 6 areas, multi-select, saved to profiles |
-| Step 4: Consistency level | ✅ | 3 tiers, saved to profiles |
-| Step 5: Location permission | ✅ | GPS or manual city/country, saved to prayer_settings |
-| Step 6: Notification permission | ✅ | Web Notifications API |
-| Step 7: Celebration screen | ✅ | Confetti, Hijri date, next prayer countdown, motivational quote |
-| Resume from last step | ✅ | onboarding_step persisted to profiles |
-| First-time dashboard tooltips | ✅ | 3-step tour (Life Score, Quick Log, Deen tab) |
-
----
-
-## 🚀 IMPLEMENTATION PRIORITY
-
-### P0 — Core Loop
-1. ~~Salah Tracking~~ ✅
-2. ~~Database sync for all modules~~ ✅
-3. ~~Life Score Engine~~ ✅
-4. ~~Home Dashboard overhaul~~ ✅
-
-### P1 — Key Features
-5. ~~Quran Tracker~~ ✅
-6. ~~Profile/Settings consolidation~~ ✅
-7. ~~Sleep & Wake targets~~ ✅
-8. ~~Family Module Phase 1~~ ✅
-9. ~~Onboarding flow (7-step + Google OAuth)~~ ✅
-10. ~~First-time dashboard tooltips~~ ✅
-
-### P2 — Wealth Module
-9. ~~Budget Tracker~~ ✅
-10. ~~Savings Goals~~ ✅
-11. ~~Spending Charts~~ ✅
-12. ~~Recurring Transactions~~ ✅
+| Multi-step onboarding (7 steps) | ✅ | Slide transitions, progress bar |
+| Resume from last step | ✅ | onboarding_step persisted |
+| First-time dashboard tooltips | ✅ | 3-step tour |
 
 ---
 
@@ -240,15 +215,24 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Admin role-based access | ✅ | `user_roles` table + `has_role` RPC + AdminGuard |
-| 30-min session timeout | ✅ | `useAdminTimeout` hook with warning at 25min |
-| Audit logging | ✅ | `admin_audit_log` table, logged on user disable/poster actions |
-| Overview stats (8 cards) | ✅ | `admin_overview_stats()` RPC — users, DAU, MAU, onboarding |
-| User growth chart | ✅ | `admin_signup_chart()` RPC + recharts ComposedChart |
-| Module usage chart | ✅ | `admin_module_usage()` RPC + horizontal bar chart |
-| User breakdown analytics | ✅ | `admin_user_breakdown()` RPC — focus areas, consistency, geo |
-| Retention cohorts | ✅ | `admin_retention_cohorts()` RPC — D1/D3/D7/D14/D30 table |
-| User management table | ✅ | Search, sort, paginate (25/page), CSV export, disable toggle |
-| Da'wah poster management | ✅ | Upload, delete, grid view with existing storage bucket |
-| System health monitor | ✅ | DB/Auth/Storage status + recent error log |
-| Announcements management | ✅ | Pre-existing, kept as-is |
-| Auto-refresh (60s) | ✅ | All dashboard/analytics data |
+| 30-min session timeout | ✅ | Warning at 25min |
+| Audit logging | ✅ | `admin_audit_log` table |
+| Overview stats | ✅ | `admin_overview_stats()` RPC |
+| User growth chart | ✅ | `admin_signup_chart()` RPC |
+| Module usage chart | ✅ | `admin_module_usage()` RPC |
+| User breakdown analytics | ✅ | `admin_user_breakdown()` RPC |
+| Retention cohorts | ✅ | D1/D3/D7/D14/D30 table |
+| User management table | ✅ | Search, sort, paginate, CSV export, disable toggle |
+| Da'wah poster management | ✅ | Upload, delete, grid view |
+| System health monitor | ✅ | DB/Auth/Storage status |
+| Announcements management | ✅ | Pre-existing |
+
+---
+
+## 🎨 DESIGN SYSTEM
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| No hardcoded emojis in UI | ✅ | All emojis replaced with Lucide React icons across all modules |
+| Semantic design tokens | ✅ | Using HSL CSS variables in index.css + tailwind.config.ts |
+| Dark mode support | ✅ | next-themes, all tokens dark-mode aware |

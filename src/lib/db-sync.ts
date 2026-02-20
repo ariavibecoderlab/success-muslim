@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { notifyFastingLogged, notifyAllPrayersComplete } from '@/lib/family-feed';
 
 /** Get the current user ID, or null if not authenticated */
 async function getUserId(): Promise<string | null> {
@@ -25,6 +26,24 @@ export function syncSalahLog(date: string, prayerName: string, status: string | 
       await supabase.from('salah_logs').upsert({
         user_id: userId, date, prayer_name: prayerName, status, logged_at: loggedAt,
       }, { onConflict: 'user_id,date,prayer_name' });
+
+      // Check if all 5 prayers are now completed for today (only on non-missed prayers)
+      if (status !== 'missed') {
+        const { data: todayLogs } = await supabase
+          .from('salah_logs')
+          .select('prayer_name, status')
+          .eq('user_id', userId)
+          .eq('date', date)
+          .neq('status', 'missed');
+        const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+        const completedNames = (todayLogs || []).map(r => r.prayer_name);
+        const allDone = PRAYERS.every(p => completedNames.includes(p));
+        if (allDone) {
+          const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
+          const name = profile?.display_name || 'A member';
+          await notifyAllPrayersComplete(userId, name);
+        }
+      }
     }
   });
 }
@@ -171,6 +190,10 @@ export function syncFastingToggle(date: string, isFasting: boolean) {
     if (!userId) return;
     if (isFasting) {
       await supabase.from('fasting_log').upsert({ user_id: userId, date }, { onConflict: 'user_id,date' });
+      // Post to family feed (only when user starts fasting, not when un-toggling)
+      const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
+      const name = profile?.display_name || 'A member';
+      await notifyFastingLogged(userId, name);
     } else {
       await supabase.from('fasting_log').delete().match({ user_id: userId, date });
     }

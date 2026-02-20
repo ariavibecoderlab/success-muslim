@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { notifyQuranTargetMet, notifyStreakMilestone } from '@/lib/family-feed';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -152,6 +153,7 @@ export function useQuranDailyTarget() {
 
   const markTodayDone = async (surahNumber?: number, ayahNumber?: number) => {
     if (!user) return;
+    const wasAlreadyDone = isDoneToday;
     await supabase.from('quran_daily_log' as any).upsert({
       user_id: user.id,
       date: today,
@@ -159,11 +161,26 @@ export function useQuranDailyTarget() {
       surah_number: surahNumber ?? null,
       ayah_number: ayahNumber ?? null,
     }, { onConflict: 'user_id,date' });
-    // Also update last position if provided
     if (surahNumber) {
       await savePrefs({ last_surah: surahNumber, last_ayah: ayahNumber ?? 1 });
     }
     loadLog();
+
+    // Post to family feed (fire-and-forget, only on first completion today)
+    if (!wasAlreadyDone) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('display_name')
+        .eq('id', user.id)
+        .single();
+      const name = profile?.display_name || 'A member';
+      await notifyQuranTargetMet(user.id, name);
+      // Also check for streak milestones after reload
+      const newStreak = streak + 1;
+      if ([7, 14, 21, 30, 60, 100].includes(newStreak)) {
+        await notifyStreakMilestone(user.id, name, newStreak);
+      }
+    }
   };
 
   const selectTarget = async (targetType: string) => {

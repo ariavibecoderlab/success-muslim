@@ -125,7 +125,7 @@ const MemberProfile = () => {
           <Card>
             <CardContent className="p-4 text-center flex flex-col items-center">
               <p className="text-2xl font-bold flex items-center gap-1">
-                <Flame className="h-5 w-5 text-orange-500" />
+                <Flame className="h-5 w-5 text-primary" />
                 {entry?.quran_streak ?? '—'}
               </p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Day streak</p>
