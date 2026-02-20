@@ -56,7 +56,7 @@ const MemberProfile = () => {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
         <EyeOff className="h-10 w-10 text-muted-foreground" />
         <p className="text-muted-foreground text-sm">This member's profile is private.</p>
-        <Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+        <Button variant="outline" onClick={() => navigate(`/family/${familyId}/dashboard`)}>Go back</Button>
       </div>
     );
   }
@@ -71,7 +71,7 @@ const MemberProfile = () => {
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-semibold">Member Profile</h1>

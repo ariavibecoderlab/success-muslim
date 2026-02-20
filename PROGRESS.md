@@ -150,6 +150,7 @@
 | Privacy Settings in Profile | ✅ | FamilyPrivacySettings card added to Settings page |
 | Bottom nav Family tab | ✅ | Added between Tasks and Profile (7 tabs, 9px labels) |
 | RLS on all family tables | ✅ | Full row-level security with SECURITY DEFINER helper functions |
+| Back button navigation fix | ✅ | All `navigate(-1)` replaced with explicit routes (no more history loops) |
 | Family Module — Phase 2 (Class Mode, CSV export) | ❌ | Planned |
 
 ---
