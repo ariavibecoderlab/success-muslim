@@ -176,6 +176,22 @@ const SurahReader = () => {
   const numRef = useRef(num);
   numRef.current = num;
 
+  // ── Flush any pending session saved by a previous unmount ──────────────────
+  // On SPA navigation, fetch() gets aborted by the browser before completion.
+  // Strategy: on unmount → write pending session to localStorage.
+  // On next mount of this page → flush it to DB via the Supabase client (which works fine on mount).
+  useEffect(() => {
+    const pending = localStorage.getItem('quran_pending_session');
+    if (pending && userRef.current) {
+      try {
+        const session = JSON.parse(pending);
+        localStorage.removeItem('quran_pending_session');
+        supabase.from('quran_reading_sessions').insert(session as any).then();
+      } catch {}
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount to flush any leftover pending session
+
   useEffect(() => {
     // Capture the token at mount time. In React Strict Mode, the first
     // (discarded) mount will have an older token; only the real mount's
@@ -194,17 +210,17 @@ const SurahReader = () => {
       const currentUser = userRef.current;
       const currentSavePrefs = savePrefsFnRef.current;
 
-      // Save final position to prefs
+      // Save final position to prefs (this goes through the same localStorage+DB
+      // write-through pattern so it's resilient to navigation)
       currentSavePrefs({ last_surah: currentNum, last_ayah: endAyah });
-
-      // Persist locally for offline resilience
       localStorage.setItem('quran_reading_position', JSON.stringify({ surah: currentNum, ayah: endAyah, ts: Date.now() }));
 
-      // Write ONE session row to DB
+      // Store session to localStorage — will be flushed to DB on next page load
+      // (fetch/supabase client calls get aborted during SPA navigation)
       if (currentUser && start) {
         const durationSeconds = Math.round((Date.now() - start.time) / 1000);
         const today = new Date().toISOString().split('T')[0];
-        supabase.from('quran_reading_sessions').insert({
+        const pendingSession = {
           user_id: currentUser.id,
           date: today,
           start_surah: start.surah,
@@ -213,7 +229,8 @@ const SurahReader = () => {
           end_ayah: endAyah,
           duration_seconds: durationSeconds,
           ayahs_read: Math.max(1, endAyah - start.ayah + 1),
-        } as any);
+        };
+        localStorage.setItem('quran_pending_session', JSON.stringify(pendingSession));
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
