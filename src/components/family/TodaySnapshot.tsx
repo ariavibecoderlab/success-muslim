@@ -1,5 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { LeaderboardEntry } from '@/hooks/useFamilyDashboard';
+import { CheckCircle2, Circle, Moon, Flame } from 'lucide-react';
 
 interface TodaySnapshotProps {
   entry: LeaderboardEntry;
@@ -10,11 +11,6 @@ const TodaySnapshot = ({ entry, onClick }: TodaySnapshotProps) => {
   const initials = entry.display_name
     ? entry.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
-
-  // Derive "today" status from weekly data as proxies
-  const prayerIcon = entry.prayers_this_week > 0 ? '✅' : '⬜';
-  const quranIcon = entry.quran_days_this_week > 0 ? '✅' : '⬜';
-  const fastIcon = entry.fasting_days_this_week > 0 ? '🌙' : '⬜';
 
   return (
     <button
@@ -30,12 +26,26 @@ const TodaySnapshot = ({ entry, onClick }: TodaySnapshotProps) => {
       <span className="text-xs font-medium truncate flex-1 min-w-0">
         {entry.display_name || 'Member'}
       </span>
-      <div className="flex items-center gap-1.5 flex-shrink-0 text-[11px]">
-        <span title="Prayer">{prayerIcon}</span>
-        <span title="Quran">{quranIcon}</span>
-        <span title="Fasting">{fastIcon}</span>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <span title="Prayer">
+          {entry.prayers_this_week > 0
+            ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        </span>
+        <span title="Quran">
+          {entry.quran_days_this_week > 0
+            ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        </span>
+        <span title="Fasting">
+          {entry.fasting_days_this_week > 0
+            ? <Moon className="h-3.5 w-3.5 text-primary" />
+            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        </span>
         {entry.quran_streak > 0 && (
-          <span className="text-orange-500 text-[10px]">🔥{entry.quran_streak}</span>
+          <span className="flex items-center gap-0.5 text-[10px] text-primary">
+            <Flame className="h-3 w-3" />{entry.quran_streak}
+          </span>
         )}
       </div>
     </button>
