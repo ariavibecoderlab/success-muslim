@@ -1,13 +1,16 @@
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFamilyDashboard } from '@/hooks/useFamilyDashboard';
 import { useFamily } from '@/hooks/useFamily';
 import { useAuth } from '@/hooks/useAuth';
 import {
-  ArrowLeft, Settings, Loader2, RefreshCw, Users, Megaphone
+  ArrowLeft, Settings, Loader2, RefreshCw, Users, Megaphone, Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import LeaderboardCard from '@/components/family/LeaderboardCard';
 import ActivityFeedItem from '@/components/family/ActivityFeedItem';
 import TodaySnapshot from '@/components/family/TodaySnapshot';
@@ -17,7 +20,9 @@ const FamilyDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { families } = useFamily();
-  const { leaderboard, feed, announcement, loading, refresh, toggleReaction } = useFamilyDashboard(id ?? null);
+  const { leaderboard, feed, announcement, loading, refresh, toggleReaction, postAnnouncement } = useFamilyDashboard(id ?? null);
+  const [announcementText, setAnnouncementText] = useState('');
+  const [postingAnnouncement, setPostingAnnouncement] = useState(false);
 
   const family = families.find(f => f.id === id);
   const isAdmin = family?.user_role === 'admin';
@@ -34,7 +39,11 @@ const FamilyDashboard = () => {
           </Button>
           <div className="flex-1 min-w-0">
             <h1 className="font-semibold truncate">{family?.name || 'Family'}</h1>
-            <p className="text-xs text-muted-foreground">{family?.member_count} members</p>
+            {family ? (
+              <p className="text-xs text-muted-foreground">{family.member_count} members</p>
+            ) : (
+              <Skeleton className="h-3 w-20 mt-0.5" />
+            )}
           </div>
           <Button variant="ghost" size="icon" onClick={refresh}>
             <RefreshCw className="h-4 w-4" />
@@ -62,6 +71,37 @@ const FamilyDashboard = () => {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">Admin announcement</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{announcement.message}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Admin: post announcement */}
+            {isAdmin && (
+              <Card className="border-dashed border-border">
+                <CardContent className="p-3">
+                  <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1">
+                    <Megaphone className="h-3 w-3" /> Post Announcement
+                  </p>
+                  <div className="flex gap-2">
+                    <Textarea
+                      placeholder="Write an announcement for your group…"
+                      value={announcementText}
+                      onChange={e => setAnnouncementText(e.target.value)}
+                      className="min-h-[60px] text-sm resize-none"
+                    />
+                    <Button
+                      size="icon"
+                      disabled={!announcementText.trim() || postingAnnouncement}
+                      onClick={async () => {
+                        setPostingAnnouncement(true);
+                        await postAnnouncement(announcementText.trim());
+                        setAnnouncementText('');
+                        setPostingAnnouncement(false);
+                      }}
+                    >
+                      {postingAnnouncement ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

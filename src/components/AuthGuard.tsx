@@ -44,7 +44,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   if (!user) return <Navigate to="/auth" replace />;
   if (needsOnboarding) return <Navigate to="/onboarding" replace />;
 
-  return <>{children}</>;
+  return children as React.ReactElement;
 };
 
 export default AuthGuard;
