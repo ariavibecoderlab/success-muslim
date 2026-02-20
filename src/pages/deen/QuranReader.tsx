@@ -72,7 +72,7 @@ function QuranCalendar({ log }: { log: { date: string; target_met: boolean }[] }
   const days = useMemo(() => {
     const result = [];
     const today = new Date();
-    for (let i = 29; i >= 0; i--) {
+    for (let i = 27; i >= 0; i--) {
       const d = new Date(today);
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
@@ -80,7 +80,6 @@ function QuranCalendar({ log }: { log: { date: string; target_met: boolean }[] }
       result.push({
         dateStr,
         day: d.getDate(),
-        isFuture: false,
         met: entry?.target_met ?? false,
         hasEntry: !!entry,
       });
@@ -88,23 +87,32 @@ function QuranCalendar({ log }: { log: { date: string; target_met: boolean }[] }
     return result;
   }, [log]);
 
+  const DOW_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
   return (
-    <div className="grid grid-cols-10 gap-1">
-      {days.map(d => (
-        <div
-          key={d.dateStr}
-          title={d.dateStr}
-          className={`aspect-square rounded-sm text-[8px] flex items-center justify-center font-medium
-            ${d.met
-              ? 'bg-primary text-primary-foreground'
-              : d.hasEntry
-              ? 'bg-destructive/30 text-destructive-foreground'
-              : 'bg-secondary text-muted-foreground'
-            }`}
-        >
-          {d.day}
-        </div>
-      ))}
+    <div>
+      <div className="grid grid-cols-7 gap-1.5 mb-1">
+        {DOW_HEADERS.map((h, i) => (
+          <div key={i} className="text-center text-[10px] font-semibold text-muted-foreground">{h}</div>
+        ))}
+      </div>
+      <div className="grid grid-cols-7 gap-1.5">
+        {days.map(d => (
+          <div
+            key={d.dateStr}
+            title={d.dateStr}
+            className={`aspect-square rounded text-[11px] flex items-center justify-center font-medium
+              ${d.met
+                ? 'bg-primary text-primary-foreground'
+                : d.hasEntry
+                ? 'bg-destructive/30 text-destructive-foreground'
+                : 'bg-secondary text-muted-foreground'
+              }`}
+          >
+            {d.day}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -272,7 +280,7 @@ const QuranReader = () => {
                   <div className="flex justify-center">{t.icon}</div>
                   <p className="text-xs font-semibold leading-tight">{t.label}</p>
                   <p className="text-[10px] text-muted-foreground">{t.dailyAmount}</p>
-                  <p className="text-[9px] text-muted-foreground/70">{getEstimatedDate(t.completionDays)}</p>
+                  <p className="text-[10px] text-muted-foreground/70 line-clamp-1">{getEstimatedDate(t.completionDays)}</p>
                 </CardContent>
               </Card>
             ))}
@@ -449,9 +457,9 @@ const QuranReader = () => {
             </p>
             <div className="grid grid-cols-4 gap-2">
               {achievements.map(a => (
-                <div key={a.label} className={`text-center p-2 rounded-lg ${a.earned ? 'bg-primary/10 text-primary' : 'bg-secondary/50 text-muted-foreground opacity-50'}`}>
+                <div key={a.label} className={`text-center p-2 rounded-lg min-h-[60px] flex flex-col items-center justify-center ${a.earned ? 'bg-primary/10 text-primary' : 'bg-secondary/50 text-muted-foreground opacity-50'}`}>
                   <div className="flex justify-center">{a.icon}</div>
-                  <p className="text-[9px] mt-1 leading-tight font-medium">{a.label}</p>
+                  <p className="text-[10px] mt-1 leading-tight font-medium break-words text-center">{a.label}</p>
                 </div>
               ))}
             </div>
