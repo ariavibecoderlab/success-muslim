@@ -1,63 +1,41 @@
 
-# Fix: Replace `navigate(-1)` with Explicit Routes in Family Module
+# Fix: Remove `fps.family_id` from `get_family_leaderboard` RPC
 
 ## Root Cause
-All back buttons in the family module use `navigate(-1)` (browser history). When a user arrives at `/family/[id]/dashboard` directly from the bottom nav tab, the history stack's previous entry is the dashboard itself, causing the loop. The fix is to replace every `navigate(-1)` call with a hardcoded explicit route.
 
-## Route Map
+A previous migration attempted to scope the `family_privacy_settings` join by adding `AND fps.family_id = p_family_id`. However, the `family_privacy_settings` table has no `family_id` column — it only has `user_id`. This causes the runtime error:
 
-| Page | Current | Fixed |
-|---|---|---|
-| `/family/[id]/dashboard` → Back | `navigate(-1)` | `navigate('/family')` |
-| `/family/[id]/member/[uid]` → Back (header) | `navigate(-1)` | `navigate(\`/family/${familyId}/dashboard\`)` |
-| `/family/[id]/member/[uid]` → Back (private fallback) | `navigate(-1)` | `navigate(\`/family/${familyId}/dashboard\`)` |
-| `/family/[id]/settings` → Back (header) | `navigate(-1)` | `navigate(\`/family/${id}/dashboard\`)` |
-
-`FamilySettings.tsx` line 70 already uses `navigate('/family')` for the leave-family action — this is correct and will not be changed.
-
-## Files to Change
-
-### 1. `src/pages/family/FamilyDashboard.tsx` — line 38
-```tsx
-// Before
-<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-// After
-<Button variant="ghost" size="icon" onClick={() => navigate('/family')}>
+```
+column fps.family_id does not exist
 ```
 
-### 2. `src/pages/family/MemberProfile.tsx` — lines 59 and 74
-```tsx
-// Line 59 — private profile fallback button
-// Before
-<Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
-// After
-<Button variant="outline" onClick={() => navigate(`/family/${familyId}/dashboard`)}>Go back</Button>
+## Fix
 
-// Line 74 — header back button
-// Before
-<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-// After
-<Button variant="ghost" size="icon" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
+A single new database migration that replaces `get_family_leaderboard` and changes:
+
+```sql
+-- BROKEN (current)
+LEFT JOIN family_privacy_settings fps
+  ON fps.user_id = fm.user_id
+  AND fps.family_id = p_family_id   -- ← column does not exist
+
+-- FIXED
+LEFT JOIN family_privacy_settings fps
+  ON fps.user_id = fm.user_id       -- ← join on user_id only
 ```
 
-### 3. `src/pages/family/FamilySettings.tsx` — line 90
-```tsx
-// Before
-<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-// After
-<Button variant="ghost" size="icon" onClick={() => navigate(`/family/${id}/dashboard`)}>
-```
+Since `family_privacy_settings` is a single-row-per-user table (not per-family), joining only on `user_id` is correct. A user's privacy preferences apply globally across all families they belong to.
 
-## Also: Update `PROGRESS.md`
-Add an entry under the Family Module section marking the back button fix as complete.
+## File Changed
 
-## No Database Changes Required
-This is a pure frontend routing fix — no schema or RLS changes needed.
+### New DB migration
+Recreate `get_family_leaderboard` with the corrected LEFT JOIN — identical to the working version except `AND fps.family_id = p_family_id` is removed.
 
-## Verified Navigation Flow After Fix
-1. User on `/family` → taps family card → lands on `/family/[id]/dashboard`
-2. Taps **Back** → lands on `/family` ✅
-3. From dashboard → taps a member → lands on `/family/[id]/member/[uid]`
-4. Taps **Back** → lands on `/family/[id]/dashboard` ✅
-5. From dashboard → taps Settings → lands on `/family/[id]/settings`
-6. Taps **Back** → lands on `/family/[id]/dashboard` ✅
+## No Frontend Changes Required
+
+This is a pure database fix. The existing frontend code in `useFamilyDashboard.ts` calls `supabase.rpc('get_family_leaderboard', ...)` exactly as before — no changes needed there.
+
+## Expected Result After Fix
+- Leaderboard RPC executes without error
+- Leaderboard and Today's Snapshot populate correctly on the Family Dashboard
+- Privacy settings (`show_on_leaderboard`, `ghost_mode`) are respected per user
