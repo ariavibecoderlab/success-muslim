@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Moon, Heart, Wallet, ListChecks, UserCircle } from 'lucide-react';
+import { Home, Moon, Heart, Wallet, ListChecks, UserCircle, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const tabs = [
@@ -8,6 +8,7 @@ const tabs = [
   { icon: Heart, label: 'Health', path: '/health' },
   { icon: Wallet, label: 'Wealth', path: '/wealth' },
   { icon: ListChecks, label: 'Tasks', path: '/productivity' },
+  { icon: Users, label: 'Family', path: '/family' },
   { icon: UserCircle, label: 'Profile', path: '/settings' },
 ];
 
@@ -35,7 +36,7 @@ const BottomNav = () => {
                 />
               )}
               <tab.icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+              <span className="text-[9px] font-medium leading-none">{tab.label}</span>
             </Link>
           );
         })}

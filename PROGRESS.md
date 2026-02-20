@@ -1,6 +1,6 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-19
+> **Last Updated:** 2026-02-20
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
 
 ---
@@ -29,6 +29,7 @@
 | Transactions → DB | ✅ | `transactions` table with recurring support |
 | Savings goals → DB | ✅ | `savings_goals` + `savings_contributions` tables |
 | Budget periods → DB | ✅ | `budget_periods` table |
+| Family module → DB | ✅ | 6 new tables: `families`, `family_members`, `family_activity_feed`, `family_reactions`, `family_announcements`, `family_privacy_settings` |
 
 ---
 
@@ -41,7 +42,8 @@
 | Bottom tab: Wellness | ✅ | Health route |
 | Bottom tab: Wealth | ✅ | Wealth hub with sub-pages |
 | Bottom tab: Tasks | ✅ | Productivity route |
-| Bottom tab: Profile | ✅ | Replaced Family → Profile/Settings |
+| Bottom tab: Family | ✅ | Full family module |
+| Bottom tab: Profile | ✅ | Settings/profile page |
 
 ---
 
@@ -70,9 +72,10 @@
 | Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
 | Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |
 | Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
-| Quran Tracker (Daily Target) | ✅ | Replaced complex opt-in system with simple daily target picker (8 options). One-time onboarding, "Mark Today as Done" check-in, streak tracking, 30-day calendar heatmap, achievements |
+| Quran Tracker (Daily Target) | ✅ | Replaced complex opt-in system with simple daily target picker (8 options). One-time onboarding, "Mark Today as Done" check-in, streak tracking, 28-day calendar heatmap, achievements |
 | Quran Daily Log | ✅ | `quran_daily_log` table — user_id, date, target_met, surah, ayah. Streak computed from consecutive target_met days |
-| Quran Reading Calendar | ✅ | 30-day grid calendar (green = done, grey = missed) replaces old 90-day heatmap |
+| Quran Reading Calendar | ✅ | 28-day weekly-format calendar (7 cols, day headers S M T W T F S, green = done) |
+| Quran Reset Target | ✅ | "Reset My Target" in Settings danger zone clears onboarding so user can re-pick |
 | Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
 | Qiyam Planner | ✅ | Tahajjud window calc, sleep/wake settings, streak, alarm, DB synced |
 | Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals, Laylatul Qadr, summary |
@@ -122,6 +125,35 @@
 
 ---
 
+## 👨‍👩‍👧 FAMILY MODULE — Phase 1
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Create family group | ✅ | Name input → 6-char invite code generated → saved to DB |
+| Invite system | ✅ | Unique invite code + shareable link (success-muslim.lovable.app/family/join/:code) |
+| Join via code | ✅ | Code lookup with preview (name + member count) before confirming |
+| Join via link | ✅ | URL param pre-fills code, same join flow |
+| Max 20 members | ✅ | Enforced server-side before insert |
+| Max 2 families per user | ✅ | Enforced server-side before create/join |
+| Family Hub page | ✅ | Empty state → create/join CTA; 1 family → auto-redirect to dashboard; 2 → selection |
+| Family Dashboard | ✅ | Leaderboard + Today's Snapshot + Activity Feed + Announcement banner |
+| Weekly Leaderboard | ✅ | `get_family_leaderboard` RPC — Iman score based on prayers + quran + fasting |
+| Leaderboard cards | ✅ | Medal icons 🥇🥈🥉, streak, prayer/quran counts, Iman score |
+| Today's Snapshot | ✅ | Per-member prayer/quran/fasting status row |
+| Activity Feed | ✅ | 30 most recent events, reactions 🤲❤️🔥 per item |
+| Feed reactions | ✅ | Toggle reaction (one per type per user), optimistic UI update |
+| Member Profile | ✅ | Individual expanded view: score, stats grid, streak, privacy-gated sections |
+| Family Settings | ✅ | Admin: rename, remove members, transfer admin; all: leave group |
+| Announcements | ✅ | Admin can post, shown as banner on dashboard |
+| Privacy controls | ✅ | Toggle prayer/quran/fasting/health/streaks/leaderboard per user |
+| Ghost mode | ✅ | Completely hides user from family view |
+| Privacy Settings in Profile | ✅ | FamilyPrivacySettings card added to Settings page |
+| Bottom nav Family tab | ✅ | Added between Tasks and Profile (7 tabs, 9px labels) |
+| RLS on all family tables | ✅ | Full row-level security with SECURITY DEFINER helper functions |
+| Family Module — Phase 2 (Class Mode, CSV export) | ❌ | Planned |
+
+---
+
 ## 🧠 LIFE SCORE ENGINE
 
 | Feature | Status | Notes |
@@ -152,9 +184,9 @@
 | Feature | Status | Notes |
 |---------|--------|-------|
 | Display name, city, country | ✅ | Settings page |
-| Replace Family tab → Profile tab | ✅ | Done |
 | Avatar upload | ✅ | Storage bucket + profile page |
 | Profile consolidation | ✅ | Account info, edit profile, sign out |
+| Family Privacy Settings | ✅ | Toggle card added to Settings page |
 
 ---
 
@@ -190,7 +222,7 @@
 5. ~~Quran Tracker~~ ✅
 6. ~~Profile/Settings consolidation~~ ✅
 7. ~~Sleep & Wake targets~~ ✅
-8. ~~Replace Family tab → Profile tab~~ ✅
+8. ~~Family Module Phase 1~~ ✅
 9. ~~Onboarding flow (7-step + Google OAuth)~~ ✅
 10. ~~First-time dashboard tooltips~~ ✅
 

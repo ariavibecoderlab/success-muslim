@@ -212,6 +212,212 @@ export type Database = {
         }
         Relationships: []
       }
+      families: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          invite_link: string | null
+          mode: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code: string
+          invite_link?: string | null
+          mode?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          invite_link?: string | null
+          mode?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      family_activity_feed: {
+        Row: {
+          activity_type: string
+          created_at: string
+          family_id: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          family_id: string
+          id?: string
+          message: string
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_activity_feed_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_announcements: {
+        Row: {
+          admin_id: string
+          created_at: string
+          family_id: string
+          id: string
+          message: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          family_id: string
+          id?: string
+          message: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          family_id?: string
+          id?: string
+          message?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_announcements_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_members: {
+        Row: {
+          family_id: string
+          id: string
+          is_visible: boolean
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          family_id: string
+          id?: string
+          is_visible?: boolean
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          family_id?: string
+          id?: string
+          is_visible?: boolean
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_members_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "families"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      family_privacy_settings: {
+        Row: {
+          ghost_mode: boolean
+          id: string
+          show_fasting: boolean
+          show_health: boolean
+          show_on_leaderboard: boolean
+          show_prayer: boolean
+          show_quran: boolean
+          show_streaks: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ghost_mode?: boolean
+          id?: string
+          show_fasting?: boolean
+          show_health?: boolean
+          show_on_leaderboard?: boolean
+          show_prayer?: boolean
+          show_quran?: boolean
+          show_streaks?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ghost_mode?: boolean
+          id?: string
+          show_fasting?: boolean
+          show_health?: boolean
+          show_on_leaderboard?: boolean
+          show_prayer?: boolean
+          show_quran?: boolean
+          show_streaks?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      family_reactions: {
+        Row: {
+          created_at: string
+          feed_id: string
+          id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feed_id: string
+          id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feed_id?: string
+          id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_reactions_feed_id_fkey"
+            columns: ["feed_id"]
+            isOneToOne: false
+            referencedRelation: "family_activity_feed"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fasting_log: {
         Row: {
           created_at: string
@@ -1505,6 +1711,21 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_family_leaderboard: {
+        Args: { p_family_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          fasting_days_this_week: number
+          ghost_mode: boolean
+          iman_score: number
+          prayers_this_week: number
+          quran_days_this_week: number
+          quran_streak: number
+          show_on_leaderboard: boolean
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1512,6 +1733,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_family_admin: { Args: { p_family_id: string }; Returns: boolean }
+      is_family_member: { Args: { p_family_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

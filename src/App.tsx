@@ -19,6 +19,11 @@ import Health from "./pages/Health";
 import Wealth from "./pages/Wealth";
 import Productivity from "./pages/Productivity";
 import Family from "./pages/Family";
+import CreateFamily from "./pages/family/CreateFamily";
+import JoinFamily from "./pages/family/JoinFamily";
+import FamilyDashboard from "./pages/family/FamilyDashboard";
+import MemberProfile from "./pages/family/MemberProfile";
+import FamilySettings from "./pages/family/FamilySettings";
 import QadaSolatSetup from "./pages/QadaSolatSetup";
 import QadaSolatTrack from "./pages/QadaSolatTrack";
 import RamadhanQadaSetup from "./pages/RamadhanQadaSetup";
@@ -85,6 +90,7 @@ const App = () => (
                 <Route path="/health" element={<Health />} />
                 <Route path="/wealth" element={<Wealth />} />
                 <Route path="/productivity" element={<Productivity />} />
+                <Route path="/family" element={<Family />} />
                 <Route path="/settings" element={<Settings />} />
               </Route>
 
@@ -118,6 +124,14 @@ const App = () => (
               <Route path="/productivity/life-areas" element={<AuthGuard><LifeAreas /></AuthGuard>} />
               <Route path="/wealth/budget" element={<AuthGuard><BudgetTracker /></AuthGuard>} />
               <Route path="/wealth/savings" element={<AuthGuard><SavingsGoals /></AuthGuard>} />
+
+              {/* Family sub-pages (no AppLayout) */}
+              <Route path="/family/create" element={<AuthGuard><CreateFamily /></AuthGuard>} />
+              <Route path="/family/join" element={<AuthGuard><JoinFamily /></AuthGuard>} />
+              <Route path="/family/join/:code" element={<AuthGuard><JoinFamily /></AuthGuard>} />
+              <Route path="/family/:id/dashboard" element={<AuthGuard><FamilyDashboard /></AuthGuard>} />
+              <Route path="/family/:id/member/:uid" element={<AuthGuard><MemberProfile /></AuthGuard>} />
+              <Route path="/family/:id/settings" element={<AuthGuard><FamilySettings /></AuthGuard>} />
 
               {/* Admin routes */}
               <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
