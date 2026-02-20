@@ -41,7 +41,14 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user) return <Navigate to="/auth" replace />;
+  if (!user) {
+    const SKIP_PATHS = ['/', '/auth', '/onboarding', '/install', '/reset-password'];
+    const path = window.location.pathname + window.location.search;
+    if (!SKIP_PATHS.some(p => path === p || path.startsWith(p + '/'))) {
+      localStorage.setItem('post_auth_redirect', path);
+    }
+    return <Navigate to="/auth" replace />;
+  }
   if (needsOnboarding) return <Navigate to="/onboarding" replace />;
 
   return children as React.ReactElement;

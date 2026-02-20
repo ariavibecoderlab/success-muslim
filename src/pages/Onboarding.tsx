@@ -56,13 +56,23 @@ const Onboarding = () => {
     if (!loading && !user) navigate('/auth', { replace: true });
   }, [user, loading, navigate]);
 
+  const navigateAfterOnboarding = useCallback(() => {
+    const redirect = localStorage.getItem('post_auth_redirect');
+    if (redirect) {
+      localStorage.removeItem('post_auth_redirect');
+      navigate(redirect, { replace: true });
+    } else {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate]);
+
   // Redirect if onboarding already completed
   useEffect(() => {
     if (!user) return;
     supabase.from('profiles').select('onboarding_completed').eq('id', user.id).single().then(({ data }) => {
-      if (data?.onboarding_completed) navigate('/dashboard', { replace: true });
+      if (data?.onboarding_completed) navigateAfterOnboarding();
     });
-  }, [user, navigate]);
+  }, [user, navigateAfterOnboarding]);
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -235,7 +245,7 @@ const Onboarding = () => {
       onboarding_step: TOTAL_STEPS,
     }).eq('id', user.id);
     setSaving(false);
-    navigate('/dashboard');
+    navigateAfterOnboarding();
   };
 
   const hijriDate = formatHijriDate(new Date());
