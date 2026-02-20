@@ -74,6 +74,11 @@
 | Quran Tracker (Daily Target) | ✅ | Simple daily target picker, "Mark Today as Done", streak, 28-day calendar heatmap, achievements |
 | Quran Daily Log | ✅ | `quran_daily_log` table |
 | Quran Bookmarks | ✅ | DB synced |
+| Quran Position Auto-tracking | ✅ | Intersection Observer tracks last visible ayah; saves to `quran_preferences` on exit |
+| Quran Session Logging | ✅ | Writes start/end surah+ayah + duration to `quran_reading_sessions` on reader exit |
+| Quran Resume Banner | ✅ | "Lanjut dari [Surah] Ayat [X]?" banner on reader open if saved position exists |
+| Quran Mark Done (auto-fill) | ✅ | "Mark Today as Done" sheet shows pre-filled last position — no manual input |
+| Quran /iman Homepage Data | ✅ | Strip chip + card shows real isDoneToday, streak, daysDone from `useQuranDailyTarget` |
 | Qiyam Planner | ✅ | Tahajjud window calc, streak, alarm, DB synced |
 | Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals |
 | Hajj/Umrah Planner | ✅ | Step-by-step guides with duas, packing checklist, DB synced |

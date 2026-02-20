@@ -2,6 +2,18 @@
 
 > Updated: 2026-02-20
 
+## ✅ COMPLETED — Quran Module Position Tracking
+
+Full real-data Quran experience implemented:
+
+- **Auto Position Tracking**: Intersection Observer in `SurahReader` tracks last visible ayah per scroll
+- **Resume Banner**: On open, shows "Lanjut dari [Surah] Ayat [X]?" with [Lanjut] / [Mulai dari awal]
+- **On-Exit Save**: `savePrefs({ last_surah, last_ayah })` + one row in `quran_reading_sessions` written on unmount
+- **Auto-save every 30s**: Position saved to localStorage as backup
+- **Mark Today as Done**: Sheet now auto-fills last position from prefs — no manual text inputs
+- **/iman homepage**: Strip chip + Quran card use real `isDoneToday`, `streak`, `daysDone` from DB
+- **Removed stubs**: `useQuranSessions` (always-empty sessions stub) fully removed
+
 ## ✅ COMPLETED — Family Module Phase 1
 
 All Phase 1 family features are fully implemented:

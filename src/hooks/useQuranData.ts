@@ -252,19 +252,8 @@ export function useQuranBookmarks() {
   return { bookmarks, addBookmark, removeBookmark, isBookmarked, reload: load };
 }
 
-// ─── Reading sessions (kept for backward compat, no longer used for tracking) ─
-
-export function useQuranSessions() {
-  const { user } = useAuth();
-
-  const logSession = async () => { /* No-op: session tracking removed */ };
-
-  const getSessions = useCallback(async (_days: number = 30) => {
-    return [] as any[];
-  }, []);
-
-  return { logSession, getSessions };
-}
+// useQuranSessions removed — real session tracking now happens in SurahReader
+// via quran_reading_sessions table (start/end surah+ayah, duration) on unmount.
 
 // ─── Memorization ─────────────────────────────────────────────────────────────
 
