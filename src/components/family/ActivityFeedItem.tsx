@@ -2,11 +2,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import type { FeedItem } from '@/hooks/useFamilyDashboard';
 import { formatDistanceToNow } from 'date-fns';
+import { HandHelping, Heart, Flame } from 'lucide-react';
 
-const REACTION_LABELS: Record<string, string> = {
-  dua: '🤲',
-  love: '❤️',
-  fire: '🔥',
+const REACTION_ICONS: Record<string, React.ReactNode> = {
+  dua: <HandHelping className="h-3 w-3" />,
+  love: <Heart className="h-3 w-3" />,
+  fire: <Flame className="h-3 w-3" />,
 };
 
 interface ActivityFeedItemProps {
@@ -48,7 +49,7 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
                       : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
                   }`}
                 >
-                  <span>{REACTION_LABELS[r.type]}</span>
+                  <span>{REACTION_ICONS[r.type]}</span>
                   {r.count > 0 && <span className="font-medium">{r.count}</span>}
                 </button>
               ))}

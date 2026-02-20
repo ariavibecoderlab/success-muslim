@@ -2,12 +2,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { LeaderboardEntry } from '@/hooks/useFamilyDashboard';
-import { Flame } from 'lucide-react';
+import { Flame, BookOpen, HandHelping, Medal, Trophy, Award } from 'lucide-react';
 
 const RANK_CONFIG = [
-  { medal: '🥇', bg: 'from-yellow-500/10 to-yellow-500/5', border: 'border-yellow-500/30' },
-  { medal: '🥈', bg: 'from-slate-400/10 to-slate-400/5', border: 'border-slate-400/30' },
-  { medal: '🥉', bg: 'from-amber-700/10 to-amber-700/5', border: 'border-amber-700/30' },
+  { icon: <Trophy className="h-5 w-5 text-yellow-500" />, bg: 'from-yellow-500/10 to-yellow-500/5', border: 'border-yellow-500/30' },
+  { icon: <Medal className="h-5 w-5 text-slate-400" />, bg: 'from-slate-400/10 to-slate-400/5', border: 'border-slate-400/30' },
+  { icon: <Award className="h-5 w-5 text-amber-700" />, bg: 'from-amber-700/10 to-amber-700/5', border: 'border-amber-700/30' },
 ];
 
 interface LeaderboardCardProps {
@@ -32,9 +32,9 @@ const LeaderboardCard = ({ entry, rank, isCurrentUser, onClick }: LeaderboardCar
     >
       <CardContent className={`p-3 flex items-center gap-3 bg-gradient-to-r ${config?.bg ?? ''}`}>
         {/* Rank */}
-        <div className="w-8 text-center flex-shrink-0">
+        <div className="w-8 flex items-center justify-center flex-shrink-0">
           {rank <= 3 ? (
-            <span className="text-lg leading-none">{config.medal}</span>
+            config.icon
           ) : (
             <span className="text-sm font-bold text-muted-foreground">#{rank}</span>
           )}
@@ -59,14 +59,14 @@ const LeaderboardCard = ({ entry, rank, isCurrentUser, onClick }: LeaderboardCar
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-            <span className="text-[10px] text-muted-foreground">
-              🙏 {entry.prayers_this_week} prayers
+            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <HandHelping className="h-2.5 w-2.5" /> {entry.prayers_this_week} prayers
             </span>
-            <span className="text-[10px] text-muted-foreground">
-              📖 {entry.quran_days_this_week}/7 days
+            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+              <BookOpen className="h-2.5 w-2.5" /> {entry.quran_days_this_week}/7 days
             </span>
             {entry.quran_streak > 0 && (
-              <span className="text-[10px] text-orange-500 flex items-center gap-0.5">
+              <span className="text-[10px] text-primary flex items-center gap-0.5">
                 <Flame className="h-2.5 w-2.5" />{entry.quran_streak}d
               </span>
             )}
