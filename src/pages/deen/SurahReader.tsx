@@ -29,10 +29,9 @@ function getVerseAudioUrl(_reciterId: number, surahNum: number, ayahNum: number)
   return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${SURAH_NAMES.slice(0, surahNum - 1).reduce((sum, su) => sum + su.ayahs, 0) + ayahNum}.mp3`;
 }
 
-// Module-level session token — survives React Strict Mode double-mount.
-// Each real navigation to this page gets a new token; the cleanup
-// checks the token it captured at mount time against the current one.
-let _sessionToken = 0;
+// Unique session ID generated once per real navigation (survives Strict Mode).
+// Written into the pending session object so duplicate flushes can be detected.
+let _currentSessionId = '';
 
 const SurahReader = () => {
   const { surahNum } = useParams<{ surahNum: string }>();
@@ -67,7 +66,15 @@ const SurahReader = () => {
   const lastVisibleAyahRef = useRef<number | null>(null);
   const sessionStartRef = useRef<{ surah: number; ayah: number; time: number } | null>(null);
   const hasSavedSessionRef = useRef(false); // prevent duplicate inserts
-  const mountTokenRef = useRef(0); // matches module-level token to detect Strict Mode re-mounts
+
+  // Stable refs so cleanup effects always see the latest values without re-registering
+  const savePrefsFnRef = useRef(savePrefs);
+  savePrefsFnRef.current = savePrefs;
+  const userRef = useRef(user);
+  userRef.current = user;
+  const numRef = useRef(num);
+  numRef.current = num;
+  
 
   // Resume banner: show if saved position is in this surah and no explicit ?ayah param
   const savedLastAyah = prefs.last_surah === num ? prefs.last_ayah : null;
@@ -84,124 +91,49 @@ const SurahReader = () => {
   }, [num, savedLastAyah, targetAyah, resumeDismissed]);
 
   // Record session start position — always start from ayah 1 (or explicit targetAyah)
-  // Increment module token so THIS mount owns the session insert.
   useEffect(() => {
-    _sessionToken += 1;
-    const myToken = _sessionToken;
-    mountTokenRef.current = myToken;
+    // Generate a unique session ID for this navigation. Module-level so it
+    // survives React Strict Mode's fake double-mount. The cleanup captures this
+    // ID and uses it both as a write key and a dedup guard.
+    _currentSessionId = crypto.randomUUID();
+    sessionStartRef.current = { surah: num, ayah: targetAyah ?? 1, time: Date.now() };
     hasSavedSessionRef.current = false;
-    const startAyah = targetAyah || 1;
-    sessionStartRef.current = { surah: num, ayah: startAyah, time: Date.now() };
-    // Return nothing — cleanup handled in the separate unmount effect
   }, [num, targetAyah]);
-
-  // Calculate initial page from targetAyah
-  useEffect(() => {
-    if (targetAyah) {
-      setCurrentPage(Math.ceil(targetAyah / AYAHS_PER_PAGE));
-    } else {
-      setCurrentPage(1);
-    }
-  }, [num, targetAyah]);
-
-  // Load ayahs for current page
-  useEffect(() => {
-    setLoading(true);
-    setAyahs([]);
-    const translationId = TRANSLATION_IDS[prefs.translation_lang]?.id || 131;
-    fetchAyahs(num, currentPage, translationId, AYAHS_PER_PAGE).then(data => {
-      setAyahs(data.verses);
-      setLoading(false);
-    }).catch(() => {
-      toast.error('Failed to load surah');
-      setLoading(false);
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [num, currentPage, prefs.translation_lang]);
-
-  // Scroll to target ayah after load
-  useEffect(() => {
-    if (targetAyah && ayahs.length > 0) {
-      setTimeout(() => {
-        const el = document.getElementById(`ayah-${targetAyah}`);
-        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    }
-  }, [targetAyah, ayahs]);
-
-  // ── Intersection Observer: track last visible ayah ──────────────────────────
-  useEffect(() => {
-    if (ayahs.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let maxVisible = lastVisibleAyahRef.current ?? ayahs[0]?.verse_number ?? 1;
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            const ayahId = parseInt(entry.target.getAttribute('data-ayah') || '0');
-            if (ayahId > maxVisible) {
-              maxVisible = ayahId;
-            }
-          }
-        });
-        lastVisibleAyahRef.current = maxVisible;
-        setLastVisibleAyah(maxVisible);
-      },
-      { threshold: 0.3, rootMargin: '0px 0px -10% 0px' }
-    );
-
-    const els = document.querySelectorAll('[data-ayah]');
-    els.forEach(el => observer.observe(el));
-    return () => observer.disconnect();
-  }, [ayahs]);
-
-  // ── Auto-save position to localStorage every 30s ──────────────────────────
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (lastVisibleAyahRef.current) {
-        const pos = { surah: num, ayah: lastVisibleAyahRef.current, ts: Date.now() };
-        localStorage.setItem('quran_reading_position', JSON.stringify(pos));
-      }
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [num]);
-
-  // ── Save position + write session row on unmount ──────────────────────────
-  // Use stable refs to avoid re-registering the cleanup on every render,
-  // which was the cause of duplicate inserts.
-  const savePrefsFnRef = useRef(savePrefs);
-  savePrefsFnRef.current = savePrefs;
-  const userRef = useRef(user);
-  userRef.current = user;
-  const numRef = useRef(num);
-  numRef.current = num;
 
   // ── Flush any pending session saved by a previous unmount ──────────────────
-  // On SPA navigation, fetch() gets aborted by the browser before completion.
-  // Strategy: on unmount → write pending session to localStorage.
-  // On next mount of this page → flush it to DB via the Supabase client (which works fine on mount).
+  // SPA navigation aborts in-flight fetch() calls, so we write to localStorage
+  // on unmount and flush on the NEXT mount of any SurahReader.
   useEffect(() => {
     const pending = localStorage.getItem('quran_pending_session');
     if (pending && userRef.current) {
       try {
         const session = JSON.parse(pending);
-        localStorage.removeItem('quran_pending_session');
-        supabase.from('quran_reading_sessions').insert(session as any).then();
+        const sessionId: string = session._sessionId;
+        const flushedKey = 'quran_flushed_session_id';
+        const alreadyFlushed = localStorage.getItem(flushedKey) === sessionId;
+        if (!alreadyFlushed && sessionId) {
+          localStorage.setItem(flushedKey, sessionId);
+          localStorage.removeItem('quran_pending_session');
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { _sessionId: _removed, ...row } = session;
+          supabase.from('quran_reading_sessions').insert(row as any).then();
+        }
       } catch {}
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount to flush any leftover pending session
+  }, []); // Run once on mount
 
   useEffect(() => {
-    // Capture the token at mount time. In React Strict Mode, the first
-    // (discarded) mount will have an older token; only the real mount's
-    // cleanup will see mountTokenRef.current === _sessionToken.
-    const capturedToken = _sessionToken;
+    // Capture the session ID at the moment this effect registers.
+    // Strict Mode unmounts and remounts: the first (ghost) cleanup will see
+    // a stale capturedId that no longer matches _currentSessionId, so it bails.
+    const capturedId = _currentSessionId;
 
     return () => {
-      // Only the most-recent real mount should write the session.
+      // Guard 1: Only the latest real mount writes the session.
+      if (capturedId !== _currentSessionId) return;
+      // Guard 2: Prevent double-write if something else already saved.
       if (hasSavedSessionRef.current) return;
-      if (mountTokenRef.current !== capturedToken) return; // Strict Mode ghost mount
       hasSavedSessionRef.current = true;
 
       const endAyah = lastVisibleAyahRef.current || 1;
@@ -210,17 +142,14 @@ const SurahReader = () => {
       const currentUser = userRef.current;
       const currentSavePrefs = savePrefsFnRef.current;
 
-      // Save final position to prefs (this goes through the same localStorage+DB
-      // write-through pattern so it's resilient to navigation)
       currentSavePrefs({ last_surah: currentNum, last_ayah: endAyah });
       localStorage.setItem('quran_reading_position', JSON.stringify({ surah: currentNum, ayah: endAyah, ts: Date.now() }));
 
-      // Store session to localStorage — will be flushed to DB on next page load
-      // (fetch/supabase client calls get aborted during SPA navigation)
       if (currentUser && start) {
         const durationSeconds = Math.round((Date.now() - start.time) / 1000);
         const today = new Date().toISOString().split('T')[0];
         const pendingSession = {
+          _sessionId: capturedId, // dedup key — stripped before DB insert
           user_id: currentUser.id,
           date: today,
           start_surah: start.surah,
@@ -234,7 +163,7 @@ const SurahReader = () => {
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps: register once on mount, fire once on unmount
+  }, []); // Empty deps: registers once on mount, fires once on real unmount
 
   // Cleanup audio on unmount
   useEffect(() => {
