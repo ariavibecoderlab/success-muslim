@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '@/hooks/useFamily';
-import { Users, Plus, UserPlus, Loader2 } from 'lucide-react';
+import { Users, Plus, UserPlus, Loader2, BookOpen, HandHelping, BarChart2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -100,13 +100,13 @@ const Family = () => {
 
         <div className="mt-10 grid grid-cols-3 gap-4 w-full max-w-xs">
           {[
-            { emoji: '📖', label: 'Quran streaks' },
-            { emoji: '🙏', label: 'Prayer check-ins' },
-            { emoji: '🔥', label: 'Leaderboard' },
+            { icon: BookOpen, label: 'Quran streaks' },
+            { icon: HandHelping, label: 'Prayer check-ins' },
+            { icon: BarChart2, label: 'Leaderboard' },
           ].map(item => (
             <div key={item.label} className="flex flex-col items-center gap-1.5">
-              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-xl">
-                {item.emoji}
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
+                <item.icon className="h-5 w-5 text-primary" />
               </div>
               <p className="text-[10px] text-muted-foreground text-center">{item.label}</p>
             </div>
