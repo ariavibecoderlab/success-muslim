@@ -1,48 +1,120 @@
-import { Users, Calendar, BookOpen, Home, Target, PiggyBank } from 'lucide-react';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useFamily } from '@/hooks/useFamily';
+import { Users, Plus, UserPlus, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import EditableText from '@/components/cms/EditableText';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import AppHeader from '@/components/AppHeader';
 
-const features = [
-  { icon: Calendar, title: 'Shared Calendar', desc: 'Family events & appointments together' },
-  { icon: Target, title: 'Family Goals', desc: 'Shared OKRs for the whole family' },
-  { icon: BookOpen, title: 'Kids Education', desc: 'Quran memorization & Islamic studies' },
-  { icon: Home, title: 'Household Tasks', desc: 'Chore delegation & tracking' },
-  { icon: Users, title: 'Family Budget', desc: 'Shared financial overview' },
-  { icon: PiggyBank, title: 'Savings Funds', desc: 'Hajj, Umrah, holiday & waqaf funds' },
-];
+const Family = () => {
+  const navigate = useNavigate();
+  const { families, loading } = useFamily();
 
-const Family = () => (
-  <div className="min-h-screen bg-background">
-    <AppHeader title="Family" icon={Users} />
+  // If user already has families, redirect to the first one's dashboard
+  useEffect(() => {
+    if (!loading && families.length === 1) {
+      navigate(`/family/${families[0].id}/dashboard`, { replace: true });
+    }
+  }, [loading, families, navigate]);
 
-    <main className="max-w-4xl mx-auto px-6 py-8">
-      <div className="flex flex-col items-center text-center mb-10">
-        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-          <Users className="h-8 w-8 text-primary" />
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If user is in 2 families, show selection
+  if (families.length >= 2) {
+    return (
+      <div className="min-h-screen bg-background">
+        <AppHeader title="Family" icon={Users} />
+        <main className="max-w-lg mx-auto px-4 py-8 space-y-3">
+          <p className="text-sm text-muted-foreground mb-4">Your family groups:</p>
+          {families.map(f => (
+            <Card
+              key={f.id}
+              className="cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
+              onClick={() => navigate(`/family/${f.id}/dashboard`)}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <Avatar className="h-10 w-10 bg-primary/10">
+                  <AvatarFallback className="text-primary font-bold">
+                    {f.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{f.name}</p>
+                  <p className="text-xs text-muted-foreground">{f.member_count} members</p>
+                </div>
+                {f.user_role === 'admin' && (
+                  <Badge variant="outline" className="text-[10px] flex-shrink-0">Admin</Badge>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </main>
+        <div className="h-20" />
+      </div>
+    );
+  }
+
+  // Empty state — no family yet
+  return (
+    <div className="min-h-screen bg-background">
+      <AppHeader title="Family" icon={Users} />
+
+      <main className="max-w-lg mx-auto px-4 py-12 flex flex-col items-center text-center">
+        <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">
+          <Users className="h-10 w-10 text-primary" />
         </div>
-        <EditableText elementKey="family.title" defaultText="Coming Soon" tag="h1" className="text-2xl font-bold mb-2" />
-        <EditableText elementKey="family.desc" defaultText="Build a strong Muslim family together. Shared goals, shared growth, shared barakah." tag="p" className="text-muted-foreground text-sm max-w-sm" />
-      </div>
 
-      <EditableText elementKey="family.features.title" defaultText="Planned Features" tag="h2" className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4" />
-      <div className="grid sm:grid-cols-2 gap-3">
-        {features.map((f, i) => (
-          <Card key={f.title} className="border-dashed opacity-70">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                <f.icon className="h-4 w-4 text-muted-foreground" />
+        <h1 className="text-2xl font-bold mb-2">Build together, grow together</h1>
+        <p className="text-muted-foreground text-sm max-w-xs mb-8">
+          Create a private family group or join one. See each other's progress,
+          celebrate milestones, and inspire each other every day.
+        </p>
+
+        <div className="w-full space-y-3 max-w-xs">
+          <Button
+            className="w-full h-12 text-base"
+            onClick={() => navigate('/family/create')}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create a Family Group
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full h-12 text-base"
+            onClick={() => navigate('/family/join')}
+          >
+            <UserPlus className="h-5 w-5 mr-2" />
+            Join with Invite Code
+          </Button>
+        </div>
+
+        <div className="mt-10 grid grid-cols-3 gap-4 w-full max-w-xs">
+          {[
+            { emoji: '📖', label: 'Quran streaks' },
+            { emoji: '🙏', label: 'Prayer check-ins' },
+            { emoji: '🔥', label: 'Leaderboard' },
+          ].map(item => (
+            <div key={item.label} className="flex flex-col items-center gap-1.5">
+              <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-xl">
+                {item.emoji}
               </div>
-              <div>
-                <EditableText elementKey={`family.feature.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-medium" />
-                <EditableText elementKey={`family.feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-xs text-muted-foreground" />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </main>
-  </div>
-);
+              <p className="text-[10px] text-muted-foreground text-center">{item.label}</p>
+            </div>
+          ))}
+        </div>
+      </main>
+
+      <div className="h-20" />
+    </div>
+  );
+};
 
 export default Family;

@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { UserCircle, LogOut, Save, Camera, Mail, MapPin, User, Shield } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { useNavigate } from 'react-router-dom';
+import FamilyPrivacySettings from '@/components/family/FamilyPrivacySettings';
 
 const Settings = () => {
   const { user, signOut } = useAuth();
@@ -197,6 +198,9 @@ const Settings = () => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Family Privacy */}
+        <FamilyPrivacySettings />
 
         {/* Sign Out */}
         <Button variant="destructive" onClick={handleLogout} className="w-full">
