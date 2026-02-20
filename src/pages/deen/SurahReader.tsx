@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   BookMarked, ChevronLeft, ChevronRight, BookOpen, Brain,
@@ -61,6 +61,7 @@ const SurahReader = () => {
   const [lastVisibleAyah, setLastVisibleAyah] = useState<number | null>(null);
   const lastVisibleAyahRef = useRef<number | null>(null);
   const sessionStartRef = useRef<{ surah: number; ayah: number; time: number } | null>(null);
+  const hasSavedSessionRef = useRef(false); // prevent duplicate inserts
 
   // Resume banner: show if saved position is in this surah and no explicit ?ayah param
   const savedLastAyah = prefs.last_surah === num ? prefs.last_ayah : null;
@@ -76,11 +77,13 @@ const SurahReader = () => {
     }
   }, [num, savedLastAyah, targetAyah, resumeDismissed]);
 
-  // Record session start position
+  // Record session start position — always start from ayah 1 (or explicit targetAyah)
+  // so that ayahs_read is calculated correctly. The saved last position is for resuming, not for the session start.
   useEffect(() => {
-    const startAyah = targetAyah || (prefs.last_surah === num && !showResumeBanner && savedLastAyah ? savedLastAyah : 1);
+    const startAyah = targetAyah || 1;
     sessionStartRef.current = { surah: num, ayah: startAyah, time: Date.now() };
-  }, [num]);
+    hasSavedSessionRef.current = false; // reset guard for this new session
+  }, [num, targetAyah]);
 
   // Calculate initial page from targetAyah
   useEffect(() => {
@@ -154,39 +157,51 @@ const SurahReader = () => {
   }, [num]);
 
   // ── Save position + write session row on unmount ──────────────────────────
-  const saveSessionOnExit = useCallback(async () => {
-    const endAyah = lastVisibleAyahRef.current || prefs.last_ayah || 1;
-    const start = sessionStartRef.current;
-
-    // Save final position to prefs
-    await savePrefs({ last_surah: num, last_ayah: endAyah });
-
-    // Also persist locally for offline resilience
-    localStorage.setItem('quran_reading_position', JSON.stringify({ surah: num, ayah: endAyah, ts: Date.now() }));
-
-    // Write session row to DB
-    if (user && start) {
-      const durationSeconds = Math.round((Date.now() - start.time) / 1000);
-      const today = new Date().toISOString().split('T')[0];
-      await supabase.from('quran_reading_sessions').insert({
-        user_id: user.id,
-        date: today,
-        start_surah: start.surah,
-        start_ayah: start.ayah,
-        end_surah: num,
-        end_ayah: endAyah,
-        duration_seconds: durationSeconds,
-        ayahs_read: Math.max(0, endAyah - start.ayah + 1),
-      } as any);
-    }
-  }, [num, prefs.last_ayah, savePrefs, user]);
+  // Use stable refs to avoid re-registering the cleanup on every render,
+  // which was the cause of duplicate inserts.
+  const savePrefsFnRef = useRef(savePrefs);
+  savePrefsFnRef.current = savePrefs;
+  const userRef = useRef(user);
+  userRef.current = user;
+  const numRef = useRef(num);
+  numRef.current = num;
 
   useEffect(() => {
     return () => {
-      // fire-and-forget on unmount
-      saveSessionOnExit();
+      // Guard: only write once per component mount lifetime
+      if (hasSavedSessionRef.current) return;
+      hasSavedSessionRef.current = true;
+
+      const endAyah = lastVisibleAyahRef.current || 1;
+      const start = sessionStartRef.current;
+      const currentNum = numRef.current;
+      const currentUser = userRef.current;
+      const currentSavePrefs = savePrefsFnRef.current;
+
+      // Save final position to prefs
+      currentSavePrefs({ last_surah: currentNum, last_ayah: endAyah });
+
+      // Persist locally for offline resilience
+      localStorage.setItem('quran_reading_position', JSON.stringify({ surah: currentNum, ayah: endAyah, ts: Date.now() }));
+
+      // Write ONE session row to DB
+      if (currentUser && start) {
+        const durationSeconds = Math.round((Date.now() - start.time) / 1000);
+        const today = new Date().toISOString().split('T')[0];
+        supabase.from('quran_reading_sessions').insert({
+          user_id: currentUser.id,
+          date: today,
+          start_surah: start.surah,
+          start_ayah: start.ayah,
+          end_surah: currentNum,
+          end_ayah: endAyah,
+          duration_seconds: durationSeconds,
+          ayahs_read: Math.max(1, endAyah - start.ayah + 1),
+        } as any);
+      }
     };
-  }, [saveSessionOnExit]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps: register once on mount, fire once on unmount
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -288,10 +303,7 @@ const SurahReader = () => {
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <Button
             variant="ghost" size="icon" className="h-8 w-8"
-            onClick={() => {
-              saveSessionOnExit();
-              navigate('/iman/quran');
-            }}
+            onClick={() => navigate('/iman/quran')}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
