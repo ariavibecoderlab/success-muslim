@@ -39,6 +39,7 @@ export function useFamilyDashboard(familyId: string | null) {
   const loadLeaderboard = useCallback(async () => {
     if (!familyId || !user) return;
     const { data, error } = await supabase.rpc('get_family_leaderboard', { p_family_id: familyId });
+    if (error) console.error('Leaderboard RPC error:', error);
     if (!error && data) {
       setLeaderboard(
         (data as LeaderboardEntry[]).map(r => ({
