@@ -1,132 +1,72 @@
 
-# Post-Auth Redirect for Invite Links
+# Three Issues Found — Fix Plan
 
-## Goal
-When a logged-out user opens `/family/join/6RBD4U`, they currently get redirected to `/auth` and lose their place. After login + onboarding, they land on `/dashboard`. This plan stores the intended path before any redirect and restores it at the end of the auth/onboarding flow.
+## Issue 1 (Critical): Leaderboard RPC returns error — `user_id is ambiguous`
 
-## Flow Diagram
+The `get_family_leaderboard` SQL function has a bug inside the `quran_streak` CTE. The subquery `WHERE user_id = fm.user_id` refers to `user_id` inside a CTE called `ranked` — but `user_id` is ambiguous because PostgreSQL doesn't know if it refers to the CTE variable or the outer `fm.user_id`. It needs to be fully qualified as `quran_daily_log.user_id`.
 
-```text
-User opens /family/join/6RBD4U (not logged in)
-        │
-        ▼
-AuthGuard fires
-  → saves /family/join/6RBD4U to localStorage['post_auth_redirect']
-  → redirects to /auth
-        │
-        ▼
-User logs in (email/Google)
-  Auth.tsx → navigates to /onboarding
-        │
-        ▼
-User completes onboarding
-  Onboarding.tsx finishOnboarding()
-  → reads localStorage['post_auth_redirect']
-  → clears key
-  → navigates to /family/join/6RBD4U  ← lands back on invite page!
-        │
-        ▼
-JoinFamily page loads, invite code pre-filled, user taps "Join"
+Additionally, the LEFT JOIN on `family_privacy_settings` joins only on `fps.user_id = fm.user_id` — if a user is in two families, this could return duplicate rows. It should also join on `fps.family_id = p_family_id`.
+
+**Fix**: A new database migration that replaces the function with fully table-qualified column references:
+
+```sql
+-- Inside the quran_streak CTE, change:
+WHERE user_id = fm.user_id  -- ambiguous!
+-- To:
+WHERE quran_daily_log.user_id = fm.user_id  -- fully qualified
+
+-- Also fix the LEFT JOIN:
+LEFT JOIN family_privacy_settings fps 
+  ON fps.user_id = fm.user_id 
+  AND fps.family_id = p_family_id  -- add family scope
 ```
 
-## Files to Change
+---
 
-### 1. `src/components/AuthGuard.tsx`
-- When `!user` is detected, save `window.location.pathname + window.location.search` to `localStorage.setItem('post_auth_redirect', ...)` **before** returning `<Navigate to="/auth" replace />`.
-- Skip saving if the current path is already `/auth`, `/onboarding`, `/`, or `/install` to avoid redirect loops.
+## Issue 2 (UX): Bottom navigation missing on FamilyDashboard
 
-```ts
-const SKIP_PATHS = ['/', '/auth', '/onboarding', '/install', '/reset-password'];
+`/family/:id/dashboard` is registered outside `AppLayout` in `App.tsx`, so `BottomNav` never renders. The fix is to add `BottomNav` directly to `FamilyDashboard.tsx` itself, consistent with how other sub-pages that need it handle the nav.
 
-if (!user) {
-  const path = window.location.pathname + window.location.search;
-  if (!SKIP_PATHS.some(p => path === p || path.startsWith(p + '/'))) {
-    localStorage.setItem('post_auth_redirect', path);
-  }
-  return <Navigate to="/auth" replace />;
-}
-```
+This avoids restructuring App.tsx routing and keeps FamilyDashboard self-contained with its own header + bottom nav.
 
-### 2. `src/pages/Onboarding.tsx` — `finishOnboarding()`
-- After marking `onboarding_completed: true`, check `localStorage.getItem('post_auth_redirect')`.
-- If a value exists, clear it and navigate there. Otherwise fall back to `/dashboard`.
+**Fix**: Import and render `<BottomNav />` at the bottom of `FamilyDashboard.tsx`, and adjust `pb-24` on `<main>` to `pb-28` to account for the nav bar height.
 
-```ts
-const finishOnboarding = async () => {
-  if (!user) return;
-  setSaving(true);
-  await supabase.from('profiles').update({
-    onboarding_completed: true,
-    onboarding_step: TOTAL_STEPS,
-  }).eq('id', user.id);
-  setSaving(false);
+---
 
-  const redirect = localStorage.getItem('post_auth_redirect');
-  if (redirect) {
-    localStorage.removeItem('post_auth_redirect');
-    navigate(redirect);
-  } else {
-    navigate('/dashboard');
-  }
-};
-```
+## Issue 3 (Bug): Back button bounces user back to dashboard
 
-### 3. `src/pages/Auth.tsx` — `handleSubmit` (email login)
-- After successful **login** (not signup), also check for `post_auth_redirect` before navigating.
-- If a redirect is stored, consume it and navigate there instead of `/onboarding`.
-- For new signups: they must verify email first, then complete onboarding — no redirect needed.
-- **Note**: Google OAuth returns to `window.location.origin` (no control over where it lands); the `AuthGuard` on the protected route will handle it after the OAuth callback resolves.
+`navigate('/family')` sends the user to the `/family` pillar page, which immediately redirects back to `/family/:id/dashboard` (because the user is in exactly 1 family). This creates an infinite bounce.
 
-```ts
-if (isLogin) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  // For returning users (onboarding already done), go directly to redirect
-  // AuthGuard will handle the onboarding check for new users
-  navigate('/onboarding'); // AuthGuard in the target route handles the rest
-}
-```
+The correct fix is to use `navigate(-1)` (browser history back). If the user navigated to the dashboard from the bottom nav or directly, this will correctly go back to the previous page. As a safety fallback, if there is no browser history entry, it can fall back to `/dashboard`.
 
-Actually, for login — we should still navigate to `/onboarding` which checks `onboarding_completed` and redirects to dashboard if already done. The redirect is consumed at `finishOnboarding` time. If the user has already completed onboarding, the `Onboarding` page redirects straight to `/dashboard` (line 63) — we need to also check for the stored redirect there.
+**Fix**: In `FamilyDashboard.tsx`, change the back button handler from `navigate('/family')` to `navigate(-1)`.
 
-### Revised Onboarding redirect logic (both early-exit AND finish)
-There are two places in `Onboarding.tsx` where navigation to `/dashboard` occurs:
-1. **Early exit** (line 63): `if (data?.onboarding_completed) navigate('/dashboard', { replace: true })` — user who just logged in is already onboarded.
-2. **Finish** (line 238): `navigate('/dashboard')` — user just completed onboarding.
+---
 
-Both need to check for `post_auth_redirect`:
+## Files Changed
 
-```ts
-// Helper inside Onboarding
-const navigateAfterOnboarding = () => {
-  const redirect = localStorage.getItem('post_auth_redirect');
-  if (redirect) {
-    localStorage.removeItem('post_auth_redirect');
-    navigate(redirect, { replace: true });
-  } else {
-    navigate('/dashboard', { replace: true });
-  }
-};
-```
+### File 1: New DB migration
+Re-create `get_family_leaderboard` with:
+- Fully qualified `quran_daily_log.user_id` inside the streak CTE
+- `fps` LEFT JOIN scoped to `fps.family_id = p_family_id`
 
-Use `navigateAfterOnboarding()` in both the early-exit useEffect and the `finishOnboarding` function.
+### File 2: `src/pages/family/FamilyDashboard.tsx`
+- Import `BottomNav` from `@/components/BottomNav`
+- Add `<BottomNav />` at the bottom of the returned JSX
+- Change back button `onClick` from `navigate('/family')` to `navigate(-1)`
+- Change `pb-24` on `<main>` to `pb-28`
 
-## Edge Cases Handled
-
-| Scenario | Behaviour |
-|---|---|
-| User opens invite link, is already logged in + onboarded | AuthGuard passes, lands directly on `/family/join/CODE` — no redirect needed |
-| User opens invite link, logged in but needs onboarding | AuthGuard saves path → redirects to `/onboarding` → on finish, navigates to invite URL |
-| User opens invite link, not logged in, uses Google OAuth | AuthGuard saves path → Google OAuth returns to origin → `Auth.tsx` redirects to `/onboarding` → finish navigates to stored redirect |
-| User opens invite link, not logged in, uses email | AuthGuard saves path → login → onboarding check → finish navigates to stored redirect |
-| User navigates to a regular protected page while logged out | AuthGuard saves `/dashboard` or `/iman/quran` etc. → after auth → redirect back |
-| Skip paths (/, /auth, /onboarding) | Not stored — prevents redirect loops |
-| Path already has invite code in URL | Full `pathname + search` is stored, so code survives |
+---
 
 ## Build Sequence
 
-1. `src/components/AuthGuard.tsx` — add localStorage write before unauthenticated redirect
-2. `src/pages/Onboarding.tsx` — add `navigateAfterOnboarding` helper, use it in both early-exit and finish
-3. `src/pages/Auth.tsx` — no changes required (login already navigates to `/onboarding` which handles the redirect)
+1. DB migration — fix RPC function (fixes leaderboard and Today's Snapshot in one go)
+2. `FamilyDashboard.tsx` — add BottomNav + fix back button
 
-No database changes required. No new dependencies.
+No other files need changes.
+
+## Expected Result After Fix
+- Leaderboard shows VibeCoder (and all members) correctly
+- Today's Snapshot populates from the same leaderboard data
+- Bottom navigation bar visible on the family dashboard
+- Back button navigates correctly to previous page
