@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -12,6 +12,8 @@ export interface QuranPrefs {
   night_mode: boolean;
   memorization_enabled: boolean;
   daily_memo_goal: number;
+  daily_target_type: string | null;
+  target_selected_at: string | null;
 }
 
 const DEFAULT_PREFS: QuranPrefs = {
@@ -24,10 +26,11 @@ const DEFAULT_PREFS: QuranPrefs = {
   night_mode: false,
   memorization_enabled: false,
   daily_memo_goal: 3,
+  daily_target_type: null,
+  target_selected_at: null,
 };
 
 const LOCAL_KEY = 'quran_prefs_v2';
-const PROMPTED_KEY = 'quran_prompted';
 
 export function useQuranPrefs() {
   const { user } = useAuth();
@@ -38,18 +41,6 @@ export function useQuranPrefs() {
     } catch { return { ...DEFAULT_PREFS }; }
   });
   const [loading, setLoading] = useState(true);
-  // Initialize prompted from localStorage so it persists across refreshes even without DB
-  const [prompted, setPrompted] = useState(() => {
-    try {
-      return localStorage.getItem(PROMPTED_KEY) === 'true';
-    } catch { return false; }
-  });
-
-  // Persist prompted to localStorage whenever it changes
-  const setPromptedPersist = useCallback((val: boolean) => {
-    setPrompted(val);
-    try { localStorage.setItem(PROMPTED_KEY, String(val)); } catch {}
-  }, []);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -70,15 +61,15 @@ export function useQuranPrefs() {
           night_mode: data.night_mode ?? false,
           memorization_enabled: data.memorization_enabled ?? false,
           daily_memo_goal: data.daily_memo_goal ?? 3,
+          daily_target_type: (data as any).daily_target_type ?? null,
+          target_selected_at: (data as any).target_selected_at ?? null,
         };
         setPrefsState(p);
         localStorage.setItem(LOCAL_KEY, JSON.stringify(p));
-        // Row exists in DB = user has already been prompted
-        setPromptedPersist(true);
       }
       setLoading(false);
     })();
-  }, [user, setPromptedPersist]);
+  }, [user]);
 
   const savePrefs = useCallback(async (updates: Partial<QuranPrefs>) => {
     const merged = { ...prefs, ...updates };
@@ -97,13 +88,107 @@ export function useQuranPrefs() {
       night_mode: merged.night_mode,
       memorization_enabled: merged.memorization_enabled,
       daily_memo_goal: merged.daily_memo_goal,
+      daily_target_type: merged.daily_target_type,
+      target_selected_at: merged.target_selected_at,
     } as any, { onConflict: 'user_id' });
   }, [prefs, user]);
 
-  return { prefs, savePrefs, loading, prompted, setPrompted: setPromptedPersist };
+  return { prefs, savePrefs, loading };
 }
 
-// Bookmarks hook
+// ─── Daily Target Hook ────────────────────────────────────────────────────────
+
+export interface DailyLogEntry {
+  id: string;
+  date: string;
+  target_met: boolean;
+  surah_number: number | null;
+  ayah_number: number | null;
+}
+
+export function useQuranDailyTarget() {
+  const { user } = useAuth();
+  const { prefs, savePrefs, loading: prefsLoading } = useQuranPrefs();
+  const [log, setLog] = useState<DailyLogEntry[]>([]);
+  const [logLoading, setLogLoading] = useState(true);
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const loadLog = useCallback(async () => {
+    if (!user) { setLogLoading(false); return; }
+    const since = new Date();
+    since.setDate(since.getDate() - 90);
+    const { data } = await supabase
+      .from('quran_daily_log' as any)
+      .select('*')
+      .eq('user_id', user.id)
+      .gte('date', since.toISOString().split('T')[0])
+      .order('date', { ascending: false });
+    setLog((data || []) as unknown as DailyLogEntry[]);
+    setLogLoading(false);
+  }, [user]);
+
+  useEffect(() => { loadLog(); }, [loadLog]);
+
+  const todayEntry = log.find(e => e.date === today) ?? null;
+  const isDoneToday = todayEntry?.target_met ?? false;
+
+  // Streak: consecutive days ending today (or yesterday) with target_met
+  const streak = (() => {
+    const metDates = new Set(log.filter(e => e.target_met).map(e => e.date));
+    let count = 0;
+    const d = new Date();
+    // If today not done yet, start from yesterday
+    if (!metDates.has(today)) d.setDate(d.getDate() - 1);
+    for (let i = 0; i < 365; i++) {
+      const key = d.toISOString().split('T')[0];
+      if (metDates.has(key)) { count++; d.setDate(d.getDate() - 1); }
+      else break;
+    }
+    return count;
+  })();
+
+  const daysDone = log.filter(e => e.target_met).length;
+
+  const markTodayDone = async (surahNumber?: number, ayahNumber?: number) => {
+    if (!user) return;
+    await supabase.from('quran_daily_log' as any).upsert({
+      user_id: user.id,
+      date: today,
+      target_met: true,
+      surah_number: surahNumber ?? null,
+      ayah_number: ayahNumber ?? null,
+    }, { onConflict: 'user_id,date' });
+    // Also update last position if provided
+    if (surahNumber) {
+      await savePrefs({ last_surah: surahNumber, last_ayah: ayahNumber ?? 1 });
+    }
+    loadLog();
+  };
+
+  const selectTarget = async (targetType: string) => {
+    await savePrefs({
+      daily_target_type: targetType,
+      target_selected_at: new Date().toISOString(),
+    });
+  };
+
+  return {
+    prefs,
+    savePrefs,
+    loading: prefsLoading || logLoading,
+    log,
+    todayEntry,
+    isDoneToday,
+    streak,
+    daysDone,
+    markTodayDone,
+    selectTarget,
+  };
+}
+
+// ─── Bookmarks ────────────────────────────────────────────────────────────────
+
 export interface Bookmark {
   id: string;
   surah_number: number;
@@ -150,46 +235,22 @@ export function useQuranBookmarks() {
   return { bookmarks, addBookmark, removeBookmark, isBookmarked, reload: load };
 }
 
-// Reading sessions
+// ─── Reading sessions (kept for backward compat, no longer used for tracking) ─
+
 export function useQuranSessions() {
   const { user } = useAuth();
 
-  const logSession = useCallback(async (
-    startSurah: number, startAyah: number,
-    endSurah: number, endAyah: number,
-    ayahsRead: number, durationSeconds: number
-  ) => {
-    if (!user) return;
-    const pagesRead = Math.round((ayahsRead / 15) * 10) / 10; // ~15 ayahs per page
-    await supabase.from('quran_reading_sessions').insert({
-      user_id: user.id,
-      start_surah: startSurah,
-      start_ayah: startAyah,
-      end_surah: endSurah,
-      end_ayah: endAyah,
-      pages_read: pagesRead,
-      ayahs_read: ayahsRead,
-      duration_seconds: durationSeconds,
-    } as any);
-  }, [user]);
+  const logSession = async () => { /* No-op: session tracking removed */ };
 
-  const getSessions = useCallback(async (days: number = 30) => {
-    if (!user) return [];
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    const { data } = await supabase
-      .from('quran_reading_sessions')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('date', since.toISOString().split('T')[0])
-      .order('created_at', { ascending: false });
-    return (data || []) as any[];
-  }, [user]);
+  const getSessions = useCallback(async (_days: number = 30) => {
+    return [] as any[];
+  }, []);
 
   return { logSession, getSessions };
 }
 
-// Memorization hook
+// ─── Memorization ─────────────────────────────────────────────────────────────
+
 export function useQuranMemorization() {
   const { user } = useAuth();
   const [memorized, setMemorized] = useState<{ surah_number: number; ayah_number: number }[]>([]);

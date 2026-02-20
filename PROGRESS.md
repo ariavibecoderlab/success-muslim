@@ -70,9 +70,9 @@
 | Quran Pagination | ✅ | Long surahs paginated (25 ayahs/page) for smooth performance |
 | Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters (Alafasy default) |
 | Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
-| Quran Tracker (opt-in) | ✅ | Gentle onboarding prompt (shows once, persisted to DB + localStorage), auto-tracking, daily goal, streak |
-| Quran Session Recording | ✅ | Saves position on every page change, logs duration on close, restores last position on reopen |
-| Quran Reading Heatmap | ✅ | 90-day calendar heatmap on tracker dashboard |
+| Quran Tracker (Daily Target) | ✅ | Replaced complex opt-in system with simple daily target picker (8 options). One-time onboarding, "Mark Today as Done" check-in, streak tracking, 30-day calendar heatmap, achievements |
+| Quran Daily Log | ✅ | `quran_daily_log` table — user_id, date, target_met, surah, ayah. Streak computed from consecutive target_met days |
+| Quran Reading Calendar | ✅ | 30-day grid calendar (green = done, grey = missed) replaces old 90-day heatmap |
 | Quran Bookmarks | ✅ | Bookmark ayahs, last-read auto-saved, DB synced |
 | Qiyam Planner | ✅ | Tahajjud window calc, sleep/wake settings, streak, alarm, DB synced |
 | Ramadan Optimizer | ✅ | Auto-detect Ramadan, suhoor/iftar times, daily ibadah goals, Laylatul Qadr, summary |
