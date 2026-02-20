@@ -103,9 +103,6 @@ const Iman = () => {
   const salahCount = getTodaySalahCount();
 
   // Quran stats — real data from useQuranDailyTarget (isDoneToday, quranStreak, daysDone injected above)
-    for (let i = 0; i < 365; i++) {
-      if (dates.has(d.toISOString().split('T')[0])) count++;
-      else if (i > 0) break;
 
   const { hijriDate } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
