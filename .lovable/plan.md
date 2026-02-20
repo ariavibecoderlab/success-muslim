@@ -1,72 +1,63 @@
 
-# Three Issues Found — Fix Plan
+# Fix: Replace `navigate(-1)` with Explicit Routes in Family Module
 
-## Issue 1 (Critical): Leaderboard RPC returns error — `user_id is ambiguous`
+## Root Cause
+All back buttons in the family module use `navigate(-1)` (browser history). When a user arrives at `/family/[id]/dashboard` directly from the bottom nav tab, the history stack's previous entry is the dashboard itself, causing the loop. The fix is to replace every `navigate(-1)` call with a hardcoded explicit route.
 
-The `get_family_leaderboard` SQL function has a bug inside the `quran_streak` CTE. The subquery `WHERE user_id = fm.user_id` refers to `user_id` inside a CTE called `ranked` — but `user_id` is ambiguous because PostgreSQL doesn't know if it refers to the CTE variable or the outer `fm.user_id`. It needs to be fully qualified as `quran_daily_log.user_id`.
+## Route Map
 
-Additionally, the LEFT JOIN on `family_privacy_settings` joins only on `fps.user_id = fm.user_id` — if a user is in two families, this could return duplicate rows. It should also join on `fps.family_id = p_family_id`.
+| Page | Current | Fixed |
+|---|---|---|
+| `/family/[id]/dashboard` → Back | `navigate(-1)` | `navigate('/family')` |
+| `/family/[id]/member/[uid]` → Back (header) | `navigate(-1)` | `navigate(\`/family/${familyId}/dashboard\`)` |
+| `/family/[id]/member/[uid]` → Back (private fallback) | `navigate(-1)` | `navigate(\`/family/${familyId}/dashboard\`)` |
+| `/family/[id]/settings` → Back (header) | `navigate(-1)` | `navigate(\`/family/${id}/dashboard\`)` |
 
-**Fix**: A new database migration that replaces the function with fully table-qualified column references:
+`FamilySettings.tsx` line 70 already uses `navigate('/family')` for the leave-family action — this is correct and will not be changed.
 
-```sql
--- Inside the quran_streak CTE, change:
-WHERE user_id = fm.user_id  -- ambiguous!
--- To:
-WHERE quran_daily_log.user_id = fm.user_id  -- fully qualified
+## Files to Change
 
--- Also fix the LEFT JOIN:
-LEFT JOIN family_privacy_settings fps 
-  ON fps.user_id = fm.user_id 
-  AND fps.family_id = p_family_id  -- add family scope
+### 1. `src/pages/family/FamilyDashboard.tsx` — line 38
+```tsx
+// Before
+<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+// After
+<Button variant="ghost" size="icon" onClick={() => navigate('/family')}>
 ```
 
----
+### 2. `src/pages/family/MemberProfile.tsx` — lines 59 and 74
+```tsx
+// Line 59 — private profile fallback button
+// Before
+<Button variant="outline" onClick={() => navigate(-1)}>Go back</Button>
+// After
+<Button variant="outline" onClick={() => navigate(`/family/${familyId}/dashboard`)}>Go back</Button>
 
-## Issue 2 (UX): Bottom navigation missing on FamilyDashboard
+// Line 74 — header back button
+// Before
+<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+// After
+<Button variant="ghost" size="icon" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
+```
 
-`/family/:id/dashboard` is registered outside `AppLayout` in `App.tsx`, so `BottomNav` never renders. The fix is to add `BottomNav` directly to `FamilyDashboard.tsx` itself, consistent with how other sub-pages that need it handle the nav.
+### 3. `src/pages/family/FamilySettings.tsx` — line 90
+```tsx
+// Before
+<Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+// After
+<Button variant="ghost" size="icon" onClick={() => navigate(`/family/${id}/dashboard`)}>
+```
 
-This avoids restructuring App.tsx routing and keeps FamilyDashboard self-contained with its own header + bottom nav.
+## Also: Update `PROGRESS.md`
+Add an entry under the Family Module section marking the back button fix as complete.
 
-**Fix**: Import and render `<BottomNav />` at the bottom of `FamilyDashboard.tsx`, and adjust `pb-24` on `<main>` to `pb-28` to account for the nav bar height.
+## No Database Changes Required
+This is a pure frontend routing fix — no schema or RLS changes needed.
 
----
-
-## Issue 3 (Bug): Back button bounces user back to dashboard
-
-`navigate('/family')` sends the user to the `/family` pillar page, which immediately redirects back to `/family/:id/dashboard` (because the user is in exactly 1 family). This creates an infinite bounce.
-
-The correct fix is to use `navigate(-1)` (browser history back). If the user navigated to the dashboard from the bottom nav or directly, this will correctly go back to the previous page. As a safety fallback, if there is no browser history entry, it can fall back to `/dashboard`.
-
-**Fix**: In `FamilyDashboard.tsx`, change the back button handler from `navigate('/family')` to `navigate(-1)`.
-
----
-
-## Files Changed
-
-### File 1: New DB migration
-Re-create `get_family_leaderboard` with:
-- Fully qualified `quran_daily_log.user_id` inside the streak CTE
-- `fps` LEFT JOIN scoped to `fps.family_id = p_family_id`
-
-### File 2: `src/pages/family/FamilyDashboard.tsx`
-- Import `BottomNav` from `@/components/BottomNav`
-- Add `<BottomNav />` at the bottom of the returned JSX
-- Change back button `onClick` from `navigate('/family')` to `navigate(-1)`
-- Change `pb-24` on `<main>` to `pb-28`
-
----
-
-## Build Sequence
-
-1. DB migration — fix RPC function (fixes leaderboard and Today's Snapshot in one go)
-2. `FamilyDashboard.tsx` — add BottomNav + fix back button
-
-No other files need changes.
-
-## Expected Result After Fix
-- Leaderboard shows VibeCoder (and all members) correctly
-- Today's Snapshot populates from the same leaderboard data
-- Bottom navigation bar visible on the family dashboard
-- Back button navigates correctly to previous page
+## Verified Navigation Flow After Fix
+1. User on `/family` → taps family card → lands on `/family/[id]/dashboard`
+2. Taps **Back** → lands on `/family` ✅
+3. From dashboard → taps a member → lands on `/family/[id]/member/[uid]`
+4. Taps **Back** → lands on `/family/[id]/dashboard` ✅
+5. From dashboard → taps Settings → lands on `/family/[id]/settings`
+6. Taps **Back** → lands on `/family/[id]/dashboard` ✅
