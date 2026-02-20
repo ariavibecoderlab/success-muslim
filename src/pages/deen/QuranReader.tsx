@@ -165,8 +165,6 @@ const QuranReader = () => {
 
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [markSheetOpen, setMarkSheetOpen] = useState(false);
-  const [markSurah, setMarkSurah] = useState('');
-  const [markAyah, setMarkAyah] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('surah');
 
@@ -223,12 +221,11 @@ const QuranReader = () => {
   };
 
   const handleMarkDone = async () => {
-    const surahNum = markSurah ? parseInt(markSurah) : undefined;
-    const ayahNum = markAyah ? parseInt(markAyah) : undefined;
+    // Use auto-filled last position from prefs — no manual input needed
+    const surahNum = prefs.last_surah > 0 ? prefs.last_surah : undefined;
+    const ayahNum = prefs.last_ayah > 0 ? prefs.last_ayah : undefined;
     await markTodayDone(surahNum, ayahNum);
     setMarkSheetOpen(false);
-    setMarkSurah('');
-    setMarkAyah('');
     toast.success('Barakallah! Keep it up 🌟');
   };
 
@@ -660,36 +657,30 @@ const QuranReader = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Mark as Done Sheet */}
+        {/* Mark as Done Sheet — auto-filled from last saved position */}
         <Sheet open={markSheetOpen} onOpenChange={setMarkSheetOpen}>
           <SheetContent side="bottom" className="rounded-t-2xl pb-8">
             <SheetHeader className="mb-4">
-              <SheetTitle>Where did you read up to? <span className="text-muted-foreground font-normal text-sm">(optional)</span></SheetTitle>
+              <SheetTitle>Tandai hari ini selesai?</SheetTitle>
             </SheetHeader>
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div>
-                <Label className="text-xs mb-1 block">Surah number</Label>
-                <Input
-                  type="number"
-                  min={1} max={114}
-                  placeholder="e.g. 2"
-                  value={markSurah}
-                  onChange={e => setMarkSurah(e.target.value)}
-                />
+
+            {prefs.last_surah > 0 ? (
+              <div className="bg-secondary/60 rounded-xl p-4 mb-5 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Posisi terakhir</p>
+                <p className="text-base font-semibold text-foreground">
+                  {SURAH_NAMES[prefs.last_surah - 1]?.name ?? `Surah ${prefs.last_surah}`}
+                  {' '}·{' '}
+                  Ayat {prefs.last_ayah}
+                </p>
               </div>
-              <div>
-                <Label className="text-xs mb-1 block">Ayah number</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  placeholder="e.g. 26"
-                  value={markAyah}
-                  onChange={e => setMarkAyah(e.target.value)}
-                />
-              </div>
-            </div>
+            ) : (
+              <p className="text-sm text-muted-foreground mb-5 text-center">
+                Belum ada posisi tersimpan — target hari ini akan ditandai selesai.
+              </p>
+            )}
+
             <Button className="w-full flex items-center gap-2" size="lg" onClick={handleMarkDone}>
-              <CheckCircle2 className="h-4 w-4" /> Done — Mark Today as Complete
+              <CheckCircle2 className="h-4 w-4" /> Confirm ✓
             </Button>
           </SheetContent>
         </Sheet>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   BookMarked, ChevronLeft, ChevronRight, BookOpen, Brain,
@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useQuranPrefs, useQuranBookmarks, useQuranMemorization } from '@/hooks/useQuranData';
 import { fetchAyahs, fetchTafsir, SURAH_NAMES, TRANSLATION_IDS, type Ayah } from '@/lib/quran-api';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const AYAHS_PER_PAGE = 25;
 
@@ -31,6 +33,7 @@ const SurahReader = () => {
   const { surahNum } = useParams<{ surahNum: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const num = Number(surahNum) || 1;
   const targetAyah = Number(searchParams.get('ayah')) || null;
 
@@ -54,6 +57,30 @@ const SurahReader = () => {
   const [reciterId, setReciterId] = useState(7);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // Position tracking
+  const [lastVisibleAyah, setLastVisibleAyah] = useState<number | null>(null);
+  const lastVisibleAyahRef = useRef<number | null>(null);
+  const sessionStartRef = useRef<{ surah: number; ayah: number; time: number } | null>(null);
+
+  // Resume banner: show if saved position is in this surah and no explicit ?ayah param
+  const savedLastAyah = prefs.last_surah === num ? prefs.last_ayah : null;
+  const [showResumeBanner, setShowResumeBanner] = useState(false);
+  const [resumeDismissed, setResumeDismissed] = useState(false);
+
+  // Show resume banner only on first open, if there's a saved position and no explicit URL ayah
+  useEffect(() => {
+    if (!resumeDismissed && savedLastAyah && savedLastAyah > 1 && !targetAyah) {
+      setShowResumeBanner(true);
+    } else {
+      setShowResumeBanner(false);
+    }
+  }, [num, savedLastAyah, targetAyah, resumeDismissed]);
+
+  // Record session start position
+  useEffect(() => {
+    const startAyah = targetAyah || (prefs.last_surah === num && !showResumeBanner && savedLastAyah ? savedLastAyah : 1);
+    sessionStartRef.current = { surah: num, ayah: startAyah, time: Date.now() };
+  }, [num]);
 
   // Calculate initial page from targetAyah
   useEffect(() => {
@@ -76,7 +103,6 @@ const SurahReader = () => {
       toast.error('Failed to load surah');
       setLoading(false);
     });
-    // Scroll to top on page change
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [num, currentPage, prefs.translation_lang]);
 
@@ -90,13 +116,77 @@ const SurahReader = () => {
     }
   }, [targetAyah, ayahs]);
 
-  // Save position whenever ayahs load (always, not just when tracker enabled)
+  // ── Intersection Observer: track last visible ayah ──────────────────────────
   useEffect(() => {
-    if (ayahs.length > 0) {
-      const lastAyah = ayahs[ayahs.length - 1]?.verse_number || 1;
-      savePrefs({ last_surah: num, last_ayah: lastAyah });
+    if (ayahs.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let maxVisible = lastVisibleAyahRef.current ?? ayahs[0]?.verse_number ?? 1;
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const ayahId = parseInt(entry.target.getAttribute('data-ayah') || '0');
+            if (ayahId > maxVisible) {
+              maxVisible = ayahId;
+            }
+          }
+        });
+        lastVisibleAyahRef.current = maxVisible;
+        setLastVisibleAyah(maxVisible);
+      },
+      { threshold: 0.3, rootMargin: '0px 0px -10% 0px' }
+    );
+
+    const els = document.querySelectorAll('[data-ayah]');
+    els.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [ayahs]);
+
+  // ── Auto-save position to localStorage every 30s ──────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (lastVisibleAyahRef.current) {
+        const pos = { surah: num, ayah: lastVisibleAyahRef.current, ts: Date.now() };
+        localStorage.setItem('quran_reading_position', JSON.stringify(pos));
+      }
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [num]);
+
+  // ── Save position + write session row on unmount ──────────────────────────
+  const saveSessionOnExit = useCallback(async () => {
+    const endAyah = lastVisibleAyahRef.current || prefs.last_ayah || 1;
+    const start = sessionStartRef.current;
+
+    // Save final position to prefs
+    await savePrefs({ last_surah: num, last_ayah: endAyah });
+
+    // Also persist locally for offline resilience
+    localStorage.setItem('quran_reading_position', JSON.stringify({ surah: num, ayah: endAyah, ts: Date.now() }));
+
+    // Write session row to DB
+    if (user && start) {
+      const durationSeconds = Math.round((Date.now() - start.time) / 1000);
+      const today = new Date().toISOString().split('T')[0];
+      await supabase.from('quran_reading_sessions').insert({
+        user_id: user.id,
+        date: today,
+        start_surah: start.surah,
+        start_ayah: start.ayah,
+        end_surah: num,
+        end_ayah: endAyah,
+        duration_seconds: durationSeconds,
+        ayahs_read: Math.max(0, endAyah - start.ayah + 1),
+      } as any);
     }
-  }, [ayahs, num]);
+  }, [num, prefs.last_ayah, savePrefs, user]);
+
+  useEffect(() => {
+    return () => {
+      // fire-and-forget on unmount
+      saveSessionOnExit();
+    };
+  }, [saveSessionOnExit]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -142,7 +232,6 @@ const SurahReader = () => {
 
     audio.onended = () => {
       setPlayingAyah(null);
-      // Auto-play next ayah if it exists on current page
       const nextAyah = ayahs.find(a => a.verse_number === ayahNum + 1);
       if (nextAyah) {
         handlePlayAyah(nextAyah.verse_number);
@@ -171,12 +260,39 @@ const SurahReader = () => {
     }
   };
 
+  // Resume from saved position
+  const handleResume = () => {
+    if (savedLastAyah) {
+      setCurrentPage(Math.ceil(savedLastAyah / AYAHS_PER_PAGE));
+      setShowResumeBanner(false);
+      setResumeDismissed(true);
+      setTimeout(() => {
+        const el = document.getElementById(`ayah-${savedLastAyah}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 400);
+    }
+  };
+
+  const handleStartFromBeginning = () => {
+    setShowResumeBanner(false);
+    setResumeDismissed(true);
+    setCurrentPage(1);
+    sessionStartRef.current = { surah: num, ayah: 1, time: Date.now() };
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/iman/quran')}>
+          <Button
+            variant="ghost" size="icon" className="h-8 w-8"
+            onClick={() => {
+              saveSessionOnExit();
+              navigate('/iman/quran');
+            }}
+          >
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="text-center">
@@ -190,6 +306,25 @@ const SurahReader = () => {
           </Button>
         </div>
       </div>
+
+      {/* Resume Banner */}
+      {showResumeBanner && savedLastAyah && (
+        <div className="max-w-2xl mx-auto px-4 pt-3">
+          <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-primary leading-tight">
+              Lanjut dari <span className="font-bold">{surahInfo?.name}</span> Ayat {savedLastAyah}?
+            </p>
+            <div className="flex gap-2 shrink-0">
+              <Button size="sm" variant="outline" className="h-7 text-xs px-2.5" onClick={handleStartFromBeginning}>
+                Mulai dari awal
+              </Button>
+              <Button size="sm" className="h-7 text-xs px-2.5" onClick={handleResume}>
+                Lanjut
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Surah navigation */}
       <div className="flex items-center justify-between px-4 py-2 max-w-2xl mx-auto border-b">
@@ -260,6 +395,7 @@ const SurahReader = () => {
                 <div
                   key={ayah.verse_number}
                   id={`ayah-${ayah.verse_number}`}
+                  data-ayah={ayah.verse_number}
                   className={`py-5 border-b border-border/50 ${memorized ? 'bg-primary/5' : ''}`}
                 >
                   {/* Ayah number + actions */}
