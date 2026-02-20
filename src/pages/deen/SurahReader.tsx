@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import {
   BookMarked, ChevronLeft, ChevronRight, BookOpen, Brain,
@@ -8,13 +8,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useQuranPrefs, useQuranBookmarks, useQuranSessions, useQuranMemorization } from '@/hooks/useQuranData';
+import { useQuranPrefs, useQuranBookmarks, useQuranMemorization } from '@/hooks/useQuranData';
 import { fetchAyahs, fetchTafsir, SURAH_NAMES, TRANSLATION_IDS, type Ayah } from '@/lib/quran-api';
 import { toast } from 'sonner';
 
 const AYAHS_PER_PAGE = 25;
 
-// Popular reciters with quran.com audio CDN
 const RECITERS = [
   { id: 7, name: 'Mishary Rashid Alafasy' },
   { id: 5, name: 'Abu Bakr Al-Shatri' },
@@ -24,18 +23,7 @@ const RECITERS = [
   { id: 10, name: 'Saad Al-Ghamdi' },
 ];
 
-function getAudioUrl(reciterId: number, surahNum: number, ayahNum: number) {
-  // quran.com audio CDN pattern
-  const s = String(surahNum).padStart(3, '0');
-  const a = String(ayahNum).padStart(3, '0');
-  return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surahNum === 1 ? ayahNum : SURAH_NAMES.slice(0, surahNum - 1).reduce((acc, s) => acc + s.ayahs, 0) + ayahNum}.mp3`;
-}
-
-// Use verses.quran.com for per-ayah audio
-function getVerseAudioUrl(reciterId: number, surahNum: number, ayahNum: number) {
-  const s = String(surahNum).padStart(3, '0');
-  const a = String(ayahNum).padStart(3, '0');
-  // This CDN serves individual ayah audio files
+function getVerseAudioUrl(_reciterId: number, surahNum: number, ayahNum: number) {
   return `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${SURAH_NAMES.slice(0, surahNum - 1).reduce((sum, su) => sum + su.ayahs, 0) + ayahNum}.mp3`;
 }
 
@@ -48,7 +36,6 @@ const SurahReader = () => {
 
   const { prefs, savePrefs } = useQuranPrefs();
   const { addBookmark, removeBookmark, isBookmarked, bookmarks } = useQuranBookmarks();
-  const { logSession } = useQuranSessions();
   const { toggleMemorized, isMemorized } = useQuranMemorization();
 
   const [ayahs, setAyahs] = useState<Ayah[]>([]);
@@ -64,19 +51,9 @@ const SurahReader = () => {
 
   // Audio
   const [playingAyah, setPlayingAyah] = useState<number | null>(null);
-  const [reciterId, setReciterId] = useState(7); // Alafasy default
+  const [reciterId, setReciterId] = useState(7);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  const sessionStart = useRef(Date.now());
-  const firstAyahRead = useRef(1);
-  const prefsRef = useRef(prefs);
-  const ayahsRef = useRef(ayahs);
-  const numRef = useRef(num);
-
-  // Keep refs in sync
-  useEffect(() => { prefsRef.current = prefs; }, [prefs]);
-  useEffect(() => { ayahsRef.current = ayahs; }, [ayahs]);
-  useEffect(() => { numRef.current = num; }, [num]);
 
   // Calculate initial page from targetAyah
   useEffect(() => {
@@ -99,8 +76,6 @@ const SurahReader = () => {
       toast.error('Failed to load surah');
       setLoading(false);
     });
-    sessionStart.current = Date.now();
-    firstAyahRead.current = (currentPage - 1) * AYAHS_PER_PAGE + 1;
     // Scroll to top on page change
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [num, currentPage, prefs.translation_lang]);
@@ -115,29 +90,13 @@ const SurahReader = () => {
     }
   }, [targetAyah, ayahs]);
 
-  // Save position whenever ayahs load (i.e. on every page/surah change)
+  // Save position whenever ayahs load (always, not just when tracker enabled)
   useEffect(() => {
-    if (prefs.tracker_enabled && ayahs.length > 0) {
+    if (ayahs.length > 0) {
       const lastAyah = ayahs[ayahs.length - 1]?.verse_number || 1;
       savePrefs({ last_surah: num, last_ayah: lastAyah });
     }
-  }, [ayahs, num, prefs.tracker_enabled]);
-
-  // Log session on unmount using refs to avoid stale closures
-  useEffect(() => {
-    return () => {
-      const p = prefsRef.current;
-      const a = ayahsRef.current;
-      const n = numRef.current;
-      if (p.tracker_enabled && a.length > 0) {
-        const lastAyah = a[a.length - 1]?.verse_number || 1;
-        const duration = Math.round((Date.now() - sessionStart.current) / 1000);
-        if (duration > 10) {
-          logSession(n, firstAyahRead.current, n, lastAyah, a.length, duration);
-        }
-      }
-    };
-  }, [logSession]);
+  }, [ayahs, num]);
 
   // Cleanup audio on unmount
   useEffect(() => {

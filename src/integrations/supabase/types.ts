@@ -745,6 +745,36 @@ export type Database = {
         }
         Relationships: []
       }
+      quran_daily_log: {
+        Row: {
+          ayah_number: number | null
+          created_at: string
+          date: string
+          id: string
+          surah_number: number | null
+          target_met: boolean
+          user_id: string
+        }
+        Insert: {
+          ayah_number?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          surah_number?: number | null
+          target_met?: boolean
+          user_id: string
+        }
+        Update: {
+          ayah_number?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          surah_number?: number | null
+          target_met?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       quran_log: {
         Row: {
           created_at: string
@@ -807,12 +837,14 @@ export type Database = {
           created_at: string
           daily_goal_pages: number | null
           daily_memo_goal: number | null
+          daily_target_type: string | null
           font_size: number | null
           id: string
           last_ayah: number | null
           last_surah: number | null
           memorization_enabled: boolean | null
           night_mode: boolean | null
+          target_selected_at: string | null
           tracker_enabled: boolean | null
           translation_lang: string | null
           updated_at: string
@@ -822,12 +854,14 @@ export type Database = {
           created_at?: string
           daily_goal_pages?: number | null
           daily_memo_goal?: number | null
+          daily_target_type?: string | null
           font_size?: number | null
           id?: string
           last_ayah?: number | null
           last_surah?: number | null
           memorization_enabled?: boolean | null
           night_mode?: boolean | null
+          target_selected_at?: string | null
           tracker_enabled?: boolean | null
           translation_lang?: string | null
           updated_at?: string
@@ -837,12 +871,14 @@ export type Database = {
           created_at?: string
           daily_goal_pages?: number | null
           daily_memo_goal?: number | null
+          daily_target_type?: string | null
           font_size?: number | null
           id?: string
           last_ayah?: number | null
           last_surah?: number | null
           memorization_enabled?: boolean | null
           night_mode?: boolean | null
+          target_selected_at?: string | null
           tracker_enabled?: boolean | null
           translation_lang?: string | null
           updated_at?: string

@@ -1,26 +1,23 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen, Search, BookMarked, Star, ChevronRight,
-  Layers, Settings2, Moon, Sun, Flame, Target, Trophy,
-  BarChart3, Brain,
+  BookOpen, Search, BookMarked, ChevronRight, Settings2,
+  CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import SubPageLayout from '@/components/SubPageLayout';
-import ReadingHeatmap from '@/components/quran/ReadingHeatmap';
-import { useQuranPrefs, useQuranBookmarks, useQuranSessions } from '@/hooks/useQuranData';
-import { SURAH_NAMES, TOTAL_AYAHS, TRANSLATION_IDS } from '@/lib/quran-api';
+import { useQuranDailyTarget, useQuranBookmarks } from '@/hooks/useQuranData';
+import { SURAH_NAMES, TRANSLATION_IDS } from '@/lib/quran-api';
 import { toast } from 'sonner';
 
 const IMAN_SIBLINGS = [
@@ -31,34 +28,140 @@ const IMAN_SIBLINGS = [
   { path: '/iman/zakat', label: 'Zakat' },
 ];
 
+// ─── Target definitions ───────────────────────────────────────────────────────
+
+interface TargetOption {
+  key: string;
+  emoji: string;
+  label: string;
+  sublabel: string;
+  dailyAmount: string;
+  completionDays: number | null; // null = ongoing
+}
+
+const TARGETS: TargetOption[] = [
+  { key: 'khatam_30',  emoji: '🏆', label: 'Khatam 30 Juz',  sublabel: 'Complete in 30 days',   dailyAmount: '1 juz/day',        completionDays: 30   },
+  { key: 'khatam_60',  emoji: '⭐', label: 'Khatam 15 Juz',  sublabel: 'Complete in 60 days',   dailyAmount: '½ juz/day',        completionDays: 60   },
+  { key: 'khatam_90',  emoji: '📖', label: 'Khatam 10 Juz',  sublabel: 'Complete in 90 days',   dailyAmount: '~3 pages/day',     completionDays: 90   },
+  { key: 'khatam_180', emoji: '📄', label: 'Khatam 5 Juz',   sublabel: 'Complete in 180 days',  dailyAmount: '~1.5 pages/day',   completionDays: 180  },
+  { key: 'khatam_365', emoji: '📃', label: 'Khatam 1 Juz',   sublabel: 'Complete in 1 year',    dailyAmount: '~⅓ page/day',      completionDays: 365  },
+  { key: 'page_10',    emoji: '📝', label: '10 Pages/day',   sublabel: 'Complete in ~60 days',  dailyAmount: '10 pages',         completionDays: 60   },
+  { key: 'page_1',     emoji: '🌱', label: '1 Page/day',     sublabel: 'Complete in ~600 days', dailyAmount: '1 page',           completionDays: 600  },
+  { key: 'ayah_1',     emoji: '✨', label: '1 Ayah/day',     sublabel: 'Small but consistent',  dailyAmount: '1 ayah',           completionDays: null },
+];
+
+function getEstimatedDate(days: number | null): string {
+  if (!days) return 'Ongoing journey';
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  return `Est. complete: ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
+
+function getTargetDailyLabel(key: string): string {
+  return TARGETS.find(t => t.key === key)?.dailyAmount ?? 'your daily reading';
+}
+
+function getTargetLabel(key: string): string {
+  return TARGETS.find(t => t.key === key)?.label ?? 'your target';
+}
+
+// ─── Calendar component ───────────────────────────────────────────────────────
+
+function QuranCalendar({ log }: { log: { date: string; target_met: boolean }[] }) {
+  const days = useMemo(() => {
+    const result = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().split('T')[0];
+      const entry = log.find(e => e.date === dateStr);
+      result.push({
+        dateStr,
+        day: d.getDate(),
+        isFuture: false,
+        met: entry?.target_met ?? false,
+        hasEntry: !!entry,
+      });
+    }
+    return result;
+  }, [log]);
+
+  return (
+    <div className="grid grid-cols-10 gap-1">
+      {days.map(d => (
+        <div
+          key={d.dateStr}
+          title={d.dateStr}
+          className={`aspect-square rounded-sm text-[8px] flex items-center justify-center font-medium
+            ${d.met
+              ? 'bg-primary text-primary-foreground'
+              : d.hasEntry
+              ? 'bg-destructive/30 text-destructive-foreground'
+              : 'bg-secondary text-muted-foreground'
+            }`}
+        >
+          {d.day}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Progress Ring ────────────────────────────────────────────────────────────
+
+function ProgressRing({ percent, label, sublabel }: { percent: number; label: string; sublabel: string }) {
+  const size = 160;
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference - (Math.min(percent, 100) / 100) * circumference;
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: size, height: size }}>
+        <svg className="-rotate-90" width={size} height={size}>
+          <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--secondary))" strokeWidth={strokeWidth} />
+          <circle
+            cx={size / 2} cy={size / 2} r={radius} fill="none"
+            stroke="hsl(var(--primary))"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            className="transition-all duration-700"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <BookOpen className="h-5 w-5 text-primary mb-1" />
+          <span className="text-2xl font-bold">{Math.round(percent)}%</span>
+        </div>
+      </div>
+      <p className="text-sm font-semibold mt-2">{label}</p>
+      <p className="text-xs text-muted-foreground">{sublabel}</p>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 const QuranReader = () => {
   const navigate = useNavigate();
-  const { prefs, savePrefs, loading: prefsLoading, prompted, setPrompted } = useQuranPrefs();
+  const {
+    prefs, savePrefs, loading,
+    log, isDoneToday, streak, daysDone,
+    markTodayDone, selectTarget,
+  } = useQuranDailyTarget();
   const { bookmarks } = useQuranBookmarks();
-  const { getSessions } = useQuranSessions();
+
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
+  const [markSheetOpen, setMarkSheetOpen] = useState(false);
+  const [markSurah, setMarkSurah] = useState('');
+  const [markAyah, setMarkAyah] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('surah');
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Load sessions for stats
-  useEffect(() => {
-    getSessions(30).then(s => setSessions(s || []));
-  }, []);
-
-  // Show onboarding prompt if first time
-  useEffect(() => {
-    if (!prefsLoading && !prompted) {
-      setShowOnboarding(true);
-    }
-  }, [prefsLoading, prompted]);
-
-  const handleTrackerChoice = async (enable: boolean) => {
-    await savePrefs({ tracker_enabled: enable });
-    setPrompted(true); // This now persists to localStorage
-    setShowOnboarding(false);
-    toast.success(enable ? 'Tracker enabled! Your reading will be tracked automatically.' : 'Got it! You can enable tracking later in settings.');
-  };
+  const targetSelected = !!prefs.target_selected_at;
 
   // Filtered surah list
   const filteredSurahs = useMemo(() => {
@@ -73,160 +176,289 @@ const QuranReader = () => {
 
   // Juz grouping
   const juzList = useMemo(() => {
-    const juzs: { number: number; surahs: string }[] = [];
-    // Approximate juz boundaries
-    const juzStart = [
+    const juzStarts = [
       [1,1],[2,142],[2,253],[3,93],[4,24],[4,148],[5,82],[6,111],[7,88],[8,41],
       [9,93],[11,6],[12,53],[15,1],[17,1],[18,75],[21,1],[23,1],[25,21],[27,56],
       [29,46],[33,31],[36,28],[39,32],[41,47],[46,1],[51,31],[58,1],[67,1],[78,1],
     ];
-    for (let i = 0; i < 30; i++) {
-      const [startS] = juzStart[i];
-      const endS = i < 29 ? juzStart[i + 1][0] : 114;
-      const surahNames = [];
+    return juzStarts.map(([startS], i) => {
+      const endS = i < 29 ? juzStarts[i + 1][0] : 114;
+      const names: string[] = [];
       for (let s = startS; s <= Math.min(endS, 114); s++) {
-        surahNames.push(SURAH_NAMES[s - 1]?.name || '');
+        names.push(SURAH_NAMES[s - 1]?.name || '');
       }
-      juzs.push({ number: i + 1, surahs: surahNames.slice(0, 3).join(', ') + (surahNames.length > 3 ? '...' : '') });
-    }
-    return juzs;
+      return { number: i + 1, surahs: names.slice(0, 3).join(', ') + (names.length > 3 ? '...' : '') };
+    });
   }, []);
 
   // Stats
-  const totalAyahsRead = sessions.reduce((s, r) => s + (r.ayahs_read || 0), 0);
-  const completionPercent = Math.min(100, Math.round((totalAyahsRead / TOTAL_AYAHS) * 100));
-  const todaySessions = sessions.filter(s => s.date === new Date().toISOString().split('T')[0]);
-  const todayPages = todaySessions.reduce((s, r) => s + Number(r.pages_read || 0), 0);
-  const streak = (() => {
-    const dates = new Set(sessions.map(s => s.date));
-    let count = 0;
-    const d = new Date();
-    for (let i = 0; i < 365; i++) {
-      const key = d.toISOString().split('T')[0];
-      if (dates.has(key)) count++;
-      else if (i > 0) break;
-      d.setDate(d.getDate() - 1);
-    }
-    return count;
-  })();
+  const targetDays = TARGETS.find(t => t.key === prefs.daily_target_type)?.completionDays ?? null;
+  const progressPercent = targetDays ? Math.min(100, (daysDone / targetDays) * 100) : 0;
+  const daysRemaining = targetDays ? Math.max(0, targetDays - daysDone) : null;
 
-  if (prefsLoading) {
+  // Achievements
+  const achievements = [
+    { label: 'First Day', emoji: '✅', earned: daysDone >= 1 },
+    { label: '7 Day Streak', emoji: '🔥', earned: streak >= 7 },
+    { label: '30 Day Streak', emoji: '💎', earned: streak >= 30 },
+    { label: 'Khatam Complete', emoji: '🏆', earned: targetDays !== null && daysDone >= (targetDays ?? Infinity) },
+  ];
+
+  const handleBeginJourney = async () => {
+    if (!selectedTarget) {
+      toast.error('Please select a target first');
+      return;
+    }
+    await selectTarget(selectedTarget);
+    toast.success('Your Quran journey begins! Bismillah 🤲');
+  };
+
+  const handleMarkDone = async () => {
+    const surahNum = markSurah ? parseInt(markSurah) : undefined;
+    const ayahNum = markAyah ? parseInt(markAyah) : undefined;
+    await markTodayDone(surahNum, ayahNum);
+    setMarkSheetOpen(false);
+    setMarkSurah('');
+    setMarkAyah('');
+    toast.success('Barakallah! Keep it up 🌟');
+  };
+
+  if (loading) {
     return (
       <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
         <div className="space-y-4">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-lg" />)}
         </div>
       </SubPageLayout>
     );
   }
 
+  // ── View A: Target Onboarding ──────────────────────────────────────────────
+  if (!targetSelected) {
+    return (
+      <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
+        <div className="space-y-5">
+          {/* Quote */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardContent className="p-4 text-center">
+              <Sparkles className="h-5 w-5 text-primary mx-auto mb-2" />
+              <p className="text-xs text-muted-foreground italic leading-relaxed">
+                "The deeds Allah loves most are those that are consistent, even if they are small."
+              </p>
+              <p className="text-[10px] text-muted-foreground mt-1">— Prophet Muhammad ﷺ (Bukhari)</p>
+            </CardContent>
+          </Card>
+
+          {/* Title */}
+          <div className="text-center space-y-1">
+            <h2 className="text-lg font-bold">Start your daily Quran journey</h2>
+            <p className="text-sm text-muted-foreground">Choose a target you can commit to — every single day</p>
+          </div>
+
+          {/* Target cards */}
+          <div className="grid grid-cols-2 gap-2.5">
+            {TARGETS.map(t => (
+              <Card
+                key={t.key}
+                className={`cursor-pointer transition-all ${
+                  selectedTarget === t.key
+                    ? 'border-primary ring-2 ring-primary/30 bg-primary/5'
+                    : 'hover:border-primary/30'
+                }`}
+                onClick={() => setSelectedTarget(t.key)}
+              >
+                <CardContent className="p-3 text-center space-y-1">
+                  <div className="text-2xl">{t.emoji}</div>
+                  <p className="text-xs font-semibold leading-tight">{t.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{t.dailyAmount}</p>
+                  <p className="text-[9px] text-muted-foreground/70">{getEstimatedDate(t.completionDays)}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <p className="text-[10px] text-center text-muted-foreground">
+            ✨ Small but consistent is beloved by Allah
+          </p>
+
+          <Button
+            className="w-full"
+            disabled={!selectedTarget}
+            onClick={handleBeginJourney}
+          >
+            Begin My Journey
+          </Button>
+
+          {/* Skip to reader */}
+          <div className="border-t pt-4">
+            <p className="text-xs text-center text-muted-foreground mb-3">Or go straight to reading</p>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search surah..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 h-9"
+              />
+            </div>
+            {searchQuery && (
+              <div className="mt-2 space-y-1 max-h-48 overflow-y-auto">
+                {filteredSurahs.slice(0, 8).map(surah => (
+                  <Card
+                    key={surah.number}
+                    className="cursor-pointer hover:border-primary/20 transition-all"
+                    onClick={() => navigate(`/iman/quran/read/${surah.number}`)}
+                  >
+                    <CardContent className="p-2 flex items-center gap-2">
+                      <span className="w-6 h-6 rounded bg-secondary flex items-center justify-center text-xs font-bold shrink-0">
+                        {surah.number}
+                      </span>
+                      <span className="text-sm">{surah.name}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </SubPageLayout>
+    );
+  }
+
+  // ── View B: Main Tracker Dashboard ─────────────────────────────────────────
   return (
     <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
       <div className="space-y-4">
 
-        {/* Onboarding Prompt */}
-        {showOnboarding && (
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-            <CardContent className="p-5 text-center space-y-3">
-              <BookOpen className="h-8 w-8 text-primary mx-auto" />
-              <h3 className="text-sm font-semibold">Would you like to track your Quran reading?</h3>
-              <p className="text-xs text-muted-foreground">
-                We'll remember where you left off and help you build a consistent reading habit.
-              </p>
-              <div className="flex gap-2 justify-center pt-1">
-                <Button size="sm" onClick={() => handleTrackerChoice(true)}>
-                  Yes, track my progress
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleTrackerChoice(false)}>
-                  No thanks, just read
-                </Button>
+        {/* Hero Progress Ring */}
+        <div className="flex justify-center py-2">
+          <ProgressRing
+            percent={progressPercent}
+            label={getTargetLabel(prefs.daily_target_type!)}
+            sublabel={targetDays
+              ? `${daysDone} of ${targetDays} days completed`
+              : `${daysDone} days completed`}
+          />
+        </div>
+
+        {/* Today's Target Card */}
+        <Card className={isDoneToday
+          ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-transparent'
+          : ''}>
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+              Today's Target
+            </p>
+            <p className="text-sm font-medium mb-3">
+              {getTargetDailyLabel(prefs.daily_target_type!)}
+            </p>
+            {isDoneToday ? (
+              <div className="flex items-center gap-2 text-primary">
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold">Barakallah! See you tomorrow.</p>
+                  {streak > 0 && (
+                    <p className="text-xs text-muted-foreground">🔥 {streak} day streak</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <Button className="w-full" size="lg" onClick={() => setMarkSheetOpen(true)}>
+                ✅ Mark Today as Done
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-2">
+          <Card>
+            <CardContent className="p-3 text-center">
+              <Calendar className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold">{daysRemaining ?? '∞'}</p>
+              <p className="text-[10px] text-muted-foreground">Days Left</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <Flame className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold">{streak}</p>
+              <p className="text-[10px] text-muted-foreground">Streak</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <Star className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold">{daysDone}</p>
+              <p className="text-[10px] text-muted-foreground">Days Done</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Last Read / Continue Reading */}
+        {prefs.last_surah > 0 && (
+          <Card
+            className="cursor-pointer hover:border-primary/30 transition-all"
+            onClick={() => navigate(`/iman/quran/read/${prefs.last_surah}?ayah=${prefs.last_ayah}`)}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Last Read</p>
+                  <p className="text-sm font-semibold">
+                    {SURAH_NAMES[prefs.last_surah - 1]?.name} · Ayah {prefs.last_ayah}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-xs text-primary font-medium">
+                Continue <ChevronRight className="h-3.5 w-3.5" />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Tracker Stats (when enabled) */}
-        {prefs.tracker_enabled && !showOnboarding && (
-          <>
-            {/* Continue reading */}
-            {prefs.last_surah > 0 && (
-              <Card
-                className="cursor-pointer hover:border-primary/30 transition-all"
-                onClick={() => navigate(`/iman/quran/read/${prefs.last_surah}?ayah=${prefs.last_ayah}`)}
-              >
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Continue Reading</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {SURAH_NAMES[prefs.last_surah - 1]?.name} · Ayah {prefs.last_ayah}
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Quick stats */}
-            <div className="grid grid-cols-3 gap-2">
-              <Card>
-                <CardContent className="p-3 text-center">
-                  <Flame className="h-3.5 w-3.5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{streak}</p>
-                  <p className="text-[9px] text-muted-foreground">Day Streak</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-3 text-center">
-                  <Target className="h-3.5 w-3.5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{todayPages.toFixed(1)}</p>
-                  <p className="text-[9px] text-muted-foreground">Pages Today</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-3 text-center">
-                  <BarChart3 className="h-3.5 w-3.5 text-primary mx-auto mb-1" />
-                  <p className="text-lg font-bold">{completionPercent}%</p>
-                  <p className="text-[9px] text-muted-foreground">Complete</p>
-                </CardContent>
-              </Card>
+        {/* Monthly Calendar (30-day) */}
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Last 30 Days
+            </p>
+            <QuranCalendar log={log} />
+            <div className="flex gap-4 mt-3 justify-end">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-sm bg-primary" />
+                <span className="text-[10px] text-muted-foreground">Done</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-sm bg-secondary" />
+                <span className="text-[10px] text-muted-foreground">Not yet</span>
+              </div>
             </div>
+          </CardContent>
+        </Card>
 
-            {/* Daily goal progress */}
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-xs font-medium">Daily Goal</p>
-                  <span className="text-xs text-primary font-bold">
-                    {todayPages.toFixed(1)} / {prefs.daily_goal_pages} pages
-                  </span>
+        {/* Achievements */}
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Achievements
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {achievements.map(a => (
+                <div key={a.label} className={`text-center p-2 rounded-lg ${a.earned ? 'bg-primary/10' : 'bg-secondary/50 opacity-50'}`}>
+                  <div className="text-xl">{a.emoji}</div>
+                  <p className="text-[9px] mt-1 leading-tight font-medium">{a.label}</p>
                 </div>
-                <Progress value={Math.min(100, (todayPages / prefs.daily_goal_pages) * 100)} className="h-1.5" />
-              </CardContent>
-            </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
-            {/* Reading Heatmap */}
-            <ReadingHeatmap sessions={sessions} />
-          </>
-        )}
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search surah by name or number..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9 h-9"
-          />
-        </div>
-
-        {/* Settings button */}
-        <div className="flex justify-end">
+        {/* Settings + Change Target */}
+        <div className="flex items-center justify-between">
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" size="sm" className="text-xs">
@@ -256,28 +488,42 @@ const QuranReader = () => {
                     className="mt-2"
                   />
                 </div>
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Reading Tracker</Label>
-                  <Switch checked={prefs.tracker_enabled} onCheckedChange={v => savePrefs({ tracker_enabled: v })} />
-                </div>
-                {prefs.tracker_enabled && (
-                  <div>
-                    <Label className="text-xs">Daily Goal (pages)</Label>
-                    <Input
-                      type="number" min={1} max={50}
-                      value={prefs.daily_goal_pages}
-                      onChange={e => savePrefs({ daily_goal_pages: Number(e.target.value) || 4 })}
-                      className="mt-1 h-8"
-                    />
+                <div>
+                  <Label className="text-xs mb-2 block">Change Daily Target</Label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {TARGETS.map(t => (
+                      <Button
+                        key={t.key}
+                        variant={prefs.daily_target_type === t.key ? 'default' : 'outline'}
+                        size="sm"
+                        className="text-xs h-auto py-1.5 justify-start"
+                        onClick={() => savePrefs({ daily_target_type: t.key })}
+                      >
+                        {t.emoji} {t.label}
+                      </Button>
+                    ))}
                   </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs">Memorization Tracker</Label>
-                  <Switch checked={prefs.memorization_enabled} onCheckedChange={v => savePrefs({ memorization_enabled: v })} />
                 </div>
               </div>
             </DialogContent>
           </Dialog>
+          <Trophy className="h-4 w-4 text-muted-foreground/40" />
+        </div>
+
+        {/* Divider */}
+        <div className="border-t pt-2">
+          <p className="text-xs text-muted-foreground text-center mb-3">Browse & Read</p>
+        </div>
+
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search surah by name or number..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 h-9"
+          />
         </div>
 
         {/* Tabs: Surah / Juz / Bookmarks */}
@@ -291,7 +537,6 @@ const QuranReader = () => {
             </TabsTrigger>
           </TabsList>
 
-          {/* Surah List */}
           <TabsContent value="surah" className="mt-3">
             <ScrollArea className="h-[50vh]">
               <div className="space-y-1">
@@ -313,7 +558,7 @@ const QuranReader = () => {
                           </p>
                         </div>
                       </div>
-                      <p className="text-base font-arabic text-right" style={{ fontFamily: 'serif' }}>
+                      <p className="text-base text-right" style={{ fontFamily: 'serif' }}>
                         {surah.arabic}
                       </p>
                     </CardContent>
@@ -323,7 +568,6 @@ const QuranReader = () => {
             </ScrollArea>
           </TabsContent>
 
-          {/* Juz List */}
           <TabsContent value="juz" className="mt-3">
             <ScrollArea className="h-[50vh]">
               <div className="space-y-1">
@@ -332,7 +576,6 @@ const QuranReader = () => {
                     key={juz.number}
                     className="cursor-pointer hover:border-primary/20 transition-all"
                     onClick={() => {
-                      // Navigate to first surah of juz
                       const juzStarts = [1,2,2,3,4,4,5,6,7,8,9,11,12,15,17,18,21,23,25,27,29,33,36,39,41,46,51,58,67,78];
                       navigate(`/iman/quran/read/${juzStarts[juz.number - 1]}`);
                     }}
@@ -355,7 +598,6 @@ const QuranReader = () => {
             </ScrollArea>
           </TabsContent>
 
-          {/* Bookmarks */}
           <TabsContent value="bookmarks" className="mt-3">
             {bookmarks.length === 0 ? (
               <Card>
@@ -394,6 +636,41 @@ const QuranReader = () => {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Mark as Done Sheet */}
+        <Sheet open={markSheetOpen} onOpenChange={setMarkSheetOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Where did you read up to? <span className="text-muted-foreground font-normal text-sm">(optional)</span></SheetTitle>
+            </SheetHeader>
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              <div>
+                <Label className="text-xs mb-1 block">Surah number</Label>
+                <Input
+                  type="number"
+                  min={1} max={114}
+                  placeholder="e.g. 2"
+                  value={markSurah}
+                  onChange={e => setMarkSurah(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">Ayah number</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  placeholder="e.g. 26"
+                  value={markAyah}
+                  onChange={e => setMarkAyah(e.target.value)}
+                />
+              </div>
+            </div>
+            <Button className="w-full" size="lg" onClick={handleMarkDone}>
+              ✅ Done — Mark Today as Complete
+            </Button>
+          </SheetContent>
+        </Sheet>
+
       </div>
     </SubPageLayout>
   );
