@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import {
   ArrowLeft, Settings, Loader2, RefreshCw, Users, Megaphone, Send
 } from 'lucide-react';
+import BottomNav from '@/components/BottomNav';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -34,7 +35,7 @@ const FamilyDashboard = () => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/family')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1 min-w-0">
@@ -56,7 +57,7 @@ const FamilyDashboard = () => {
         </div>
       </div>
 
-      <main className="max-w-lg mx-auto px-4 py-5 space-y-6 pb-24">
+      <main className="max-w-lg mx-auto px-4 py-5 space-y-6 pb-28">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -164,7 +165,8 @@ const FamilyDashboard = () => {
             </section>
           </>
         )}
-      </main>
+    </main>
+      <BottomNav />
     </div>
   );
 };
