@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BookOpen, Search, BookMarked, ChevronRight, Settings2,
   CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
   Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal, RotateCcw,
+  Plus, Pencil, Trash2, ChevronDown,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,9 +17,17 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import SubPageLayout from '@/components/SubPageLayout';
-import { useQuranDailyTarget, useQuranBookmarks } from '@/hooks/useQuranData';
+import { useQuranPrefs, useQuranBookmarks } from '@/hooks/useQuranData';
+import { useQuranReadingLog, type ReadingLogEntry } from '@/hooks/useQuranReadingLog';
 import { SURAH_NAMES, TRANSLATION_IDS } from '@/lib/quran-api';
+import {
+  ayahCountInRange, pageCountInRange, juzSegmentsInRange,
+  globalAyahIndex, pageToSurahAyah, lastAyahOnPage, pageForAyah,
+  advanceByAyahs, endOfSurah, advanceByOnePage, advanceByOneHizb,
+  isValidSurahAyah,
+} from '@/lib/quran-mapping';
 import { toast } from 'sonner';
 
 const IMAN_SIBLINGS = [
@@ -37,7 +46,7 @@ interface TargetOption {
   label: string;
   sublabel: string;
   dailyAmount: string;
-  completionDays: number | null; // null = ongoing
+  completionDays: number | null;
 }
 
 const TARGETS: TargetOption[] = [
@@ -56,65 +65,6 @@ function getEstimatedDate(days: number | null): string {
   const d = new Date();
   d.setDate(d.getDate() + days);
   return `Est. complete: ${d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-}
-
-function getTargetDailyLabel(key: string): string {
-  return TARGETS.find(t => t.key === key)?.dailyAmount ?? 'your daily reading';
-}
-
-function getTargetLabel(key: string): string {
-  return TARGETS.find(t => t.key === key)?.label ?? 'your target';
-}
-
-// ─── Calendar component ───────────────────────────────────────────────────────
-
-function QuranCalendar({ log }: { log: { date: string; target_met: boolean }[] }) {
-  const days = useMemo(() => {
-    const result = [];
-    const today = new Date();
-    for (let i = 27; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-      const entry = log.find(e => e.date === dateStr);
-      result.push({
-        dateStr,
-        day: d.getDate(),
-        met: entry?.target_met ?? false,
-        hasEntry: !!entry,
-      });
-    }
-    return result;
-  }, [log]);
-
-  const DOW_HEADERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-
-  return (
-    <div>
-      <div className="grid grid-cols-7 gap-1.5 mb-1">
-        {DOW_HEADERS.map((h, i) => (
-          <div key={i} className="text-center text-[10px] font-semibold text-muted-foreground">{h}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-1.5">
-        {days.map(d => (
-          <div
-            key={d.dateStr}
-            title={d.dateStr}
-            className={`aspect-square rounded text-[11px] flex items-center justify-center font-medium
-              ${d.met
-                ? 'bg-primary text-primary-foreground'
-                : d.hasEntry
-                ? 'bg-destructive/30 text-destructive-foreground'
-                : 'bg-secondary text-muted-foreground'
-              }`}
-          >
-            {d.day}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
 }
 
 // ─── Progress Ring ────────────────────────────────────────────────────────────
@@ -152,22 +102,75 @@ function ProgressRing({ percent, label, sublabel }: { percent: number; label: st
   );
 }
 
+// ─── Log entry row ────────────────────────────────────────────────────────────
+
+function LogEntryRow({ entry, onEdit, onDelete }: {
+  entry: ReadingLogEntry;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const startName = SURAH_NAMES[entry.start_surah - 1]?.name ?? '';
+  const endName = SURAH_NAMES[entry.end_surah - 1]?.name ?? '';
+  const time = new Date(entry.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const rangeLabel = entry.start_surah === entry.end_surah
+    ? `${startName} ${entry.start_ayah}-${entry.end_ayah}`
+    : `${startName} ${entry.start_ayah} → ${endName} ${entry.end_ayah}`;
+
+  return (
+    <div className="flex items-center justify-between py-2 px-1 group">
+      <div className="flex-1 min-w-0 cursor-pointer" onClick={onEdit}>
+        <p className="text-sm font-medium truncate">{rangeLabel}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {time} · {entry.ayah_count} ayah · {Number(entry.page_count)} pg
+        </p>
+      </div>
+      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onEdit}>
+          <Pencil className="h-3 w-3" />
+        </Button>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={onDelete}>
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 const QuranReader = () => {
   const navigate = useNavigate();
+  const { prefs, savePrefs, loading: prefsLoading } = useQuranPrefs();
   const {
-    prefs, savePrefs, loading,
-    log, isDoneToday, streak, daysDone,
-    markTodayDone, selectTarget,
-  } = useQuranDailyTarget();
+    todayLogs, todayTotalAyahs, todayTotalPages,
+    allTimeTotalAyahs, allTimeTotalPages,
+    hasDoneToday, streak, lastPosition, last7DaysLogs,
+    loading: logLoading, addLog, updateLog, deleteLog, checkOverlap, logs,
+  } = useQuranReadingLog();
   const { bookmarks } = useQuranBookmarks();
 
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
-  const [markSheetOpen, setMarkSheetOpen] = useState(false);
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('surah');
+  const [last7Open, setLast7Open] = useState(false);
 
+  // Log sheet state
+  const [logMode, setLogMode] = useState<'continue' | 'manual'>('continue');
+  const [inputTab, setInputTab] = useState<'ayah' | 'page'>('ayah');
+  const [editingLog, setEditingLog] = useState<ReadingLogEntry | null>(null);
+
+  // Ayah inputs
+  const [fromSurah, setFromSurah] = useState(1);
+  const [fromAyah, setFromAyah] = useState(1);
+  const [toSurah, setToSurah] = useState(1);
+  const [toAyah, setToAyah] = useState(1);
+
+  // Page inputs
+  const [fromPage, setFromPage] = useState(1);
+  const [toPage, setToPage] = useState(1);
+
+  const loading = prefsLoading || logLoading;
   const targetSelected = !!prefs.target_selected_at;
 
   // Filtered surah list
@@ -175,9 +178,7 @@ const QuranReader = () => {
     if (!searchQuery.trim()) return SURAH_NAMES;
     const q = searchQuery.toLowerCase();
     return SURAH_NAMES.filter(s =>
-      s.name.toLowerCase().includes(q) ||
-      s.arabic.includes(q) ||
-      String(s.number).includes(q)
+      s.name.toLowerCase().includes(q) || s.arabic.includes(q) || String(s.number).includes(q)
     );
   }, [searchQuery]);
 
@@ -198,36 +199,151 @@ const QuranReader = () => {
     });
   }, []);
 
-  // Stats
-  const targetDays = TARGETS.find(t => t.key === prefs.daily_target_type)?.completionDays ?? null;
-  const progressPercent = targetDays ? Math.min(100, (daysDone / targetDays) * 100) : 0;
-  const daysRemaining = targetDays ? Math.max(0, targetDays - daysDone) : null;
+  // Khatam progress (based on total ayahs / 6236)
+  const khatamPercent = Math.min(100, (allTimeTotalAyahs / 6236) * 100);
 
-  // Achievements
-  const achievements = [
-    { label: 'First Day',     icon: <CheckCircle2 className="h-5 w-5" />, earned: daysDone >= 1 },
-    { label: '7 Day Streak',  icon: <Flame className="h-5 w-5" />,        earned: streak >= 7 },
-    { label: '30 Day Streak', icon: <Award className="h-5 w-5" />,        earned: streak >= 30 },
-    { label: 'Khatam',        icon: <Medal className="h-5 w-5" />,        earned: targetDays !== null && daysDone >= (targetDays ?? Infinity) },
-  ];
+  // Open log sheet
+  const openLogSheet = useCallback((editEntry?: ReadingLogEntry) => {
+    if (editEntry) {
+      setEditingLog(editEntry);
+      setLogMode('manual');
+      setInputTab('ayah');
+      setFromSurah(editEntry.start_surah);
+      setFromAyah(editEntry.start_ayah);
+      setToSurah(editEntry.end_surah);
+      setToAyah(editEntry.end_ayah);
+    } else {
+      setEditingLog(null);
+      setLogMode('continue');
+      setInputTab('ayah');
+      setFromSurah(lastPosition.surah);
+      setFromAyah(lastPosition.ayah);
+      // Default "To" = same as from (user will adjust)
+      setToSurah(lastPosition.surah);
+      setToAyah(lastPosition.ayah);
+      setFromPage(pageForAyah(lastPosition.surah, lastPosition.ayah));
+      setToPage(pageForAyah(lastPosition.surah, lastPosition.ayah));
+    }
+    setLogSheetOpen(true);
+  }, [lastPosition]);
+
+  // Live summary calculation
+  const liveSummary = useMemo(() => {
+    let sS: number, sA: number, eS: number, eA: number;
+    if (inputTab === 'page') {
+      const from = pageToSurahAyah(fromPage);
+      const to = lastAyahOnPage(toPage);
+      sS = from.surah; sA = from.ayah; eS = to.surah; eA = to.ayah;
+    } else {
+      sS = logMode === 'continue' ? lastPosition.surah : fromSurah;
+      sA = logMode === 'continue' ? lastPosition.ayah : fromAyah;
+      eS = toSurah; eA = toAyah;
+    }
+
+    // Auto-swap if from > to
+    const fromGi = globalAyahIndex(sS, sA);
+    const toGi = globalAyahIndex(eS, eA);
+    if (fromGi > toGi) {
+      [sS, sA, eS, eA] = [eS, eA, sS, sA];
+    }
+
+    const ayahs = ayahCountInRange(sS, sA, eS, eA);
+    const pages = pageCountInRange(sS, sA, eS, eA);
+    const juz = juzSegmentsInRange(sS, sA, eS, eA);
+    return { ayahs, pages, juz, startS: sS, startA: sA, endS: eS, endA: eA };
+  }, [inputTab, fromPage, toPage, logMode, lastPosition, fromSurah, fromAyah, toSurah, toAyah]);
+
+  // Quick buttons
+  const applyQuick = useCallback((fn: (s: number, a: number) => { surah: number; ayah: number }) => {
+    const from = logMode === 'continue' ? lastPosition : { surah: fromSurah, ayah: fromAyah };
+    const result = fn(from.surah, from.ayah);
+    setToSurah(result.surah);
+    setToAyah(result.ayah);
+  }, [logMode, lastPosition, fromSurah, fromAyah]);
+
+  // Save handler
+  const handleSave = async () => {
+    const { startS, startA, endS, endA, ayahs, pages, juz } = liveSummary;
+    if (ayahs <= 0) {
+      toast.error('Please select a valid range');
+      return;
+    }
+
+    // Check overlap
+    const overlaps = checkOverlap(startS, startA, endS, endA);
+    const editId = editingLog?.id;
+    const realOverlaps = overlaps.filter(o => o.id !== editId);
+
+    if (realOverlaps.length > 0) {
+      // For now, keep both (user can delete manually)
+      toast.info('Note: This range overlaps with an existing log entry.');
+    }
+
+    const logType = inputTab === 'page' ? 'page' : logMode;
+
+    if (editingLog) {
+      await updateLog(editingLog.id, {
+        start_surah: startS,
+        start_ayah: startA,
+        end_surah: endS,
+        end_ayah: endA,
+        log_type: logType,
+      });
+      toast.success(`Updated: ${ayahs} ayah, ${pages} pages`);
+    } else {
+      await addLog({
+        log_type: logType,
+        start_surah: startS,
+        start_ayah: startA,
+        end_surah: endS,
+        end_ayah: endA,
+      });
+      const streakMsg = streak > 0 ? ` · ${streak + 1}-day streak 🔥` : '';
+      toast.success(`MashaAllah! You read ${ayahs} ayah${streakMsg}`);
+    }
+
+    setLogSheetOpen(false);
+  };
+
+  // Delete with undo
+  const handleDelete = (entry: ReadingLogEntry) => {
+    deleteLog(entry.id);
+    toast('Log deleted', {
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          addLog({
+            log_type: entry.log_type,
+            start_surah: entry.start_surah,
+            start_ayah: entry.start_ayah,
+            end_surah: entry.end_surah,
+            end_ayah: entry.end_ayah,
+          });
+        },
+      },
+      duration: 5000,
+    });
+  };
 
   const handleBeginJourney = async () => {
     if (!selectedTarget) {
       toast.error('Please select a target first');
       return;
     }
-    await selectTarget(selectedTarget);
+    await savePrefs({
+      daily_target_type: selectedTarget,
+      target_selected_at: new Date().toISOString(),
+    });
     toast.success('Your Quran journey begins! Bismillah 🤲');
   };
 
-  const handleMarkDone = async () => {
-    // Use auto-filled last position from prefs — no manual input needed
-    const surahNum = prefs.last_surah > 0 ? prefs.last_surah : undefined;
-    const ayahNum = prefs.last_ayah > 0 ? prefs.last_ayah : undefined;
-    await markTodayDone(surahNum, ayahNum);
-    setMarkSheetOpen(false);
-    toast.success('Barakallah! Keep it up 🌟');
-  };
+  // Stats
+  const achievements = [
+    { label: 'First Day', icon: <CheckCircle2 className="h-5 w-5" />, earned: allTimeTotalAyahs >= 1 },
+    { label: '7 Day Streak', icon: <Flame className="h-5 w-5" />, earned: streak >= 7 },
+    { label: '30 Day Streak', icon: <Award className="h-5 w-5" />, earned: streak >= 30 },
+    { label: 'Khatam', icon: <Medal className="h-5 w-5" />, earned: allTimeTotalAyahs >= 6236 },
+  ];
 
   if (loading) {
     return (
@@ -244,7 +360,6 @@ const QuranReader = () => {
     return (
       <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
         <div className="space-y-5">
-          {/* Quote */}
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardContent className="p-4 text-center">
               <Sparkles className="h-5 w-5 text-primary mx-auto mb-2" />
@@ -255,13 +370,11 @@ const QuranReader = () => {
             </CardContent>
           </Card>
 
-          {/* Title */}
           <div className="text-center space-y-1">
             <h2 className="text-lg font-bold">Start your daily Quran journey</h2>
             <p className="text-sm text-muted-foreground">Choose a target you can commit to — every single day</p>
           </div>
 
-          {/* Target cards */}
           <div className="grid grid-cols-2 gap-2.5">
             {TARGETS.map(t => (
               <Card
@@ -287,15 +400,10 @@ const QuranReader = () => {
             <Sparkles className="h-3 w-3" /> Small but consistent is beloved by Allah
           </p>
 
-          <Button
-            className="w-full"
-            disabled={!selectedTarget}
-            onClick={handleBeginJourney}
-          >
+          <Button className="w-full" disabled={!selectedTarget} onClick={handleBeginJourney}>
             Begin My Journey
           </Button>
 
-          {/* Skip to reader */}
           <div className="border-t pt-4">
             <p className="text-xs text-center text-muted-foreground mb-3">Or go straight to reading</p>
             <div className="relative">
@@ -332,46 +440,63 @@ const QuranReader = () => {
   }
 
   // ── View B: Main Tracker Dashboard ─────────────────────────────────────────
+
+  // Group last 7 days logs by date
+  const last7ByDate = last7DaysLogs.reduce<Record<string, ReadingLogEntry[]>>((acc, l) => {
+    (acc[l.date] = acc[l.date] || []).push(l);
+    return acc;
+  }, {});
+
   return (
     <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
       <div className="space-y-4">
 
-        {/* Hero Progress Ring */}
+        {/* Khatam Progress Ring */}
         <div className="flex justify-center py-2">
           <ProgressRing
-            percent={progressPercent}
-            label={getTargetLabel(prefs.daily_target_type!)}
-            sublabel={targetDays
-              ? `${daysDone} of ${targetDays} days completed`
-              : `${daysDone} days completed`}
+            percent={khatamPercent}
+            label="Khatam Progress"
+            sublabel={`${allTimeTotalAyahs} of 6,236 ayahs read`}
           />
         </div>
 
-        {/* Today's Target Card */}
-        <Card className={isDoneToday
-          ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-transparent'
-          : ''}>
+        {/* Log Reading Button */}
+        <Button className="w-full flex items-center gap-2" size="lg" onClick={() => openLogSheet()}>
+          <Plus className="h-4 w-4" /> Log Reading
+        </Button>
+
+        {/* Today's Reading Summary */}
+        <Card className={hasDoneToday ? 'border-primary/30 bg-gradient-to-br from-primary/5 to-transparent' : ''}>
           <CardContent className="p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-              Today's Target
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+              Today's Reading
             </p>
-            <p className="text-sm font-medium mb-3">
-              {getTargetDailyLabel(prefs.daily_target_type!)}
-            </p>
-            {isDoneToday ? (
-              <div className="flex items-center gap-2 text-primary">
-                <CheckCircle2 className="h-5 w-5 shrink-0" />
-                <div>
-                  <p className="text-sm font-semibold">Barakallah! See you tomorrow.</p>
-                  {streak > 0 && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3" /> {streak} day streak</p>
-                  )}
+            {hasDoneToday ? (
+              <>
+                <div className="flex items-center gap-3 mb-3">
+                  <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                  <div>
+                    <p className="text-sm font-semibold">{todayTotalAyahs} ayah · {todayTotalPages} pages</p>
+                    {streak > 0 && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Flame className="h-3 w-3" /> {streak} day streak
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-0.5 border-t pt-2">
+                  {todayLogs.map(entry => (
+                    <LogEntryRow
+                      key={entry.id}
+                      entry={entry}
+                      onEdit={() => openLogSheet(entry)}
+                      onDelete={() => handleDelete(entry)}
+                    />
+                  ))}
+                </div>
+              </>
             ) : (
-              <Button className="w-full flex items-center gap-2" size="lg" onClick={() => setMarkSheetOpen(true)}>
-                <CheckCircle2 className="h-4 w-4" /> Mark Today as Done
-              </Button>
+              <p className="text-sm text-muted-foreground">No reading logged yet today. Tap "Log Reading" to start!</p>
             )}
           </CardContent>
         </Card>
@@ -380,9 +505,16 @@ const QuranReader = () => {
         <div className="grid grid-cols-3 gap-2">
           <Card>
             <CardContent className="p-3 text-center">
-              <Calendar className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{daysRemaining ?? '∞'}</p>
-              <p className="text-[10px] text-muted-foreground">Days Left</p>
+              <BookOpen className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold">{allTimeTotalAyahs}</p>
+              <p className="text-[10px] text-muted-foreground">Total Ayahs</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-3 text-center">
+              <FileText className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold">{allTimeTotalPages}</p>
+              <p className="text-[10px] text-muted-foreground">Total Pages</p>
             </CardContent>
           </Card>
           <Card>
@@ -392,20 +524,13 @@ const QuranReader = () => {
               <p className="text-[10px] text-muted-foreground">Streak</p>
             </CardContent>
           </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Star className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{daysDone}</p>
-              <p className="text-[10px] text-muted-foreground">Days Done</p>
-            </CardContent>
-          </Card>
         </div>
 
-        {/* Last Read / Continue Reading */}
-        {prefs.last_surah > 0 && (
+        {/* Last Read / Continue */}
+        {lastPosition.surah > 0 && (
           <Card
             className="cursor-pointer hover:border-primary/30 transition-all"
-            onClick={() => navigate(`/iman/quran/read/${prefs.last_surah}?ayah=${prefs.last_ayah}`)}
+            onClick={() => navigate(`/iman/quran/read/${lastPosition.surah}?ayah=${lastPosition.ayah}`)}
           >
             <CardContent className="p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -415,7 +540,7 @@ const QuranReader = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">Last Read</p>
                   <p className="text-sm font-semibold">
-                    {SURAH_NAMES[prefs.last_surah - 1]?.name} · Ayah {prefs.last_ayah}
+                    {SURAH_NAMES[lastPosition.surah - 1]?.name} · Ayah {lastPosition.ayah}
                   </p>
                 </div>
               </div>
@@ -426,25 +551,38 @@ const QuranReader = () => {
           </Card>
         )}
 
-        {/* Monthly Calendar (30-day) */}
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Last 30 Days
-            </p>
-            <QuranCalendar log={log} />
-            <div className="flex gap-4 mt-3 justify-end">
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-sm bg-primary" />
-                <span className="text-[10px] text-muted-foreground">Done</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded-sm bg-secondary" />
-                <span className="text-[10px] text-muted-foreground">Not yet</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Last 7 Days (collapsible) */}
+        {Object.keys(last7ByDate).length > 0 && (
+          <Collapsible open={last7Open} onOpenChange={setLast7Open}>
+            <Card>
+              <CardContent className="p-4">
+                <CollapsibleTrigger className="flex items-center justify-between w-full">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Last 7 Days
+                  </p>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${last7Open ? 'rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 space-y-3">
+                  {Object.entries(last7ByDate).sort(([a], [b]) => b.localeCompare(a)).map(([date, entries]) => (
+                    <div key={date}>
+                      <p className="text-xs font-medium text-muted-foreground mb-1">
+                        {new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                      {entries.map(entry => (
+                        <LogEntryRow
+                          key={entry.id}
+                          entry={entry}
+                          onEdit={() => openLogSheet(entry)}
+                          onDelete={() => handleDelete(entry)}
+                        />
+                      ))}
+                    </div>
+                  ))}
+                </CollapsibleContent>
+              </CardContent>
+            </Card>
+          </Collapsible>
+        )}
 
         {/* Achievements */}
         <Card>
@@ -463,7 +601,7 @@ const QuranReader = () => {
           </CardContent>
         </Card>
 
-        {/* Settings + Change Target */}
+        {/* Settings */}
         <div className="flex items-center justify-between">
           <Dialog>
             <DialogTrigger asChild>
@@ -657,30 +795,170 @@ const QuranReader = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Mark as Done Sheet — auto-filled from last saved position */}
-        <Sheet open={markSheetOpen} onOpenChange={setMarkSheetOpen}>
-          <SheetContent side="bottom" className="rounded-t-2xl pb-8">
-            <SheetHeader className="mb-4">
-              <SheetTitle>Tandai hari ini selesai?</SheetTitle>
+        {/* ── Log Reading Sheet ─────────────────────────────────────────────── */}
+        <Sheet open={logSheetOpen} onOpenChange={setLogSheetOpen}>
+          <SheetContent side="bottom" className="rounded-t-2xl pb-8 max-h-[85vh] overflow-y-auto">
+            <SheetHeader className="mb-3">
+              <SheetTitle>{editingLog ? 'Edit Reading Log' : 'Log Reading'}</SheetTitle>
             </SheetHeader>
 
-            {prefs.last_surah > 0 ? (
-              <div className="bg-secondary/60 rounded-xl p-4 mb-5 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Posisi terakhir</p>
-                <p className="text-base font-semibold text-foreground">
-                  {SURAH_NAMES[prefs.last_surah - 1]?.name ?? `Surah ${prefs.last_surah}`}
-                  {' '}·{' '}
-                  Ayat {prefs.last_ayah}
-                </p>
-              </div>
+            {/* Input tabs: By Ayah / By Page */}
+            <Tabs value={inputTab} onValueChange={v => setInputTab(v as any)} className="mb-3">
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="ayah">📖 By Ayah</TabsTrigger>
+                <TabsTrigger value="page">📄 By Page</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {inputTab === 'ayah' ? (
+              <>
+                {/* Mode toggle */}
+                {!editingLog && (
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      variant={logMode === 'continue' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => setLogMode('continue')}
+                    >
+                      Continue
+                    </Button>
+                    <Button
+                      variant={logMode === 'manual' ? 'default' : 'outline'}
+                      size="sm"
+                      className="flex-1 text-xs"
+                      onClick={() => setLogMode('manual')}
+                    >
+                      Manual Range
+                    </Button>
+                  </div>
+                )}
+
+                {/* From */}
+                <div className="mb-3">
+                  <Label className="text-xs text-muted-foreground">From</Label>
+                  {logMode === 'continue' && !editingLog ? (
+                    <div className="bg-secondary/60 rounded-lg p-2.5 mt-1">
+                      <p className="text-sm font-medium">
+                        {SURAH_NAMES[lastPosition.surah - 1]?.name} · Ayah {lastPosition.ayah}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2 mt-1">
+                      <Select value={String(fromSurah)} onValueChange={v => { setFromSurah(Number(v)); setFromAyah(1); }}>
+                        <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue /></SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {SURAH_NAMES.map(s => (
+                            <SelectItem key={s.number} value={String(s.number)}>
+                              {s.number}. {s.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={SURAH_NAMES[fromSurah - 1]?.ayahs ?? 1}
+                        value={fromAyah}
+                        onChange={e => setFromAyah(Math.max(1, Number(e.target.value)))}
+                        className="w-20 h-9 text-xs"
+                        placeholder="Ayah"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* To */}
+                <div className="mb-3">
+                  <Label className="text-xs text-muted-foreground">To</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Select value={String(toSurah)} onValueChange={v => { setToSurah(Number(v)); setToAyah(1); }}>
+                      <SelectTrigger className="flex-1 h-9 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {SURAH_NAMES.map(s => (
+                          <SelectItem key={s.number} value={String(s.number)}>
+                            {s.number}. {s.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={SURAH_NAMES[toSurah - 1]?.ayahs ?? 1}
+                      value={toAyah}
+                      onChange={e => setToAyah(Math.max(1, Number(e.target.value)))}
+                      className="w-20 h-9 text-xs"
+                      placeholder="Ayah"
+                    />
+                  </div>
+                </div>
+
+                {/* Quick buttons */}
+                {!editingLog && (
+                  <div className="flex flex-wrap gap-1.5 mb-4">
+                    <Button variant="outline" size="sm" className="text-[10px] h-7 px-2"
+                      onClick={() => applyQuick((s, a) => advanceByAyahs(s, a, 5))}>+5 ayah</Button>
+                    <Button variant="outline" size="sm" className="text-[10px] h-7 px-2"
+                      onClick={() => applyQuick((s, a) => advanceByAyahs(s, a, 10))}>+10 ayah</Button>
+                    <Button variant="outline" size="sm" className="text-[10px] h-7 px-2"
+                      onClick={() => applyQuick((s, _a) => endOfSurah(s))}>End of surah</Button>
+                    <Button variant="outline" size="sm" className="text-[10px] h-7 px-2"
+                      onClick={() => applyQuick(advanceByOnePage)}>1 page</Button>
+                    <Button variant="outline" size="sm" className="text-[10px] h-7 px-2"
+                      onClick={() => applyQuick(advanceByOneHizb)}>1 hizb</Button>
+                  </div>
+                )}
+              </>
             ) : (
-              <p className="text-sm text-muted-foreground mb-5 text-center">
-                Belum ada posisi tersimpan — target hari ini akan ditandai selesai.
-              </p>
+              /* By Page tab */
+              <div className="mb-4 space-y-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">From Page</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={604}
+                    value={fromPage}
+                    onChange={e => setFromPage(Math.max(1, Math.min(604, Number(e.target.value))))}
+                    className="mt-1 h-9"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">To Page</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={604}
+                    value={toPage}
+                    onChange={e => setToPage(Math.max(1, Math.min(604, Number(e.target.value))))}
+                    className="mt-1 h-9"
+                  />
+                </div>
+              </div>
             )}
 
-            <Button className="w-full flex items-center gap-2" size="lg" onClick={handleMarkDone}>
-              <CheckCircle2 className="h-4 w-4" /> Confirm ✓
+            {/* Live Summary */}
+            <Card className="mb-4 border-primary/20 bg-primary/5">
+              <CardContent className="p-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">Reading Summary</p>
+                <div className="space-y-1">
+                  <p className="text-sm flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {liveSummary.ayahs} ayah
+                  </p>
+                  <p className="text-sm flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {liveSummary.pages} pages
+                  </p>
+                  <p className="text-sm flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
+                    Juz {liveSummary.juz.join(', ')} {liveSummary.juz.length > 1 ? '' : '(partial)'}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button className="w-full" size="lg" onClick={handleSave} disabled={liveSummary.ayahs <= 0}>
+              {editingLog ? 'Update Reading' : 'Save Reading'}
             </Button>
           </SheetContent>
         </Sheet>
