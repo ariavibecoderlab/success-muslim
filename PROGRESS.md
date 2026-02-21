@@ -98,9 +98,15 @@
 | IF Fasting Stages | ✅ | 11 levels (0-72h) with scientific + Islamic framing, stage card, timeline, progress tracking |
 | IF Custom Fast Fix | ✅ | Set Duration (quick-pick) or Set End Time options — all fasts have countdown |
 | IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button |
-| IF Dashboard Widget Enhanced | ✅ | Shows current level badge, stage name, next level countdown |
+| IF Dashboard Widget Enhanced | ✅ | Active: elapsed HH:MM:SS, level badge, end time, progress %, next stage. Inactive: last fast, streak count |
 | IF Timeline Auto-scroll | ✅ | Auto-slides to current level, size differentiation (current=large+ring, completed=small+filled, future=greyed) |
-| IF Level-Up Notifications | ✅ | Sonner toast + browser push notification when new fasting stage reached |
+| IF Level-Up Notifications | ✅ | Sonner toast + browser push + haptic vibration when new fasting stage reached |
+| IF Health Onboarding | ✅ | 11-screen assessment (goal, gender, age, height, weight, BMI, eating, sleep, activity, experience, report) → `user_health_profiles` DB |
+| IF Active Screen Redesign | ✅ | Premium "You're fasting!" screen: timer ring with color shifts, education cards, tips, FAQ, challenges, confirmation dialog |
+| IF Calendar Heatmap | ✅ | Monthly fasting heatmap + streak counter + weekly stats |
+| IF Streak Celebration | ✅ | Full-screen milestone popup (1/3/7/14/21/30 days) with animated flame + weekly calendar |
+| IF Educational Content | ✅ | Horizontal scrollable cards per stage, fasting tips with Islamic framing, rotating FAQ |
+| IF Fasting Challenges | ✅ | 7-day/14-day/Ramadan challenges with auto-tracked progress from localStorage |
 | Steps Tracker | ✅ | Manual step logging, progress ring, weekly chart, targets, streak, milestones, DB sync |
 | Sleep & Wake targets | ✅ | Configurable targets |
 
