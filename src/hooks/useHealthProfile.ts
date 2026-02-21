@@ -27,14 +27,16 @@ export function useHealthProfile() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
+  const userId = user?.id;
 
-    const fetch = async () => {
+  useEffect(() => {
+    if (!userId) { setLoading(false); return; }
+
+    const fetchProfile = async () => {
       const { data } = await supabase
         .from('user_health_profiles')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .maybeSingle();
 
       if (data) {
@@ -43,14 +45,14 @@ export function useHealthProfile() {
       }
       setLoading(false);
     };
-    fetch();
-  }, [user]);
+    fetchProfile();
+  }, [userId]);
 
   const saveProfile = async (updates: Partial<HealthProfile>) => {
-    if (!user) return;
+    if (!userId) return;
     const { data } = await supabase
       .from('user_health_profiles')
-      .upsert({ user_id: user.id, ...updates } as any, { onConflict: 'user_id' })
+      .upsert({ user_id: userId, ...updates } as any, { onConflict: 'user_id' })
       .select()
       .single();
     if (data) {
