@@ -1487,6 +1487,78 @@ export type Database = {
         }
         Relationships: []
       }
+      steps_logs: {
+        Row: {
+          activity_type: string
+          calories_burned: number
+          created_at: string
+          date: string
+          distance_meters: number
+          id: string
+          logged_at: string
+          source: string
+          steps: number
+          user_id: string
+        }
+        Insert: {
+          activity_type?: string
+          calories_burned?: number
+          created_at?: string
+          date: string
+          distance_meters?: number
+          id?: string
+          logged_at?: string
+          source?: string
+          steps: number
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          calories_burned?: number
+          created_at?: string
+          date?: string
+          distance_meters?: number
+          id?: string
+          logged_at?: string
+          source?: string
+          steps?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      steps_preferences: {
+        Row: {
+          created_at: string
+          daily_target: number
+          id: string
+          reminder_enabled: boolean
+          reminder_time: string | null
+          stride_length_cm: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_target?: number
+          id?: string
+          reminder_enabled?: boolean
+          reminder_time?: string | null
+          stride_length_cm?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_target?: number
+          id?: string
+          reminder_enabled?: boolean
+          reminder_time?: string | null
+          stride_length_cm?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       sunnah_log: {
         Row: {
           completed_items: Json

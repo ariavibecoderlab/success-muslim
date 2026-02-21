@@ -96,6 +96,7 @@
 | Sunnah Fasting Calendar | ✅ | DB sync |
 | IF Timer | ✅ | DB sync, custom duration picker |
 | IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button |
+| Steps Tracker | ✅ | Manual step logging, progress ring, weekly chart, targets, streak, milestones, DB sync |
 | Sleep & Wake targets | ✅ | Configurable targets |
 
 ---

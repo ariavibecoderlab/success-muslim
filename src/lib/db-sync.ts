@@ -549,3 +549,60 @@ export async function hydrateFromDatabase(): Promise<void> {
     console.warn('[db-sync] Hydration failed:', err);
   }
 }
+
+// =============================================
+// HEALTH: STEPS
+// =============================================
+
+export function syncStepLog(date: string, steps: number, activityType: string, distanceMeters: number, caloriesBurned: number, loggedAt: string) {
+  syncAsync(async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+    await supabase.from('steps_logs').insert({
+      user_id: userId, date, steps, activity_type: activityType,
+      distance_meters: distanceMeters, calories_burned: caloriesBurned, logged_at: loggedAt, source: 'manual',
+    });
+  });
+}
+
+export function syncStepLogDelete(id: string) {
+  syncAsync(async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+    await supabase.from('steps_logs').delete().eq('id', id).eq('user_id', userId);
+  });
+}
+
+export function syncStepsPrefs(dailyTarget: number, strideLengthCm: number, reminderEnabled: boolean, reminderTime: string | null) {
+  syncAsync(async () => {
+    const userId = await getUserId();
+    if (!userId) return;
+    await supabase.from('steps_preferences').upsert({
+      user_id: userId, daily_target: dailyTarget, stride_length_cm: strideLengthCm,
+      reminder_enabled: reminderEnabled, reminder_time: reminderTime,
+    }, { onConflict: 'user_id' });
+  });
+}
+
+export async function pullStepsLogs(): Promise<any[] | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data } = await supabase.from('steps_logs').select('*').eq('user_id', userId).order('logged_at', { ascending: false });
+  if (!data || data.length === 0) return null;
+  return data.map(r => ({
+    id: r.id, date: r.date, steps: r.steps, activityType: r.activity_type,
+    distanceMeters: Number(r.distance_meters), caloriesBurned: Number(r.calories_burned),
+    loggedAt: r.logged_at, source: r.source,
+  }));
+}
+
+export async function pullStepsPrefs(): Promise<any | null> {
+  const userId = await getUserId();
+  if (!userId) return null;
+  const { data } = await supabase.from('steps_preferences').select('*').eq('user_id', userId).single();
+  if (!data) return null;
+  return {
+    dailyTarget: data.daily_target, strideLengthCm: Number(data.stride_length_cm),
+    reminderEnabled: data.reminder_enabled, reminderTime: data.reminder_time,
+  };
+}

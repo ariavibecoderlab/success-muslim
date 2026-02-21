@@ -12,6 +12,7 @@ const HEALTH_SIBLINGS = [
   { path: '/health/weight', label: 'Weight' },
   { path: '/health/hydration', label: 'Hydration' },
   { path: '/health/sleep', label: 'Sleep' },
+  { path: '/health/steps', label: 'Steps' },
   { path: '/health/fasting', label: 'Fasting' },
   { path: '/health/if-timer', label: 'IF Timer' },
 ];
