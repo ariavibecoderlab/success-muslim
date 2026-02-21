@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup } from '@/lib/health-storage';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
 import FastingCalendarHeatmap from '@/components/health/FastingCalendarHeatmap';
 import FastingTimerRing from '@/components/health/FastingTimerRing';
@@ -175,14 +176,21 @@ const HealthIFTimer = () => {
         {active && !showCustom && (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold">You're fasting!</h2>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between"
+            >
+              <div>
+                <h2 className="text-xl font-black tracking-tight">You're fasting!</h2>
+                <p className="text-xs text-muted-foreground">Stay strong — your body is healing</p>
+              </div>
               <div className="flex items-center gap-2">
-                <button onClick={handleQuickWater} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80">
+                <button onClick={handleQuickWater} className="w-9 h-9 rounded-full bg-secondary/80 flex items-center justify-center hover:bg-secondary transition-colors">
                   <Droplets className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
-            </div>
+            </motion.div>
 
             {/* Educational Cards */}
             {currentStage && <FastingEducationCards level={currentStage.level} />}
@@ -197,21 +205,23 @@ const HealthIFTimer = () => {
             />
 
             {/* Start/End Timeline */}
-            <div className="flex items-center gap-4 px-2">
-              <div className="flex items-center gap-2 flex-1">
-                <div className="w-3 h-3 rounded-full bg-primary" />
+            <div className="flex items-center gap-3 px-3 py-3 rounded-xl bg-secondary/40">
+              <div className="flex items-center gap-2.5 flex-1">
+                <div className="w-3 h-3 rounded-full bg-primary shadow-sm shadow-primary/30" />
                 <div>
-                  <p className="text-[10px] text-muted-foreground">Start</p>
-                  <p className="text-xs font-semibold">{format(new Date(active.startTime), 'HH:mm, dd MMM')}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Started</p>
+                  <p className="text-xs font-bold">{format(new Date(active.startTime), 'HH:mm')}</p>
                 </div>
               </div>
-              <div className="flex-1 h-px bg-border" />
-              <div className="flex items-center gap-2 flex-1 justify-end">
+              <div className="flex-1 flex items-center">
+                <div className="w-full h-[2px] bg-gradient-to-r from-primary/40 via-primary/20 to-border rounded-full" />
+              </div>
+              <div className="flex items-center gap-2.5 flex-1 justify-end">
                 <div>
-                  <p className="text-[10px] text-muted-foreground text-right">End (expected)</p>
-                  <p className="text-xs font-semibold text-right">{endTime ? format(endTime, 'HH:mm, dd MMM') : '—'}</p>
+                  <p className="text-[10px] text-muted-foreground text-right font-medium">Goal</p>
+                  <p className="text-xs font-bold text-right">{endTime ? format(endTime, 'HH:mm') : '—'}</p>
                 </div>
-                <div className="w-3 h-3 rounded-full border-2 border-muted-foreground" />
+                <div className="w-3 h-3 rounded-full border-2 border-muted-foreground/40" />
               </div>
             </div>
 
@@ -229,14 +239,14 @@ const HealthIFTimer = () => {
             <FastingChallenges sessions={sessions} />
 
             {/* End Fasting */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button variant="outline" onClick={handleDeleteFast}
-                className="gap-2 border-destructive text-destructive hover:bg-destructive/10 flex-1">
+                className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 flex-1">
                 <Trash2 className="h-4 w-4" /> Cancel
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button className="gap-2 flex-1">
+                  <Button className="gap-2 flex-1 shadow-md shadow-primary/20">
                     <Square className="h-4 w-4" /> {remaining <= 0 ? 'Complete Fast' : 'End Fast'}
                   </Button>
                 </AlertDialogTrigger>
@@ -246,7 +256,7 @@ const HealthIFTimer = () => {
                     <AlertDialogDescription>
                       {remaining > 0
                         ? 'You still have time remaining. Are you sure you want to end early?'
-                        : 'Congratulations! Your fasting goal is complete.'}
+                        : 'Congratulations! Your fasting goal is complete. 🎉'}
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -262,35 +272,45 @@ const HealthIFTimer = () => {
         {/* ===== INACTIVE VIEW ===== */}
         {!active && !showCustom && (
           <>
+            {/* Mode selector pills */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
               {MODES.map(m => (
                 <button key={m.label} onClick={() => { setSelectedMode(m); setShowCustom(false); }}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    selectedMode.label === m.label ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
+                  className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
+                    selectedMode.label === m.label
+                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105'
+                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                   }`}>{m.label}</button>
               ))}
               <button onClick={() => setShowCustom(true)}
-                className="flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5 bg-secondary text-secondary-foreground">
+                className="flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80">
                 <Settings2 className="h-3.5 w-3.5" /> Custom
               </button>
             </div>
 
             {/* Timer ring (inactive) */}
-            <div className="flex flex-col items-center">
-              <div className="relative w-52 h-52">
-                <svg className="w-52 h-52 -rotate-90" viewBox="0 0 160 160">
-                  <circle cx="80" cy="80" r="70" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
+            <div className="flex flex-col items-center py-4">
+              <div className="relative w-56 h-56">
+                <svg className="w-56 h-56 -rotate-90" viewBox="0 0 160 160">
+                  <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(var(--secondary))" strokeWidth="5" opacity="0.5" />
+                  <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeDasharray="4 8" opacity="0.15" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <Timer className="h-8 w-8 text-primary mb-2" />
-                  <p className="text-lg font-bold">{selectedMode.label}</p>
-                  <p className="text-xs text-muted-foreground">{selectedMode.hours}h fast</p>
+                  <motion.div
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  >
+                    <Timer className="h-9 w-9 text-primary mb-2" />
+                  </motion.div>
+                  <p className="text-2xl font-black tracking-tight">{selectedMode.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{selectedMode.hours}h fasting · {24 - selectedMode.hours}h eating</p>
                 </div>
               </div>
             </div>
 
+            {/* Start button */}
             <div className="flex justify-center">
-              <Button onClick={handleStart} className="gap-2 px-8" size="lg">
+              <Button onClick={handleStart} className="gap-2 px-10 shadow-lg shadow-primary/20" size="lg">
                 <Play className="h-4 w-4" /> Start Fast
               </Button>
             </div>
@@ -358,17 +378,17 @@ const HealthIFTimer = () => {
 
         {/* History */}
         {sessions.length > 0 && (
-          <Card>
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-3">Recent Fasts</p>
-              <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Recent Fasts</p>
+              <div className="space-y-2.5">
                 {sessions.slice(0, 5).map((s, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{s.startTime ? format(new Date(s.startTime), 'dd MMM HH:mm') : '—'}</span>
+                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-border/30 last:border-0">
+                    <span className="text-muted-foreground text-xs">{s.startTime ? format(new Date(s.startTime), 'dd MMM · HH:mm') : '—'}</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-medium">{s.mode}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${s.completed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                        {s.completed ? 'Done' : 'Cancelled'}
+                      <span className="font-semibold text-xs">{s.mode}</span>
+                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${s.completed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                        {s.completed ? 'Completed' : 'Cancelled'}
                       </span>
                     </div>
                   </div>

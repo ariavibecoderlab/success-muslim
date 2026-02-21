@@ -117,8 +117,8 @@ export default function IFOnboarding() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Progress bar */}
       {step < 11 && (
-        <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted">
-          <motion.div className="h-full bg-primary" animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }} transition={{ duration: 0.3 }} />
+        <div className="fixed top-0 left-0 right-0 z-50 h-1.5 bg-muted/50">
+          <motion.div className="h-full bg-primary rounded-r-full" animate={{ width: `${(step / TOTAL_STEPS) * 100}%` }} transition={{ duration: 0.3 }} />
         </div>
       )}
 
@@ -144,8 +144,8 @@ export default function IFOnboarding() {
               {step === 1 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">What's your main goal?</h1>
-                    <p className="text-sm text-muted-foreground mt-1">This helps us recommend the best fasting plan</p>
+                    <h1 className="text-2xl font-black tracking-tight">What's your main goal?</h1>
+                    <p className="text-sm text-muted-foreground mt-1.5">This helps us recommend the best fasting plan</p>
                   </div>
                   <div className="space-y-2.5">
                     {GOALS.map(g => (
@@ -352,40 +352,46 @@ export default function IFOnboarding() {
               {/* Step 11: Report */}
               {step === 11 && (
                 <div className="space-y-5">
-                  <div className="text-center">
-                    <h1 className="text-2xl font-bold">Your Health Report</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Based on your answers</p>
-                  </div>
+                  <motion.div className="text-center" initial={{ scale: 0.9 }} animate={{ scale: 1 }} transition={{ duration: 0.4 }}>
+                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-3">
+                      <Check className="h-7 w-7 text-primary" />
+                    </div>
+                    <h1 className="text-2xl font-black">Your Health Report</h1>
+                    <p className="text-sm text-muted-foreground mt-1">Personalized based on your answers</p>
+                  </motion.div>
 
-                  <div className="rounded-2xl border border-border bg-card p-5 space-y-4">
+                  <div className="rounded-2xl border border-border bg-card p-5 space-y-5 shadow-sm">
                     {/* Stats grid */}
                     <div className="grid grid-cols-2 gap-3 text-center">
-                      <div className="rounded-xl bg-secondary p-3">
-                        <p className="text-[10px] text-muted-foreground">Gender</p>
-                        <p className="text-sm font-bold capitalize">{gender || '—'}</p>
+                      <div className="rounded-xl bg-secondary/70 p-3.5">
+                        <p className="text-[10px] text-muted-foreground font-medium">Gender</p>
+                        <p className="text-sm font-bold capitalize mt-0.5">{gender || '—'}</p>
                       </div>
-                      <div className="rounded-xl bg-secondary p-3">
-                        <p className="text-[10px] text-muted-foreground">Age</p>
-                        <p className="text-sm font-bold">{age}</p>
+                      <div className="rounded-xl bg-secondary/70 p-3.5">
+                        <p className="text-[10px] text-muted-foreground font-medium">Age</p>
+                        <p className="text-sm font-bold mt-0.5">{age}</p>
                       </div>
-                      <div className="rounded-xl bg-secondary p-3">
-                        <p className="text-[10px] text-muted-foreground">Height</p>
-                        <p className="text-sm font-bold">{heightCm} cm</p>
+                      <div className="rounded-xl bg-secondary/70 p-3.5">
+                        <p className="text-[10px] text-muted-foreground font-medium">Height</p>
+                        <p className="text-sm font-bold mt-0.5">{heightCm} cm</p>
                       </div>
-                      <div className="rounded-xl bg-secondary p-3">
-                        <p className="text-[10px] text-muted-foreground">Weight</p>
-                        <p className="text-sm font-bold">{weightKg} kg</p>
+                      <div className="rounded-xl bg-secondary/70 p-3.5">
+                        <p className="text-[10px] text-muted-foreground font-medium">Weight</p>
+                        <p className="text-sm font-bold mt-0.5">{weightKg} kg</p>
                       </div>
                     </div>
 
                     {/* BMI */}
-                    <div className="text-center space-y-2">
-                      <p className="text-xs text-muted-foreground">Body Mass Index</p>
-                      <p className="text-3xl font-black" style={{ color: bmiCat.color }}>{bmi}</p>
+                    <div className="text-center space-y-2 pt-2">
+                      <p className="text-xs text-muted-foreground font-medium">Body Mass Index</p>
+                      <p className="text-4xl font-black" style={{ color: bmiCat.color }}>{bmi}</p>
                       <p className="text-sm font-semibold" style={{ color: bmiCat.color }}>{bmiCat.label}</p>
-                      <div className="relative h-3 rounded-full bg-gradient-to-r from-blue-400 via-green-400 via-yellow-400 to-red-500">
-                        <div className="absolute top-0 w-4 h-4 -translate-x-1/2 -translate-y-0.5 rounded-full bg-foreground border-2 border-background shadow-lg"
-                          style={{ left: `${getBMIPosition(bmi)}%` }} />
+                      <div className="relative h-3 rounded-full bg-gradient-to-r from-blue-400 via-green-400 via-yellow-400 to-red-500 mt-3">
+                        <motion.div
+                          className="absolute top-0 w-4 h-4 -translate-x-1/2 -translate-y-0.5 rounded-full bg-foreground border-2 border-background shadow-lg"
+                          animate={{ left: `${getBMIPosition(bmi)}%` }}
+                          transition={{ duration: 0.5, ease: 'easeOut' }}
+                        />
                       </div>
                       <div className="flex justify-between text-[9px] text-muted-foreground px-1">
                         <span>15</span><span>18.5</span><span>25</span><span>30</span><span>40</span>
@@ -393,15 +399,15 @@ export default function IFOnboarding() {
                     </div>
 
                     {/* TDEE */}
-                    <div className="rounded-xl bg-primary/5 p-3 text-center">
-                      <p className="text-[10px] text-muted-foreground">Daily Calorie Needs (TDEE)</p>
-                      <p className="text-lg font-bold text-primary">{tdee} kcal</p>
+                    <div className="rounded-xl bg-primary/5 p-4 text-center">
+                      <p className="text-[10px] text-muted-foreground font-medium">Daily Calorie Needs (TDEE)</p>
+                      <p className="text-xl font-black text-primary mt-1">{tdee} kcal</p>
                     </div>
 
                     {/* Recommended protocol */}
-                    <div className="rounded-xl bg-primary/10 p-4 text-center space-y-1">
-                      <p className="text-xs text-muted-foreground">Recommended Protocol</p>
-                      <p className="text-2xl font-black text-primary">{protocol}</p>
+                    <div className="rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 p-5 text-center space-y-1 border border-primary/10">
+                      <p className="text-xs text-muted-foreground font-medium">Recommended Protocol</p>
+                      <p className="text-3xl font-black text-primary">{protocol}</p>
                       <p className="text-[10px] text-muted-foreground">
                         {protocol.includes(':') ? `${protocol.split(':')[0]}h fasting · ${protocol.split(':')[1]}h eating` : protocol}
                       </p>
@@ -409,12 +415,12 @@ export default function IFOnboarding() {
 
                     {tolose > 0 && (
                       <p className="text-center text-xs text-muted-foreground">
-                        Estimated loss: <span className="font-semibold text-primary">~{estLoss} kg</span> in 30 days
+                        Estimated loss: <span className="font-bold text-primary">~{estLoss} kg</span> in 30 days
                       </p>
                     )}
                   </div>
 
-                  <Button onClick={handleFinish} className="w-full" size="lg">
+                  <Button onClick={handleFinish} className="w-full shadow-lg shadow-primary/20" size="lg">
                     Got it — Go to IF Timer <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
