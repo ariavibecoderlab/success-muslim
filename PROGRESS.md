@@ -95,7 +95,10 @@
 | Sleep Tracker | ✅ | DB sync |
 | Sunnah Fasting Calendar | ✅ | DB sync |
 | IF Timer | ✅ | DB sync, custom duration picker |
+| IF Fasting Stages | ✅ | 11 levels (0-72h) with scientific + Islamic framing, stage card, timeline, progress tracking |
+| IF Custom Fast Fix | ✅ | Set Duration (quick-pick) or Set End Time options — all fasts have countdown |
 | IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button |
+| IF Dashboard Widget Enhanced | ✅ | Shows current level badge, stage name, next level countdown |
 | Steps Tracker | ✅ | Manual step logging, progress ring, weekly chart, targets, streak, milestones, DB sync |
 | Sleep & Wake targets | ✅ | Configurable targets |
 
