@@ -134,8 +134,8 @@ export default function IFOnboarding() {
         </div>
       )}
 
-      <div className="flex-1 flex items-center justify-center px-6 py-16">
-        <div className="w-full max-w-md">
+      <div className="flex-1 flex items-center justify-center px-6 py-16 overflow-hidden">
+        <div className="w-full max-w-md overflow-hidden">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div key={step} custom={direction} variants={slideVariants}
               initial="enter" animate="center" exit="exit" transition={{ duration: 0.25, ease: 'easeInOut' }}>
