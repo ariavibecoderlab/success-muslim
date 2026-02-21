@@ -76,6 +76,65 @@ const SurahReader = () => {
   numRef.current = num;
   
 
+  // Fetch ayahs for current page
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const translationId = TRANSLATION_IDS[prefs.translation_lang || 'en']?.id || 131;
+        const data = await fetchAyahs(num, currentPage, translationId, AYAHS_PER_PAGE);
+        if (!cancelled) {
+          setAyahs(data.verses);
+        }
+      } catch (err) {
+        console.error('Failed to fetch ayahs:', err);
+        if (!cancelled) {
+          toast.error('Failed to load ayahs');
+          setAyahs([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, [num, currentPage, prefs.translation_lang]);
+
+  // Scroll to target ayah after loading
+  useEffect(() => {
+    if (!loading && targetAyah && ayahs.some(a => a.verse_number === targetAyah)) {
+      setTimeout(() => {
+        const el = document.getElementById(`ayah-${targetAyah}`);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [loading, targetAyah, ayahs]);
+
+  // Track last visible ayah via IntersectionObserver
+  useEffect(() => {
+    if (loading || ayahs.length === 0) return;
+    const elements = ayahs.map(a => document.getElementById(`ayah-${a.verse_number}`)).filter(Boolean) as HTMLElement[];
+    const observer = new IntersectionObserver(
+      (entries) => {
+        let maxAyah = lastVisibleAyahRef.current || 0;
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const ayahNum = Number(entry.target.getAttribute('data-ayah'));
+            if (ayahNum > maxAyah) maxAyah = ayahNum;
+          }
+        });
+        if (maxAyah > (lastVisibleAyahRef.current || 0)) {
+          lastVisibleAyahRef.current = maxAyah;
+          setLastVisibleAyah(maxAyah);
+        }
+      },
+      { threshold: 0.5 }
+    );
+    elements.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, [loading, ayahs]);
+
   // Resume banner: show if saved position is in this surah and no explicit ?ayah param
   const savedLastAyah = prefs.last_surah === num ? prefs.last_ayah : null;
   const [showResumeBanner, setShowResumeBanner] = useState(false);
