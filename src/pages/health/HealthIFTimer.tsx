@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Timer, Play, Square, Trash2, Settings2, Clock, Target } from 'lucide-react';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ const HealthIFTimer = () => {
   const [customTab, setCustomTab] = useState<'duration' | 'endtime'>('duration');
   const [customDurationHours, setCustomDurationHours] = useState(16);
   const [customEndTime, setCustomEndTime] = useState('19:00');
+  const prevLevelRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!active) return;
@@ -108,6 +110,22 @@ const HealthIFTimer = () => {
   const dashOffset = circumference - (progress / 100) * circumference;
 
   const currentStage = active ? getCurrentStage(elapsedHours) : null;
+
+  // Level-up detection
+  useEffect(() => {
+    if (!currentStage) return;
+    const prevLevel = prevLevelRef.current;
+    if (prevLevel !== undefined && currentStage.level > prevLevel) {
+      toast(`🎉 Level Up! You've reached Lv.${currentStage.level} — ${currentStage.name}`);
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(`⚡ Fasting Level ${currentStage.level} reached`, {
+          body: currentStage.name,
+          icon: '/favicon.png',
+        });
+      }
+    }
+    prevLevelRef.current = currentStage.level;
+  }, [currentStage]);
 
   return (
     <SubPageLayout title="IF Timer" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/if-timer">

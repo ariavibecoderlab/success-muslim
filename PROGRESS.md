@@ -99,6 +99,8 @@
 | IF Custom Fast Fix | ✅ | Set Duration (quick-pick) or Set End Time options — all fasts have countdown |
 | IF Active Widget on Health Hub | ✅ | Live countdown + Break Fast button |
 | IF Dashboard Widget Enhanced | ✅ | Shows current level badge, stage name, next level countdown |
+| IF Timeline Auto-scroll | ✅ | Auto-slides to current level, size differentiation (current=large+ring, completed=small+filled, future=greyed) |
+| IF Level-Up Notifications | ✅ | Sonner toast + browser push notification when new fasting stage reached |
 | Steps Tracker | ✅ | Manual step logging, progress ring, weekly chart, targets, streak, milestones, DB sync |
 | Sleep & Wake targets | ✅ | Configurable targets |
 
