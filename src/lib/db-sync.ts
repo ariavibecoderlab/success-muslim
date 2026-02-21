@@ -500,7 +500,7 @@ export async function hydrateFromDatabase(): Promise<void> {
   if (!userId) return;
 
   try {
-    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, tasks, habits, habitLog, lifeAreas, sunnah, qada, ramadhan, fidyah, quran] = await Promise.all([
+    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, tasks, habits, habitLog, lifeAreas, sunnah, qada, ramadhan, fidyah, quran, stepsLogs, stepsPrefs] = await Promise.all([
       pullSalahLogs(),
       pullDhikrSessions(),
       pullBMI(),
@@ -518,6 +518,8 @@ export async function hydrateFromDatabase(): Promise<void> {
       pullRamadhanQada(),
       pullFidyahHistory(),
       pullQuranLog(),
+      pullStepsLogs(),
+      pullStepsPrefs(),
     ]);
 
     if (salah) localStorage.setItem('salah_tracking', JSON.stringify(salah));
@@ -543,6 +545,8 @@ export async function hydrateFromDatabase(): Promise<void> {
     }
     if (fidyah) localStorage.setItem('fidyah_history', JSON.stringify(fidyah));
     if (quran) localStorage.setItem('quran_log', JSON.stringify(quran));
+    if (stepsLogs) localStorage.setItem('health_steps_logs', JSON.stringify(stepsLogs));
+    if (stepsPrefs) localStorage.setItem('health_steps_prefs', JSON.stringify(stepsPrefs));
 
     console.log('[db-sync] Hydration from database complete');
   } catch (err) {
