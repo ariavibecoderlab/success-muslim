@@ -112,16 +112,18 @@ function LogEntryRow({ entry, onEdit, onDelete }: {
   const startName = SURAH_NAMES[entry.start_surah - 1]?.name ?? '';
   const endName = SURAH_NAMES[entry.end_surah - 1]?.name ?? '';
   const time = new Date(entry.created_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const isPageMode = entry.log_type === 'page';
+  const unitLabel = isPageMode ? 'Page' : 'Ayah';
   const rangeLabel = entry.start_surah === entry.end_surah
-    ? `${startName} ${entry.start_ayah}-${entry.end_ayah}`
-    : `${startName} ${entry.start_ayah} → ${endName} ${entry.end_ayah}`;
+    ? `${startName} · ${unitLabel} ${entry.start_ayah}–${entry.end_ayah}`
+    : `${startName} ${unitLabel} ${entry.start_ayah} → ${endName} ${unitLabel} ${entry.end_ayah}`;
 
   return (
     <div className="flex items-center justify-between py-2 px-1 group">
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onEdit}>
         <p className="text-sm font-medium truncate">{rangeLabel}</p>
         <p className="text-[10px] text-muted-foreground">
-          {time} · {entry.ayah_count} ayah · {Number(entry.page_count)} pg
+          {time} · {entry.ayah_count} ayah · {Number(entry.page_count)} pages
         </p>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -855,15 +857,18 @@ const QuranReader = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={SURAH_NAMES[fromSurah - 1]?.ayahs ?? 1}
-                        value={fromAyah}
-                        onChange={e => setFromAyah(Math.max(1, Number(e.target.value)))}
-                        className="w-20 h-9 text-xs"
-                        placeholder="Ayah"
-                      />
+                      <div className="flex flex-col">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={SURAH_NAMES[fromSurah - 1]?.ayahs ?? 1}
+                          value={fromAyah}
+                          onChange={e => setFromAyah(Math.max(1, Number(e.target.value)))}
+                          className="w-20 h-9 text-xs"
+                          placeholder="Ayah"
+                        />
+                        <span className="text-[10px] text-muted-foreground mt-0.5 text-center">Ayah</span>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -882,15 +887,18 @@ const QuranReader = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={SURAH_NAMES[toSurah - 1]?.ayahs ?? 1}
-                      value={toAyah}
-                      onChange={e => setToAyah(Math.max(1, Number(e.target.value)))}
-                      className="w-20 h-9 text-xs"
-                      placeholder="Ayah"
-                    />
+                    <div className="flex flex-col">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={SURAH_NAMES[toSurah - 1]?.ayahs ?? 1}
+                        value={toAyah}
+                        onChange={e => setToAyah(Math.max(1, Number(e.target.value)))}
+                        className="w-20 h-9 text-xs"
+                        placeholder="Ayah"
+                      />
+                      <span className="text-[10px] text-muted-foreground mt-0.5 text-center">Ayah</span>
+                    </div>
                   </div>
                 </div>
 

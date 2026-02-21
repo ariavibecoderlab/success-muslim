@@ -72,7 +72,7 @@
 | Quran Audio Recitation | ✅ | Per-ayah audio playback, auto-advance, 6 reciters |
 | Quran Navigation | ✅ | Surah list, Juz list, search, bookmarks, jump to ayah |
 | Quran Tracker (Daily Target) | ✅ | Target picker, streak, achievements |
-| Quran Reading Log System | ✅ | Range-based logging, multiple logs/day, By Ayah + By Page, live summary, overlap detection, edit/delete with undo |
+| Quran Reading Log System | ✅ | Range-based logging, multiple logs/day, By Ayah + By Page, live summary, overlap detection, edit/delete with undo, clear Ayah/Page labels in form + log list |
 | Quran Daily Log | ✅ | `quran_daily_log` + `quran_reading_log` tables |
 | Quran Bookmarks | ✅ | DB synced |
 | Quran Position Auto-tracking | ✅ | Intersection Observer tracks last visible ayah; saves to `quran_preferences` on exit |
