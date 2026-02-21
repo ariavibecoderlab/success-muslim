@@ -22,7 +22,7 @@ export interface HealthProfile {
 }
 
 export function useHealthProfile() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [profile, setProfile] = useState<HealthProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState(false);
@@ -30,6 +30,7 @@ export function useHealthProfile() {
   const userId = user?.id;
 
   useEffect(() => {
+    if (authLoading) return; // Wait for auth to resolve first
     if (!userId) { setLoading(false); return; }
 
     const fetchProfile = async () => {
@@ -46,7 +47,7 @@ export function useHealthProfile() {
       setLoading(false);
     };
     fetchProfile();
-  }, [userId]);
+  }, [userId, authLoading]);
 
   const saveProfile = async (updates: Partial<HealthProfile>) => {
     if (!userId) return;
