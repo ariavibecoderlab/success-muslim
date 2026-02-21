@@ -1,37 +1,122 @@
 
 
-## Fix: "Last Read" Not Updating After Reading in SurahReader
+# Daily Steps Tracker — Implementation Plan
 
-### Problem
-When you read up to Al-Baqarah ayah 75 in the reader and navigate back to `/iman/quran`, the "Last Read" card still shows ayah 61. This happens because:
+## Overview
+Add a full-featured manual steps tracker to the `/health` module, following the existing patterns (localStorage write-through, DB sync, widget registry, SubPageLayout).
 
-1. The SurahReader saves your actual reading position (ayah 75) to `quran_preferences` when you leave the page.
-2. But the dashboard's "Last Read" display pulls from the most recent entry in `quran_reading_log` (which has end_ayah=61 from a manually logged session).
-3. The `quran_preferences` value is only used as a fallback when there are zero log entries -- so it's ignored.
+---
 
-### Solution
-Update the `lastPosition` logic in `useQuranReadingLog.ts` to compare both sources (latest log entry vs. `quran_preferences`) and use whichever represents a more advanced position. This way, passive reading in SurahReader correctly updates "Last Read" even without creating a manual log entry.
+## 1. Database Setup (2 migrations)
 
-### Technical Details
+### Table: `steps_logs`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK, gen_random_uuid() |
+| user_id | uuid | NOT NULL |
+| date | date | NOT NULL |
+| steps | integer | NOT NULL |
+| activity_type | text | DEFAULT 'walking' |
+| distance_meters | numeric | calculated |
+| calories_burned | numeric | calculated |
+| logged_at | timestamptz | DEFAULT now() |
+| source | text | DEFAULT 'manual' (future: healthkit, googlefit, smartwatch) |
+| created_at | timestamptz | DEFAULT now() |
 
-**File: `src/hooks/useQuranReadingLog.ts`** (lines 67-71)
+RLS: standard user_id CRUD policies.
 
-Change the `lastPosition` memo to compare the global ayah index of the latest log entry against the position saved in `quran_preferences`, and return whichever is further ahead:
+### Table: `steps_preferences`
+| Column | Type | Notes |
+|--------|------|-------|
+| id | uuid | PK |
+| user_id | uuid | UNIQUE, NOT NULL |
+| daily_target | integer | DEFAULT 10000 |
+| stride_length_cm | numeric | DEFAULT 76.2 |
+| reminder_enabled | boolean | DEFAULT false |
+| reminder_time | text | nullable |
+| created_at / updated_at | timestamptz | |
 
-```typescript
-const lastPosition = useMemo(() => {
-  const prefPos = { surah: prefs.last_surah, ayah: prefs.last_ayah };
-  if (logs.length === 0) return prefPos;
+RLS: standard user_id CRUD policies.
 
-  const latest = logs[0];
-  const logPos = { surah: latest.end_surah, ayah: latest.end_ayah };
+---
 
-  // Use whichever position is further in the Quran
-  const logIdx = globalAyahIndex(logPos.surah, logPos.ayah);
-  const prefIdx = globalAyahIndex(prefPos.surah, prefPos.ayah);
-  return prefIdx > logIdx ? prefPos : logPos;
-}, [logs, prefs.last_surah, prefs.last_ayah]);
-```
+## 2. Storage Layer: `src/lib/steps-storage.ts`
 
-This is a single-line-level change in one file. No database or migration changes needed.
+Follow the exact pattern of `health-storage.ts`:
+- LocalStorage keys: `health_steps_logs`, `health_steps_prefs`
+- Functions: `getStepsToday()`, `addStepLog()`, `deleteStepLog()`, `getStepsPrefs()`, `setStepsTarget()`, `getStepsHistory(7)`, `getStepsStreak()`, `getTotalStepsAllTime()`
+- Distance calc: `steps * strideCm / 100` meters
+- Calorie calc: `steps * 0.04` kcal (rough estimate)
+- Each function calls a corresponding db-sync function
+
+---
+
+## 3. DB Sync additions in `src/lib/db-sync.ts`
+
+Add sync functions:
+- `syncStepLog(date, steps, activityType, distanceMeters, caloriesBurned, loggedAt)`
+- `syncStepLogDelete(id)`
+- `syncStepsPrefs(dailyTarget, strideLengthCm, reminderEnabled, reminderTime)`
+
+---
+
+## 4. Main Page: `src/pages/health/HealthSteps.tsx`
+
+Full-featured page using `SubPageLayout` (same as Hydration/Sleep):
+
+- **Hero Ring**: Large circular progress ring (steps / target), green when hit, amber when below
+- **Log Steps Button**: Opens a dialog/card with number input + activity type selector (Walking, Running, Hiking, Others) + optional time
+- **Today's Summary**: Total steps, estimated distance, estimated calories, list of all logs today with time + steps + activity
+- **Stats Row**: 3 cards — Today's steps, Weekly average, Best day this week
+- **Weekly Bar Chart**: 7-day recharts BarChart with target dotted reference line, green bars for target-met days
+- **Target Setting**: Quick-pick buttons (5000, 7500, 10000, 12500, Custom) with WHO context
+- **Streak and Milestones**: Consecutive days hitting target, milestone badges (1 day, 7-day, 30-day, 100K total, 1M total)
+- **Sunnah Nudge**: Motivational message after hitting target
+- **Coming Soon Banner**: "Connect your smartwatch or phone to auto-sync steps -- coming soon"
+
+Sibling routes updated to include Steps.
+
+---
+
+## 5. Health Hub Integration: `src/pages/Health.tsx`
+
+- Add `Footprints` icon entry to the features array: `{ icon: Footprints, title: 'Steps Tracker', desc: 'Daily step count & goals', path: '/health/steps' }`
+- Add a Steps card to the quick stats grid showing today's steps vs target
+
+---
+
+## 6. Router: `src/App.tsx`
+
+- Import `HealthSteps` and add route: `/health/steps`
+
+---
+
+## 7. Dashboard Widget: `src/components/widgets/StepsWidget.tsx`
+
+- Small: shoe icon + steps count
+- Medium: progress bar + steps/target + streak
+- Register in `widget-registry.ts` as `steps_today`, module `health`
+
+---
+
+## 8. Update Sibling Routes
+
+All health sub-pages' `HEALTH_SIBLINGS` array gets a new entry: `{ path: '/health/steps', label: 'Steps' }`
+
+---
+
+## 9. Documentation Updates
+
+- **PROGRESS.md**: Add "Steps Tracker" row under Wellness Module
+- **.lovable/plan.md**: Clear old plan, note Steps Tracker completion
+
+---
+
+## Technical Notes
+
+- Activity types stored as: `'walking' | 'running' | 'hiking' | 'others'`
+- `source` field defaults to `'manual'` — no code changes needed when smartwatch integration is added later, just a new source value
+- Multiple logs per day are summed for the ring and stats
+- Streak counts consecutive days where total steps >= daily target
+- All icons use Lucide React (`Footprints`, `TrendingUp`, `Flame`, etc.) — no emojis in UI
 
