@@ -9,6 +9,7 @@ import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF } from '@/lib/hea
 import { format } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
+import FastingCalendarHeatmap from '@/components/health/FastingCalendarHeatmap';
 import { getCurrentStage } from '@/lib/fasting-stages';
 
 const HEALTH_SIBLINGS = [
@@ -349,6 +350,9 @@ const HealthIFTimer = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Fasting Calendar Heatmap */}
+        <FastingCalendarHeatmap sessions={sessions} />
 
         {/* History */}
         {sessions.length > 0 && (
