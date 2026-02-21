@@ -29,6 +29,7 @@ const SleepWidget = lazy(() => import('@/components/widgets/SleepWidget'));
 const SadaqahWidget = lazy(() => import('@/components/widgets/SadaqahWidget'));
 const TasksTodayWidget = lazy(() => import('@/components/widgets/TasksTodayWidget'));
 const DakwahWidget = lazy(() => import('@/components/widgets/DakwahWidget'));
+const StepsWidget = lazy(() => import('@/components/widgets/StepsWidget'));
 
 export const WIDGET_REGISTRY: WidgetDefinition[] = [
   {
@@ -153,6 +154,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     defaultEnabled: false,
     defaultSize: 'medium',
     defaultPosition: 11,
+  },
+  {
+    id: 'steps_today',
+    label: 'Steps Today',
+    icon: 'Footprints',
+    module: 'health',
+    component: StepsWidget,
+    defaultEnabled: false,
+    defaultSize: 'medium',
+    defaultPosition: 12,
   },
 ];
 

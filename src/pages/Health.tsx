@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp } from 'lucide-react';
+import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp, Footprints } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getBMI, getHydration, getSleepLog, bmiCategory, getActiveIF, stopIF } from '@/lib/health-storage';
+import { getStepsToday, getStepsPrefs } from '@/lib/steps-storage';
 import EditableText from '@/components/cms/EditableText';
 
 const features = [
@@ -12,6 +13,7 @@ const features = [
   { icon: TrendingUp, title: 'Weight Tracker', desc: 'Log weight & view trends', path: '/health/weight' },
   { icon: Droplets, title: 'Hydration', desc: 'Daily water intake tracker', path: '/health/hydration' },
   { icon: BedDouble, title: 'Sleep Tracker', desc: 'Track sleep quality', path: '/health/sleep' },
+  { icon: Footprints, title: 'Steps Tracker', desc: 'Daily step count & goals', path: '/health/steps' },
   { icon: Moon, title: 'Sunnah Fasting', desc: 'Mon, Thu & White Days', path: '/health/fasting' },
   { icon: Timer, title: 'IF Timer', desc: 'Intermittent fasting modes', path: '/health/if-timer' },
 ];
@@ -23,6 +25,9 @@ const Health = () => {
   const sleepLog = getSleepLog();
   const lastSleep = sleepLog[sleepLog.length - 1];
   const cat = bmi ? bmiCategory(bmi.bmi) : null;
+  const { total: stepsToday } = getStepsToday();
+  const stepsPrefs = getStepsPrefs();
+  const stepsPct = Math.min(Math.round((stepsToday / stepsPrefs.dailyTarget) * 100), 100);
 
   const [activeIF, setActiveIF] = useState(getActiveIF);
   const [now, setNow] = useState(Date.now());
@@ -69,7 +74,7 @@ const Health = () => {
       </div>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-4 gap-2">
         <Card><CardContent className="p-3 text-center">
           <EditableText elementKey="health.stat.bmi" defaultText="BMI" tag="p" className="text-[10px] text-muted-foreground" />
           <p className="text-lg font-bold">{bmi?.bmi ?? '—'}</p>
@@ -84,6 +89,11 @@ const Health = () => {
           <EditableText elementKey="health.stat.sleep" defaultText="Sleep" tag="p" className="text-[10px] text-muted-foreground" />
           <p className="text-lg font-bold">{lastSleep?.duration ?? '—'}</p>
           <p className="text-[10px] text-muted-foreground">hours</p>
+        </CardContent></Card>
+        <Card><CardContent className="p-3 text-center">
+          <EditableText elementKey="health.stat.steps" defaultText="Steps" tag="p" className="text-[10px] text-muted-foreground" />
+          <p className="text-lg font-bold">{stepsToday.toLocaleString()}</p>
+          <p className="text-[10px] text-muted-foreground">{stepsPct}%</p>
         </CardContent></Card>
       </div>
 
