@@ -7,10 +7,10 @@
 - **Logging Form (By Ayah)**: The "To" input displays an **"Ayah"** label beneath the number.
 - **Logging Form (By Page)**: Inputs are labeled **"From Page"** and **"To Page"**.
 
-### 2. Singular / Plural Fix for "page"
-All occurrences of page counts now correctly show **"1 page"** (singular) instead of "1 pages":
-- Log entry summary row (e.g. `3 ayah · 1 page`)
-- Success toast after logging/updating
+### 2. Singular / Plural Fix for "ayah" and "page"
+All occurrences of ayah and page counts now correctly handle singular/plural forms (e.g. **"1 ayah · 1 page"** vs **"5 ayahs · 3 pages"**):
+- Log entry summary row
+- Success toast after logging (add + update)
 - Today's summary card
 - Live summary preview in the logging form
 
