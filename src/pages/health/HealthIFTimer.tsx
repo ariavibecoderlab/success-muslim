@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Timer, Play, Square, Trash2, Settings2, Clock, Target, Share2, Droplets, Pencil } from 'lucide-react';
+import { Timer, Play, Square, Trash2, Settings2, Clock, Target, Droplets, CheckCircle2, Scale, StickyNote } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup } from '@/lib/health-storage';
 import { format } from 'date-fns';
@@ -21,7 +22,7 @@ import { getCurrentStage } from '@/lib/fasting-stages';
 import { useHealthProfile } from '@/hooks/useHealthProfile';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
 const HEALTH_SIBLINGS = [
@@ -77,7 +78,11 @@ const HealthIFTimer = () => {
   const [customEndTime, setCustomEndTime] = useState('19:00');
   const prevLevelRef = useRef<number | undefined>(undefined);
   const [showCelebration, setShowCelebration] = useState(false);
-
+  const [showEndReview, setShowEndReview] = useState(false);
+  const [endReviewWeight, setEndReviewWeight] = useState('');
+  const [endReviewNotes, setEndReviewNotes] = useState('');
+  const [endReviewSnapshot, setEndReviewSnapshot] = useState<{ elapsed: number; elapsedHours: number; mode: string; startTime: string; goalTime: string; level: number; stageName: string } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // Redirect to onboarding if not completed
   useEffect(() => {
     if (!profileLoading && !profileCompleted) {
@@ -113,17 +118,50 @@ const HealthIFTimer = () => {
     setShowCustom(false);
   };
 
-  const handleStop = (completed: boolean) => {
-    stopIF(completed);
+  const handleOpenEndReview = () => {
+    if (!active) return;
+    const start = new Date(active.startTime).getTime();
+    const elH = (Date.now() - start) / 3600000;
+    const stage = getCurrentStage(elH);
+    const end = new Date(start + active.fastingHours * 3600000);
+    setEndReviewSnapshot({
+      elapsed: Date.now() - start,
+      elapsedHours: elH,
+      mode: active.mode,
+      startTime: format(new Date(active.startTime), 'HH:mm'),
+      goalTime: format(end, 'HH:mm'),
+      level: stage.level,
+      stageName: stage.name,
+    });
+    setEndReviewWeight('');
+    setEndReviewNotes('');
+    setShowEndReview(true);
+  };
+
+  const handleSaveFast = () => {
+    stopIF(true);
     setActive(null);
     const newSessions = getIFSessions();
     setSessions(newSessions);
-    if (completed) {
-      const streak = calculateStreak(newSessions);
-      if (shouldShowCelebration(streak)) {
-        setShowCelebration(true);
-      }
+    setShowEndReview(false);
+    toast.success('Fast saved!');
+    const streak = calculateStreak(newSessions);
+    if (shouldShowCelebration(streak)) {
+      setShowCelebration(true);
     }
+  };
+
+  const handleDiscardFast = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const handleConfirmDiscard = () => {
+    deleteIF();
+    setActive(null);
+    setShowEndReview(false);
+    setShowDeleteConfirm(false);
+    setSessions(getIFSessions());
+    toast('Fast discarded');
   };
 
   const handleDeleteFast = () => { deleteIF(); setActive(null); };
@@ -173,7 +211,7 @@ const HealthIFTimer = () => {
 
       <div className="space-y-5">
         {/* ===== ACTIVE FASTING VIEW ===== */}
-        {active && !showCustom && (
+        {active && !showCustom && !showEndReview && (
           <>
             {/* Header */}
             <motion.div
@@ -244,27 +282,9 @@ const HealthIFTimer = () => {
                 className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 flex-1">
                 <Trash2 className="h-4 w-4" /> Cancel
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button className="gap-2 flex-1 shadow-md shadow-primary/20">
-                    <Square className="h-4 w-4" /> {remaining <= 0 ? 'Complete Fast' : 'End Fast'}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>End your fast?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      {remaining > 0
-                        ? 'You still have time remaining. Are you sure you want to end early?'
-                        : 'Congratulations! Your fasting goal is complete. 🎉'}
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Keep Going</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleStop(true)}>End Fast</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button onClick={handleOpenEndReview} className="gap-2 flex-1 shadow-md shadow-primary/20">
+                <Square className="h-4 w-4" /> {remaining <= 0 ? 'Complete Fast' : 'End Fast'}
+              </Button>
             </div>
           </>
         )}
@@ -373,11 +393,144 @@ const HealthIFTimer = () => {
           </div>
         )}
 
-        {/* Calendar Heatmap (always visible) */}
-        <FastingCalendarHeatmap sessions={sessions} />
+        {/* ===== END FAST REVIEW ===== */}
+        {showEndReview && endReviewSnapshot && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-4"
+          >
+            {/* Header */}
+            <div className="text-center space-y-1 pt-2">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-2">
+                <CheckCircle2 className="h-7 w-7 text-primary" />
+              </div>
+              <h2 className="text-xl font-black">Fasting Summary</h2>
+              <p className="text-xs text-muted-foreground">Review your fast before saving</p>
+            </div>
+
+            {/* Summary Card */}
+            <Card className="border-primary/20">
+              <CardContent className="p-4 space-y-3">
+                {/* Total Time */}
+                <div className="text-center py-3 border-b border-border/50">
+                  <p className="text-3xl font-black tracking-tight">
+                    {Math.floor(endReviewSnapshot.elapsedHours)}h {Math.round((endReviewSnapshot.elapsedHours % 1) * 60)}m
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Total Fasting Time</p>
+                </div>
+
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold">{endReviewSnapshot.mode}</p>
+                    <p className="text-[10px] text-muted-foreground">Protocol</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold">Lv.{endReviewSnapshot.level}</p>
+                    <p className="text-[10px] text-muted-foreground">{endReviewSnapshot.stageName}</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold">{endReviewSnapshot.startTime}</p>
+                    <p className="text-[10px] text-muted-foreground">Started</p>
+                  </div>
+                  <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold">{format(new Date(), 'HH:mm')}</p>
+                    <p className="text-[10px] text-muted-foreground">Ended</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Weight Today */}
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold">Weight Today</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">Optional</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="20"
+                    max="300"
+                    placeholder="e.g. 72.5"
+                    value={endReviewWeight}
+                    onChange={e => setEndReviewWeight(e.target.value)}
+                    className="h-10"
+                  />
+                  <span className="text-sm text-muted-foreground font-medium">kg</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notes */}
+            <Card>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <StickyNote className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-semibold">Notes</span>
+                  <span className="text-[10px] text-muted-foreground ml-auto">Optional</span>
+                </div>
+                <Textarea
+                  placeholder="How did you feel? Any observations..."
+                  value={endReviewNotes}
+                  onChange={e => setEndReviewNotes(e.target.value)}
+                  rows={3}
+                  className="resize-none text-sm"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-1">
+              <Button
+                variant="outline"
+                onClick={handleDiscardFast}
+                className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10 flex-1"
+              >
+                <Trash2 className="h-4 w-4" /> Discard
+              </Button>
+              <Button onClick={handleSaveFast} className="gap-2 flex-1 shadow-md shadow-primary/20">
+                <CheckCircle2 className="h-4 w-4" /> Save Fast
+              </Button>
+            </div>
+
+            {/* Back link */}
+            <button
+              onClick={() => setShowEndReview(false)}
+              className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+            >
+              ← Keep fasting
+            </button>
+          </motion.div>
+        )}
+
+        {/* Discard Confirmation Dialog */}
+        <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Discard this fast?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete this fasting session. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmDiscard} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Discard
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Calendar Heatmap (hidden during review) */}
+        {!showEndReview && <FastingCalendarHeatmap sessions={sessions} />}
 
         {/* History */}
-        {sessions.length > 0 && (
+        {!showEndReview && sessions.length > 0 && (
           <Card className="overflow-hidden">
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Recent Fasts</p>
