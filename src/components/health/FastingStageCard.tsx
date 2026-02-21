@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { FASTING_STAGES, getCurrentStage, getNextStage, getStageProgress, type FastingStage } from '@/lib/fasting-stages';
@@ -69,10 +69,24 @@ interface StagesTimelineProps {
 export function StagesTimeline({ elapsedHours }: StagesTimelineProps) {
   const currentStage = getCurrentStage(elapsedHours);
   const [preview, setPreview] = useState<FastingStage | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const stageRefs = useRef<Record<number, HTMLButtonElement | null>>({});
+
+  const setStageRef = useCallback((level: number) => (el: HTMLButtonElement | null) => {
+    stageRefs.current[level] = el;
+  }, []);
+
+  // Auto-scroll to current stage
+  useEffect(() => {
+    const el = stageRefs.current[currentStage.level];
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
+  }, [currentStage.level]);
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
+      <div ref={scrollRef} className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-hide">
         {FASTING_STAGES.map((s) => {
           const isCompleted = elapsedHours >= s.endHours;
           const isCurrent = s.level === currentStage.level;
@@ -82,6 +96,7 @@ export function StagesTimeline({ elapsedHours }: StagesTimelineProps) {
           return (
             <button
               key={s.level}
+              ref={setStageRef(s.level)}
               onClick={() => setPreview(preview?.level === s.level ? null : s)}
               className={`flex-shrink-0 flex flex-col items-center gap-1 p-1.5 rounded-lg transition-all min-w-[52px] ${
                 isCurrent
@@ -92,15 +107,15 @@ export function StagesTimeline({ elapsedHours }: StagesTimelineProps) {
               }`}
             >
               <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                  isCompleted
-                    ? 'bg-primary text-primary-foreground'
-                    : isCurrent
-                    ? 'bg-primary text-primary-foreground animate-pulse'
-                    : 'bg-muted text-muted-foreground'
+                className={`rounded-full flex items-center justify-center transition-all ${
+                  isCurrent
+                    ? 'w-10 h-10 bg-primary text-primary-foreground ring-2 ring-primary ring-offset-2 ring-offset-background'
+                    : isCompleted
+                    ? 'w-7 h-7 bg-primary text-primary-foreground'
+                    : 'w-7 h-7 bg-muted text-muted-foreground'
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" />
+                <Icon className={isCurrent ? 'h-5 w-5' : 'h-3.5 w-3.5'} />
               </div>
               <span className={`text-[9px] font-medium ${isFuture ? 'text-muted-foreground/50' : 'text-foreground'}`}>
                 Lv.{s.level}
