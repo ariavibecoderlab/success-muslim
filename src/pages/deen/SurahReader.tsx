@@ -51,8 +51,10 @@ const SurahReader = () => {
   const [tafsirText, setTafsirText] = useState<string>('');
   const [tafsirLoading, setTafsirLoading] = useState(false);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination — start on the page that contains the target ayah
+  const [currentPage, setCurrentPage] = useState(() =>
+    targetAyah ? Math.ceil(targetAyah / AYAHS_PER_PAGE) : 1
+  );
   const surahInfo = SURAH_NAMES[num - 1];
   const totalPages = Math.ceil((surahInfo?.ayahs || 1) / AYAHS_PER_PAGE);
 
