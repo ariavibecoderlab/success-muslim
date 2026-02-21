@@ -123,7 +123,7 @@ function LogEntryRow({ entry, onEdit, onDelete }: {
       <div className="flex-1 min-w-0 cursor-pointer" onClick={onEdit}>
         <p className="text-sm font-medium truncate">{rangeLabel}</p>
         <p className="text-[10px] text-muted-foreground">
-          {time} · {entry.ayah_count} ayah · {Number(entry.page_count)} pages
+          {time} · {entry.ayah_count} ayah · {Number(entry.page_count)} {Number(entry.page_count) === 1 ? 'page' : 'pages'}
         </p>
       </div>
       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -291,7 +291,7 @@ const QuranReader = () => {
         end_ayah: endA,
         log_type: logType,
       });
-      toast.success(`Updated: ${ayahs} ayah, ${pages} pages`);
+      toast.success(`Updated: ${ayahs} ayah, ${pages} ${pages === 1 ? 'page' : 'pages'}`);
     } else {
       await addLog({
         log_type: logType,
@@ -478,7 +478,7 @@ const QuranReader = () => {
                 <div className="flex items-center gap-3 mb-3">
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
                   <div>
-                    <p className="text-sm font-semibold">{todayTotalAyahs} ayah · {todayTotalPages} pages</p>
+                    <p className="text-sm font-semibold">{todayTotalAyahs} ayah · {todayTotalPages} {todayTotalPages === 1 ? 'page' : 'pages'}</p>
                     {streak > 0 && (
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Flame className="h-3 w-3" /> {streak} day streak
@@ -955,7 +955,7 @@ const QuranReader = () => {
                     <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {liveSummary.ayahs} ayah
                   </p>
                   <p className="text-sm flex items-center gap-1.5">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {liveSummary.pages} pages
+                    <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> {liveSummary.pages} {liveSummary.pages === 1 ? 'page' : 'pages'}
                   </p>
                   <p className="text-sm flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
