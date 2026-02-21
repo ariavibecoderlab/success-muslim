@@ -48,6 +48,7 @@ import HealthHydration from "./pages/health/HealthHydration";
 import HealthSleep from "./pages/health/HealthSleep";
 import HealthFasting from "./pages/health/HealthFasting";
 import HealthIFTimer from "./pages/health/HealthIFTimer";
+import IFOnboarding from "./pages/health/IFOnboarding";
 import HealthSteps from "./pages/health/HealthSteps";
 import DailyTasks from "./pages/productivity/DailyTasks";
 import HabitStreaks from "./pages/productivity/HabitStreaks";
@@ -120,6 +121,7 @@ const App = () => (
               <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
               <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
               <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
+              <Route path="/health/if-onboarding" element={<AuthGuard><IFOnboarding /></AuthGuard>} />
               <Route path="/health/steps" element={<AuthGuard><HealthSteps /></AuthGuard>} />
               <Route path="/productivity/tasks" element={<AuthGuard><DailyTasks /></AuthGuard>} />
               <Route path="/productivity/habits" element={<AuthGuard><HabitStreaks /></AuthGuard>} />

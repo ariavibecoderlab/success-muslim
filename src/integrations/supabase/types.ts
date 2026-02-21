@@ -1660,6 +1660,66 @@ export type Database = {
         }
         Relationships: []
       }
+      user_health_profiles: {
+        Row: {
+          activity_level: string | null
+          age: number | null
+          bmi: number | null
+          completed_at: string | null
+          created_at: string
+          eating_habits: string | null
+          fasting_experience: string | null
+          gender: string | null
+          goal: string | null
+          goal_weight_kg: number | null
+          height_cm: number | null
+          id: string
+          recommended_protocol: string | null
+          sleep_hours: string | null
+          tdee: number | null
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          age?: number | null
+          bmi?: number | null
+          completed_at?: string | null
+          created_at?: string
+          eating_habits?: string | null
+          fasting_experience?: string | null
+          gender?: string | null
+          goal?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
+          id?: string
+          recommended_protocol?: string | null
+          sleep_hours?: string | null
+          tdee?: number | null
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          age?: number | null
+          bmi?: number | null
+          completed_at?: string | null
+          created_at?: string
+          eating_habits?: string | null
+          fasting_experience?: string | null
+          gender?: string | null
+          goal?: string | null
+          goal_weight_kg?: number | null
+          height_cm?: number | null
+          id?: string
+          recommended_protocol?: string | null
+          sleep_hours?: string | null
+          tdee?: number | null
+          user_id?: string
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
