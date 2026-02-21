@@ -117,6 +117,9 @@ const HealthIFTimer = () => {
     const prevLevel = prevLevelRef.current;
     if (prevLevel !== undefined && currentStage.level > prevLevel) {
       toast(`🎉 Level Up! You've reached Lv.${currentStage.level} — ${currentStage.name}`);
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200, 100, 200]);
+      }
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification(`⚡ Fasting Level ${currentStage.level} reached`, {
           body: currentStage.name,
