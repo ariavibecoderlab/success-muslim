@@ -160,7 +160,7 @@ export default function IFOnboarding() {
               {step === 2 && (
                 <div className="space-y-6">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">What's your gender?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">What's your gender?</h1>
                     <p className="text-sm text-muted-foreground mt-1">Used for accurate BMR calculation</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -180,7 +180,8 @@ export default function IFOnboarding() {
               {step === 3 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">How old are you?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">How old are you?</h1>
+                    <p className="text-sm text-muted-foreground mt-1">Age affects your metabolic rate</p>
                   </div>
                   <div className="relative h-64 overflow-hidden rounded-xl">
                     <div ref={ageScrollRef} className="h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide px-4"
@@ -215,7 +216,7 @@ export default function IFOnboarding() {
               {step === 4 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">What's your height?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">What's your height?</h1>
                   </div>
                   <div className="flex justify-center gap-2 mb-2">
                     <button onClick={() => setUseImperial(false)} className={`px-4 py-1.5 rounded-full text-xs font-medium ${!useImperial ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>cm</button>
@@ -235,7 +236,7 @@ export default function IFOnboarding() {
               {step === 5 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">What's your current weight?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">What's your current weight?</h1>
                   </div>
                   <div className="flex justify-center gap-2 mb-2">
                     <button onClick={() => setUseLbs(false)} className={`px-4 py-1.5 rounded-full text-xs font-medium ${!useLbs ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>kg</button>
@@ -269,7 +270,7 @@ export default function IFOnboarding() {
               {step === 6 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">What's your goal weight?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">What's your goal weight?</h1>
                   </div>
                   <div className="text-center">
                     <p className="text-4xl font-black">{useLbs ? `${kgToLbs(goalWeightKg)} lb` : `${goalWeightKg} kg`}</p>
@@ -291,7 +292,7 @@ export default function IFOnboarding() {
               {step === 7 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">Your eating habits?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">Your eating habits?</h1>
                   </div>
                   <div className="space-y-2.5">
                     {EATING_HABITS.map(e => (
@@ -306,7 +307,7 @@ export default function IFOnboarding() {
               {step === 8 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">Hours of sleep per night?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">Hours of sleep per night?</h1>
                   </div>
                   <div className="flex flex-wrap justify-center gap-3">
                     {SLEEP_OPTIONS.map(s => (
@@ -323,7 +324,7 @@ export default function IFOnboarding() {
               {step === 9 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">How active are you?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">How active are you?</h1>
                   </div>
                   <div className="space-y-2.5">
                     {ACTIVITY_LEVELS.map(a => (
@@ -338,7 +339,7 @@ export default function IFOnboarding() {
               {step === 10 && (
                 <div className="space-y-5">
                   <div className="text-center">
-                    <h1 className="text-2xl font-bold">Fasting experience?</h1>
+                    <h1 className="text-2xl font-black tracking-tight">Fasting experience?</h1>
                   </div>
                   <div className="space-y-2.5">
                     {FASTING_EXPERIENCE.map(f => (
