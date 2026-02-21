@@ -1092,6 +1092,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quran_reading_log: {
+        Row: {
+          ayah_count: number
+          created_at: string
+          date: string
+          end_ayah: number
+          end_surah: number
+          id: string
+          juz_segments: Json | null
+          log_type: string
+          page_count: number
+          start_ayah: number
+          start_surah: number
+          user_id: string
+        }
+        Insert: {
+          ayah_count?: number
+          created_at?: string
+          date?: string
+          end_ayah: number
+          end_surah: number
+          id?: string
+          juz_segments?: Json | null
+          log_type?: string
+          page_count?: number
+          start_ayah: number
+          start_surah: number
+          user_id: string
+        }
+        Update: {
+          ayah_count?: number
+          created_at?: string
+          date?: string
+          end_ayah?: number
+          end_surah?: number
+          id?: string
+          juz_segments?: Json | null
+          log_type?: string
+          page_count?: number
+          start_ayah?: number
+          start_surah?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       quran_reading_sessions: {
         Row: {
           ayahs_read: number | null

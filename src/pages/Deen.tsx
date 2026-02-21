@@ -16,7 +16,7 @@ import { getTodaySalahCount } from '@/lib/salah-storage';
 import { useHijriDate } from '@/hooks/useHijriDate';
 import { calcIman } from '@/lib/life-score';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
-import { useQuranDailyTarget } from '@/hooks/useQuranData';
+import { useQuranReadingLog } from '@/hooks/useQuranReadingLog';
 import {
   fetchPrayerTimes,
   getNextPrayerIndex,
@@ -45,7 +45,7 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 const Iman = () => {
   const [, forceUpdate] = useState(0);
   const { settings, loading: settingsLoading } = usePrayerSettings();
-  const { isDoneToday, streak: quranStreak, daysDone } = useQuranDailyTarget();
+  const { hasDoneToday: isDoneToday, streak: quranStreak, todayTotalPages, todayTotalAyahs } = useQuranReadingLog();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
   const [countdown, setCountdown] = useState('');
 
@@ -200,7 +200,7 @@ const Iman = () => {
             {[
               { icon: Star, label: `${salahCount.logged}/5`, sub: 'Salah', to: '/dashboard' },
               { icon: HandHeart, label: `${dailyDhikr.totalCount}`, sub: 'Dhikr', to: '/iman/dhikr' },
-              { icon: BookOpen, label: isDoneToday ? '✓ Done' : 'Pending', sub: 'Quran', to: '/iman/quran' },
+              { icon: BookOpen, label: isDoneToday ? `${todayTotalPages} pg` : 'Pending', sub: 'Quran', to: '/iman/quran' },
               { icon: ListChecks, label: `${sunnahDone}/${sunnahItems.length}`, sub: 'Sunnah', to: '/iman/sunnah' },
             ].map(item => (
               <Link key={item.sub} to={item.to} className="flex-1 min-w-0">
@@ -232,7 +232,7 @@ const Iman = () => {
                   <p className="text-sm font-semibold">Quran</p>
                   <p className="text-[11px] text-muted-foreground mt-0.5">
                     {isDoneToday
-                      ? `${daysDone} days done${quranStreak > 0 ? ` · 🔥 ${quranStreak}d streak` : ''}`
+                      ? `${todayTotalAyahs} ayah · ${todayTotalPages} pg${quranStreak > 0 ? ` · 🔥 ${quranStreak}d streak` : ''}`
                       : quranStreak > 0 ? `🔥 ${quranStreak}d streak · read today?` : 'Start reading'}
                   </p>
                 </CardContent>
