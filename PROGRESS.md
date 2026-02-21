@@ -112,6 +112,7 @@
 | IF End-Fast Review Screen | ✅ | Summary with total time, stats grid, weight input, notes, save/discard |
 | IF Onboarding Polish | ✅ | Consistent font-black headers, subtitles on all steps |
 | Health Hub Redesign | ✅ | Colorful Apple Health-style layout, IF Timer hero, gradient feature cards, animated rings |
+| Health Hub v2 Polish | ✅ | Quick actions row, motivational quote banner, IF active gradient (orange→amber), tool name truncation fix, steps display cap |
 
 ---
 
