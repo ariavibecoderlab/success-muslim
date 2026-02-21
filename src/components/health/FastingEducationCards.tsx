@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, X } from 'lucide-react';
+import { BookOpen, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCardsForLevel, type EducationCard } from '@/lib/if-educational-content';
 
@@ -16,19 +16,22 @@ export default function FastingEducationCards({ level }: Props) {
   return (
     <>
       <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
-        {cards.map(card => (
-          <button
+        {cards.map((card, i) => (
+          <motion.button
             key={card.id}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.35, delay: i * 0.08, ease: 'easeOut' }}
             onClick={() => setExpanded(card)}
-            className="flex-shrink-0 w-48 rounded-xl border border-border bg-card p-3 text-left hover:border-primary/30 transition-colors"
+            className="flex-shrink-0 w-48 rounded-xl border border-border bg-card p-3 text-left hover:border-primary/30 hover:shadow-md transition-all"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <BookOpen className="h-3.5 w-3.5 text-primary" />
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span className="text-[10px] font-medium text-primary">Learn</span>
             </div>
             <p className="text-xs font-semibold line-clamp-1">{card.title}</p>
             <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">{card.summary}</p>
-          </button>
+          </motion.button>
         ))}
       </div>
 

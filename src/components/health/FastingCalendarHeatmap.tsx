@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, subMonths,
 import { ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { motion } from 'framer-motion';
 import type { IFSession } from '@/lib/health-storage';
 
 interface Props {
@@ -80,6 +81,7 @@ export default function FastingCalendarHeatmap({ sessions }: Props) {
   const totalFasts = days.reduce((sum, d) => sum + (dateMap[format(d, 'yyyy-MM-dd')]?.count || 0), 0);
 
   return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: 'easeOut' }}>
     <Card>
       <CardContent className="p-4 space-y-3">
         {/* Streak + Weekly Stats */}
@@ -118,7 +120,7 @@ export default function FastingCalendarHeatmap({ sessions }: Props) {
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-1">
+        <motion.div className="grid grid-cols-7 gap-1" initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.008 } } }}>
           {WEEKDAYS.map(d => (
             <div key={d} className="text-[9px] text-muted-foreground text-center font-medium">{d}</div>
           ))}
@@ -131,8 +133,9 @@ export default function FastingCalendarHeatmap({ sessions }: Props) {
             const isFuture = isAfter(day, today);
             const isToday = isSameDay(day, today);
             return (
-              <div
+              <motion.div
                 key={key}
+                variants={{ hidden: { opacity: 0, scale: 0.7 }, visible: { opacity: 1, scale: 1 } }}
                 className={`aspect-square rounded-sm flex items-center justify-center text-[9px] ${
                   isFuture ? 'bg-secondary/30 text-muted-foreground/30' : getHeatColor(data)
                 } ${data?.completed ? 'text-primary-foreground font-medium' : 'text-foreground/70'} ${
@@ -141,10 +144,10 @@ export default function FastingCalendarHeatmap({ sessions }: Props) {
                 title={`${format(day, 'MMM d')}: ${data?.count || 0} fast(s)`}
               >
                 {day.getDate()}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
 
         {/* Legend */}
         <div className="flex items-center justify-center gap-1.5 pt-1">
@@ -172,5 +175,6 @@ export default function FastingCalendarHeatmap({ sessions }: Props) {
         </div>
       </CardContent>
     </Card>
+    </motion.div>
   );
 }
