@@ -72,11 +72,16 @@ export function useQuranReadingLog() {
 
   // Last position from most recent log's end position, fallback to prefs
   const lastPosition = useMemo(() => {
-    if (logs.length > 0) {
-      const latest = logs[0]; // ordered by created_at desc
-      return { surah: latest.end_surah, ayah: latest.end_ayah };
-    }
-    return { surah: prefs.last_surah, ayah: prefs.last_ayah };
+    const prefPos = { surah: prefs.last_surah, ayah: prefs.last_ayah };
+    if (logs.length === 0) return prefPos;
+
+    const latest = logs[0];
+    const logPos = { surah: latest.end_surah, ayah: latest.end_ayah };
+
+    // Use whichever position is further in the Quran
+    const logIdx = globalAyahIndex(logPos.surah, logPos.ayah);
+    const prefIdx = globalAyahIndex(prefPos.surah, prefPos.ayah);
+    return prefIdx > logIdx ? prefPos : logPos;
   }, [logs, prefs.last_surah, prefs.last_ayah]);
 
   // Last 7 days grouped
