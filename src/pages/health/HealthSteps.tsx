@@ -9,8 +9,9 @@ import SubPageLayout from '@/components/SubPageLayout';
 import {
   getStepsToday, addStepLog, deleteStepLog, getStepsPrefs, setStepsTarget,
   getStepsHistory, getStepsStreak, getTotalStepsAllTime, getBestDayThisWeek,
-  getWeeklyAverage, calcDistance, calcCalories, type ActivityType,
+  getWeeklyAverage, calcDistance, calcCalories, getAllLogs, type ActivityType,
 } from '@/lib/steps-storage';
+import StepsCalendarHeatmap from '@/components/health/StepsCalendarHeatmap';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -299,6 +300,9 @@ const HealthSteps = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Monthly Heatmap */}
+        <StepsCalendarHeatmap logs={getAllLogs()} dailyTarget={prefs.dailyTarget} />
 
         {/* Streak & Milestones */}
         <Card>

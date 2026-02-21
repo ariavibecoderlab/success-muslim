@@ -88,7 +88,7 @@ export function calcCalories(steps: number): number {
 
 // ── Step Logs ──────────────────────────────────────
 
-function getAllLogs(): StepLog[] {
+export function getAllLogs(): StepLog[] {
   return get<StepLog[]>(KEYS.logs, []);
 }
 
