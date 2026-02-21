@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp, Footprints, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp, Footprints, ChevronRight, Smile, UtensilsCrossed } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { getBMI, getHydration, getSleepLog, bmiCategory, getActiveIF, getIFSessions, stopIF } from '@/lib/health-storage';
+import { getBMI, getHydration, getSleepLog, bmiCategory, getActiveIF, getIFSessions, stopIF, addCup } from '@/lib/health-storage';
 import { getStepsToday, getStepsPrefs } from '@/lib/steps-storage';
 import EditableText from '@/components/cms/EditableText';
+import { toast } from 'sonner';
 
 // ── Animation variants ────────────────────────────
 
@@ -29,6 +30,18 @@ const staggerItem = {
   hidden: { opacity: 0, y: 14 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: 'easeOut' as const } },
 };
+
+// ── Motivational quotes ───────────────────────────
+
+const QUOTES = [
+  { text: "Your body is a trust (amanah) from Allah — take care of it.", source: "Islamic Wisdom" },
+  { text: "The strong believer is better and more beloved to Allah than the weak believer.", source: "Sahih Muslim" },
+  { text: "Fasting is a shield; it protects you from the Hellfire.", source: "Hadith" },
+  { text: "Take benefit of five before five: your health before your sickness.", source: "Hadith" },
+  { text: "Eat, drink, but do not be excessive. Allah does not love the excessive.", source: "Quran 7:31" },
+  { text: "In the body there is a piece of flesh — if it is sound, the whole body is sound.", source: "Bukhari & Muslim" },
+  { text: "Movement is a blessing. Every step you take is sadaqah.", source: "Islamic Wisdom" },
+];
 
 // ── Colorful Stats Ring ───────────────────────────
 
@@ -69,6 +82,17 @@ const features = [
   { icon: Moon, title: 'Sunnah Fasting', desc: 'Mon, Thu & White Days', path: '/health/fasting', gradient: 'from-purple-500 to-purple-600' },
 ];
 
+// ── Quick Actions config ──────────────────────────
+
+const quickActions = [
+  { icon: Droplets, label: 'Water', gradient: 'from-blue-400 to-blue-500', action: 'water' },
+  { icon: Smile, label: 'Mood', gradient: 'from-pink-400 to-rose-500', action: 'mood' },
+  { icon: UtensilsCrossed, label: 'Meal', gradient: 'from-green-400 to-emerald-500', action: 'meal' },
+  { icon: Scale, label: 'Weight', gradient: 'from-amber-400 to-amber-500', action: 'weight' },
+  { icon: Footprints, label: 'Steps', gradient: 'from-orange-400 to-orange-500', action: 'steps' },
+  { icon: Timer, label: 'Fast', gradient: 'from-teal-400 to-teal-500', action: 'fast' },
+];
+
 // ── Main component ────────────────────────────────
 
 const Health = () => {
@@ -78,7 +102,9 @@ const Health = () => {
   const sleepLog = getSleepLog();
   const lastSleep = sleepLog[sleepLog.length - 1];
   const cat = bmi ? bmiCategory(bmi.bmi) : null;
-  const { total: stepsToday } = getStepsToday();
+  const { total: rawStepsToday } = getStepsToday();
+  // Cap display at 200k to prevent showing corrupt data
+  const stepsToday = Math.min(rawStepsToday, 200000);
   const stepsPrefs = getStepsPrefs();
   const stepsPct = Math.min(Math.round((stepsToday / stepsPrefs.dailyTarget) * 100), 100);
   const waterPct = Math.min(Math.round((hydration.cups / hydration.goal) * 100), 100);
@@ -87,7 +113,14 @@ const Health = () => {
 
   const [activeIF, setActiveIF] = useState(getActiveIF);
   const [now, setNow] = useState(Date.now());
+  const [quoteIndex, setQuoteIndex] = useState(0);
   const lastSession = getIFSessions()[0];
+
+  // Rotate quote daily based on day-of-year
+  useEffect(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    setQuoteIndex(dayOfYear % QUOTES.length);
+  }, []);
 
   useEffect(() => {
     if (!activeIF) return;
@@ -98,6 +131,30 @@ const Health = () => {
   const handleBreakFast = () => {
     stopIF(false);
     setActiveIF(null);
+  };
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'water':
+        addCup();
+        toast.success('Water logged! 💧');
+        break;
+      case 'mood':
+        toast.info('Mood tracking coming soon!');
+        break;
+      case 'meal':
+        toast.info('Meal tracking coming soon!');
+        break;
+      case 'weight':
+        navigate('/health/weight');
+        break;
+      case 'steps':
+        navigate('/health/steps');
+        break;
+      case 'fast':
+        navigate('/health/if-timer');
+        break;
+    }
   };
 
   let ifRemaining = 0;
@@ -120,6 +177,9 @@ const Health = () => {
   const today = new Date();
   const isMonOrThu = today.getDay() === 1 || today.getDay() === 4;
 
+  const nextQuote = () => setQuoteIndex((prev) => (prev + 1) % QUOTES.length);
+  const prevQuote = () => setQuoteIndex((prev) => (prev - 1 + QUOTES.length) % QUOTES.length);
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader title="Health & Wellness" icon={Heart} />
@@ -128,13 +188,17 @@ const Health = () => {
         {/* ── IF Timer Hero ──────────────────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
           {activeIF ? (
-            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white">
+            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
+                    <motion.div
+                      className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-sm"
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    >
                       <Timer className="h-6 w-6" />
-                    </div>
+                    </motion.div>
                     <div>
                       <div className="flex items-center gap-1.5">
                         <span className="relative flex h-2 w-2">
@@ -162,8 +226,8 @@ const Health = () => {
               </CardContent>
             </Card>
           ) : (
-            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white">
-              <CardContent className="p-5">
+            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+              <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-4">
                   <motion.div
                     className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-sm shrink-0"
@@ -177,7 +241,7 @@ const Health = () => {
                     <p className="text-xs text-white/70 mt-0.5">
                       {lastSession
                         ? `Last: ${lastSession.mode} — ${lastSession.completed ? 'Completed ✓' : 'Ended early'}`
-                        : 'Start your wellness fasting journey'}
+                        : 'Start a fast — your body will thank you 💪'}
                     </p>
                   </div>
                   <Button size="sm" onClick={() => navigate('/health/if-timer')} className="bg-white text-emerald-700 hover:bg-white/90 font-semibold text-xs shrink-0">
@@ -189,8 +253,56 @@ const Health = () => {
           )}
         </motion.div>
 
-        {/* ── Colorful Stats Rings ────────────────── */}
+        {/* ── Motivational Quote Banner ───────────── */}
         <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1}>
+          <Card
+            className="border-0 shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 cursor-pointer overflow-hidden"
+            onClick={nextQuote}
+          >
+            <CardContent className="p-3.5">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={quoteIndex}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-1"
+                >
+                  <p className="text-xs font-medium text-foreground leading-relaxed">"{QUOTES[quoteIndex].text}"</p>
+                  <p className="text-[10px] text-muted-foreground">— {QUOTES[quoteIndex].source}</p>
+                </motion.div>
+              </AnimatePresence>
+              <div className="flex justify-center gap-1 mt-2">
+                {QUOTES.map((_, i) => (
+                  <div key={i} className={`w-1 h-1 rounded-full transition-colors ${i === quoteIndex ? 'bg-primary' : 'bg-muted-foreground/20'}`} />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* ── Quick Actions ──────────────────────── */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
+          <div className="grid grid-cols-6 gap-2">
+            {quickActions.map((qa) => (
+              <motion.button
+                key={qa.action}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => handleQuickAction(qa.action)}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${qa.gradient} flex items-center justify-center shadow-sm`}>
+                  <qa.icon className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-[9px] font-medium text-muted-foreground">{qa.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── Colorful Stats Rings ────────────────── */}
+        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
           <EditableText elementKey="health.stats.title" defaultText="Today's Progress" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
         </motion.div>
         <motion.div className="grid grid-cols-4 gap-3" initial="hidden" animate="visible" variants={staggerContainer}>
@@ -241,7 +353,7 @@ const Health = () => {
 
         {/* ── Gradient Feature Cards ──────────────── */}
         <div>
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={3}>
+          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={4}>
             <EditableText elementKey="health.tools.title" defaultText="Wellness Tools" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
           </motion.div>
           <motion.div className="grid grid-cols-2 gap-2.5" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}>
@@ -251,13 +363,13 @@ const Health = () => {
                   className="cursor-pointer hover:shadow-md transition-all active:scale-[0.98]"
                   onClick={() => navigate(f.path)}
                 >
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shrink-0`}>
-                      <f.icon className="h-5 w-5 text-white" />
+                  <CardContent className="p-3.5 flex items-center gap-2.5">
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${f.gradient} flex items-center justify-center shrink-0`}>
+                      <f.icon className="h-4 w-4 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <EditableText elementKey={`health.feature.${i}.title`} defaultText={f.title} tag="p" className="text-sm font-semibold truncate" />
-                      <EditableText elementKey={`health.feature.${i}.desc`} defaultText={f.desc} tag="p" className="text-[10px] text-muted-foreground" />
+                      <p className="text-[13px] font-semibold leading-tight">{f.title}</p>
+                      <p className="text-[10px] text-muted-foreground leading-tight mt-0.5">{f.desc}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   </CardContent>
