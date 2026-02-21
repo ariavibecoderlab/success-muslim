@@ -1,51 +1,58 @@
 
 
-## Polish the /health Page
+## Redesign /health Page — "Apple Health Meets Islamic Wellness"
 
-### Current Issues
-- No entrance animations (every other polished page uses framer-motion)
-- Hero icon is static (IF Timer page has breathing animations)
-- Stats cards are plain with no visual differentiation
-- Feature cards grid lacks staggered entrance
-- Typography uses `font-bold` instead of `font-black tracking-tight` (inconsistent with polished pages)
-- IF active widget has no progress indicator
-- Sunnah reminder card is basic
-- No circular progress rings for stats (water, steps)
+### PROGRESS.md Update
+- Update date to 2026-02-21
+- Add new row: `IF End-Fast Review Screen | ✅ | Summary with total time, stats grid, weight input, notes, save/discard`
+- Add new row: `IF Onboarding Polish | ✅ | Consistent font-black headers, subtitles on all steps`
+- Add new row: `Health Hub Redesign | ✅ | Colorful Apple Health-style layout, IF Timer hero, gradient feature cards, animated rings`
 
-### Planned Changes (single file: `src/pages/Health.tsx`)
+### Health Page Redesign (src/pages/Health.tsx)
 
-1. **Add framer-motion imports and animation variants**
-   - `fadeUp` stagger variant matching Dashboard pattern (delay: 0.07s per item)
-   - Container variant with `staggerChildren` for feature cards
+**1. IF Timer Hero Card at Top**
+- Large prominent card at the very top (replaces the generic Heart hero)
+- When inactive: gradient background (green-to-teal), large Timer icon with breathing animation, "Start a Fast" CTA button, last fast summary text
+- When active: live countdown ring, elapsed time, pulsing green dot, progress bar, "View Fast" button linking to /health/if-timer
+- This makes IF the flagship feature of the wellness page
 
-2. **Hero section polish**
-   - Upgrade title to `font-black tracking-tight`
-   - Add subtle breathing/pulse animation to the Heart icon (matching IF Timer style)
-   - Wrap hero in `motion.div` with fade-in
+**2. Colorful Stats Ring Section**
+- Replace the flat 4-column grid with larger, color-coded circular progress rings (Apple Health style)
+- Each ring gets a distinct vibrant color:
+  - Water: blue (#3B82F6)
+  - Steps: orange (#F97316)
+  - Sleep: indigo (#6366F1)
+  - BMI: emerald (#10B981)
+- Rings are bigger (size 56px) with bold center values
+- Arranged in a 2x2 grid with labels below each ring
 
-3. **Stats cards upgrade**
-   - Wrap stats grid in staggered `motion.div`
-   - Add mini circular progress rings for Water (cups/goal) and Steps (percentage) using inline SVG circles
-   - Color-code BMI value based on category (green/yellow/red)
-   - Add subtle `hover:shadow-sm` and `transition-shadow` to each stat card
+**3. Gradient Feature Cards**
+- Each feature card gets a unique gradient icon background matching its theme:
+  - BMI: emerald gradient
+  - Weight: amber gradient
+  - Hydration: blue gradient
+  - Sleep: indigo gradient
+  - Steps: orange gradient
+  - Sunnah Fasting: purple gradient
+- Remove IF Timer from the feature grid (it's now the hero)
+- Cards get slightly rounded icon containers with gradient fills
+- Arrow/chevron indicator on each card for tap affordance
 
-4. **Active IF widget enhancement**
-   - Add a slim `Progress` bar showing elapsed percentage
-   - Wrap in `motion.div` with a slide-down entrance
-   - Add a pulsing green dot indicator next to "IF Fasting Active"
+**4. Sunnah Reminder Enhancement**
+- Warmer gradient background (amber/yellow tones) instead of plain secondary
+- Moon icon with subtle glow effect
+- Slightly larger text with encouraging tone
 
-5. **Feature cards grid animations**
-   - Staggered fade-up entrance for each card (delay: index * 0.06s)
-   - Add `hover:shadow-md` transition for premium hover feel
-   - Slightly larger icon containers with gradient backgrounds matching each feature's theme
-
-6. **Sunnah reminder card**
-   - Add gentle fade-in animation
-   - Upgrade border with `border-primary/20` accent
+**5. Animation Polish**
+- All existing framer-motion staggered animations retained
+- IF Hero card gets a scale-in entrance
+- Stats rings animate their stroke-dashoffset on mount (countUp effect)
+- Feature cards keep staggered fadeUp
 
 ### Technical Details
-- Only `src/pages/Health.tsx` will be modified
-- Import `motion` from `framer-motion` and `Progress` from UI components
-- All animations use `viewport={{ once: true }}` to fire once on scroll
-- No new dependencies needed
+- Single file change: `src/pages/Health.tsx`
+- Plus `PROGRESS.md` update
+- No new dependencies
+- Features array reduced from 7 to 6 (IF Timer removed from grid)
+- MiniRing component upgraded with larger default size and animated offset
 
