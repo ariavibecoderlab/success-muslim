@@ -1,6 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
+import { format } from 'date-fns';
 import { Moon, Sun, BookOpen, HandHeart, Star, Flame, Settings2, Calendar, Trophy, Check } from 'lucide-react';
 import SubPageLayout from '@/components/SubPageLayout';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -80,7 +83,10 @@ const RamadanOptimizer = () => {
   const [tempSettings, setTempSettings] = useState<RamadanSettings>(DEFAULT_SETTINGS);
   const [fajrTime, setFajrTime] = useState('05:30');
   const [maghribTime, setMaghribTime] = useState('19:15');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const selectedDateKey = format(selectedDate, 'yyyy-MM-dd');
   const today = new Date().toISOString().split('T')[0];
+  const isSelectedToday = selectedDateKey === today;
   const { isRamadan, ramadanDay } = useHijriDate();
   const isLastTenNights = isRamadan && ramadanDay >= 21;
 
@@ -135,7 +141,7 @@ const RamadanOptimizer = () => {
     load();
   }, [user]);
 
-  const todayLog = logs.find(l => l.date === today);
+  const selectedLog = logs.find(l => l.date === selectedDateKey);
 
   // Iftar countdown
   const [iftarCountdown, setIftarCountdown] = useState('');
@@ -168,13 +174,13 @@ const RamadanOptimizer = () => {
     return `${String(Math.floor(totalMin / 60)).padStart(2, '0')}:${String(totalMin % 60).padStart(2, '0')}`;
   }, [fajrTime, settings.suhoor_minutes_before_fajr]);
 
-  const logToday = async (field: string, value: any) => {
+  const logForDate = async (field: string, value: any) => {
     if (!user) return;
-    if (todayLog) {
-      await supabase.from('ramadan_daily_log').update({ [field]: value }).eq('id', todayLog.id);
-      setLogs(prev => prev.map(l => l.id === todayLog.id ? { ...l, [field]: value } : l));
+    if (selectedLog) {
+      await supabase.from('ramadan_daily_log').update({ [field]: value }).eq('id', selectedLog.id);
+      setLogs(prev => prev.map(l => l.id === selectedLog.id ? { ...l, [field]: value } : l));
     } else {
-      const entry = { user_id: user.id, date: today, [field]: value };
+      const entry = { user_id: user.id, date: selectedDateKey, [field]: value };
       const { data } = await supabase.from('ramadan_daily_log').insert(entry).select().single();
       if (data) {
         setLogs(prev => [{
@@ -188,11 +194,11 @@ const RamadanOptimizer = () => {
   };
 
   const toggleSunnahSolat = async (solatId: string) => {
-    const current = todayLog?.sunnah_solat ?? [];
+    const current = selectedLog?.sunnah_solat ?? [];
     const updated = current.includes(solatId)
       ? current.filter((id: string) => id !== solatId)
       : [...current, solatId];
-    await logToday('sunnah_solat', updated);
+    await logForDate('sunnah_solat', updated);
   };
 
   const saveSettings = async () => {
@@ -266,6 +272,14 @@ const RamadanOptimizer = () => {
       }
     >
       <div className="space-y-5">
+        {/* Backdate */}
+        <BackdatePrompt moduleKey="ramadan" onLogPastData={() => {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          setSelectedDate(yesterday);
+        }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
+
         {/* Status Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className={`border-primary/20 ${isRamadan ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent' : 'bg-gradient-to-br from-muted/50 to-transparent'}`}>
@@ -327,16 +341,16 @@ const RamadanOptimizer = () => {
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     🤲 Selawat
                   </span>
-                  <span className="text-xs font-bold">{todayLog?.selawat_count ?? 0}/{SELAWAT_TARGET}</span>
+                  <span className="text-xs font-bold">{selectedLog?.selawat_count ?? 0}/{SELAWAT_TARGET}</span>
                 </div>
-                <Progress value={((todayLog?.selawat_count ?? 0) / SELAWAT_TARGET) * 100} className="h-2 mb-1.5" />
+                <Progress value={((selectedLog?.selawat_count ?? 0) / SELAWAT_TARGET) * 100} className="h-2 mb-1.5" />
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 10)}>+10</Button>
+                    onClick={() => logForDate('selawat_count', (selectedLog?.selawat_count ?? 0) + 10)}>+10</Button>
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 33)}>+33</Button>
+                    onClick={() => logForDate('selawat_count', (selectedLog?.selawat_count ?? 0) + 33)}>+33</Button>
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('selawat_count', (todayLog?.selawat_count ?? 0) + 100)}>+100</Button>
+                    onClick={() => logForDate('selawat_count', (selectedLog?.selawat_count ?? 0) + 100)}>+100</Button>
                 </div>
               </div>
 
@@ -346,16 +360,16 @@ const RamadanOptimizer = () => {
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     📿 Dzikir
                   </span>
-                  <span className="text-xs font-bold">{todayLog?.dhikr_count ?? 0}/{DZIKIR_TARGET}</span>
+                  <span className="text-xs font-bold">{selectedLog?.dhikr_count ?? 0}/{DZIKIR_TARGET}</span>
                 </div>
-                <Progress value={((todayLog?.dhikr_count ?? 0) / DZIKIR_TARGET) * 100} className="h-2 mb-1.5" />
+                <Progress value={((selectedLog?.dhikr_count ?? 0) / DZIKIR_TARGET) * 100} className="h-2 mb-1.5" />
                 <div className="flex gap-2">
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 10)}>+10</Button>
+                    onClick={() => logForDate('dhikr_count', (selectedLog?.dhikr_count ?? 0) + 10)}>+10</Button>
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 33)}>+33</Button>
+                    onClick={() => logForDate('dhikr_count', (selectedLog?.dhikr_count ?? 0) + 33)}>+33</Button>
                   <Button size="sm" variant="outline" className="h-7 text-xs px-3"
-                    onClick={() => logToday('dhikr_count', (todayLog?.dhikr_count ?? 0) + 100)}>+100</Button>
+                    onClick={() => logForDate('dhikr_count', (selectedLog?.dhikr_count ?? 0) + 100)}>+100</Button>
                 </div>
               </div>
             </CardContent>
@@ -366,13 +380,13 @@ const RamadanOptimizer = () => {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <Card>
             <CardContent className="p-4 space-y-3">
-              <p className="text-sm font-semibold">Today's Ibadah</p>
+              <p className="text-sm font-semibold">{isSelectedToday ? "Today's Ibadah" : format(selectedDate, 'd MMM yyyy')}</p>
 
               {/* Fasted */}
               <div className="flex items-center justify-between">
-                <span className="text-sm">Fasted Today</span>
-                <Switch checked={todayLog?.fasted ?? false}
-                  onCheckedChange={v => logToday('fasted', v)} />
+                <span className="text-sm">Fasted</span>
+                <Switch checked={selectedLog?.fasted ?? false}
+                  onCheckedChange={v => logForDate('fasted', v)} />
               </div>
 
               {/* Quran Pages */}
@@ -381,12 +395,12 @@ const RamadanOptimizer = () => {
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <BookOpen className="h-3 w-3" /> Quran Pages
                   </span>
-                  <span className="text-xs font-bold">{todayLog?.quran_pages ?? 0}/{settings.daily_quran_goal}</span>
+                  <span className="text-xs font-bold">{selectedLog?.quran_pages ?? 0}/{settings.daily_quran_goal}</span>
                 </div>
                 <div className="flex gap-2">
-                  <Progress value={((todayLog?.quran_pages ?? 0) / settings.daily_quran_goal) * 100} className="h-2 flex-1" />
+                  <Progress value={((selectedLog?.quran_pages ?? 0) / settings.daily_quran_goal) * 100} className="h-2 flex-1" />
                   <Button size="sm" variant="outline" className="h-6 text-xs px-2"
-                    onClick={() => logToday('quran_pages', (todayLog?.quran_pages ?? 0) + 1)}>+1</Button>
+                    onClick={() => logForDate('quran_pages', (selectedLog?.quran_pages ?? 0) + 1)}>+1</Button>
                 </div>
               </div>
 
@@ -397,7 +411,7 @@ const RamadanOptimizer = () => {
                     <Star className="h-3 w-3" /> Tarawih
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold">{todayLog?.tarawih_rakaat ?? 0}/{settings.tarawih_target} rakaat</span>
+                    <span className="text-xs font-bold">{selectedLog?.tarawih_rakaat ?? 0}/{settings.tarawih_target} rakaat</span>
                   </div>
                 </div>
                 <div className="flex gap-2 mb-1.5">
@@ -415,9 +429,9 @@ const RamadanOptimizer = () => {
                     }}>20 Rakaat</Button>
                 </div>
                 <div className="flex gap-2">
-                  <Progress value={((todayLog?.tarawih_rakaat ?? 0) / settings.tarawih_target) * 100} className="h-2 flex-1" />
+                  <Progress value={((selectedLog?.tarawih_rakaat ?? 0) / settings.tarawih_target) * 100} className="h-2 flex-1" />
                   <Button size="sm" variant="outline" className="h-6 text-xs px-2"
-                    onClick={() => logToday('tarawih_rakaat', Math.min((todayLog?.tarawih_rakaat ?? 0) + 2, settings.tarawih_target))}>+2</Button>
+                    onClick={() => logForDate('tarawih_rakaat', Math.min((selectedLog?.tarawih_rakaat ?? 0) + 2, settings.tarawih_target))}>+2</Button>
                 </div>
               </div>
             </CardContent>
@@ -431,7 +445,7 @@ const RamadanOptimizer = () => {
               <p className="text-sm font-semibold">Solat Sunnah</p>
               <div className="space-y-2">
                 {SUNNAH_SOLAT_LIST.map(solat => {
-                  const isChecked = (todayLog?.sunnah_solat ?? []).includes(solat.id);
+                  const isChecked = (selectedLog?.sunnah_solat ?? []).includes(solat.id);
                   return (
                     <button
                       key={solat.id}
@@ -451,7 +465,7 @@ const RamadanOptimizer = () => {
                 })}
               </div>
               <p className="text-[10px] text-muted-foreground text-center">
-                {(todayLog?.sunnah_solat ?? []).length}/{SUNNAH_SOLAT_LIST.length} completed today
+                {(selectedLog?.sunnah_solat ?? []).length}/{SUNNAH_SOLAT_LIST.length} completed
               </p>
             </CardContent>
           </Card>

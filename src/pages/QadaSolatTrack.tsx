@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
 import { Flame, Target, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -8,6 +9,8 @@ import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
 import { PRAYER_NAMES, PrayerType } from '@/lib/types';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const PRAYERS: PrayerType[] = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
@@ -20,17 +23,19 @@ const IMAN_TRACKERS = [
 const QadaSolatTrack = () => {
   const setup = getQadaSetup();
   const [progress, setProgress] = useState(getQadaProgress());
-  const today = getTodayKey();
-  const todayLog = progress.dailyLogs[today] || { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
-  const todayTotal = Object.values(todayLog).reduce((s, v) => s + v, 0);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === getTodayKey();
+  const dayLog = progress.dailyLogs[dateKey] || { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
+  const dayTotal = Object.values(dayLog).reduce((s, v) => s + v, 0);
 
   const handleIncrement = (prayer: PrayerType) => {
-    setProgress(logQadaPrayer(prayer));
+    setProgress(logQadaPrayer(prayer, 1, dateKey));
   };
 
   const handleDecrement = (prayer: PrayerType) => {
-    if (todayLog[prayer] > 0) {
-      setProgress(undoQadaPrayer(prayer));
+    if (dayLog[prayer] > 0) {
+      setProgress(undoQadaPrayer(prayer, dateKey));
     }
   };
 
@@ -53,15 +58,21 @@ const QadaSolatTrack = () => {
   const remaining = setup.totalPrayers - progress.totalCompleted;
   const pct = Math.min((progress.totalCompleted / setup.totalPrayers) * 100, 100);
 
-  const encouragement = todayTotal >= setup.dailyTarget
-    ? "Alhamdulillah! Target reached today! 🌟"
-    : todayTotal > 0
+  const encouragement = dayTotal >= setup.dailyTarget
+    ? "Alhamdulillah! Target reached! 🌟"
+    : dayTotal > 0
     ? "Keep going, you're doing great!"
-    : "Bismillah, start your qada for today";
+    : "Bismillah, start your qada";
 
   return (
     <SubPageLayout title="Qada Solat" backTo="/iman" siblingRoutes={IMAN_TRACKERS} currentPath="/qada-solat/track">
+      <BackdatePrompt moduleKey="qada-solat" onLogPastData={() => {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        setSelectedDate(yesterday);
+      }} />
       <div className="space-y-6">
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
         {/* Overall progress */}
         <Card>
           <CardContent className="p-6">
@@ -102,12 +113,12 @@ const QadaSolatTrack = () => {
         {/* Today's target */}
         <div>
           <div className="flex justify-between items-center mb-3">
-            <h2 className="font-semibold">Today's Qada</h2>
-            <span className="text-sm text-muted-foreground">{todayTotal} / {setup.dailyTarget}</span>
+            <h2 className="font-semibold">{isToday ? "Today's Qada" : format(selectedDate, 'd MMM yyyy')}</h2>
+            <span className="text-sm text-muted-foreground">{dayTotal} / {setup.dailyTarget}</span>
           </div>
           <div className="space-y-2">
           {PRAYERS.map((prayer, i) => {
-              const count = todayLog[prayer] || 0;
+              const count = dayLog[prayer] || 0;
               const done = count > 0;
               return (
                 <motion.div
