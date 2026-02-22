@@ -1,46 +1,62 @@
 
 
-## Fix Three Production Issues Before Launch
+## Phase 2 Backdate: Weight, Steps, IF Timer, Quran Tracker
 
-### Issue 1: Family Invite Link Shows Wrong Domain
+### Overview
+Add the `BackdateDatePicker` component to the remaining 4 trackers so users can log data for past dates (up to 90 days back). Each module uses LocalStorage with date-keyed entries, so the storage layer already supports arbitrary dates -- we just need to wire up the date picker in the UI and pass the selected date to the storage functions.
 
-**Problem:** `useFamily.ts` hardcodes `https://success-muslim.lovable.app` when generating invite links. Also, `Install.tsx` references the old domain in install instructions.
+### Changes by Module
 
-**Fix:**
-- **`src/hooks/useFamily.ts` (line 115):** Change invite link to use `https://www.successmuslim.app/family/join/${invite_code}`
-- **`src/pages/Install.tsx` (lines 94, 125, 156):** Replace all 3 instances of `success-muslim.lovable.app` with `www.successmuslim.app`
-- **`index.html` (lines 14, 20):** The OG/Twitter image URLs point to a Lovable CDN -- these can stay as-is (they're image hosting URLs, not page URLs), but we should add `og:url` meta tag pointing to `https://www.successmuslim.app`
+#### 1. Weight Tracker (`src/pages/health/HealthWeight.tsx`)
+- Add `BackdateDatePicker` and `BackdatePrompt` at the top of the page
+- Track `selectedDate` state; derive `dateKey` from it
+- In `handleAdd`, use `dateKey` instead of `todayKey()` when calling `addWeightEntry`
+- Update the "Update Today" / "Log Weight" button label to reflect the selected date
+- The `addWeightEntry` function in `health-storage.ts` already accepts a `{ date, weight }` object, so no storage changes needed
 
-### Issue 2: Lovable Login Showing on Production
+#### 2. Steps Tracker (`src/pages/health/HealthSteps.tsx`)
+- Add `BackdateDatePicker` and `BackdatePrompt` at the top
+- Track `selectedDate` state
+- Modify `addStepLog` in `src/lib/steps-storage.ts` to accept an optional `date` parameter (currently hardcodes `todayKey()`)
+- Pass `selectedDate` formatted as `yyyy-MM-dd` when logging steps
+- Show logs for the selected date instead of always today
+- Modify `getStepsToday` to accept an optional date parameter (or add a `getStepsForDate` variant)
 
-**What's happening:** The `Auth.tsx` page uses `lovable.auth.signInWithOAuth('google', ...)` from `@lovable.dev/cloud-auth-js`. This is the correct SDK for Google OAuth when using Lovable Cloud -- it is NOT "Lovable branding," it's the auth infrastructure.
+#### 3. IF Timer (`src/pages/health/HealthIFTimer.tsx`)
+- Add a "Log Past Fast" button in the inactive view (below the Start Fast button)
+- This opens a dialog with: date picker, protocol selector, duration input, and Save button
+- Manually creates an IF session entry with the selected past date as `startTime`
+- No changes to the active timer flow -- backdate only applies to manual logging of completed past fasts
+- Modify `src/lib/health-storage.ts` to add a `logPastIF(date, mode, hours)` function that inserts a completed session
 
-**Clarification needed:** The Google OAuth flow goes through Lovable Cloud's auth system, which is expected behavior. The login page itself (`Auth.tsx`) already shows only Success Muslim branding (Moon icon, "Success Muslim" name). If the user is seeing a Lovable-branded consent screen during Google OAuth, that's part of the Lovable Cloud auth flow and cannot be changed from code.
+#### 4. Quran Tracker (`src/pages/QuranTracker.tsx`)
+- Add `BackdateDatePicker` and `BackdatePrompt` at the top
+- Track `selectedDate` state
+- Modify `logQuranPages` and `addQuranPages` in `src/lib/quran-storage.ts` to accept an optional `date` parameter (currently hardcodes `todayKey()`)
+- Load `getQuranDay(dateKey)` for the selected date so the counter shows that day's data
+- Pass `dateKey` to all page-add and log operations
 
-**What we CAN do:** Ensure the Auth page itself has zero Lovable references in visible UI -- which it already does. The page shows the Moon icon and "Welcome Back" text with Success Muslim styling.
+### Technical Details
 
-### Issue 3: "Edit with Lovable" Badge Visible on Production
+**Storage changes:**
+- `src/lib/steps-storage.ts`: Add optional `date` param to `addStepLog` (line 106: `date: todayKey()` becomes `date: dateOverride || todayKey()`)
+- `src/lib/steps-storage.ts`: Add `getStepsForDate(date)` function
+- `src/lib/quran-storage.ts`: Add optional `date` param to `logQuranPages` (line 44) and `addQuranPages` (line 60)
+- `src/lib/health-storage.ts`: Add `logPastIF(date, mode, hours)` function that pushes a completed session
 
-**This is a Lovable platform setting, not a code fix.** The badge is injected by the Lovable platform and can be hidden via:
+**UI pattern (consistent across all 4):**
+- `BackdatePrompt` shown on first visit (one-time, uses localStorage flag per module)
+- `BackdateDatePicker` placed below the page title, above the main content
+- When a past date is selected, an amber "Backdating" label appears
+- All data reads and writes use the selected date
 
-**Settings -> Project Settings -> "Hide 'Lovable' Badge"**
-
-No code change needed -- this is toggled in the Lovable project settings UI.
-
----
-
-### Summary of Code Changes
-
-| File | Change |
-|---|---|
-| `src/hooks/useFamily.ts` | Line 115: replace domain with `https://www.successmuslim.app` |
-| `src/pages/Install.tsx` | Lines 94, 125, 156: replace 3x `success-muslim.lovable.app` with `www.successmuslim.app` |
-| `index.html` | Add `og:url` meta tag with production domain |
-| `PROGRESS.md` | Log production fixes |
-
-### Non-Code Actions (User Required)
-
-1. **Hide Lovable Badge:** Go to your Lovable project Settings and toggle "Hide 'Lovable' Badge" ON
-2. **Google OAuth branding:** The Lovable Cloud auth consent screen is expected behavior -- the login page UI itself already shows only Success Muslim branding
-3. **Existing invite links:** Any families already created in the database still have the old `invite_link` stored. You may want to run a SQL update to fix those, or we can make the share flow use a dynamically generated link instead of the stored one
+**Files to modify (8 files):**
+1. `src/pages/health/HealthWeight.tsx` -- add date picker + wire date to logging
+2. `src/pages/health/HealthSteps.tsx` -- add date picker + wire date to logging
+3. `src/pages/health/HealthIFTimer.tsx` -- add "Log Past Fast" manual entry dialog
+4. `src/pages/QuranTracker.tsx` -- add date picker + wire date to logging
+5. `src/lib/steps-storage.ts` -- add date param to `addStepLog`, add `getStepsForDate`
+6. `src/lib/quran-storage.ts` -- add date param to `logQuranPages` and `addQuranPages`
+7. `src/lib/health-storage.ts` -- add `logPastIF` function
+8. `PROGRESS.md` -- mark Phase 2 as complete
 
