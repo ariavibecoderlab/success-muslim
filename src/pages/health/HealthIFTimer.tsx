@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup, logPastIF } from '@/lib/health-storage';
+import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup, logPastIF, editIFSession } from '@/lib/health-storage';
 import { format, subDays, startOfDay, isAfter, isBefore } from 'date-fns';
 import { motion } from 'framer-motion';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
@@ -28,7 +28,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -88,6 +89,17 @@ const HealthIFTimer = () => {
   const [endReviewNotes, setEndReviewNotes] = useState('');
   const [endReviewSnapshot, setEndReviewSnapshot] = useState<{ elapsed: number; elapsedHours: number; mode: string; startTime: string; goalTime: string; level: number; stageName: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [endReviewDate, setEndReviewDate] = useState<Date>(new Date());
+  const [endReviewTime, setEndReviewTime] = useState(format(new Date(), 'HH:mm'));
+  const [endReviewError, setEndReviewError] = useState('');
+
+  // Edit past fast state
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editStartTime, setEditStartTime] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [editEndTime, setEditEndTime] = useState('');
+  const [editError, setEditError] = useState('');
 
   // Log Past Fast state
   const [showLogPast, setShowLogPast] = useState(false);
@@ -146,13 +158,54 @@ const HealthIFTimer = () => {
       level: stage.level,
       stageName: stage.name,
     });
+    const now = new Date();
+    setEndReviewDate(now);
+    setEndReviewTime(format(now, 'HH:mm'));
+    setEndReviewError('');
     setEndReviewWeight('');
     setEndReviewNotes('');
     setShowEndReview(true);
   };
 
+  // Compute end review duration based on editable date/time
+  const getEndReviewEndTime = (): Date | null => {
+    if (!active) return null;
+    const [h, m] = endReviewTime.split(':').map(Number);
+    const d = new Date(endReviewDate);
+    d.setHours(h, m, 0, 0);
+    return d;
+  };
+
+  const endReviewDuration = (() => {
+    if (!active) return null;
+    const endDt = getEndReviewEndTime();
+    if (!endDt) return null;
+    const startMs = new Date(active.startTime).getTime();
+    const endMs = endDt.getTime();
+    const diffSec = (endMs - startMs) / 1000;
+    if (diffSec <= 0) return null;
+    const hours = Math.floor(diffSec / 3600);
+    const mins = Math.round((diffSec % 3600) / 60);
+    return { hours, mins, totalSec: diffSec };
+  })();
+
+  const validateEndReview = (): string => {
+    if (!active) return 'No active fast';
+    const endDt = getEndReviewEndTime();
+    if (!endDt) return 'Invalid end time';
+    const startMs = new Date(active.startTime).getTime();
+    const endMs = endDt.getTime();
+    if (endMs <= startMs) return 'End time cannot be before start time';
+    if (endMs > Date.now() + 60000) return 'End time cannot be in the future';
+    if ((endMs - startMs) < 60000) return 'Fast must be at least 1 minute';
+    return '';
+  };
+
   const handleSaveFast = () => {
-    stopIF(true);
+    const error = validateEndReview();
+    if (error) { setEndReviewError(error); return; }
+    const endDt = getEndReviewEndTime();
+    stopIF(true, endDt?.toISOString());
     setActive(null);
     const newSessions = getIFSessions();
     setSessions(newSessions);
@@ -509,15 +562,48 @@ const HealthIFTimer = () => {
               <p className="text-xs text-muted-foreground">Review your fast before saving</p>
             </div>
 
-            {/* Summary Card */}
+             {/* Summary Card */}
             <Card className="border-primary/20">
               <CardContent className="p-4 space-y-3">
                 <div className="text-center py-3 border-b border-border/50">
                   <p className="text-3xl font-black tracking-tight">
-                    {Math.floor(endReviewSnapshot.elapsedHours)}h {Math.round((endReviewSnapshot.elapsedHours % 1) * 60)}m
+                    {endReviewDuration ? `${endReviewDuration.hours}h ${endReviewDuration.mins}m` : '—'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">Total Fasting Time</p>
                 </div>
+
+                {/* Editable End Date/Time */}
+                <div className="space-y-3 pt-1">
+                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">End Date & Time</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-muted-foreground mb-1 block">Date</label>
+                      <Input
+                        type="date"
+                        value={format(endReviewDate, 'yyyy-MM-dd')}
+                        max={format(new Date(), 'yyyy-MM-dd')}
+                        onChange={e => {
+                          const d = new Date(e.target.value + 'T12:00:00');
+                          if (!isNaN(d.getTime())) { setEndReviewDate(d); setEndReviewError(''); }
+                        }}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-muted-foreground mb-1 block">Time</label>
+                      <Input
+                        type="time"
+                        value={endReviewTime}
+                        onChange={e => { setEndReviewTime(e.target.value); setEndReviewError(''); }}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                  </div>
+                  {endReviewError && (
+                    <p className="text-xs text-destructive font-medium">{endReviewError}</p>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-secondary/50 rounded-lg p-3 text-center">
                     <p className="text-sm font-bold">{endReviewSnapshot.mode}</p>
@@ -532,7 +618,7 @@ const HealthIFTimer = () => {
                     <p className="text-[10px] text-muted-foreground">Started</p>
                   </div>
                   <div className="bg-secondary/50 rounded-lg p-3 text-center">
-                    <p className="text-sm font-bold">{format(new Date(), 'HH:mm')}</p>
+                    <p className="text-sm font-bold">{endReviewTime}</p>
                     <p className="text-[10px] text-muted-foreground">Ended</p>
                   </div>
                 </div>
@@ -632,21 +718,121 @@ const HealthIFTimer = () => {
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Recent Fasts</p>
               <div className="space-y-2.5">
-                {sessions.slice(0, 5).map((s, i) => (
-                  <div key={i} className="flex items-center justify-between text-sm py-1.5 border-b border-border/30 last:border-0">
-                    <span className="text-muted-foreground text-xs">{s.startTime ? format(new Date(s.startTime), 'dd MMM · HH:mm') : '—'}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-xs">{s.mode}</span>
-                      <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${s.completed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
-                        {s.completed ? 'Completed' : 'Cancelled'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                {sessions.slice(0, 5).map((s, i) => {
+                  const dur = s.startTime && s.endTime
+                    ? (() => {
+                        const sec = (new Date(s.endTime).getTime() - new Date(s.startTime).getTime()) / 1000;
+                        return `${Math.floor(sec / 3600)}h ${Math.round((sec % 3600) / 60)}m`;
+                      })()
+                    : null;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        if (!s.endTime) return;
+                        setEditIndex(i);
+                        setEditStartDate(format(new Date(s.startTime), 'yyyy-MM-dd'));
+                        setEditStartTime(format(new Date(s.startTime), 'HH:mm'));
+                        setEditEndDate(format(new Date(s.endTime), 'yyyy-MM-dd'));
+                        setEditEndTime(format(new Date(s.endTime), 'HH:mm'));
+                        setEditError('');
+                      }}
+                      className="flex items-center justify-between text-sm py-1.5 border-b border-border/30 last:border-0 w-full text-left hover:bg-secondary/30 rounded px-1 -mx-1 transition-colors"
+                    >
+                      <div className="flex flex-col">
+                        <span className="text-muted-foreground text-xs">{s.startTime ? format(new Date(s.startTime), 'dd MMM · HH:mm') : '—'}</span>
+                        {dur && <span className="text-[10px] text-muted-foreground">{dur}</span>}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-xs">{s.mode}</span>
+                        <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium ${s.completed ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+                          {s.completed ? 'Completed' : 'Cancelled'}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
         )}
+
+        {/* Edit Past Fast Dialog */}
+        <Dialog open={editIndex !== null} onOpenChange={(open) => { if (!open) setEditIndex(null); }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-primary" />
+                Edit Fast
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-1">
+              {editIndex !== null && sessions[editIndex] && (
+                <>
+                  <div className="bg-secondary/50 rounded-lg p-3 text-center">
+                    <p className="text-sm font-bold">{sessions[editIndex].mode}</p>
+                    <p className="text-[10px] text-muted-foreground">Protocol</p>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 block">Start</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="date" value={editStartDate}
+                        onChange={e => { setEditStartDate(e.target.value); setEditError(''); }}
+                        className="h-9 text-sm" />
+                      <Input type="time" value={editStartTime}
+                        onChange={e => { setEditStartTime(e.target.value); setEditError(''); }}
+                        className="h-9 text-sm" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label className="text-xs font-medium mb-1.5 block">End</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Input type="date" value={editEndDate}
+                        onChange={e => { setEditEndDate(e.target.value); setEditError(''); }}
+                        className="h-9 text-sm" />
+                      <Input type="time" value={editEndTime}
+                        onChange={e => { setEditEndTime(e.target.value); setEditError(''); }}
+                        className="h-9 text-sm" />
+                    </div>
+                  </div>
+
+                  {/* Duration display */}
+                  {(() => {
+                    const s = new Date(`${editStartDate}T${editStartTime}:00`).getTime();
+                    const e = new Date(`${editEndDate}T${editEndTime}:00`).getTime();
+                    const sec = (e - s) / 1000;
+                    if (sec > 0) {
+                      return (
+                        <div className="text-center py-2 bg-secondary/40 rounded-lg">
+                          <p className="text-lg font-black">{Math.floor(sec / 3600)}h {Math.round((sec % 3600) / 60)}m</p>
+                          <p className="text-[10px] text-muted-foreground">Duration</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
+                  {editError && <p className="text-xs text-destructive font-medium">{editError}</p>}
+                </>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditIndex(null)}>Cancel</Button>
+              <Button onClick={() => {
+                if (editIndex === null) return;
+                const newStart = new Date(`${editStartDate}T${editStartTime}:00`).toISOString();
+                const newEnd = new Date(`${editEndDate}T${editEndTime}:00`).toISOString();
+                const err = editIFSession(editIndex, { startTime: newStart, endTime: newEnd });
+                if (err) { setEditError(err); return; }
+                setSessions(getIFSessions());
+                setEditIndex(null);
+                toast.success('Fast updated!');
+              }}>Save</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SubPageLayout>
   );
