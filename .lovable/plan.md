@@ -1,26 +1,75 @@
 
 
-## Fix: Family Invite Links Using Wrong Domain
+## Fix Qada Solat Tracker
 
-### Root Cause
+### Problems and Root Causes
 
-Two separate issues:
-1. The share function in `FamilySettings.tsx` reads `family.invite_link` from the database. Families created before the domain fix still have `https://success-muslim.lovable.app/...` stored.
-2. The `CreateFamily.tsx` post-creation screen also reads `created.invite_link` from the DB response, which is correct for new families but the pattern is fragile.
+1. **"43,867 remaining"** -- The calculation is mathematically correct (e.g., 18 years x 365 days x 65% missed x 5 prayers = ~21k). The number may seem unrealistic but is accurate based on user input. The real issue is users can't edit their total if they entered wrong values.
 
-### Solution
+2. **"Est. 2 March 2050"** -- The completion estimate shows an absolute date far in the future. For long timelines, "~24 years at current pace" is more useful than a specific date.
 
-Stop relying on the stored `invite_link` from the database. Instead, always construct the link dynamically from the invite code + production domain constant.
+3. **Progress bar at 0%** -- `Math.round()` rounds tiny percentages (e.g., 25/43867 = 0.057%) to 0%. The progress bar needs a minimum visible value when any progress exists.
 
 ### Changes
 
-| File | Change |
-|------|--------|
-| `src/pages/family/FamilySettings.tsx` | In `handleShare`, construct the link as `https://www.successmuslim.app/family/join/${family.invite_code}` instead of using `family.invite_link` |
-| `src/pages/family/CreateFamily.tsx` | Same approach: construct the invite link from the code rather than reading from DB response |
-| Database migration | Update existing records: `UPDATE families SET invite_link = 'https://www.successmuslim.app/family/join/' || invite_code WHERE invite_link LIKE '%success-muslim.lovable.app%';` |
+#### 1. `src/pages/QadaSolatTrack.tsx` -- Main tracker page
 
-### Technical Detail
+- Add "Edit" button (Settings2 icon) next to "Overall Progress" heading
+- Add Dialog to edit `totalPrayers` and `dailyTarget` -- saves via `saveQadaSetup()`
+- Replace `estimateCompletionDate()` with `formatYearsMonths(estimateCompletionDays())` for human-friendly display
+- Add minimum progress bar value: `Math.max(pct, progress.totalCompleted > 0 ? 0.5 : 0)` so any progress shows a visible sliver
+- Upgrade encouragement messages:
+  - Streak >= 5: "5 day streak -- MashaAllah!"
+  - Streak >= 3: "Keep it up! X day streak"
+  - Any progress today: "Every prayer counts. Keep going"
+  - No progress: "Bismillah, start your qada"
+- Format remaining with `toLocaleString()` (already done) and add "~X years at current pace" below
 
-A shared constant `PRODUCTION_DOMAIN` could be introduced, but since only two files use it and `useFamily.ts` already hardcodes the same URL, the simplest approach is to construct the URL inline in the two affected files. The DB migration fixes all existing records so the stored values are also correct going forward.
+#### 2. `src/pages/Deen.tsx` -- Iman page (Qada Solat card)
+
+- Line 416: Replace `Est. {estimateCompletionDate(...)}` with `~{formatYearsMonths(estimateCompletionDays(...))} left`
+- Line 421: Replace `Math.round(...)` with logic that shows at least `<1%` when progress > 0 but rounds to 0
+- Line 424: Add minimum progress bar value (same `Math.max` pattern)
+
+#### 3. `src/lib/storage.ts` -- Add `updateQadaSetup` export
+
+- Add function to update setup fields (totalPrayers, dailyTarget, totalByPrayer) without resetting progress
+- Re-export `saveQadaSetup` is sufficient since it already exists; the tracker page will modify setup fields and call `saveQadaSetup()`
+
+#### 4. `PROGRESS.md` -- Update with fix details
+
+### Technical Details
+
+**Edit Dialog fields:**
+- "Total Qada Prayers" -- number input, pre-filled with current `setup.totalPrayers`
+- "Daily Target" -- number input, pre-filled with current `setup.dailyTarget`
+- On save: update `setup.totalPrayers`, recalculate `totalByPrayer` (divide evenly by 5), call `saveQadaSetup()`
+
+**Progress bar minimum:**
+```typescript
+const displayPct = progress.totalCompleted > 0 ? Math.max(pct, 0.5) : 0;
+```
+
+**Completion estimate format:**
+```typescript
+// Before: "Est. 2 March 2050"
+// After:  "~24 years at current pace"
+const completionDays = estimateCompletionDays(setup, progress.totalCompleted);
+const completionText = completionDays > 0 
+  ? `~${formatYearsMonths(completionDays)} at current pace`
+  : 'Done!';
+```
+
+**Encouragement logic:**
+```typescript
+const encouragement = dayTotal >= setup.dailyTarget
+  ? "Alhamdulillah! Target reached! 🌟"
+  : progress.currentStreak >= 5
+  ? `${progress.currentStreak} day streak — MashaAllah! 🔥`
+  : progress.currentStreak >= 3
+  ? `${progress.currentStreak} day streak — keep it up! 💪`
+  : dayTotal > 0
+  ? "Every prayer counts. Keep going 💪"
+  : "Bismillah, start your qada";
+```
 
