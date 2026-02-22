@@ -103,12 +103,12 @@ export function getStepsToday(): { total: number; logs: StepLog[] } {
   return { total, logs };
 }
 
-export function addStepLog(steps: number, activityType: ActivityType, loggedAt?: string): StepLog {
+export function addStepLog(steps: number, activityType: ActivityType, loggedAt?: string, dateOverride?: string): StepLog {
   const prefs = getStepsPrefs();
   const now = loggedAt || new Date().toISOString();
   const entry: StepLog = {
     id: generateId(),
-    date: todayKey(),
+    date: dateOverride || todayKey(),
     steps,
     activityType,
     distanceMeters: calcDistance(steps, prefs.strideLengthCm),
@@ -163,6 +163,12 @@ export function getStepsStreak(): number {
     }
   }
   return streak;
+}
+
+export function getStepsForDate(date: string): { total: number; logs: StepLog[] } {
+  const logs = getAllLogs().filter(l => l.date === date);
+  const total = logs.reduce((sum, l) => sum + l.steps, 0);
+  return { total, logs };
 }
 
 export function getTotalStepsAllTime(): number {

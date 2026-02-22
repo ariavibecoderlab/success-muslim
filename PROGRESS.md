@@ -29,7 +29,11 @@
 | Sleep Tracker | ✅ | Date picker + logs for selected date |
 | Fasting (Sunnah) | ✅ | Already had calendar with past-date tapping |
 | Salah logging | ✅ | `logSalah()` now accepts optional date param |
-| **Phase 2 (remaining)** | 🔲 | Weight, Steps, IF Timer, Quran, Qada Solat |
+| Weight Tracker | ✅ | Date picker + dateKey passed to addWeightEntry |
+| Steps Tracker | ✅ | Date picker + addStepLog accepts dateOverride + getStepsForDate |
+| IF Timer | ✅ | "Log Past Fast" dialog with date picker, protocol, duration |
+| Quran Tracker | ✅ | Date picker + logQuranPages/addQuranPages accept dateOverride |
+| **Phase 2** | ✅ | All 4 trackers complete |
 
 ---
 

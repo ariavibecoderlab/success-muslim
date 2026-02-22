@@ -9,9 +9,13 @@ import SubPageLayout from '@/components/SubPageLayout';
 import {
   getStepsToday, addStepLog, deleteStepLog, getStepsPrefs, setStepsTarget,
   getStepsHistory, getStepsStreak, getTotalStepsAllTime, getBestDayThisWeek,
-  getWeeklyAverage, calcDistance, calcCalories, getAllLogs, type ActivityType,
+  getWeeklyAverage, calcDistance, calcCalories, getAllLogs, getStepsForDate,
+  type ActivityType,
 } from '@/lib/steps-storage';
+import { format, subDays } from 'date-fns';
 import StepsCalendarHeatmap from '@/components/health/StepsCalendarHeatmap';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -48,18 +52,22 @@ const HealthSteps = () => {
   const [activityType, setActivityType] = useState<ActivityType>('walking');
   const [showTargetPicker, setShowTargetPicker] = useState(false);
   const [customTarget, setCustomTarget] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
   const prefs = getStepsPrefs();
-  const { total: todaySteps, logs: todayLogs } = getStepsToday();
-  const progress = Math.min((todaySteps / prefs.dailyTarget) * 100, 100);
-  const targetHit = todaySteps >= prefs.dailyTarget;
+  const { total: daySteps, logs: dayLogs } = isToday ? getStepsToday() : getStepsForDate(dateKey);
+  const progress = Math.min((daySteps / prefs.dailyTarget) * 100, 100);
+  const targetHit = daySteps >= prefs.dailyTarget;
   const history = getStepsHistory(7);
   const streak = getStepsStreak();
   const totalAllTime = getTotalStepsAllTime();
   const bestDay = getBestDayThisWeek();
   const weeklyAvg = getWeeklyAverage();
-  const todayDistance = calcDistance(todaySteps, prefs.strideLengthCm);
-  const todayCalories = calcCalories(todaySteps);
+  const dayDistance = calcDistance(daySteps, prefs.strideLengthCm);
+  const dayCalories = calcCalories(daySteps);
 
   const circumference = 2 * Math.PI * 70;
   const dashOffset = circumference - (progress / 100) * circumference;
@@ -68,7 +76,7 @@ const HealthSteps = () => {
   const handleLog = () => {
     const steps = parseInt(stepsInput);
     if (!steps || steps <= 0) return;
-    addStepLog(steps, activityType);
+    addStepLog(steps, activityType, undefined, isToday ? undefined : dateKey);
     setStepsInput('');
     setActivityType('walking');
     setDialogOpen(false);
@@ -87,6 +95,10 @@ const HealthSteps = () => {
     refresh();
   };
 
+  const handleBackdatePrompt = () => {
+    setSelectedDate(subDays(new Date(), 1));
+  };
+
   const chartData = history.map(h => ({
     ...h,
     fill: h.steps >= prefs.dailyTarget ? 'hsl(142, 71%, 45%)' : 'hsl(var(--muted-foreground) / 0.3)',
@@ -96,9 +108,15 @@ const HealthSteps = () => {
     m.type === 'streak' ? streak >= m.threshold : totalAllTime >= m.threshold
   );
 
+  const dayLabel = isToday ? "Today's" : format(selectedDate, 'd MMM');
+
   return (
     <SubPageLayout title="Steps Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/steps">
       <div className="space-y-5">
+        {/* Backdate */}
+        <BackdatePrompt moduleKey="steps" onLogPastData={handleBackdatePrompt} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} />
+
         {/* Hero Ring */}
         <div className="flex flex-col items-center">
           <div className="relative w-48 h-48">
@@ -116,7 +134,7 @@ const HealthSteps = () => {
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <Footprints className="h-6 w-6 text-primary mb-1" />
-              <p className="text-3xl font-bold">{todaySteps.toLocaleString()}</p>
+              <p className="text-3xl font-bold">{daySteps.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">/ {prefs.dailyTarget.toLocaleString()} steps</p>
             </div>
           </div>
@@ -129,12 +147,12 @@ const HealthSteps = () => {
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="lg" className="w-full gap-2">
-              <Plus className="h-4 w-4" /> Log Steps
+              <Plus className="h-4 w-4" /> Log Steps{!isToday ? ` — ${format(selectedDate, 'd MMM')}` : ''}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Log Steps</DialogTitle>
+              <DialogTitle>Log Steps{!isToday ? ` — ${format(selectedDate, 'd MMM')}` : ''}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div>
@@ -173,30 +191,30 @@ const HealthSteps = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Today's Summary */}
+        {/* Day's Summary */}
         <Card>
           <CardContent className="p-4 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Today's Summary</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{dayLabel} Summary</p>
             <div className="grid grid-cols-3 gap-2 text-center">
               <div>
                 <Footprints className="h-4 w-4 mx-auto text-primary mb-1" />
-                <p className="text-lg font-bold">{todaySteps.toLocaleString()}</p>
+                <p className="text-lg font-bold">{daySteps.toLocaleString()}</p>
                 <p className="text-[10px] text-muted-foreground">steps</p>
               </div>
               <div>
                 <MapPin className="h-4 w-4 mx-auto text-primary mb-1" />
-                <p className="text-lg font-bold">{(todayDistance / 1000).toFixed(1)}</p>
+                <p className="text-lg font-bold">{(dayDistance / 1000).toFixed(1)}</p>
                 <p className="text-[10px] text-muted-foreground">km</p>
               </div>
               <div>
                 <Flame className="h-4 w-4 mx-auto text-primary mb-1" />
-                <p className="text-lg font-bold">{todayCalories}</p>
+                <p className="text-lg font-bold">{dayCalories}</p>
                 <p className="text-[10px] text-muted-foreground">kcal</p>
               </div>
             </div>
-            {todayLogs.length > 0 && (
+            {dayLogs.length > 0 && (
               <div className="space-y-1.5 pt-2 border-t border-border/50">
-                {todayLogs.map(log => (
+                {dayLogs.map(log => (
                   <div key={log.id} className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">
                       {new Date(log.loggedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -215,8 +233,8 @@ const HealthSteps = () => {
         {/* Stats Row */}
         <div className="grid grid-cols-3 gap-2">
           <Card><CardContent className="p-3 text-center">
-            <p className="text-[10px] text-muted-foreground">Today</p>
-            <p className="text-lg font-bold">{todaySteps.toLocaleString()}</p>
+            <p className="text-[10px] text-muted-foreground">{isToday ? 'Today' : format(selectedDate, 'd MMM')}</p>
+            <p className="text-lg font-bold">{daySteps.toLocaleString()}</p>
           </CardContent></Card>
           <Card><CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground">Weekly Avg</p>

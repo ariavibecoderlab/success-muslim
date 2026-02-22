@@ -41,8 +41,8 @@ export function getQuranDay(date?: string): QuranDayLog {
   return all[key] || { pagesRead: 0, juzNumber: null, surahName: '', notes: '' };
 }
 
-export function logQuranPages(pages: number, juzNumber?: number | null, surahName?: string, notes?: string): QuranDayLog {
-  const key = todayKey();
+export function logQuranPages(pages: number, juzNumber?: number | null, surahName?: string, notes?: string, dateOverride?: string): QuranDayLog {
+  const key = dateOverride || todayKey();
   const all = getAll();
   const existing = all[key] || { pagesRead: 0, juzNumber: null, surahName: '', notes: '' };
   
@@ -57,9 +57,10 @@ export function logQuranPages(pages: number, juzNumber?: number | null, surahNam
   return existing;
 }
 
-export function addQuranPages(amount: number): QuranDayLog {
-  const current = getQuranDay();
-  return logQuranPages(current.pagesRead + amount, current.juzNumber, current.surahName, current.notes);
+export function addQuranPages(amount: number, dateOverride?: string): QuranDayLog {
+  const key = dateOverride || todayKey();
+  const current = getQuranDay(key);
+  return logQuranPages(current.pagesRead + amount, current.juzNumber, current.surahName, current.notes, dateOverride);
 }
 
 // ── Stats ──────────────────────────────────────────
