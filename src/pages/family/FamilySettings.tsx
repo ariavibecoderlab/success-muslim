@@ -78,7 +78,8 @@ const FamilySettings = () => {
 
   const handleShare = async () => {
     if (!family) return;
-    const text = `Join "${family.name}" on Success Muslim!\nCode: ${family.invite_code}\nLink: ${family.invite_link}`;
+    const inviteLink = `https://www.successmuslim.app/family/join/${family.invite_code}`;
+    const text = `Join "${family.name}" on Success Muslim!\nCode: ${family.invite_code}\nLink: ${inviteLink}`;
     if (navigator.share) { try { await navigator.share({ text }); } catch {} }
     else await navigator.clipboard.writeText(text).then(() => toast({ title: 'Copied!' }));
   };
