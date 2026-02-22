@@ -112,7 +112,7 @@ export function useFamily() {
       attempts++;
     }
 
-    const invite_link = `https://success-muslim.lovable.app/family/join/${invite_code}`;
+    const invite_link = `https://www.successmuslim.app/family/join/${invite_code}`;
 
     const { data: family, error } = await supabase
       .from('families')
