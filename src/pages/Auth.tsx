@@ -30,7 +30,7 @@ const Auth = () => {
     );
   }
 
-  if (user) return <Navigate to="/onboarding" replace />;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
@@ -53,7 +53,7 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/onboarding');
+        navigate('/dashboard');
       } else {
         const { error } = await supabase.auth.signUp({
           email,
