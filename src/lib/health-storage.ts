@@ -36,6 +36,7 @@ export interface IFSession {
   startTime: string;
   endTime: string | null;
   completed: boolean;
+  durationSeconds?: number;
 }
 
 export interface IFActive {
@@ -238,20 +239,51 @@ export function startIF(mode: string, fastingHours: number) {
   syncIFStart(mode, startTime, fastingHours);
 }
 
-export function stopIF(completed: boolean) {
+export function stopIF(completed: boolean, endTimeOverride?: string) {
   const active = getActiveIF();
   if (!active) return;
-  const endTime = new Date().toISOString();
+  const endTime = endTimeOverride || new Date().toISOString();
+  const startMs = new Date(active.startTime).getTime();
+  const endMs = new Date(endTime).getTime();
+  const durationSeconds = Math.round((endMs - startMs) / 1000);
   const sessions = getIFSessions();
   sessions.unshift({
     mode: active.mode,
     startTime: active.startTime,
     endTime,
     completed,
+    durationSeconds,
   });
-  set(KEYS.ifSessions, sessions.slice(0, 10));
+  set(KEYS.ifSessions, sessions.slice(0, 50));
   localStorage.removeItem(KEYS.ifActive);
   syncIFStop(active.startTime, endTime, completed);
+}
+
+export function editIFSession(index: number, updates: { startTime?: string; endTime?: string }): string | null {
+  const sessions = getIFSessions();
+  if (index < 0 || index >= sessions.length) return 'Session not found';
+  const session = sessions[index];
+  const newStart = updates.startTime || session.startTime;
+  const newEnd = updates.endTime || session.endTime;
+  if (!newEnd) return 'End time is required';
+
+  const startMs = new Date(newStart).getTime();
+  const endMs = new Date(newEnd).getTime();
+  const nowMs = Date.now();
+
+  if (endMs <= startMs) return 'End time must be after start time';
+  if (endMs > nowMs + 60000) return 'End time cannot be in the future';
+  if ((endMs - startMs) < 60000) return 'Fast must be at least 1 minute';
+
+  const oldStartTime = session.startTime;
+  session.startTime = newStart;
+  session.endTime = newEnd;
+  session.durationSeconds = Math.round((endMs - startMs) / 1000);
+  set(KEYS.ifSessions, sessions);
+
+  // Sync: update the DB record matching the old start time
+  syncIFStop(oldStartTime, newEnd, session.completed);
+  return null;
 }
 
 export function deleteIF() {
