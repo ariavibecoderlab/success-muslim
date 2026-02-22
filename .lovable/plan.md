@@ -1,75 +1,75 @@
 
 
-## Fix Qada Solat Tracker
+## Fix: Onboarding Shows Again for Registered Users
 
-### Problems and Root Causes
+### Root Cause
 
-1. **"43,867 remaining"** -- The calculation is mathematically correct (e.g., 18 years x 365 days x 65% missed x 5 prayers = ~21k). The number may seem unrealistic but is accurate based on user input. The real issue is users can't edit their total if they entered wrong values.
+**Auth.tsx line 33** always redirects logged-in users to `/onboarding`:
+```
+if (user) return <Navigate to="/onboarding" replace />;
+```
 
-2. **"Est. 2 March 2050"** -- The completion estimate shows an absolute date far in the future. For long timelines, "~24 years at current pace" is more useful than a specific date.
+This means every time a returning user's session is restored (app reopen, page refresh), if they briefly hit `/auth` or if Auth.tsx renders while the session loads, they get sent to `/onboarding`. The Onboarding page then checks the DB and redirects to dashboard -- but the user sees a flash of onboarding UI, and on slow connections it may fully render.
 
-3. **Progress bar at 0%** -- `Math.round()` rounds tiny percentages (e.g., 25/43867 = 0.057%) to 0%. The progress bar needs a minimum visible value when any progress exists.
+**Auth.tsx line 56** also hardcodes `navigate('/onboarding')` after login, even for returning users.
 
-### Changes
+### Fix
 
-#### 1. `src/pages/QadaSolatTrack.tsx` -- Main tracker page
+#### 1. `src/pages/Auth.tsx`
 
-- Add "Edit" button (Settings2 icon) next to "Overall Progress" heading
-- Add Dialog to edit `totalPrayers` and `dailyTarget` -- saves via `saveQadaSetup()`
-- Replace `estimateCompletionDate()` with `formatYearsMonths(estimateCompletionDays())` for human-friendly display
-- Add minimum progress bar value: `Math.max(pct, progress.totalCompleted > 0 ? 0.5 : 0)` so any progress shows a visible sliver
-- Upgrade encouragement messages:
-  - Streak >= 5: "5 day streak -- MashaAllah!"
-  - Streak >= 3: "Keep it up! X day streak"
-  - Any progress today: "Every prayer counts. Keep going"
-  - No progress: "Bismillah, start your qada"
-- Format remaining with `toLocaleString()` (already done) and add "~X years at current pace" below
+- Change line 33: Instead of blindly redirecting to `/onboarding`, redirect to `/dashboard`
+- The AuthGuard already handles the onboarding check -- if the user hasn't completed onboarding, AuthGuard will redirect them
+- Change line 56: After login, navigate to `/dashboard` instead of `/onboarding`
+- This way, returning users go straight to dashboard, and new users get caught by AuthGuard's onboarding check
 
-#### 2. `src/pages/Deen.tsx` -- Iman page (Qada Solat card)
+#### 2. `src/hooks/useAuth.ts`
 
-- Line 416: Replace `Est. {estimateCompletionDate(...)}` with `~{formatYearsMonths(estimateCompletionDays(...))} left`
-- Line 421: Replace `Math.round(...)` with logic that shows at least `<1%` when progress > 0 but rounds to 0
-- Line 424: Add minimum progress bar value (same `Math.max` pattern)
-
-#### 3. `src/lib/storage.ts` -- Add `updateQadaSetup` export
-
-- Add function to update setup fields (totalPrayers, dailyTarget, totalByPrayer) without resetting progress
-- Re-export `saveQadaSetup` is sufficient since it already exists; the tracker page will modify setup fields and call `saveQadaSetup()`
-
-#### 4. `PROGRESS.md` -- Update with fix details
+- Fix the race condition where `onAuthStateChange` can fire before `getSession` completes, causing a brief flash of unauthenticated state
+- Use the pattern from the stack overflow suggestion: only set `loading = false` once, after the initial session check
+- Prevent `onAuthStateChange` from setting loading to false prematurely during the `INITIAL_SESSION` event
 
 ### Technical Details
 
-**Edit Dialog fields:**
-- "Total Qada Prayers" -- number input, pre-filled with current `setup.totalPrayers`
-- "Daily Target" -- number input, pre-filled with current `setup.dailyTarget`
-- On save: update `setup.totalPrayers`, recalculate `totalByPrayer` (divide evenly by 5), call `saveQadaSetup()`
-
-**Progress bar minimum:**
+**Auth.tsx changes:**
 ```typescript
-const displayPct = progress.totalCompleted > 0 ? Math.max(pct, 0.5) : 0;
+// Line 33: Change from
+if (user) return <Navigate to="/onboarding" replace />;
+// To
+if (user) return <Navigate to="/dashboard" replace />;
+
+// Line 56: Change from
+navigate('/onboarding');
+// To
+navigate('/dashboard');
 ```
 
-**Completion estimate format:**
+**useAuth.ts changes:**
 ```typescript
-// Before: "Est. 2 March 2050"
-// After:  "~24 years at current pace"
-const completionDays = estimateCompletionDays(setup, progress.totalCompleted);
-const completionText = completionDays > 0 
-  ? `~${formatYearsMonths(completionDays)} at current pace`
-  : 'Done!';
+useEffect(() => {
+  let initialLoad = true;
+
+  const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      // Only set loading false from onAuthStateChange 
+      // AFTER the initial getSession has completed
+      if (!initialLoad) setLoading(false);
+    }
+  );
+
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    setSession(session);
+    setUser(session?.user ?? null);
+    setLoading(false);
+    initialLoad = false;
+  });
+
+  return () => subscription.unsubscribe();
+}, []);
 ```
 
-**Encouragement logic:**
-```typescript
-const encouragement = dayTotal >= setup.dailyTarget
-  ? "Alhamdulillah! Target reached! 🌟"
-  : progress.currentStreak >= 5
-  ? `${progress.currentStreak} day streak — MashaAllah! 🔥`
-  : progress.currentStreak >= 3
-  ? `${progress.currentStreak} day streak — keep it up! 💪`
-  : dayTotal > 0
-  ? "Every prayer counts. Keep going 💪"
-  : "Bismillah, start your qada";
-```
-
+This ensures:
+- Returning users with completed onboarding go directly to dashboard (no onboarding flash)
+- New users who haven't completed onboarding are caught by AuthGuard and redirected to `/onboarding`
+- No race condition where loading briefly shows false before session is confirmed
