@@ -1,0 +1,1 @@
+ALTER TABLE quran_preferences ADD COLUMN monthly_page_goal integer DEFAULT 100;

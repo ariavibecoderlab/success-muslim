@@ -9,6 +9,7 @@ import {
   juzSegmentsInRange,
   globalAyahIndex,
 } from '@/lib/quran-mapping';
+import { gregorianToHijri } from '@/lib/hijri';
 
 export interface ReadingLogEntry {
   id: string;
@@ -91,6 +92,20 @@ export function useQuranReadingLog() {
     const cutoffStr = cutoff.toISOString().split('T')[0];
     return logs.filter(l => l.date >= cutoffStr && l.date !== today);
   }, [logs, today]);
+
+  // Hijri month pages: sum page_count for logs in the current Hijri month
+  const hijriMonthPages = useMemo(() => {
+    const now = new Date();
+    const currentHijri = gregorianToHijri(now);
+    return logs.reduce((sum, l) => {
+      const logDate = new Date(l.date + 'T00:00:00');
+      const logHijri = gregorianToHijri(logDate);
+      if (logHijri.month === currentHijri.month && logHijri.year === currentHijri.year) {
+        return sum + Number(l.page_count);
+      }
+      return sum;
+    }, 0);
+  }, [logs]);
 
   const addLog = useCallback(async (entry: {
     log_type: string;
@@ -199,6 +214,7 @@ export function useQuranReadingLog() {
     streak,
     lastPosition,
     last7DaysLogs,
+    hijriMonthPages,
     addLog,
     updateLog,
     deleteLog,

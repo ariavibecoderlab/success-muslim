@@ -17,6 +17,31 @@
 
 ---
 
+## ✅ FINAL VERIFICATION (2026-02-22)
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1 | Editable end time when ending IF fast | ✅ | Date/time pickers, real-time validation, Save disabled on error |
+| 2 | Backdate (90 days) across ALL modules | ✅ | All 13 modules have BackdateDatePicker + BackdatePrompt |
+| 3 | Quran monthly target follows Hijri calendar | ✅ | Monthly Goal card on QuranReader, resets each Hijri month, configurable target |
+| 4 | Hijri date follows JAKIM standard | ✅ | `useHijriDate` fetches JAKIM API, falls back to algorithmic |
+| 5 | No "Edit with Lovable" button on production | ⚠️ | User action: toggle "Hide Lovable Badge" in Settings |
+| 6 | Family invite link shows successmuslim.app | ✅ | `useFamily.ts` → `https://www.successmuslim.app/family/join/...` |
+| 7 | No Lovable branding on login page | ✅ | Auth.tsx uses Moon icon + "Success Muslim" branding |
+
+---
+
+## 📖 QURAN HIJRI MONTHLY TARGET (2026-02-22)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| DB: `monthly_page_goal` column on `quran_preferences` | ✅ | Default 100, integer |
+| `useQuranData.ts`: Added `monthly_page_goal` to `QuranPrefs` | ✅ | Saved/loaded from DB |
+| `useQuranReadingLog.ts`: Added `hijriMonthPages` computed value | ✅ | Sums pages for current Hijri month |
+| `QuranReader.tsx`: Monthly Goal card with progress bar | ✅ | Shows Hijri month, pace indicator, settings dialog |
+
+---
+
 ## 📅 BACKDATE CAPABILITY — Phase 1 (2026-02-22)
 
 | Module | Status | Notes |

@@ -15,6 +15,7 @@ export interface QuranPrefs {
   daily_memo_goal: number;
   daily_target_type: string | null;
   target_selected_at: string | null;
+  monthly_page_goal: number;
 }
 
 const DEFAULT_PREFS: QuranPrefs = {
@@ -29,6 +30,7 @@ const DEFAULT_PREFS: QuranPrefs = {
   daily_memo_goal: 3,
   daily_target_type: null,
   target_selected_at: null,
+  monthly_page_goal: 100,
 };
 
 const LOCAL_KEY = 'quran_prefs_v2';
@@ -64,6 +66,7 @@ export function useQuranPrefs() {
           daily_memo_goal: data.daily_memo_goal ?? 3,
           daily_target_type: (data as any).daily_target_type ?? null,
           target_selected_at: (data as any).target_selected_at ?? null,
+          monthly_page_goal: (data as any).monthly_page_goal ?? 100,
         };
         setPrefsState(p);
         localStorage.setItem(LOCAL_KEY, JSON.stringify(p));
@@ -91,6 +94,7 @@ export function useQuranPrefs() {
       daily_memo_goal: merged.daily_memo_goal,
       daily_target_type: merged.daily_target_type,
       target_selected_at: merged.target_selected_at,
+      monthly_page_goal: merged.monthly_page_goal,
     } as any, { onConflict: 'user_id' });
   }, [prefs, user]);
 
