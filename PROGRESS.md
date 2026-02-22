@@ -1,7 +1,19 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-21
+> **Last Updated:** 2026-02-22
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
+
+---
+
+## 🚀 PRODUCTION FIXES (2026-02-22)
+
+| Fix | Status | Notes |
+|-----|--------|-------|
+| Family invite link domain | ✅ | `useFamily.ts` → `www.successmuslim.app` |
+| Install page URLs | ✅ | 3x domain refs updated in `Install.tsx` |
+| OG meta tags | ✅ | Added `og:url` in `index.html` |
+| Lovable badge | ⚠️ | User action: toggle "Hide Lovable Badge" in Settings |
+| Auth branding | ℹ️ | Login UI is correct; OAuth consent screen is expected Cloud behavior |
 
 ---
 

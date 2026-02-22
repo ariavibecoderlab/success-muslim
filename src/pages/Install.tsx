@@ -91,7 +91,7 @@ const Install = () => {
               <ol className="space-y-4 text-sm text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                  <span>Open <strong className="text-foreground">success-muslim.lovable.app</strong> in Safari</span>
+                  <span>Open <strong className="text-foreground">www.successmuslim.app</strong> in Safari</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
@@ -122,7 +122,7 @@ const Install = () => {
               <ol className="space-y-4 text-sm text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                  <span>Open <strong className="text-foreground">success-muslim.lovable.app</strong> in Chrome</span>
+                  <span>Open <strong className="text-foreground">www.successmuslim.app</strong> in Chrome</span>
                 </li>
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
@@ -153,7 +153,7 @@ const Install = () => {
               <ol className="space-y-4 text-sm text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">1</span>
-                  <span>Visit <strong className="text-foreground">success-muslim.lovable.app</strong></span>
+                  <span>Visit <strong className="text-foreground">www.successmuslim.app</strong></span>
                 </li>
                 <li className="flex gap-3">
                   <span className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0">2</span>
