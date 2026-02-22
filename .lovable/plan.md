@@ -1,62 +1,75 @@
 
 
-## Phase 2 Backdate: Weight, Steps, IF Timer, Quran Tracker
+## Phase 3 Backdate: Prayer Log, Qada Solat, Tarawih
 
-### Overview
-Add the `BackdateDatePicker` component to the remaining 4 trackers so users can log data for past dates (up to 90 days back). Each module uses LocalStorage with date-keyed entries, so the storage layer already supports arbitrary dates -- we just need to wire up the date picker in the UI and pass the selected date to the storage functions.
+### Summary
+Add backdate support to the remaining tracking modules. Solat Sunat is already covered (it's part of the Sunnah Tracker which already has backdate). The work covers 3 modules.
 
-### Changes by Module
+### Module Analysis
 
-#### 1. Weight Tracker (`src/pages/health/HealthWeight.tsx`)
-- Add `BackdateDatePicker` and `BackdatePrompt` at the top of the page
-- Track `selectedDate` state; derive `dateKey` from it
-- In `handleAdd`, use `dateKey` instead of `todayKey()` when calling `addWeightEntry`
-- Update the "Update Today" / "Log Weight" button label to reflect the selected date
-- The `addWeightEntry` function in `health-storage.ts` already accepts a `{ date, weight }` object, so no storage changes needed
+**Solat Sunat** -- Already done. The SunnahTracker page (`/iman/sunnah`) already has `BackdateDatePicker` and `BackdatePrompt`. No changes needed.
 
-#### 2. Steps Tracker (`src/pages/health/HealthSteps.tsx`)
-- Add `BackdateDatePicker` and `BackdatePrompt` at the top
-- Track `selectedDate` state
-- Modify `addStepLog` in `src/lib/steps-storage.ts` to accept an optional `date` parameter (currently hardcodes `todayKey()`)
-- Pass `selectedDate` formatted as `yyyy-MM-dd` when logging steps
-- Show logs for the selected date instead of always today
-- Modify `getStepsToday` to accept an optional date parameter (or add a `getStepsForDate` variant)
+---
 
-#### 3. IF Timer (`src/pages/health/HealthIFTimer.tsx`)
-- Add a "Log Past Fast" button in the inactive view (below the Start Fast button)
-- This opens a dialog with: date picker, protocol selector, duration input, and Save button
-- Manually creates an IF session entry with the selected past date as `startTime`
-- No changes to the active timer flow -- backdate only applies to manual logging of completed past fasts
-- Modify `src/lib/health-storage.ts` to add a `logPastIF(date, mode, hours)` function that inserts a completed session
+### 1. Prayer Log (Salah Tracking)
 
-#### 4. Quran Tracker (`src/pages/QuranTracker.tsx`)
-- Add `BackdateDatePicker` and `BackdatePrompt` at the top
-- Track `selectedDate` state
-- Modify `logQuranPages` and `addQuranPages` in `src/lib/quran-storage.ts` to accept an optional `date` parameter (currently hardcodes `todayKey()`)
-- Load `getQuranDay(dateKey)` for the selected date so the counter shows that day's data
-- Pass `dateKey` to all page-add and log operations
+Currently, salah status (on-time / late / missed) is logged only via the `NextPrayerWidget` on the Dashboard, always for today. The storage layer (`salah-storage.ts`) already supports date-keyed entries and `logSalah` accepts an optional `date` parameter.
 
-### Technical Details
+**Changes:**
+- Create a new dedicated **Salah Log page** (`src/pages/deen/SalahLog.tsx`) with:
+  - `BackdateDatePicker` and `BackdatePrompt` at the top
+  - A list of 5 prayers (Fajr, Dhuhr, Asr, Maghrib, Isha) with on-time/late/missed/clear status buttons
+  - Loads `getSalahLog(dateKey)` for the selected date
+  - Passes `dateKey` to `logSalah(prayer, status, dateKey)`
+- Add route for `/iman/salah-log` in `App.tsx`
+- Link to it from the Prayer Times page or Iman hub
 
-**Storage changes:**
-- `src/lib/steps-storage.ts`: Add optional `date` param to `addStepLog` (line 106: `date: todayKey()` becomes `date: dateOverride || todayKey()`)
-- `src/lib/steps-storage.ts`: Add `getStepsForDate(date)` function
-- `src/lib/quran-storage.ts`: Add optional `date` param to `logQuranPages` (line 44) and `addQuranPages` (line 60)
-- `src/lib/health-storage.ts`: Add `logPastIF(date, mode, hours)` function that pushes a completed session
+**Storage:** No changes needed -- `logSalah` and `getSalahLog` already support arbitrary dates.
 
-**UI pattern (consistent across all 4):**
-- `BackdatePrompt` shown on first visit (one-time, uses localStorage flag per module)
-- `BackdateDatePicker` placed below the page title, above the main content
-- When a past date is selected, an amber "Backdating" label appears
-- All data reads and writes use the selected date
+---
 
-**Files to modify (8 files):**
-1. `src/pages/health/HealthWeight.tsx` -- add date picker + wire date to logging
-2. `src/pages/health/HealthSteps.tsx` -- add date picker + wire date to logging
-3. `src/pages/health/HealthIFTimer.tsx` -- add "Log Past Fast" manual entry dialog
-4. `src/pages/QuranTracker.tsx` -- add date picker + wire date to logging
-5. `src/lib/steps-storage.ts` -- add date param to `addStepLog`, add `getStepsForDate`
-6. `src/lib/quran-storage.ts` -- add date param to `logQuranPages` and `addQuranPages`
-7. `src/lib/health-storage.ts` -- add `logPastIF` function
-8. `PROGRESS.md` -- mark Phase 2 as complete
+### 2. Qada Solat Tracker
+
+Currently, `QadaSolatTrack.tsx` hardcodes `getTodayKey()` for the date. The `logQadaPrayer` and `undoQadaPrayer` functions in `storage.ts` also hardcode `today`.
+
+**Changes:**
+- **`src/lib/storage.ts`**: Add optional `dateOverride` parameter to `logQadaPrayer(prayer, count, dateOverride?)` and `undoQadaPrayer(prayer, dateOverride?)`
+- **`src/pages/QadaSolatTrack.tsx`**:
+  - Add `BackdateDatePicker` and `BackdatePrompt`
+  - Track `selectedDate` state, derive `dateKey`
+  - Load `dailyLogs[dateKey]` for the selected date
+  - Pass `dateKey` to `logQadaPrayer` and `undoQadaPrayer`
+  - Update "Today's Qada" header to show the selected date when backdating
+
+---
+
+### 3. Tarawih (Ramadan Optimizer)
+
+Tarawih logging lives inside `RamadanOptimizer.tsx` and is persisted via Supabase (`ramadan_daily_logs` table) with a `date` column. The page already shows "today" based on the Ramadan day.
+
+**Changes:**
+- **`src/pages/deen/RamadanOptimizer.tsx`**:
+  - Add `BackdateDatePicker` (limited to Ramadan dates only) below the header
+  - When a past date is selected, load that day's log from the existing `logs` array
+  - Allow editing that day's Tarawih rakaat, fasting status, Quran pages, etc.
+  - The `logToday` function already upserts by date, so it naturally supports any date -- just pass the selected date instead of today
+
+---
+
+### Files to modify (5 files)
+
+| File | Change |
+|------|--------|
+| `src/pages/deen/SalahLog.tsx` | **New file** -- dedicated salah logging page with backdate |
+| `src/App.tsx` | Add route for `/iman/salah-log` |
+| `src/lib/storage.ts` | Add `dateOverride` param to `logQadaPrayer` and `undoQadaPrayer` |
+| `src/pages/QadaSolatTrack.tsx` | Add date picker, wire selected date to logging |
+| `src/pages/deen/RamadanOptimizer.tsx` | Add date picker for backdating Ramadan logs |
+
+### Technical Notes
+
+- The salah storage layer (`salah-storage.ts`) needs zero changes since `logSalah(prayer, status, date?)` already accepts an optional date
+- Qada Solat storage needs the date param threaded through `logQadaPrayer` and `undoQadaPrayer`
+- Ramadan Optimizer already upserts by date to Supabase, so the `logToday` function just needs to use the selected date instead of the current date
+- All modules follow the same UI pattern: `BackdatePrompt` on first visit + `BackdateDatePicker` below the title
 
