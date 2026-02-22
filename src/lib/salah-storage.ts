@@ -40,17 +40,17 @@ export function getTodaySalah(): DailySalahLog {
   return all[today] || emptyDay(today);
 }
 
-export function logSalah(prayer: SalahName, status: SalahStatus): DailySalahLog {
-  const today = getTodayKey();
+export function logSalah(prayer: SalahName, status: SalahStatus, date?: string): DailySalahLog {
+  const dateKey = date || getTodayKey();
   const all = getAll();
-  if (!all[today]) all[today] = emptyDay(today);
+  if (!all[dateKey]) all[dateKey] = emptyDay(dateKey);
 
   const loggedAt = status ? new Date().toISOString() : null;
-  all[today].prayers[prayer] = { status, loggedAt };
+  all[dateKey].prayers[prayer] = { status, loggedAt };
 
   saveAll(all);
-  syncSalahLog(today, prayer, status, loggedAt);
-  return all[today];
+  syncSalahLog(dateKey, prayer, status, loggedAt);
+  return all[dateKey];
 }
 
 export function getSalahLog(date: string): DailySalahLog {

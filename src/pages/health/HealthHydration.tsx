@@ -3,9 +3,12 @@ import { Droplets, Plus, Minus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts';
+import { format } from 'date-fns';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getHydration, addCup, removeCup, getHydrationHistory } from '@/lib/health-storage';
 import EditableText from '@/components/cms/EditableText';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -18,10 +21,12 @@ const HEALTH_SIBLINGS = [
 ];
 
 const HealthHydration = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const [, rerender] = useState(0);
   const refresh = () => rerender(n => n + 1);
 
-  const today = getHydration();
+  const today = getHydration(dateKey);
   const progress = Math.min((today.cups / today.goal) * 100, 100);
   const history = getHydrationHistory(7);
 
@@ -30,7 +35,13 @@ const HealthHydration = () => {
 
   return (
     <SubPageLayout title="Hydration Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/hydration">
+      <BackdatePrompt moduleKey="hydration" onLogPastData={() => {}} />
       <div className="space-y-5">
+        {/* Date Picker */}
+        <div className="flex justify-center">
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} compact />
+        </div>
+
         {/* Progress ring */}
         <div className="flex flex-col items-center">
           <div className="relative w-48 h-48">
@@ -56,10 +67,10 @@ const HealthHydration = () => {
 
         {/* Controls */}
         <div className="flex justify-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => { removeCup(); refresh(); }}>
+          <Button variant="outline" size="icon" onClick={() => { removeCup(dateKey); refresh(); }}>
             <Minus className="h-4 w-4" />
           </Button>
-          <Button size="lg" onClick={() => { addCup(); refresh(); }} className="gap-2 px-8">
+          <Button size="lg" onClick={() => { addCup(dateKey); refresh(); }} className="gap-2 px-8">
             <Plus className="h-4 w-4" /> Add Glass
           </Button>
         </div>

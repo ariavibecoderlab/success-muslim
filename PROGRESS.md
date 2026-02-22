@@ -17,6 +17,22 @@
 
 ---
 
+## 📅 BACKDATE CAPABILITY — Phase 1 (2026-02-22)
+
+| Module | Status | Notes |
+|--------|--------|-------|
+| Shared BackdateDatePicker | ✅ | 90-day limit, arrow nav, calendar popup |
+| Shared BackdatePrompt | ✅ | One-time "Log past data?" dialog per module |
+| Sunnah Tracker | ✅ | Date picker + storage already supported date param |
+| Dhikr Counter | ✅ | Date picker + `saveDhikrCount` now accepts date |
+| Hydration Tracker | ✅ | Date picker + storage already supported dateKey |
+| Sleep Tracker | ✅ | Date picker + logs for selected date |
+| Fasting (Sunnah) | ✅ | Already had calendar with past-date tapping |
+| Salah logging | ✅ | `logSalah()` now accepts optional date param |
+| **Phase 2 (remaining)** | 🔲 | Weight, Steps, IF Timer, Quran, Qada Solat |
+
+---
+
 ## 🗄️ DATA PERSISTENCE
 
 | Feature | Status | Notes |

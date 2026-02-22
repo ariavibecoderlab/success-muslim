@@ -9,6 +9,8 @@ import SubPageLayout from '@/components/SubPageLayout';
 import { getSleepLog, addSleepEntry, calculateSleepDuration, sleepQuality, todayKey } from '@/lib/health-storage';
 import { format, parseISO } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const SLEEP_TARGETS_KEY = 'health_sleep_targets';
 
@@ -36,6 +38,7 @@ function timeDiffMinutes(actual: string, target: string): number {
   if (diff < -720) diff += 1440;
   return diff;
 }
+
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
   { path: '/health/weight', label: 'Weight' },
@@ -47,6 +50,10 @@ const HEALTH_SIBLINGS = [
 ];
 
 const HealthSleep = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
+
   const [log, setLog] = useState(getSleepLog);
   const [bedtime, setBedtime] = useState('23:00');
   const [wakeTime, setWakeTime] = useState('06:00');
@@ -57,11 +64,13 @@ const HealthSleep = () => {
 
   const handleAdd = () => {
     const duration = calculateSleepDuration(bedtime, wakeTime);
-    addSleepEntry({ date: todayKey(), bedtime, wakeTime, duration });
+    addSleepEntry({ date: dateKey, bedtime, wakeTime, duration });
     setLog(getSleepLog());
   };
 
-  const lastEntry = log[log.length - 1];
+  // Show entry for selected date
+  const selectedEntry = log.find(e => e.date === dateKey);
+  const lastEntry = selectedEntry || log[log.length - 1];
   const quality = lastEntry ? sleepQuality(lastEntry.duration) : null;
 
   const last7 = log.slice(-7).map(e => ({
@@ -73,7 +82,13 @@ const HealthSleep = () => {
 
   return (
     <SubPageLayout title="Sleep Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/sleep">
+      <BackdatePrompt moduleKey="sleep" onLogPastData={() => {}} />
       <div className="space-y-5">
+        {/* Date Picker */}
+        <div className="flex justify-center">
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} compact />
+        </div>
+
         {/* Input */}
         <Card>
           <CardContent className="p-4 space-y-3">
@@ -87,7 +102,9 @@ const HealthSleep = () => {
                 <Input type="time" value={wakeTime} onChange={e => setWakeTime(e.target.value)} />
               </div>
             </div>
-            <Button onClick={handleAdd} className="w-full">Log Sleep</Button>
+            <Button onClick={handleAdd} className="w-full">
+              {selectedEntry ? 'Update Sleep' : 'Log Sleep'}{!isToday ? ` for ${format(selectedDate, 'd MMM')}` : ''}
+            </Button>
           </CardContent>
         </Card>
 
@@ -95,11 +112,10 @@ const HealthSleep = () => {
         {lastEntry && quality && (
           <Card>
             <CardContent className="p-4 text-center space-y-2">
-              <EditableText elementKey="sleep.lastnight" defaultText="Last Night" tag="p" className="text-xs text-muted-foreground" />
+              <EditableText elementKey="sleep.lastnight" defaultText={selectedEntry ? format(parseISO(selectedEntry.date), 'd MMM yyyy') : "Last Night"} tag="p" className="text-xs text-muted-foreground" />
               <p className="text-4xl font-bold">{lastEntry.duration}h</p>
               <p className={`text-sm font-medium ${quality.color}`}>{quality.label}</p>
               <p className="text-xs text-muted-foreground">{lastEntry.bedtime} → {lastEntry.wakeTime}</p>
-              {/* Target comparison */}
               <div className="flex justify-center gap-4 pt-1">
                 {(() => {
                   const bedDiff = timeDiffMinutes(lastEntry.bedtime, targets.bedtime);
