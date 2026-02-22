@@ -182,7 +182,7 @@ const Health = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Health & Wellness" icon={Heart} />
+      <AppHeader title="Health & Wellness" />
       <div className="max-w-md mx-auto w-full px-5 py-6 space-y-5">
 
         {/* ── IF Timer Hero ──────────────────────── */}

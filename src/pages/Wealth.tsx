@@ -46,7 +46,7 @@ const Wealth = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Wealth & Finance" icon={Wallet} />
+      <AppHeader title="Wealth & Finance" />
 
       <main className="max-w-4xl mx-auto px-5 py-6">
         {/* Quick stats */}
