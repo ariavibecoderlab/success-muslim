@@ -23,7 +23,7 @@ const Family = () => {
   if (families.length >= 1) {
     return (
       <div className="min-h-screen bg-background">
-        <AppHeader title="Family" icon={Users} />
+        <AppHeader title="Family" />
         <main className="max-w-lg mx-auto px-4 py-8 space-y-3">
           <p className="text-sm text-muted-foreground mb-4">Your family groups:</p>
           {families.map(f => (
@@ -67,7 +67,7 @@ const Family = () => {
   // Empty state — no family yet
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Family" icon={Users} />
+      <AppHeader title="Family" />
 
       <main className="max-w-lg mx-auto px-4 py-12 flex flex-col items-center text-center">
         <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center mb-6">

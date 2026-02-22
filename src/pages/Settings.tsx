@@ -142,7 +142,7 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Profile" icon={UserCircle} />
+      <AppHeader title="Profile" />
 
       <motion.main
         className="max-w-md mx-auto px-6 py-8 space-y-6"

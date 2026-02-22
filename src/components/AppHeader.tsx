@@ -1,15 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Moon, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useHijriDate } from '@/hooks/useHijriDate';
-import type { LucideIcon } from 'lucide-react';
 import { ReactNode } from 'react';
+import smlogo from '@/assets/smlogo.webp';
 
 interface AppHeaderProps {
   /** Page title shown next to the logo */
   title?: string;
-  /** Override the left icon (defaults to Moon) */
-  icon?: LucideIcon;
   /** Extra elements on the right side */
   rightContent?: ReactNode;
   /** Show the hijri date under the brand name (only on Dashboard) */
@@ -20,7 +18,6 @@ interface AppHeaderProps {
 
 const AppHeader = ({
   title = 'Success Muslim',
-  icon: Icon = Moon,
   rightContent,
   showHijriDate = false,
   showGregorianDate = false,
@@ -37,9 +34,7 @@ const AppHeader = ({
     <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50 shadow-sm">
       <div className="max-w-4xl mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/15 transition-colors">
-            <Icon className="h-[18px] w-[18px] text-primary" />
-          </div>
+          <img src={smlogo} alt="Success Muslim" className="w-9 h-9 rounded-xl object-contain" />
           <div className="flex flex-col">
             <span className="text-base font-bold tracking-tight text-foreground leading-tight">
               {title}
