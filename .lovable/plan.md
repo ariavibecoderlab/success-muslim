@@ -1,76 +1,121 @@
 
 
-## Enhanced Settings Page
+## Fix 3 Priority Issues in Family Module
 
-The current Settings page is functional but basic. This plan polishes it into a premium, well-organized settings hub that surfaces all user-configurable options in one place.
+### Issue 1: Per-Category Privacy Toggles Actually Filter Data
 
-### Current State
-- Avatar + name header
-- Account info card (email, auth provider)
-- Edit Profile card (name, city, country)
-- Family Privacy settings
-- Sign Out button
+**Problem:** Users can toggle `show_prayer`, `show_quran`, `show_fasting`, `show_streaks` in privacy settings, but the `get_family_leaderboard` RPC ignores these and returns all data. The dashboard UI also displays everything regardless.
 
-### What Changes
+**Fix (2 parts):**
 
-#### 1. Add Prayer Location Quick-Link
-A new card showing current prayer location (city/country from prayer_settings) with a "Change" button that links to `/iman/prayer-times` settings. This gives users quick access to their most-used setting without duplicating the full prayer settings UI.
+**A. Update the `get_family_leaderboard` RPC (database migration)**
 
-#### 2. Add "Data & Storage" Section
-A card with:
-- "Clear local cache" button (clears localStorage, shows toast)
-- App version display (hardcoded or from package.json)
+Modify the RPC to respect privacy settings. When a member has `show_prayer = false`, their `prayers_this_week` returns as `0`. Same for quran, fasting, and streaks. The `iman_score` is recalculated based only on visible categories. This way the data is filtered at the source.
 
-#### 3. Add "Change Password" Section
-For email-authenticated users, add an inline card that sends a password reset email (reusing the existing `resetPasswordForEmail` logic). Shows "Reset link sent!" confirmation.
+Key changes in the SQL function:
+- `prayers_this_week`: wrap in `CASE WHEN COALESCE(fps.show_prayer, true) THEN ... ELSE 0 END`
+- `quran_days_this_week`: wrap in `CASE WHEN COALESCE(fps.show_quran, true) THEN ... ELSE 0 END`
+- `fasting_days_this_week`: wrap in `CASE WHEN COALESCE(fps.show_fasting, true) THEN ... ELSE 0 END`
+- `quran_streak`: wrap in `CASE WHEN COALESCE(fps.show_streaks, true) THEN ... ELSE 0 END`
+- `iman_score`: recalculate using only the visible categories
 
-#### 4. Visual Polish
-- Larger avatar (h-28 w-28) with a subtle gradient ring
-- Section headers use consistent icon + title pattern
-- Smooth fade-in animation using framer-motion
-- Better spacing and visual hierarchy
-- "Danger Zone" styling for sign out area
-- Gender field added to Edit Profile (select: male/female) since it exists in the profiles table but isn't editable
+**B. Update `TodaySnapshot.tsx` and `LeaderboardCard.tsx`**
 
-#### 5. Reorder Sections for Better Flow
-1. Avatar + Name header
-2. Edit Profile (name, gender, city, country)
-3. Account Info (email, provider, change password)
-4. Prayer Location quick-link
-5. Family Privacy
-6. Data & Storage
-7. Sign Out (danger zone styling)
+No UI changes needed since the RPC now returns zeroed-out values for hidden categories. The existing UI already handles zero values gracefully (shows empty circles, hides streak badges).
+
+### Issue 2: Prevent Last Admin from Leaving
+
+**Problem:** The last (or only) admin can leave a group, orphaning it with no admin to manage it.
+
+**Fix (2 parts):**
+
+**A. `src/hooks/useFamily.ts` -- Update `leaveFamily` function**
+
+Before deleting the membership, check if:
+1. The user is an admin
+2. They are the only admin in the group
+3. There are other members remaining
+
+If all true, show a toast: "You're the only admin. Transfer admin role to another member before leaving." and return `false`.
+
+If the user is the only admin AND the only member, allow leaving (the group becomes empty).
+
+**B. `src/pages/family/FamilySettings.tsx` -- Update Leave button**
+
+Add a check that disables or shows a warning on the Leave button when the current user is the sole admin with other members present. The `leaveFamily` function handles the validation, but the UI should also show context (e.g., "Transfer admin before leaving").
+
+### Issue 3: Deduplicate Feed Events
+
+**Problem:** The `postFamilyFeedEvent` function in `src/lib/family-feed.ts` can post duplicate events (e.g., "completed all 5 prayers today" posted multiple times on the same day).
+
+**Fix: `src/lib/family-feed.ts` -- Add dedup check**
+
+Before inserting a feed event, check if an event with the same `user_id`, `activity_type`, and same-day `created_at` already exists for that family. If it does, skip the insert.
+
+For streak milestones, also match on the message (since a user could hit different streak milestones on different days, but shouldn't post the same milestone twice).
+
+```text
+Changes per file:
++------------------------------------------+----------------------------------------+
+| File                                     | Change                                 |
++------------------------------------------+----------------------------------------+
+| Database migration                       | Update get_family_leaderboard RPC      |
+|                                          | to respect privacy toggles             |
++------------------------------------------+----------------------------------------+
+| src/lib/family-feed.ts                   | Add dedup check before insert          |
++------------------------------------------+----------------------------------------+
+| src/hooks/useFamily.ts                   | Add last-admin guard in leaveFamily    |
++------------------------------------------+----------------------------------------+
+| src/pages/family/FamilySettings.tsx      | Show warning when sole admin tries     |
+|                                          | to leave with other members present    |
++------------------------------------------+----------------------------------------+
+```
 
 ### Technical Details
 
-**Files modified:**
-- `src/pages/Settings.tsx` -- Complete enhancement with new sections, polish, and animations
+**RPC Migration SQL (simplified):**
+```sql
+-- Replace each metric with privacy-aware version:
+CASE WHEN COALESCE(fps.show_prayer, true) THEN
+  (SELECT COUNT(...) FROM salah_logs ...)
+ELSE 0 END AS prayers_this_week,
 
-**New imports needed:**
-- `framer-motion` for fade-in animations
-- `usePrayerSettings` for prayer location display
-- `Select` component for gender dropdown
-- `Lock`, `Trash2`, `Clock`, `ChevronRight` from lucide-react
+-- iman_score recalculated with same conditionals
+```
 
-**Gender field:**
-- Read `gender` from profiles table on load (already exists in DB schema)
-- Add a Select dropdown with "Male" / "Female" options
-- Save alongside other profile fields
+**Dedup query in family-feed.ts:**
+```typescript
+const today = new Date().toISOString().split('T')[0];
+const { data: existing } = await supabase
+  .from('family_activity_feed')
+  .select('id')
+  .eq('family_id', familyId)
+  .eq('user_id', userId)
+  .eq('activity_type', activityType)
+  .gte('created_at', `${today}T00:00:00Z`)
+  .lt('created_at', `${today}T23:59:59.999Z`)
+  .limit(1);
 
-**Change Password:**
-- Only shown when `user.app_metadata.provider === 'email'`
-- Calls `supabase.auth.resetPasswordForEmail(user.email)`
-- Shows "Reset link sent to your email" toast
+if (existing && existing.length > 0) return; // skip duplicate
+```
 
-**Prayer Location:**
-- Uses `usePrayerSettings()` hook to get current city/country
-- Displays as a clickable card linking to `/iman/prayer-times`
+**Last-admin guard in leaveFamily:**
+```typescript
+// Check if user is sole admin with other members
+const { data: admins } = await supabase
+  .from('family_members')
+  .select('user_id')
+  .eq('family_id', familyId)
+  .eq('role', 'admin');
 
-**Clear Cache:**
-- `localStorage.clear()` then `toast({ title: 'Cache cleared' })`
-- Note: user will need to refresh for changes to take effect
+const { count: totalMembers } = await supabase
+  .from('family_members')
+  .select('*', { count: 'exact', head: true })
+  .eq('family_id', familyId);
 
-**Animations:**
-- Wrap main content in `motion.div` with `initial={{ opacity: 0, y: 12 }}` and `animate={{ opacity: 1, y: 0 }}`
-- Stagger children for a polished sequential reveal
+if (admins?.length === 1 && admins[0].user_id === user.id && (totalMembers ?? 0) > 1) {
+  toast({ title: 'Transfer admin first', description: '...', variant: 'destructive' });
+  return false;
+}
+```
 
