@@ -1,58 +1,46 @@
 
 
-## Redesign /health Page — "Apple Health Meets Islamic Wellness"
+## Fix Three Production Issues Before Launch
 
-### PROGRESS.md Update
-- Update date to 2026-02-21
-- Add new row: `IF End-Fast Review Screen | ✅ | Summary with total time, stats grid, weight input, notes, save/discard`
-- Add new row: `IF Onboarding Polish | ✅ | Consistent font-black headers, subtitles on all steps`
-- Add new row: `Health Hub Redesign | ✅ | Colorful Apple Health-style layout, IF Timer hero, gradient feature cards, animated rings`
+### Issue 1: Family Invite Link Shows Wrong Domain
 
-### Health Page Redesign (src/pages/Health.tsx)
+**Problem:** `useFamily.ts` hardcodes `https://success-muslim.lovable.app` when generating invite links. Also, `Install.tsx` references the old domain in install instructions.
 
-**1. IF Timer Hero Card at Top**
-- Large prominent card at the very top (replaces the generic Heart hero)
-- When inactive: gradient background (green-to-teal), large Timer icon with breathing animation, "Start a Fast" CTA button, last fast summary text
-- When active: live countdown ring, elapsed time, pulsing green dot, progress bar, "View Fast" button linking to /health/if-timer
-- This makes IF the flagship feature of the wellness page
+**Fix:**
+- **`src/hooks/useFamily.ts` (line 115):** Change invite link to use `https://www.successmuslim.app/family/join/${invite_code}`
+- **`src/pages/Install.tsx` (lines 94, 125, 156):** Replace all 3 instances of `success-muslim.lovable.app` with `www.successmuslim.app`
+- **`index.html` (lines 14, 20):** The OG/Twitter image URLs point to a Lovable CDN -- these can stay as-is (they're image hosting URLs, not page URLs), but we should add `og:url` meta tag pointing to `https://www.successmuslim.app`
 
-**2. Colorful Stats Ring Section**
-- Replace the flat 4-column grid with larger, color-coded circular progress rings (Apple Health style)
-- Each ring gets a distinct vibrant color:
-  - Water: blue (#3B82F6)
-  - Steps: orange (#F97316)
-  - Sleep: indigo (#6366F1)
-  - BMI: emerald (#10B981)
-- Rings are bigger (size 56px) with bold center values
-- Arranged in a 2x2 grid with labels below each ring
+### Issue 2: Lovable Login Showing on Production
 
-**3. Gradient Feature Cards**
-- Each feature card gets a unique gradient icon background matching its theme:
-  - BMI: emerald gradient
-  - Weight: amber gradient
-  - Hydration: blue gradient
-  - Sleep: indigo gradient
-  - Steps: orange gradient
-  - Sunnah Fasting: purple gradient
-- Remove IF Timer from the feature grid (it's now the hero)
-- Cards get slightly rounded icon containers with gradient fills
-- Arrow/chevron indicator on each card for tap affordance
+**What's happening:** The `Auth.tsx` page uses `lovable.auth.signInWithOAuth('google', ...)` from `@lovable.dev/cloud-auth-js`. This is the correct SDK for Google OAuth when using Lovable Cloud -- it is NOT "Lovable branding," it's the auth infrastructure.
 
-**4. Sunnah Reminder Enhancement**
-- Warmer gradient background (amber/yellow tones) instead of plain secondary
-- Moon icon with subtle glow effect
-- Slightly larger text with encouraging tone
+**Clarification needed:** The Google OAuth flow goes through Lovable Cloud's auth system, which is expected behavior. The login page itself (`Auth.tsx`) already shows only Success Muslim branding (Moon icon, "Success Muslim" name). If the user is seeing a Lovable-branded consent screen during Google OAuth, that's part of the Lovable Cloud auth flow and cannot be changed from code.
 
-**5. Animation Polish**
-- All existing framer-motion staggered animations retained
-- IF Hero card gets a scale-in entrance
-- Stats rings animate their stroke-dashoffset on mount (countUp effect)
-- Feature cards keep staggered fadeUp
+**What we CAN do:** Ensure the Auth page itself has zero Lovable references in visible UI -- which it already does. The page shows the Moon icon and "Welcome Back" text with Success Muslim styling.
 
-### Technical Details
-- Single file change: `src/pages/Health.tsx`
-- Plus `PROGRESS.md` update
-- No new dependencies
-- Features array reduced from 7 to 6 (IF Timer removed from grid)
-- MiniRing component upgraded with larger default size and animated offset
+### Issue 3: "Edit with Lovable" Badge Visible on Production
+
+**This is a Lovable platform setting, not a code fix.** The badge is injected by the Lovable platform and can be hidden via:
+
+**Settings -> Project Settings -> "Hide 'Lovable' Badge"**
+
+No code change needed -- this is toggled in the Lovable project settings UI.
+
+---
+
+### Summary of Code Changes
+
+| File | Change |
+|---|---|
+| `src/hooks/useFamily.ts` | Line 115: replace domain with `https://www.successmuslim.app` |
+| `src/pages/Install.tsx` | Lines 94, 125, 156: replace 3x `success-muslim.lovable.app` with `www.successmuslim.app` |
+| `index.html` | Add `og:url` meta tag with production domain |
+| `PROGRESS.md` | Log production fixes |
+
+### Non-Code Actions (User Required)
+
+1. **Hide Lovable Badge:** Go to your Lovable project Settings and toggle "Hide 'Lovable' Badge" ON
+2. **Google OAuth branding:** The Lovable Cloud auth consent screen is expected behavior -- the login page UI itself already shows only Success Muslim branding
+3. **Existing invite links:** Any families already created in the database still have the old `invite_link` stored. You may want to run a SQL update to fix those, or we can make the share flow use a dynamically generated link instead of the stored one
 
