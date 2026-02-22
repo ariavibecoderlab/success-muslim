@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
-import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
+import { estimateCompletionDays, formatYearsMonths, getTodayKey } from '@/lib/calculations';
 import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
 import { getDailyDhikr } from '@/lib/dhikr-storage';
 import { getTodaySalahCount } from '@/lib/salah-storage';
@@ -413,15 +413,15 @@ const Iman = () => {
                           <div>
                             <h3 className="font-semibold text-sm">Qada Solat</h3>
                             <p className="text-[10px] text-muted-foreground">
-                              {qadaSetup!.totalPrayers - qadaProgress.totalCompleted} remaining · Est. {estimateCompletionDate(qadaSetup!, qadaProgress.totalCompleted)}
+                              {(qadaSetup!.totalPrayers - qadaProgress.totalCompleted).toLocaleString()} remaining · ~{formatYearsMonths(estimateCompletionDays(qadaSetup!, qadaProgress.totalCompleted))} left
                             </p>
                           </div>
                         </div>
                         <span className="text-xs font-bold text-primary">
-                          {Math.round((qadaProgress.totalCompleted / qadaSetup!.totalPrayers) * 100)}%
+                          {(() => { const p = (qadaProgress.totalCompleted / qadaSetup!.totalPrayers) * 100; return p < 1 && qadaProgress.totalCompleted > 0 ? '<1' : Math.round(p); })()}%
                         </span>
                       </div>
-                      <Progress value={(qadaProgress.totalCompleted / qadaSetup!.totalPrayers) * 100} className="h-1.5" />
+                      <Progress value={(() => { const p = (qadaProgress.totalCompleted / qadaSetup!.totalPrayers) * 100; return qadaProgress.totalCompleted > 0 ? Math.max(p, 0.5) : 0; })()} className="h-1.5" />
                       <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground">
                         <span className="flex items-center gap-0.5"><Target className="h-2.5 w-2.5" /> Today: {todayQada}/{qadaSetup!.dailyTarget}</span>
                         <span className="flex items-center gap-0.5"><Flame className="h-2.5 w-2.5" /> {qadaProgress.currentStreak}d streak</span>
