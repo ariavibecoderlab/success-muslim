@@ -1,37 +1,62 @@
 
 
-## Fix: Edit Fast Dialog — Save Button Not Disabled on Validation Error
+## Final Verification + Quran Hijri Monthly Target
 
-### The Bug
-When editing a past fast, the user can set an end date in the future (e.g., 25/02/2026 when today is 22/02/2026). The error message "End time cannot be in the future" appears correctly, but:
-- The **Save button remains enabled** and clickable
-- The **duration still displays** (75h 4m) even though the input is invalid
+### Verification Results
 
-### The Fix
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| 1 | Editable end time when ending IF fast | Working | Date/time pickers in review screen, real-time duration, validation, `stopIF` accepts override |
+| 2 | Backdate (90 days) across ALL modules | Working | All 13 modules have `BackdateDatePicker` + `BackdatePrompt` |
+| 3 | Quran monthly target follows Hijri calendar | Not implemented | Currently uses daily targets only. Needs new feature (see below) |
+| 4 | Hijri date follows JAKIM standard | Working | `useHijriDate` hook fetches JAKIM API, falls back to algorithmic conversion |
+| 5 | No "Edit with Lovable" button on production | User action required | Toggle "Hide Lovable Badge" in Lovable project Settings. Cannot be removed via code |
+| 6 | Family invite link shows successmuslim.app | Working | `useFamily.ts` line 115: `https://www.successmuslim.app/family/join/...` |
+| 7 | No Lovable branding on login page | Working | Auth.tsx uses Moon icon + "Success Muslim" branding. OAuth consent screen shows Lovable (expected Cloud behavior) |
 
-**File: `src/pages/health/HealthIFTimer.tsx`**
+### New Feature: Quran Hijri Monthly Target
 
-1. Add a `useMemo` or inline computation that performs real-time validation on the edit fields:
-   - End time > now? Error
-   - End time <= start time? Error
-   - Duration < 60 seconds? Error
+Add a monthly page goal that resets on the 1st of each Hijri month.
 
-2. Use this computed error to:
-   - Show the error message below the duration (already works)
-   - **Disable the Save button** when any validation error exists
-   - **Hide or grey out the duration display** when the end time is invalid
+#### How it works
 
-3. The validation runs on every change to start/end date/time fields, not just on Save click.
+- Use `useHijriDate()` to get current Hijri month/year
+- Show a "Monthly Goal" card on the Quran Reader page (View B - the main tracker view)
+- Default goal: 100 pages/month (configurable)
+- Progress bar showing pages read this Hijri month vs target
+- Resets automatically when Hijri month changes
+- Monthly goal stored in `quran_preferences` (new column: `monthly_page_goal`)
 
-### Changes
+#### Data aggregation
 
-| What | Detail |
+- Sum `page_count` from `quran_reading_log` entries where the Gregorian date falls within the current Hijri month
+- Use the algorithmic Hijri converter to determine which Hijri month each log date belongs to
+- This avoids needing a new DB table -- just aggregates existing reading log data
+
+#### Changes
+
+| File | Change |
 |------|--------|
-| Real-time validation variable | Compute `editValidationError` from the 4 input fields on every render |
-| Save button | Add `disabled={!!editValidationError}` prop |
-| Duration display | Only show when there is no validation error |
-| Error display | Show `editValidationError` instead of only `editError` (which is set on click) |
+| `src/pages/deen/QuranReader.tsx` | Add Monthly Goal card showing Hijri month progress, settings to change goal |
+| `src/hooks/useQuranReadingLog.ts` | Add `getHijriMonthPages(month, year)` computed value that sums pages for dates in the current Hijri month |
+| `src/hooks/useQuranData.ts` | Add `monthly_page_goal` to `QuranPrefs` interface and defaults |
+| `PROGRESS.md` | Update with verification results + new feature status |
 
-### Technical Detail
+#### DB migration
 
-Replace the current pattern where `editError` is only set on Save click. Instead, derive a validation error from the current field values on each render, and use it to control both the error message and the Save button's disabled state. The `editIFSession` still validates server-side as a safety net.
+Add `monthly_page_goal` column to `quran_preferences` table:
+
+```sql
+ALTER TABLE quran_preferences 
+ADD COLUMN monthly_page_goal integer DEFAULT 100;
+```
+
+#### UI design
+
+A card below the daily stats showing:
+- Hijri month name + year (e.g., "Sha'ban 1447")
+- Progress bar: "42 / 100 pages"
+- Percentage complete
+- Pace indicator: "On track" / "Behind" / "Ahead" based on day-of-month vs expected progress
+- Gear icon to change monthly target
+
