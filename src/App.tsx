@@ -42,6 +42,7 @@ import QiyamPlanner from "./pages/deen/QiyamPlanner";
 import RamadanOptimizer from "./pages/deen/RamadanOptimizer";
 import HajjUmrahPlanner from "./pages/deen/HajjUmrahPlanner";
 import DailyDakwah from "./pages/deen/DailyDakwah";
+import SalahLog from "./pages/deen/SalahLog";
 import HealthBMI from "./pages/health/HealthBMI";
 import HealthWeight from "./pages/health/HealthWeight";
 import HealthHydration from "./pages/health/HealthHydration";
@@ -109,6 +110,7 @@ const App = () => (
               <Route path="/iman/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
               <Route path="/iman/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
               <Route path="/iman/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
+              <Route path="/iman/salah-log" element={<AuthGuard><SalahLog /></AuthGuard>} />
               <Route path="/iman/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
               <Route path="/iman/sadaqah" element={<AuthGuard><SadaqahTracker /></AuthGuard>} />
               <Route path="/iman/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />

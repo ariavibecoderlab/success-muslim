@@ -42,9 +42,9 @@ export const saveQadaProgress = (data: QadaSolatProgress) => {
   syncQadaSolat(getQadaSetup(), data);
 };
 
-export const logQadaPrayer = (prayer: PrayerType, count: number = 1) => {
+export const logQadaPrayer = (prayer: PrayerType, count: number = 1, dateOverride?: string) => {
   const progress = getQadaProgress();
-  const today = new Date().toISOString().split('T')[0];
+  const today = dateOverride || new Date().toISOString().split('T')[0];
   
   if (!progress.dailyLogs[today]) {
     progress.dailyLogs[today] = { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
@@ -71,9 +71,9 @@ export const logQadaPrayer = (prayer: PrayerType, count: number = 1) => {
   return progress;
 };
 
-export const undoQadaPrayer = (prayer: PrayerType) => {
+export const undoQadaPrayer = (prayer: PrayerType, dateOverride?: string) => {
   const progress = getQadaProgress();
-  const today = new Date().toISOString().split('T')[0];
+  const today = dateOverride || new Date().toISOString().split('T')[0];
   
   if (progress.dailyLogs[today]?.[prayer] > 0) {
     progress.dailyLogs[today][prayer] -= 1;
