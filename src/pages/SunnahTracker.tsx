@@ -8,11 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 import {
   getSunnahItems, saveSunnahItems, getDayLog, toggleSunnahItem, getSunnahStreak,
   getSunnahWeekData, type SunnahItem,
 } from '@/lib/sunnah-storage';
 import SubPageLayout from '@/components/SubPageLayout';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const CATEGORY_LABELS: Record<string, string> = {
   intention: '🌙 Daily Intentions',
@@ -33,8 +36,12 @@ const IMAN_SIBLINGS = [
 ];
 
 const SunnahTracker = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
+
   const [items, setItems] = useState(getSunnahItems);
-  const [dayLog, setDayLog] = useState(() => getDayLog());
+  const [dayLog, setDayLog] = useState(() => getDayLog(dateKey));
   const [editing, setEditing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabel, setNewLabel] = useState('');
@@ -43,17 +50,22 @@ const SunnahTracker = () => {
   const streak = getSunnahStreak();
   const weekData = getSunnahWeekData();
 
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    const key = format(date, 'yyyy-MM-dd');
+    setDayLog(getDayLog(key));
+  };
+
   const enabledItems = items.filter(i => i.enabled);
   const completedCount = dayLog.completed.filter(id => enabledItems.find(i => i.id === id)).length;
   const progress = enabledItems.length > 0 ? (completedCount / enabledItems.length) * 100 : 0;
 
   const handleToggle = (itemId: string) => {
-    const updated = toggleSunnahItem(itemId);
+    const updated = toggleSunnahItem(itemId, dateKey);
     setDayLog(updated);
     
-    // Check if all done
     const newCompleted = updated.completed.filter(id => enabledItems.find(i => i.id === id)).length;
-    if (newCompleted === enabledItems.length && enabledItems.length > 0) {
+    if (newCompleted === enabledItems.length && enabledItems.length > 0 && isToday) {
       setCelebrateVisible(true);
       if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
       setTimeout(() => setCelebrateVisible(false), 2000);
@@ -110,12 +122,17 @@ const SunnahTracker = () => {
         </button>
       }
     >
+      <BackdatePrompt moduleKey="sunnah" onLogPastData={() => {}} />
       <div className="space-y-5">
+
+        {/* Date Picker */}
+        <div className="flex justify-center">
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact />
+        </div>
 
         {/* Hero Summary with Ring */}
         <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden relative">
           <CardContent className="p-5">
-            {/* Celebration overlay */}
             <AnimatePresence>
               {celebrateVisible && (
                 <motion.div
@@ -134,7 +151,6 @@ const SunnahTracker = () => {
             </AnimatePresence>
 
             <div className="flex items-center gap-4">
-              {/* Completion Ring */}
               <div className="relative w-20 h-20 flex-shrink-0">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
                   <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
@@ -153,7 +169,7 @@ const SunnahTracker = () => {
               </div>
 
               <div className="flex-1">
-                <h2 className="text-sm font-semibold">Today's Progress</h2>
+                <h2 className="text-sm font-semibold">{isToday ? "Today's Progress" : format(selectedDate, 'd MMM yyyy')}</h2>
                 <p className="text-2xl font-bold">{completedCount}<span className="text-sm text-muted-foreground font-normal">/{enabledItems.length}</span></p>
                 <div className="flex items-center gap-1.5 mt-1">
                   <Flame className="h-3.5 w-3.5 text-primary" />
@@ -162,22 +178,23 @@ const SunnahTracker = () => {
               </div>
             </div>
 
-            {/* Week consistency dots */}
-            <div className="flex gap-1.5 mt-4 justify-center">
-              {weekData.map((d, i) => (
-                <div key={i} className="flex flex-col items-center gap-0.5">
-                  <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-medium transition-all ${
-                    d.percentage >= 80 ? 'bg-primary text-primary-foreground' :
-                    d.percentage >= 50 ? 'bg-primary/30 text-primary' :
-                    d.percentage > 0 ? 'bg-primary/10 text-muted-foreground' :
-                    'bg-secondary text-muted-foreground/50'
-                  }`}>
-                    {d.percentage >= 80 ? <Check className="h-3 w-3" /> : d.label.charAt(0)}
+            {isToday && (
+              <div className="flex gap-1.5 mt-4 justify-center">
+                {weekData.map((d, i) => (
+                  <div key={i} className="flex flex-col items-center gap-0.5">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-medium transition-all ${
+                      d.percentage >= 80 ? 'bg-primary text-primary-foreground' :
+                      d.percentage >= 50 ? 'bg-primary/30 text-primary' :
+                      d.percentage > 0 ? 'bg-primary/10 text-muted-foreground' :
+                      'bg-secondary text-muted-foreground/50'
+                    }`}>
+                      {d.percentage >= 80 ? <Check className="h-3 w-3" /> : d.label.charAt(0)}
+                    </div>
+                    <span className="text-[8px] text-muted-foreground">{d.label}</span>
                   </div>
-                  <span className="text-[8px] text-muted-foreground">{d.label}</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

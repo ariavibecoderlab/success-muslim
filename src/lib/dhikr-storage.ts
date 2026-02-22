@@ -60,8 +60,8 @@ export function getDailyDhikr(date?: string): DhikrDailyData {
   }
 }
 
-export function saveDhikrCount(presetId: string, count: number, target: number) {
-  const key = getTodayKey();
+export function saveDhikrCount(presetId: string, count: number, target: number, date?: string) {
+  const key = date || getTodayKey();
   try {
     const all = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     const daily: DhikrDailyData = all[key] || { sessions: [], totalCount: 0 };

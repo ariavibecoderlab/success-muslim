@@ -7,8 +7,11 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
 import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset, getDhikrStreak, getDhikrHistory } from '@/lib/dhikr-storage';
 import SubPageLayout from '@/components/SubPageLayout';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const IMAN_SIBLINGS = [
   { path: '/iman/dhikr', label: 'Dhikr' },
@@ -18,10 +21,14 @@ const IMAN_SIBLINGS = [
 ];
 
 const DhikrCounter = () => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
+
   const [presets, setPresetsState] = useState(getPresets);
   const [selectedPreset, setSelectedPreset] = useState<DhikrPreset>(presets[0]);
   const [count, setCount] = useState(() => {
-    const daily = getDailyDhikr();
+    const daily = getDailyDhikr(dateKey);
     const session = daily.sessions.find(s => s.presetId === presets[0].id);
     return session?.count || 0;
   });
@@ -39,12 +46,20 @@ const DhikrCounter = () => {
   const streak = getDhikrStreak();
   const history = getDhikrHistory(7);
 
+  const handleDateChange = (date: Date) => {
+    setSelectedDate(date);
+    const key = format(date, 'yyyy-MM-dd');
+    const daily = getDailyDhikr(key);
+    const session = daily.sessions.find(s => s.presetId === selectedPreset.id);
+    setCount(session?.count || 0);
+  };
+
   const selectPreset = useCallback((preset: DhikrPreset) => {
     setSelectedPreset(preset);
-    const daily = getDailyDhikr();
+    const daily = getDailyDhikr(dateKey);
     const session = daily.sessions.find(s => s.presetId === preset.id);
     setCount(session?.count || 0);
-  }, []);
+  }, [dateKey]);
 
   const triggerHaptic = () => {
     if (navigator.vibrate) navigator.vibrate(15);
@@ -56,18 +71,17 @@ const DhikrCounter = () => {
     setPulse(true);
     triggerHaptic();
     setTimeout(() => setPulse(false), 200);
-    saveDhikrCount(selectedPreset.id, newCount, selectedPreset.target);
+    saveDhikrCount(selectedPreset.id, newCount, selectedPreset.target, dateKey);
     
-    // Add ripple
     const id = ++rippleId.current;
     setRipples(prev => [...prev, id]);
     setTimeout(() => setRipples(prev => prev.filter(r => r !== id)), 600);
-  }, [count, selectedPreset]);
+  }, [count, selectedPreset, dateKey]);
 
   const handleReset = useCallback(() => {
     setCount(0);
-    saveDhikrCount(selectedPreset.id, 0, selectedPreset.target);
-  }, [selectedPreset]);
+    saveDhikrCount(selectedPreset.id, 0, selectedPreset.target, dateKey);
+  }, [selectedPreset, dateKey]);
 
   const handleAddPreset = () => {
     if (!newName.trim()) return;
@@ -104,18 +118,23 @@ const DhikrCounter = () => {
     setPresetsState(updated);
     setSelectedPreset(updatedPreset);
     setEditingTarget(false);
-    // Re-save current count with new target
-    saveDhikrCount(selectedPreset.id, count, newTargetVal);
+    saveDhikrCount(selectedPreset.id, count, newTargetVal, dateKey);
   };
 
   const progress = Math.min((count / selectedPreset.target) * 100, 100);
   const completed = count >= selectedPreset.target;
-  const daily = getDailyDhikr();
+  const daily = getDailyDhikr(dateKey);
   const completedSessions = daily.sessions.filter(s => s.count >= s.target).length;
 
   return (
     <SubPageLayout title="Dhikr Counter" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/dhikr">
+      <BackdatePrompt moduleKey="dhikr" onLogPastData={() => {}} />
       <div className="space-y-5">
+
+        {/* Date Picker */}
+        <div className="flex justify-center">
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact />
+        </div>
 
         {/* Streak + Stats Bar */}
         <div className="flex items-center justify-between">
@@ -192,7 +211,6 @@ const DhikrCounter = () => {
               background: `conic-gradient(hsl(var(--primary)) ${progress * 3.6}deg, hsl(var(--secondary)) ${progress * 3.6}deg)`,
             }}
           >
-            {/* Ripple effects */}
             {ripples.map(id => (
               <motion.div
                 key={id}
@@ -285,7 +303,7 @@ const DhikrCounter = () => {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold">Today's Summary</h3>
+              <h3 className="text-sm font-semibold">{isToday ? "Today's Summary" : format(selectedDate, 'd MMM yyyy')}</h3>
               <span className="text-xs text-muted-foreground">{completedSessions} of {presets.length} complete</span>
             </div>
             <div className="space-y-2">
@@ -306,12 +324,12 @@ const DhikrCounter = () => {
                 );
               })}
               {daily.sessions.filter(s => s.count > 0).length === 0 && (
-                <p className="text-xs text-muted-foreground text-center py-2">No dhikr recorded today. Tap the circle to start!</p>
+                <p className="text-xs text-muted-foreground text-center py-2">No dhikr recorded{isToday ? ' today' : ''}. Tap the circle to start!</p>
               )}
             </div>
             {daily.totalCount > 0 && (
               <div className="mt-3 pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                <span>Total today</span>
+                <span>Total</span>
                 <span className="font-bold text-foreground text-base">{daily.totalCount}</span>
               </div>
             )}
