@@ -10,8 +10,11 @@ import {
   getQuranDay, addQuranPages, logQuranPages,
   getTotalPagesRead, getKhatamCount, getCurrentKhatamProgress,
   getCurrentKhatamPercent, getQuranStreak, getWeeklyHistory,
-  getEstimatedKhatamDays, TOTAL_PAGES,
+  getEstimatedKhatamDays, TOTAL_PAGES, todayKey,
 } from '@/lib/quran-storage';
+import { format, subDays } from 'date-fns';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const IMAN_SIBLINGS = [
   { path: '/iman/dhikr', label: 'Dhikr' },
@@ -23,8 +26,12 @@ const IMAN_SIBLINGS = [
 const QuranTracker = () => {
   const [, rerender] = useState(0);
   const refresh = () => rerender(n => n + 1);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const today = getQuranDay();
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === todayKey();
+
+  const dayData = getQuranDay(dateKey);
   const totalPages = getTotalPagesRead();
   const khatamCount = getKhatamCount();
   const khatamProgress = getCurrentKhatamProgress();
@@ -34,19 +41,23 @@ const QuranTracker = () => {
   const estDays = getEstimatedKhatamDays();
 
   const handleAddPages = (amount: number) => {
-    addQuranPages(amount);
+    addQuranPages(amount, dateKey);
     refresh();
   };
 
   const handleSurahChange = (surah: string) => {
-    logQuranPages(today.pagesRead, today.juzNumber, surah, today.notes);
+    logQuranPages(dayData.pagesRead, dayData.juzNumber, surah, dayData.notes, dateKey);
     refresh();
   };
 
   const handleJuzChange = (juz: string) => {
     const num = parseInt(juz) || null;
-    logQuranPages(today.pagesRead, num, today.surahName, today.notes);
+    logQuranPages(dayData.pagesRead, num, dayData.surahName, dayData.notes, dateKey);
     refresh();
+  };
+
+  const handleBackdatePrompt = () => {
+    setSelectedDate(subDays(new Date(), 1));
   };
 
   // Ring for khatam progress
@@ -56,9 +67,14 @@ const QuranTracker = () => {
   const circumference = 2 * Math.PI * radius;
   const dashOffset = circumference - (khatamPercent / 100) * circumference;
 
+  const dayLabel = isToday ? "Today's" : format(selectedDate, 'd MMM');
+
   return (
     <SubPageLayout title="Quran Tracker" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
       <div className="space-y-5">
+        {/* Backdate */}
+        <BackdatePrompt moduleKey="quran" onLogPastData={handleBackdatePrompt} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} />
 
         {/* Khatam Progress Ring */}
         <div className="flex flex-col items-center">
@@ -89,17 +105,17 @@ const QuranTracker = () => {
           )}
         </div>
 
-        {/* Today's Reading */}
+        {/* Day's Reading */}
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Today's Reading</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{dayLabel} Reading</p>
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Button variant="outline" size="icon" onClick={() => handleAddPages(-1)} disabled={today.pagesRead <= 0}>
+              <Button variant="outline" size="icon" onClick={() => handleAddPages(-1)} disabled={dayData.pagesRead <= 0}>
                 <Minus className="h-4 w-4" />
               </Button>
               <div className="text-center min-w-[80px]">
-                <p className="text-3xl font-bold">{today.pagesRead}</p>
-                <p className="text-xs text-muted-foreground">pages today</p>
+                <p className="text-3xl font-bold">{dayData.pagesRead}</p>
+                <p className="text-xs text-muted-foreground">pages {isToday ? 'today' : format(selectedDate, 'd MMM')}</p>
               </div>
               <Button variant="outline" size="icon" onClick={() => handleAddPages(1)}>
                 <Plus className="h-4 w-4" />
@@ -123,7 +139,7 @@ const QuranTracker = () => {
                 <label className="text-[10px] text-muted-foreground">Surah</label>
                 <Input
                   placeholder="e.g. Al-Baqarah"
-                  value={today.surahName}
+                  value={dayData.surahName}
                   onChange={e => handleSurahChange(e.target.value)}
                   className="h-9 text-sm"
                 />
@@ -135,7 +151,7 @@ const QuranTracker = () => {
                   type="number"
                   min={1}
                   max={30}
-                  value={today.juzNumber || ''}
+                  value={dayData.juzNumber || ''}
                   onChange={e => handleJuzChange(e.target.value)}
                   className="h-9 text-sm"
                 />

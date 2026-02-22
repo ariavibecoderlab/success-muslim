@@ -257,3 +257,18 @@ export function stopIF(completed: boolean) {
 export function deleteIF() {
   localStorage.removeItem(KEYS.ifActive);
 }
+
+export function logPastIF(date: string, mode: string, hours: number) {
+  const startTime = new Date(date + 'T06:00:00').toISOString();
+  const endTime = new Date(new Date(startTime).getTime() + hours * 3600000).toISOString();
+  const sessions = getIFSessions();
+  sessions.unshift({
+    mode,
+    startTime,
+    endTime,
+    completed: true,
+  });
+  set(KEYS.ifSessions, sessions.slice(0, 50));
+  syncIFStart(mode, startTime, hours);
+  syncIFStop(startTime, endTime, true);
+}

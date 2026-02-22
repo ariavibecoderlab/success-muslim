@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Timer, Play, Square, Trash2, Settings2, Clock, Target, Droplets, CheckCircle2, Scale, StickyNote } from 'lucide-react';
+import { Timer, Play, Square, Trash2, Settings2, Clock, Target, Droplets, CheckCircle2, Scale, StickyNote, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup } from '@/lib/health-storage';
-import { format } from 'date-fns';
+import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup, logPastIF } from '@/lib/health-storage';
+import { format, subDays, startOfDay, isAfter, isBefore } from 'date-fns';
 import { motion } from 'framer-motion';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
 import FastingCalendarHeatmap from '@/components/health/FastingCalendarHeatmap';
@@ -20,10 +21,14 @@ import FastingChallenges from '@/components/health/FastingChallenges';
 import FastingStreakCelebration, { shouldShowCelebration } from '@/components/health/FastingStreakCelebration';
 import { getCurrentStage } from '@/lib/fasting-stages';
 import { useHealthProfile } from '@/hooks/useHealthProfile';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -69,7 +74,7 @@ const HealthIFTimer = () => {
   const navigate = useNavigate();
   const { loading: profileLoading, completed: profileCompleted } = useHealthProfile();
   const [active, setActive] = useState(getActiveIF);
-  const [selectedMode, setSelectedMode] = useState(MODES[1]); // default 16:8
+  const [selectedMode, setSelectedMode] = useState(MODES[1]);
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState(getIFSessions);
   const [showCustom, setShowCustom] = useState(false);
@@ -83,6 +88,14 @@ const HealthIFTimer = () => {
   const [endReviewNotes, setEndReviewNotes] = useState('');
   const [endReviewSnapshot, setEndReviewSnapshot] = useState<{ elapsed: number; elapsedHours: number; mode: string; startTime: string; goalTime: string; level: number; stageName: string } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Log Past Fast state
+  const [showLogPast, setShowLogPast] = useState(false);
+  const [pastDate, setPastDate] = useState<Date>(subDays(new Date(), 1));
+  const [pastMode, setPastMode] = useState('16:8');
+  const [pastHours, setPastHours] = useState('16');
+  const [pastCalOpen, setPastCalOpen] = useState(false);
+
   // Redirect to onboarding if not completed
   useEffect(() => {
     if (!profileLoading && !profileCompleted) {
@@ -168,6 +181,16 @@ const HealthIFTimer = () => {
 
   const handleQuickWater = () => { addCup(); toast('Water logged!'); };
 
+  const handleLogPastFast = () => {
+    const hours = parseFloat(pastHours);
+    if (!hours || hours <= 0) return;
+    const dateStr = format(pastDate, 'yyyy-MM-dd');
+    logPastIF(dateStr, pastMode, hours);
+    setSessions(getIFSessions());
+    setShowLogPast(false);
+    toast.success(`Past fast logged for ${format(pastDate, 'd MMM yyyy')}`);
+  };
+
   let elapsed = 0, total = 0, remaining = 0, progress = 0, elapsedHours = 0;
   if (active) {
     const start = new Date(active.startTime).getTime();
@@ -195,6 +218,9 @@ const HealthIFTimer = () => {
   }, [currentStage]);
 
   const endTime = active ? new Date(new Date(active.startTime).getTime() + active.fastingHours * 3600000) : null;
+
+  const today = startOfDay(new Date());
+  const minPastDate = subDays(today, 90);
 
   if (profileLoading) return null;
 
@@ -328,14 +354,88 @@ const HealthIFTimer = () => {
               </div>
             </div>
 
-            {/* Start button */}
-            <div className="flex justify-center">
+            {/* Start button + Log Past Fast */}
+            <div className="flex flex-col items-center gap-3">
               <Button onClick={handleStart} className="gap-2 px-10 shadow-lg shadow-primary/20" size="lg">
                 <Play className="h-4 w-4" /> Start Fast
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1.5" onClick={() => setShowLogPast(true)}>
+                <CalendarDays className="h-3.5 w-3.5" /> Log a past fast
               </Button>
             </div>
           </>
         )}
+
+        {/* ===== LOG PAST FAST DIALOG ===== */}
+        <Dialog open={showLogPast} onOpenChange={setShowLogPast}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-primary" />
+                Log Past Fast
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-1">
+              {/* Date */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Date</label>
+                <Popover open={pastCalOpen} onOpenChange={setPastCalOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start text-left text-sm font-normal gap-2">
+                      <CalendarDays className="h-4 w-4" />
+                      {format(pastDate, 'EEE, d MMM yyyy')}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={pastDate}
+                      onSelect={(d) => { if (d) { setPastDate(d); setPastCalOpen(false); } }}
+                      disabled={(date) =>
+                        isAfter(startOfDay(date), subDays(today, 1)) || isBefore(startOfDay(date), minPastDate)
+                      }
+                      initialFocus
+                      className="p-3 pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Protocol */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Protocol</label>
+                <Select value={pastMode} onValueChange={setPastMode}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MODES.map(m => (
+                      <SelectItem key={m.label} value={m.label}>{m.label} ({m.hours}h fast)</SelectItem>
+                    ))}
+                    <SelectItem value="Custom">Custom</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Duration */}
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Duration (hours)</label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={72}
+                  value={pastHours}
+                  onChange={e => setPastHours(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+
+              <Button onClick={handleLogPastFast} className="w-full" disabled={!pastHours || parseFloat(pastHours) <= 0}>
+                Save Past Fast
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* ===== CUSTOM VIEW ===== */}
         {!active && showCustom && (
@@ -412,15 +512,12 @@ const HealthIFTimer = () => {
             {/* Summary Card */}
             <Card className="border-primary/20">
               <CardContent className="p-4 space-y-3">
-                {/* Total Time */}
                 <div className="text-center py-3 border-b border-border/50">
                   <p className="text-3xl font-black tracking-tight">
                     {Math.floor(endReviewSnapshot.elapsedHours)}h {Math.round((endReviewSnapshot.elapsedHours % 1) * 60)}m
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">Total Fasting Time</p>
                 </div>
-
-                {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   <div className="bg-secondary/50 rounded-lg p-3 text-center">
                     <p className="text-sm font-bold">{endReviewSnapshot.mode}</p>

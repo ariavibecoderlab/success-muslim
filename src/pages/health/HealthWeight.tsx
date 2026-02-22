@@ -7,10 +7,12 @@ import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
 import { getWeightLog, addWeightEntry, getWeightGoal, setWeightGoal as saveWeightGoal, todayKey, getBMI, saveBMI, calculateBMI, calculateTDEE } from '@/lib/health-storage';
-import { format, parseISO, differenceInDays, subDays, isAfter } from 'date-fns';
+import { format, parseISO, differenceInDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -40,7 +42,7 @@ function getStreak(log: { date: string }[]): number {
     const checkDate = format(subDays(today, i), 'yyyy-MM-dd');
     if (log.some(e => e.date === checkDate)) {
       streak++;
-    } else if (i > 0) break; // allow today to be missing
+    } else if (i > 0) break;
   }
   return streak;
 }
@@ -82,7 +84,11 @@ const HealthWeight = () => {
   const [logDialogOpen, setLogDialogOpen] = useState(false);
   const [chartRange, setChartRange] = useState<ChartRange>('30d');
   const [celebrationMsg, setCelebrationMsg] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const { toast } = useToast();
+
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === todayKey();
 
   const goalVal = getWeightGoal();
   const latest = log[log.length - 1];
@@ -116,14 +122,16 @@ const HealthWeight = () => {
     if (!w || w < 20 || w > 300) return;
 
     const prevMilestones = checkMilestones(log, goalVal);
-    addWeightEntry({ date: todayKey(), weight: w });
+    addWeightEntry({ date: dateKey, weight: w });
 
-    // Auto-update BMI
-    const bmiData = getBMI();
-    if (bmiData) {
-      const newBmi = calculateBMI(w, bmiData.height);
-      const newTdee = calculateTDEE(w, bmiData.height, bmiData.age, bmiData.gender, bmiData.activityLevel);
-      saveBMI({ ...bmiData, weight: w, bmi: newBmi, tdee: newTdee, date: todayKey() });
+    // Auto-update BMI only if logging for today
+    if (isToday) {
+      const bmiData = getBMI();
+      if (bmiData) {
+        const newBmi = calculateBMI(w, bmiData.height);
+        const newTdee = calculateTDEE(w, bmiData.height, bmiData.age, bmiData.gender, bmiData.activityLevel);
+        saveBMI({ ...bmiData, weight: w, bmi: newBmi, tdee: newTdee, date: todayKey() });
+      }
     }
 
     const updatedLog = getWeightLog();
@@ -142,7 +150,8 @@ const HealthWeight = () => {
       }
     }
 
-    toast({ title: 'Weight logged', description: `${w} kg recorded for today.` });
+    const dateLabel = isToday ? 'today' : format(selectedDate, 'd MMM');
+    toast({ title: 'Weight logged', description: `${w} kg recorded for ${dateLabel}.` });
   };
 
   const handleSetGoal = () => {
@@ -154,11 +163,19 @@ const HealthWeight = () => {
     toast({ title: 'Goal set', description: `Target: ${g} kg` });
   };
 
-  const todayLogged = log.some(e => e.date === todayKey());
+  const dateLogged = log.some(e => e.date === dateKey);
+
+  const handleBackdatePrompt = () => {
+    setSelectedDate(subDays(new Date(), 1));
+  };
 
   return (
     <SubPageLayout title="Weight Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/weight">
       <div className="space-y-5">
+        {/* Backdate */}
+        <BackdatePrompt moduleKey="weight" onLogPastData={handleBackdatePrompt} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} />
+
         {/* Celebration overlay */}
         <AnimatePresence>
           {celebrationMsg && (
@@ -206,7 +223,7 @@ const HealthWeight = () => {
                 </DialogTrigger>
                 <DialogContent className="max-w-xs">
                   <DialogHeader>
-                    <DialogTitle>Log Weight</DialogTitle>
+                    <DialogTitle>Log Weight{!isToday ? ` — ${format(selectedDate, 'd MMM')}` : ''}</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-3">
@@ -239,7 +256,7 @@ const HealthWeight = () => {
                       </Button>
                     </div>
                     <Button onClick={handleAdd} className="w-full h-11">
-                      {todayLogged ? 'Update Today' : 'Log Weight'}
+                      {dateLogged ? (isToday ? 'Update Today' : `Update ${format(selectedDate, 'd MMM')}`) : 'Log Weight'}
                     </Button>
                   </div>
                 </DialogContent>
@@ -317,7 +334,6 @@ const HealthWeight = () => {
         {chartData.length > 1 && (
           <Card>
             <CardContent className="p-4 space-y-3">
-              {/* Range toggles */}
               <div className="flex gap-1">
                 {([['7d', '7D'], ['30d', '30D'], ['all', 'All']] as const).map(([val, label]) => (
                   <Button
