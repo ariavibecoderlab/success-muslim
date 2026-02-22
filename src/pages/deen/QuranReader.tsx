@@ -4,8 +4,9 @@ import {
   BookOpen, Search, BookMarked, ChevronRight, Settings2,
   CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
   Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal, RotateCcw,
-  Plus, Pencil, Trash2, ChevronDown,
+  Plus, Pencil, Trash2, ChevronDown, Target,
 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import SubPageLayout from '@/components/SubPageLayout';
 import { useQuranPrefs, useQuranBookmarks } from '@/hooks/useQuranData';
 import { useQuranReadingLog, type ReadingLogEntry } from '@/hooks/useQuranReadingLog';
+import { useHijriDate } from '@/hooks/useHijriDate';
 import { SURAH_NAMES, TRANSLATION_IDS } from '@/lib/quran-api';
 import {
   ayahCountInRange, pageCountInRange, juzSegmentsInRange,
@@ -148,7 +150,9 @@ const QuranReader = () => {
     allTimeTotalAyahs, allTimeTotalPages,
     hasDoneToday, streak, lastPosition, last7DaysLogs,
     loading: logLoading, addLog, updateLog, deleteLog, checkOverlap, logs,
+    hijriMonthPages,
   } = useQuranReadingLog();
+  const { hijriParts } = useHijriDate();
   const { bookmarks } = useQuranBookmarks();
 
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
@@ -156,6 +160,8 @@ const QuranReader = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('surah');
   const [last7Open, setLast7Open] = useState(false);
+  const [monthlyGoalOpen, setMonthlyGoalOpen] = useState(false);
+  const [monthlyGoalInput, setMonthlyGoalInput] = useState(prefs.monthly_page_goal);
 
   // Log sheet state
   const [logMode, setLogMode] = useState<'continue' | 'manual'>('continue');
@@ -528,7 +534,72 @@ const QuranReader = () => {
           </Card>
         </div>
 
-        {/* Last Read / Continue */}
+        {/* Hijri Monthly Goal */}
+        {hijriParts && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Monthly Goal · {hijriParts.monthName} {hijriParts.year}
+                </p>
+                <Dialog open={monthlyGoalOpen} onOpenChange={setMonthlyGoalOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMonthlyGoalInput(prefs.monthly_page_goal)}>
+                      <Settings2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Monthly Page Goal</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                      <div>
+                        <Label>Pages per Hijri month</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={604}
+                          value={monthlyGoalInput}
+                          onChange={e => setMonthlyGoalInput(Number(e.target.value) || 1)}
+                          className="mt-1"
+                        />
+                      </div>
+                      <Button className="w-full" onClick={() => {
+                        savePrefs({ monthly_page_goal: monthlyGoalInput });
+                        setMonthlyGoalOpen(false);
+                        toast.success('Monthly goal updated');
+                      }}>
+                        Save
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+              <div className="flex items-baseline gap-2 mb-2">
+                <span className="text-2xl font-bold">{hijriMonthPages}</span>
+                <span className="text-sm text-muted-foreground">/ {prefs.monthly_page_goal} pages</span>
+              </div>
+              <Progress value={Math.min(100, (hijriMonthPages / prefs.monthly_page_goal) * 100)} className="h-2 mb-2" />
+              {(() => {
+                const dayOfMonth = hijriParts.day;
+                const daysInMonth = 30; // Hijri months are 29-30 days
+                const expectedProgress = (dayOfMonth / daysInMonth) * prefs.monthly_page_goal;
+                const paceRatio = hijriMonthPages / Math.max(expectedProgress, 0.1);
+                const paceLabel = paceRatio >= 1.1 ? 'Ahead' : paceRatio >= 0.85 ? 'On track' : 'Behind';
+                const paceColor = paceRatio >= 1.1 ? 'text-green-600' : paceRatio >= 0.85 ? 'text-primary' : 'text-orange-500';
+                const percent = Math.min(100, Math.round((hijriMonthPages / prefs.monthly_page_goal) * 100));
+                return (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{percent}% complete · Day {dayOfMonth}</span>
+                    <span className={`font-medium ${paceColor}`}>{paceLabel}</span>
+                  </div>
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
+
+
         {lastPosition.surah > 0 && (
           <Card
             className="cursor-pointer hover:border-primary/30 transition-all"

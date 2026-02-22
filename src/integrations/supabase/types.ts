@@ -1049,6 +1049,7 @@ export type Database = {
           last_ayah: number | null
           last_surah: number | null
           memorization_enabled: boolean | null
+          monthly_page_goal: number | null
           night_mode: boolean | null
           target_selected_at: string | null
           tracker_enabled: boolean | null
@@ -1066,6 +1067,7 @@ export type Database = {
           last_ayah?: number | null
           last_surah?: number | null
           memorization_enabled?: boolean | null
+          monthly_page_goal?: number | null
           night_mode?: boolean | null
           target_selected_at?: string | null
           tracker_enabled?: boolean | null
@@ -1083,6 +1085,7 @@ export type Database = {
           last_ayah?: number | null
           last_surah?: number | null
           memorization_enabled?: boolean | null
+          monthly_page_goal?: number | null
           night_mode?: boolean | null
           target_selected_at?: string | null
           tracker_enabled?: boolean | null
