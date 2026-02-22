@@ -798,38 +798,55 @@ const HealthIFTimer = () => {
                     </div>
                   </div>
 
-                  {/* Duration display */}
+                  {/* Duration display + real-time validation */}
                   {(() => {
                     const s = new Date(`${editStartDate}T${editStartTime}:00`).getTime();
                     const e = new Date(`${editEndDate}T${editEndTime}:00`).getTime();
+                    const nowMs = Date.now();
                     const sec = (e - s) / 1000;
-                    if (sec > 0) {
-                      return (
-                        <div className="text-center py-2 bg-secondary/40 rounded-lg">
-                          <p className="text-lg font-black">{Math.floor(sec / 3600)}h {Math.round((sec % 3600) / 60)}m</p>
-                          <p className="text-[10px] text-muted-foreground">Duration</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  })()}
 
-                  {editError && <p className="text-xs text-destructive font-medium">{editError}</p>}
+                    // Compute validation error
+                    let validationError = '';
+                    if (e <= s) validationError = 'End time must be after start time';
+                    else if (e > nowMs + 60000) validationError = 'End time cannot be in the future';
+                    else if (sec < 60) validationError = 'Fast must be at least 1 minute';
+
+                    return (
+                      <>
+                        {!validationError && sec > 0 && (
+                          <div className="text-center py-2 bg-secondary/40 rounded-lg">
+                            <p className="text-lg font-black">{Math.floor(sec / 3600)}h {Math.round((sec % 3600) / 60)}m</p>
+                            <p className="text-[10px] text-muted-foreground">Duration</p>
+                          </div>
+                        )}
+                        {(validationError || editError) && (
+                          <p className="text-xs text-destructive font-medium">{validationError || editError}</p>
+                        )}
+                      </>
+                    );
+                  })()}
                 </>
               )}
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setEditIndex(null)}>Cancel</Button>
-              <Button onClick={() => {
-                if (editIndex === null) return;
-                const newStart = new Date(`${editStartDate}T${editStartTime}:00`).toISOString();
-                const newEnd = new Date(`${editEndDate}T${editEndTime}:00`).toISOString();
-                const err = editIFSession(editIndex, { startTime: newStart, endTime: newEnd });
-                if (err) { setEditError(err); return; }
-                setSessions(getIFSessions());
-                setEditIndex(null);
-                toast.success('Fast updated!');
-              }}>Save</Button>
+              <Button
+                disabled={(() => {
+                  const s = new Date(`${editStartDate}T${editStartTime}:00`).getTime();
+                  const e = new Date(`${editEndDate}T${editEndTime}:00`).getTime();
+                  return e <= s || e > Date.now() + 60000 || (e - s) < 60000;
+                })()}
+                onClick={() => {
+                  if (editIndex === null) return;
+                  const newStart = new Date(`${editStartDate}T${editStartTime}:00`).toISOString();
+                  const newEnd = new Date(`${editEndDate}T${editEndTime}:00`).toISOString();
+                  const err = editIFSession(editIndex, { startTime: newStart, endTime: newEnd });
+                  if (err) { setEditError(err); return; }
+                  setSessions(getIFSessions());
+                  setEditIndex(null);
+                  toast.success('Fast updated!');
+                }}
+              >Save</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
