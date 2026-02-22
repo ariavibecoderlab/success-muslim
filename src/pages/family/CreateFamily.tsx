@@ -13,7 +13,7 @@ const CreateFamily = () => {
   const { toast } = useToast();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [created, setCreated] = useState<{ id: string; name: string; invite_code: string; invite_link: string | null } | null>(null);
+  const [created, setCreated] = useState<{ id: string; name: string; invite_code: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const handleCreate = async () => {
@@ -26,7 +26,6 @@ const CreateFamily = () => {
         id: family.id,
         name: family.name,
         invite_code: family.invite_code,
-        invite_link: family.invite_link,
       });
     }
   };
@@ -40,7 +39,8 @@ const CreateFamily = () => {
 
   const handleShare = async () => {
     if (!created) return;
-    const shareText = `Join my family group "${created.name}" on Success Muslim!\n\nInvite code: ${created.invite_code}\n\nOr join directly: ${created.invite_link}`;
+    const inviteLink = `https://www.successmuslim.app/family/join/${created.invite_code}`;
+    const shareText = `Join my family group "${created.name}" on Success Muslim!\n\nInvite code: ${created.invite_code}\n\nOr join directly: ${inviteLink}`;
     if (navigator.share) {
       try { await navigator.share({ title: 'Join my family group', text: shareText }); } catch {}
     } else {
@@ -83,19 +83,17 @@ const CreateFamily = () => {
                 </div>
               </div>
 
-              {created.invite_link && (
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1.5 font-medium uppercase tracking-wider">Invite Link</p>
-                  <div className="flex items-center gap-2">
-                    <p className="flex-1 text-xs bg-muted rounded-lg px-3 py-2 truncate text-muted-foreground font-mono">
-                      {created.invite_link}
-                    </p>
-                    <Button variant="outline" size="icon" onClick={() => handleCopy(created.invite_link!)}>
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5 font-medium uppercase tracking-wider">Invite Link</p>
+                <div className="flex items-center gap-2">
+                  <p className="flex-1 text-xs bg-muted rounded-lg px-3 py-2 truncate text-muted-foreground font-mono">
+                    {`https://www.successmuslim.app/family/join/${created.invite_code}`}
+                  </p>
+                  <Button variant="outline" size="icon" onClick={() => handleCopy(`https://www.successmuslim.app/family/join/${created.invite_code}`)}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
+              </div>
 
               <Button className="w-full" onClick={handleShare}>
                 <Share2 className="h-4 w-4 mr-2" />
