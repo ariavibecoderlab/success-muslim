@@ -14,6 +14,7 @@
 | OG meta tags | ✅ | Added `og:url` in `index.html` |
 | Lovable badge | ⚠️ | User action: toggle "Hide Lovable Badge" in Settings |
 | Auth branding | ℹ️ | Login UI is correct; OAuth consent screen is expected Cloud behavior |
+| Qada Solat tracker fixes | ✅ | Edit dialog for total/daily target, min progress bar, human-friendly completion estimate, streak encouragement |
 
 ---
 

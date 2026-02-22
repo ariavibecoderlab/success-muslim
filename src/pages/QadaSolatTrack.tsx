@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
-import { Flame, Target, TrendingUp, CheckCircle2, Circle } from 'lucide-react';
+import { Flame, Target, TrendingUp, CheckCircle2, Circle, Settings2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer } from '@/lib/storage';
-import { estimateCompletionDate, getTodayKey } from '@/lib/calculations';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup } from '@/lib/storage';
+import { estimateCompletionDays, getTodayKey, formatYearsMonths } from '@/lib/calculations';
 import { PRAYER_NAMES, PrayerType } from '@/lib/types';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
@@ -21,9 +25,13 @@ const IMAN_TRACKERS = [
 ];
 
 const QadaSolatTrack = () => {
-  const setup = getQadaSetup();
+  const [setup, setSetup] = useState(getQadaSetup());
   const [progress, setProgress] = useState(getQadaProgress());
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [editOpen, setEditOpen] = useState(false);
+  const [editTotal, setEditTotal] = useState('');
+  const [editDaily, setEditDaily] = useState('');
+
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === getTodayKey();
   const dayLog = progress.dailyLogs[dateKey] || { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 };
@@ -37,6 +45,29 @@ const QadaSolatTrack = () => {
     if (dayLog[prayer] > 0) {
       setProgress(undoQadaPrayer(prayer, dateKey));
     }
+  };
+
+  const openEdit = () => {
+    if (!setup) return;
+    setEditTotal(String(setup.totalPrayers));
+    setEditDaily(String(setup.dailyTarget));
+    setEditOpen(true);
+  };
+
+  const saveEdit = () => {
+    if (!setup) return;
+    const newTotal = Math.max(1, parseInt(editTotal) || 1);
+    const newDaily = Math.max(1, parseInt(editDaily) || 1);
+    const perPrayer = Math.ceil(newTotal / 5);
+    const updatedSetup = {
+      ...setup,
+      totalPrayers: newTotal,
+      dailyTarget: newDaily,
+      totalByPrayer: { fajr: perPrayer, dhuhr: perPrayer, asr: perPrayer, maghrib: perPrayer, isha: perPrayer },
+    };
+    saveQadaSetup(updatedSetup);
+    setSetup(updatedSetup);
+    setEditOpen(false);
   };
 
   if (!setup) {
@@ -57,11 +88,22 @@ const QadaSolatTrack = () => {
 
   const remaining = setup.totalPrayers - progress.totalCompleted;
   const pct = Math.min((progress.totalCompleted / setup.totalPrayers) * 100, 100);
+  const displayPct = progress.totalCompleted > 0 ? Math.max(pct, 0.5) : 0;
+  const displayPctLabel = pct < 1 && progress.totalCompleted > 0 ? '<1' : pct.toFixed(1);
+
+  const completionDays = estimateCompletionDays(setup, progress.totalCompleted);
+  const completionText = completionDays > 0
+    ? `~${formatYearsMonths(completionDays)} at current pace`
+    : 'Done! 🎉';
 
   const encouragement = dayTotal >= setup.dailyTarget
     ? "Alhamdulillah! Target reached! 🌟"
+    : progress.currentStreak >= 5
+    ? `${progress.currentStreak} day streak — MashaAllah! 🔥`
+    : progress.currentStreak >= 3
+    ? `${progress.currentStreak} day streak — keep it up! 💪`
     : dayTotal > 0
-    ? "Keep going, you're doing great!"
+    ? "Every prayer counts. Keep going 💪"
     : "Bismillah, start your qada";
 
   return (
@@ -78,12 +120,17 @@ const QadaSolatTrack = () => {
           <CardContent className="p-6">
             <div className="flex justify-between items-end mb-3">
               <div>
-                <p className="text-sm text-muted-foreground">Overall Progress</p>
-                <p className="text-2xl font-bold">{pct.toFixed(1)}%</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Overall Progress</p>
+                  <button onClick={openEdit} className="text-muted-foreground hover:text-primary transition-colors">
+                    <Settings2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <p className="text-2xl font-bold">{displayPctLabel}%</p>
               </div>
               <p className="text-sm text-muted-foreground">{progress.totalCompleted.toLocaleString()} / {setup.totalPrayers.toLocaleString()}</p>
             </div>
-            <Progress value={pct} className="h-3 mb-4" />
+            <Progress value={displayPct} className="h-3 mb-4" />
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
                 <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
@@ -164,9 +211,33 @@ const QadaSolatTrack = () => {
 
         {/* Completion estimate */}
         <p className="text-center text-xs text-muted-foreground">
-          Estimated completion: {estimateCompletionDate(setup, progress.totalCompleted)}
+          {completionText}
         </p>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Qada Setup</DialogTitle>
+            <DialogDescription>Adjust your total qada prayers and daily target.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="editTotal">Total Qada Prayers</Label>
+              <Input id="editTotal" type="number" min="1" value={editTotal} onChange={e => setEditTotal(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editDaily">Daily Target</Label>
+              <Input id="editDaily" type="number" min="1" value={editDaily} onChange={e => setEditDaily(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={saveEdit}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SubPageLayout>
   );
 };
