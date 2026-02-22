@@ -35,8 +35,26 @@ serve(async (req) => {
       });
       clearTimeout(timeoutId);
       data = await res.text();
+      
+      // Validate that the response is actually valid JSON with expected data
+      if (data) {
+        try {
+          const parsed = JSON.parse(data);
+          if (endpoint === "takwimsolat" && (!parsed.prayerTime || parsed.prayerTime.length === 0)) {
+            console.log("JAKIM returned empty prayer times, trying fallback");
+            data = null;
+          }
+          if (endpoint === "tarikhtakwim" && !parsed.takwim) {
+            console.log("JAKIM returned empty takwim, trying fallback");
+            data = null;
+          }
+        } catch {
+          console.log("JAKIM returned invalid JSON, trying fallback");
+          data = null;
+        }
+      }
     } catch {
-      console.log("JAKIM API timed out, trying Aladhan fallback");
+      console.log("JAKIM API timed out or failed, trying Aladhan fallback");
     }
 
     // If JAKIM failed and this is a hijri date request, try Aladhan API
@@ -52,15 +70,77 @@ serve(async (req) => {
           const aladhanJson = await aladhanRes.json();
           if (aladhanJson.code === 200 && aladhanJson.data?.hijri) {
             const h = aladhanJson.data.hijri;
-            // Return in JAKIM-compatible format
             const dateKey = `${y}-${m}-${d}`;
             data = JSON.stringify({
               takwim: { [dateKey]: `${h.year}-${String(h.month.number).padStart(2, "0")}-${String(h.day).padStart(2, "0")}` },
             });
           }
         } catch {
-          console.log("Aladhan API also failed");
+          console.log("Aladhan API also failed for tarikhtakwim");
         }
+      }
+    }
+
+    // If JAKIM failed and this is a prayer times request, try Aladhan API
+    if (!data && endpoint === "takwimsolat") {
+      // Map JAKIM zones to approximate coordinates for Aladhan fallback
+      const zoneCoords: Record<string, { lat: number; lng: number }> = {
+        "WLY01": { lat: 3.1390, lng: 101.6869 }, // Kuala Lumpur
+        "WLY02": { lat: 5.2831, lng: 115.2308 }, // Labuan
+        "SGR01": { lat: 2.9264, lng: 101.6964 }, // Petaling
+        "SGR02": { lat: 3.3615, lng: 101.5188 }, // Gombak/Rawang
+        "JHR01": { lat: 1.4854, lng: 103.7618 }, // Johor Bahru
+        "JHR02": { lat: 2.0442, lng: 102.5689 }, // Mersing
+        "KDH01": { lat: 6.1184, lng: 100.3685 }, // Alor Setar
+        "MLK01": { lat: 2.1896, lng: 102.2501 }, // Melaka
+        "NSN01": { lat: 2.7258, lng: 101.9424 }, // Seremban
+        "PHG01": { lat: 3.8077, lng: 103.3260 }, // Kuantan
+        "PLS01": { lat: 6.4414, lng: 100.1986 }, // Perlis
+        "PNG01": { lat: 5.4141, lng: 100.3288 }, // Penang
+        "PRK01": { lat: 4.5921, lng: 101.0901 }, // Ipoh
+        "SBH01": { lat: 5.9804, lng: 116.0735 }, // Kota Kinabalu
+        "SWK01": { lat: 1.5533, lng: 110.3592 }, // Kuching
+        "TRG01": { lat: 5.3117, lng: 103.1324 }, // Kuala Terengganu
+        "KTN01": { lat: 6.1254, lng: 102.2381 }, // Kota Bharu
+      };
+
+      const coords = zoneCoords[zone] || zoneCoords["WLY01"];
+      
+      try {
+        const today = new Date();
+        const dateStr = `${String(today.getDate()).padStart(2, "0")}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`;
+        const aladhanUrl = `https://api.aladhan.com/v1/timings/${dateStr}?latitude=${coords.lat}&longitude=${coords.lng}&method=3&school=1`;
+        const aladhanRes = await fetch(aladhanUrl, {
+          signal: AbortSignal.timeout(5000),
+        });
+        const aladhanJson = await aladhanRes.json();
+        
+        if (aladhanJson.code === 200 && aladhanJson.data?.timings) {
+          const t = aladhanJson.data.timings;
+          const hijri = aladhanJson.data.date?.hijri;
+          const hijriStr = hijri
+            ? `${hijri.year}-${String(hijri.month.number).padStart(2, "0")}-${String(hijri.day).padStart(2, "0")}`
+            : "";
+
+          // Return in JAKIM-compatible format
+          data = JSON.stringify({
+            prayerTime: [{
+              fajr: t.Fajr + ":00",
+              syuruk: t.Sunrise + ":00",
+              dhuhr: t.Dhuhr + ":00",
+              asr: t.Asr + ":00",
+              maghrib: t.Maghrib + ":00",
+              isha: t.Isha + ":00",
+              imsak: t.Imsak + ":00",
+              hijri: hijriStr,
+              date: `${today.getDate()}-${String(today.getMonth() + 1).padStart(2, "0")}-${today.getFullYear()}`,
+            }],
+            status: "OK",
+            source: "aladhan-fallback",
+          });
+        }
+      } catch {
+        console.log("Aladhan API also failed for takwimsolat");
       }
     }
 
