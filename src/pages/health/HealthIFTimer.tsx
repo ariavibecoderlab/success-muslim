@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Timer, Play, Square, Trash2, Clock, Droplets, CheckCircle2, Scale, StickyNote, CalendarDays, Bell, Pencil, UtensilsCrossed } from 'lucide-react';
+import { Timer, Play, Square, Trash2, Clock, Droplets, CheckCircle2, Scale, StickyNote, CalendarDays, Bell, Pencil, UtensilsCrossed, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import FastingStageCard, { StagesTimeline } from '@/components/health/FastingSta
 import FastingCalendarHeatmap from '@/components/health/FastingCalendarHeatmap';
 import FastingTimerRing from '@/components/health/FastingTimerRing';
 import PlanSelectorSheet, { type Plan } from '@/components/health/PlanSelectorSheet';
+import StartFastingSheet from '@/components/health/StartFastingSheet';
 import FastingEducationCards from '@/components/health/FastingEducationCards';
 import FastingTipsCard from '@/components/health/FastingTipsCard';
 import FastingFAQCard from '@/components/health/FastingFAQCard';
@@ -78,6 +79,9 @@ const HealthIFTimer = () => {
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState(getIFSessions);
   const [showPlanSheet, setShowPlanSheet] = useState(false);
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [scheduledStart, setScheduledStart] = useState<Date | null>(null);
+  const [editingScheduledStart, setEditingScheduledStart] = useState(false);
   const prevLevelRef = useRef<number | undefined>(undefined);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showEndReview, setShowEndReview] = useState(false);
@@ -117,9 +121,26 @@ const HealthIFTimer = () => {
     return () => clearInterval(interval);
   }, [active]);
 
-  const handleStart = () => {
-    startIF(selectedMode.label, selectedMode.hours);
+  const handleStart = (customStartTime?: Date) => {
+    const startTimeStr = customStartTime ? customStartTime.toISOString() : undefined;
+    startIF(selectedMode.label, selectedMode.hours, startTimeStr);
     setActive(getActiveIF());
+    setScheduledStart(null);
+  };
+
+  const handleStartPickerConfirm = (startTime: Date) => {
+    const now = new Date();
+    if (startTime.getTime() > now.getTime() + 60000) {
+      // Future start — schedule it
+      setScheduledStart(startTime);
+    } else {
+      // Past or now — start immediately with that time
+      handleStart(startTime);
+    }
+  };
+
+  const handleCancelScheduled = () => {
+    setScheduledStart(null);
   };
 
   const handlePlanSelect = (plan: Plan) => {
@@ -147,12 +168,20 @@ const HealthIFTimer = () => {
     return Math.max(0, now - lastEnd);
   }, [sessions, now]);
 
-  // Tick for inactive view too
+  // Tick for inactive/scheduled view too
   useEffect(() => {
-    if (active) return;
+    if (active && !scheduledStart) return;
     const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [active]);
+  }, [active, scheduledStart]);
+
+  // Auto-start scheduled fast when time arrives
+  useEffect(() => {
+    if (!scheduledStart || active) return;
+    if (now >= scheduledStart.getTime()) {
+      handleStart(scheduledStart);
+    }
+  }, [now, scheduledStart, active]);
 
   const handleOpenEndReview = () => {
     if (!active) return;
@@ -390,43 +419,73 @@ const HealthIFTimer = () => {
           <>
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-              <h2 className="text-xl font-black tracking-tight">Get ready to fast!</h2>
-              <p className="text-xs text-muted-foreground">Choose your plan and start when you're ready</p>
+              <h2 className="text-xl font-black tracking-tight">
+                {scheduledStart ? 'Fast scheduled!' : 'Get ready to fast!'}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                {scheduledStart ? 'Your fast will begin automatically' : 'Choose your plan and start when you\'re ready'}
+              </p>
             </motion.div>
 
-            {/* Log your meal card */}
-            <button
-              onClick={() => navigate('/health/hydration')}
-              className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-orange-200 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-950/20 text-left transition-all active:scale-[0.98]"
-            >
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
-                <UtensilsCrossed className="h-5 w-5 text-orange-500" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold">Log your meal!</p>
-                <p className="text-[10px] text-muted-foreground">Track hydration & nutrition</p>
-              </div>
-              <span className="text-lg text-orange-400">+</span>
-            </button>
+            {/* Content cards - horizontal scroll */}
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+              <button
+                onClick={() => navigate('/health/hydration')}
+                className="flex-shrink-0 w-40 rounded-2xl p-3.5 text-left transition-all active:scale-[0.98] bg-amber-50/80 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30"
+              >
+                <div className="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mb-2">
+                  <UtensilsCrossed className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <p className="text-xs font-bold leading-tight">Did you eat something?</p>
+                <div className="mt-2 w-7 h-7 rounded-full bg-foreground/80 flex items-center justify-center">
+                  <span className="text-background text-sm font-bold">+</span>
+                </div>
+              </button>
 
-            {/* Inactive Timer Ring */}
+              <div className="flex-shrink-0 w-40 rounded-2xl p-3.5 text-left bg-secondary/40 border border-border/30">
+                <p className="text-xs font-bold leading-tight mb-1">Sunnah tips to manage hunger</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">The Prophet ﷺ advised eating dates and drinking water</p>
+              </div>
+
+              <div className="flex-shrink-0 w-40 rounded-2xl p-3.5 text-left bg-secondary/40 border border-border/30">
+                <p className="text-xs font-bold leading-tight mb-1">Why Muslims fast</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Beyond weight loss — spiritual purification & taqwa</p>
+              </div>
+
+              <div className="flex-shrink-0 w-40 rounded-2xl p-3.5 text-left bg-secondary/40 border border-border/30">
+                <p className="text-xs font-bold leading-tight mb-1">Dua when breaking fast</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">ذَهَبَ الظَّمَأُ وَابْتَلَّتِ الْعُرُوقُ</p>
+              </div>
+            </div>
+
+            {/* Timer Ring */}
             <div className="flex flex-col items-center py-2">
               <div className="relative w-60 h-60">
-                {/* Warm glow */}
+                {/* Glow */}
                 <motion.div
                   className="absolute inset-2 rounded-full"
                   animate={{
-                    boxShadow: [
-                      '0 0 20px 4px rgba(234, 179, 8, 0.15)',
-                      '0 0 35px 8px rgba(234, 179, 8, 0.2)',
-                      '0 0 20px 4px rgba(234, 179, 8, 0.15)',
-                    ],
+                    boxShadow: scheduledStart
+                      ? [
+                          '0 0 20px 4px hsla(210, 70%, 55%, 0.15)',
+                          '0 0 35px 8px hsla(210, 70%, 55%, 0.2)',
+                          '0 0 20px 4px hsla(210, 70%, 55%, 0.15)',
+                        ]
+                      : [
+                          '0 0 20px 4px hsla(45, 90%, 65%, 0.15)',
+                          '0 0 35px 8px hsla(45, 90%, 65%, 0.2)',
+                          '0 0 20px 4px hsla(45, 90%, 65%, 0.15)',
+                        ],
                   }}
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                 />
                 <svg className="w-60 h-60 -rotate-90" viewBox="0 0 160 160">
                   <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(var(--secondary))" strokeWidth="5" opacity="0.5" />
-                  <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(45 90% 65%)" strokeWidth="5" strokeDasharray="6 10" opacity="0.4" />
+                  {scheduledStart ? (
+                    <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(210 70% 55%)" strokeWidth="5" strokeDasharray="6 10" opacity="0.5" />
+                  ) : (
+                    <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(45 90% 65%)" strokeWidth="5" strokeDasharray="6 10" opacity="0.4" />
+                  )}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   {/* Plan label with pencil */}
@@ -437,39 +496,96 @@ const HealthIFTimer = () => {
                     <span className="text-sm font-bold">{selectedMode.label}</span>
                     <Pencil className="h-3 w-3 text-muted-foreground" />
                   </button>
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                    Time since last fast
-                  </p>
-                  <p className="text-[28px] font-bold font-mono tracking-tight leading-tight">
-                    {(() => {
-                      const sec = Math.floor(timeSinceLastFast / 1000);
-                      const h = Math.floor(sec / 3600);
-                      const m = Math.floor((sec % 3600) / 60);
-                      const s = sec % 60;
-                      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                    })()}
-                  </p>
+
+                  {scheduledStart ? (
+                    <>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                        Remaining
+                      </p>
+                      <p className="text-[28px] font-bold font-mono tracking-tight leading-tight">
+                        {(() => {
+                          const diff = Math.max(0, scheduledStart.getTime() - now);
+                          const sec = Math.floor(diff / 1000);
+                          const h = Math.floor(sec / 3600);
+                          const m = Math.floor((sec % 3600) / 60);
+                          const s = sec % 60;
+                          return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                        })()}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-1">Your fasting starts at</p>
+                      <p className="text-sm font-bold">{format(scheduledStart, 'HH:mm')}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                        Time since last fast
+                      </p>
+                      <p className="text-[28px] font-bold font-mono tracking-tight leading-tight">
+                        {(() => {
+                          const sec = Math.floor(timeSinceLastFast / 1000);
+                          const h = Math.floor(sec / 3600);
+                          const m = Math.floor((sec % 3600) / 60);
+                          const s = sec % 60;
+                          return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                        })()}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex flex-col items-center gap-3">
-              <Button onClick={handleStart} className="gap-2 px-10 shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
-                <Play className="h-4 w-4" /> Start {selectedMode.label} Fasting
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1.5 text-xs border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
-                onClick={() => toast('Reminder feature coming soon!')}
-              >
-                <Bell className="h-3.5 w-3.5" /> Remind me later
-              </Button>
-              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1.5" onClick={() => setShowLogPast(true)}>
-                <CalendarDays className="h-3.5 w-3.5" /> Log a past fast
-              </Button>
-            </div>
+            {scheduledStart ? (
+              <>
+                {/* Start info row */}
+                <div className="flex items-center justify-between px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                    <span className="text-sm font-medium text-muted-foreground">Start</span>
+                  </div>
+                  <button
+                    onClick={() => { setEditingScheduledStart(true); setShowStartPicker(true); }}
+                    className="flex items-center gap-1.5 text-sm font-bold text-primary"
+                  >
+                    {format(scheduledStart, "'Today' HH:mm")}
+                    <Pencil className="h-3 w-3" />
+                  </button>
+                </div>
+
+                {/* End Plan button */}
+                <Button
+                  onClick={handleCancelScheduled}
+                  className="w-full gap-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl h-14 text-base font-bold shadow-lg"
+                  size="lg"
+                >
+                  End Plan
+                </Button>
+              </>
+            ) : (
+              <>
+                {/* Action buttons */}
+                <div className="flex flex-col items-center gap-3">
+                  <Button
+                    onClick={() => setShowStartPicker(true)}
+                    className="gap-2 px-10 shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    size="lg"
+                  >
+                    <Play className="h-4 w-4" /> Start Fasting
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                    onClick={() => toast('Reminder feature coming soon!')}
+                  >
+                    <Bell className="h-3.5 w-3.5" /> Remind me later
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1.5" onClick={() => setShowLogPast(true)}>
+                    <CalendarDays className="h-3.5 w-3.5" /> Log a past fast
+                  </Button>
+                </div>
+              </>
+            )}
 
             {/* Plan Selector Sheet */}
             <PlanSelectorSheet
@@ -477,6 +593,14 @@ const HealthIFTimer = () => {
               onOpenChange={setShowPlanSheet}
               onSelect={handlePlanSelect}
               currentLabel={selectedMode.label}
+            />
+
+            {/* Start Fasting Picker */}
+            <StartFastingSheet
+              open={showStartPicker}
+              onOpenChange={setShowStartPicker}
+              onConfirm={handleStartPickerConfirm}
+              initialDate={editingScheduledStart ? scheduledStart ?? undefined : undefined}
             />
           </>
         )}
