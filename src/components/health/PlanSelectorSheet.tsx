@@ -1,8 +1,5 @@
-import { useState } from 'react';
 import { Zap } from 'lucide-react';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 
 export interface Plan {
   label: string;
@@ -35,7 +32,6 @@ interface Props {
 }
 
 export default function PlanSelectorSheet({ open, onOpenChange, onSelect, currentLabel }: Props) {
-  const [customHours, setCustomHours] = useState(16);
 
   const handleSelect = (p: Plan) => {
     onSelect(p);
@@ -88,35 +84,35 @@ export default function PlanSelectorSheet({ open, onOpenChange, onSelect, curren
             </button>
           ))}
 
-          {/* Custom card */}
-          <div className={`relative w-full rounded-2xl p-4 text-left bg-secondary overflow-hidden ${
-            currentLabel.startsWith('Custom') ? 'ring-2 ring-primary shadow-md' : ''
-          }`}>
+          {/* Custom card — same style as preset cards */}
+          <button
+            onClick={() => handleSelect({ label: 'Custom', hours: 16, eating: 8 })}
+            className={`relative w-full rounded-2xl p-4 text-left transition-all active:scale-[0.98] overflow-hidden bg-violet-50 dark:bg-violet-950/30 ${
+              currentLabel.startsWith('Custom') ? 'ring-2 ring-primary shadow-md' : ''
+            }`}
+          >
             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[40px] font-black opacity-[0.07] leading-none pointer-events-none select-none">
               CUSTOM
             </span>
-            <div className="relative z-10 space-y-3">
-              <p className="text-2xl font-black tracking-tight">Custom</p>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  max={168}
-                  value={customHours}
-                  onChange={e => setCustomHours(Number(e.target.value))}
-                  className="w-20 h-9 text-sm"
-                />
-                <span className="text-sm text-muted-foreground">hours fasting</span>
+            <div className="relative z-10 flex items-start justify-between gap-3">
+              <div className="space-y-1.5">
+                <p className="text-2xl font-black tracking-tight">Custom</p>
+                <div className="flex gap-0.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <Zap
+                      key={i}
+                      className="h-3.5 w-3.5"
+                      style={{ color: 'hsl(270 60% 55%)', opacity: 1 - i * 0.25 }}
+                      fill="hsl(270 60% 55%)"
+                    />
+                  ))}
+                </div>
+                <ul className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                  <li>• Set your own fasting hours</li>
+                </ul>
               </div>
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={() => handleSelect({ label: `Custom ${customHours}h`, hours: customHours, eating: Math.max(0, 24 - customHours) })}
-              >
-                Select Custom Plan
-              </Button>
             </div>
-          </div>
+          </button>
         </div>
       </DrawerContent>
     </Drawer>

@@ -5,6 +5,14 @@
 
 ---
 
+## 🎨 IF Timer Custom Card Polish (2026-02-25)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Custom card restyled to match presets | ✅ | Same card layout with Zap bolts, watermark, violet bg |
+| Removed inline hour input & button | ✅ | Hour selection deferred to scroll wheel picker on Start |
+| Removed unused useState/Input/Button imports | ✅ | Cleaned up PlanSelectorSheet |
+
 ## 🎨 IF Timer Custom Fast Flow (2026-02-25)
 
 | Change | Status | Notes |
