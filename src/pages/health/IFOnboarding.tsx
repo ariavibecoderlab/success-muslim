@@ -71,7 +71,10 @@ export default function IFOnboarding() {
   const estLoss = estimateWeightLoss30Days(weightKg, tdee, protocol);
   const tolose = Math.max(0, +(weightKg - goalWeightKg).toFixed(1));
 
-  const handleSkip = () => navigate('/health/if-timer', { replace: true });
+  const handleSkip = async () => {
+    await saveProfile({ completed_at: new Date().toISOString() });
+    navigate('/health/if-timer', { replace: true });
+  };
 
   const handleFinish = async () => {
     await saveProfile({
