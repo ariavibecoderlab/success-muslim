@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeftRight } from 'lucide-react';
+import { ArrowLeftRight, Pencil } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface Props {
@@ -8,6 +8,9 @@ interface Props {
   progress: number;
   level: number;
   mode: string;
+  planLabel?: string;
+  onPlanTap?: () => void;
+  isActive?: boolean;
 }
 
 function getLevelColor(level: number): string {
@@ -24,7 +27,7 @@ function getLevelGlow(level: number): string {
   return 'rgba(139, 92, 246, 0.25)';
 }
 
-export default function FastingTimerRing({ elapsed, remaining, progress, level, mode }: Props) {
+export default function FastingTimerRing({ elapsed, remaining, progress, level, mode, planLabel, onPlanTap, isActive = true }: Props) {
   const [showRemaining, setShowRemaining] = useState(false);
 
   const circumference = 2 * Math.PI * 72;
@@ -90,6 +93,18 @@ export default function FastingTimerRing({ elapsed, remaining, progress, level, 
           >
             Lv.{level}
           </motion.span>
+          {/* Plan label with edit icon */}
+          {planLabel && (
+            <button
+              onClick={!isActive && onPlanTap ? onPlanTap : undefined}
+              className={`flex items-center gap-1 text-[10px] font-semibold mb-0.5 px-2 py-0.5 rounded-full ${
+                !isActive && onPlanTap ? 'hover:bg-secondary cursor-pointer' : 'cursor-default'
+              }`}
+            >
+              <span>{planLabel}</span>
+              {!isActive && onPlanTap && <Pencil className="h-2.5 w-2.5 text-muted-foreground" />}
+            </button>
+          )}
           <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
             {showRemaining ? 'Remaining' : 'Elapsed'}
           </p>
@@ -103,7 +118,6 @@ export default function FastingTimerRing({ elapsed, remaining, progress, level, 
           </button>
         </div>
       </div>
-      <p className="text-xs text-muted-foreground mt-1 font-medium">{mode}</p>
     </div>
   );
 }

@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Timer, Play, Square, Trash2, Settings2, Clock, Target, Droplets, CheckCircle2, Scale, StickyNote, CalendarDays } from 'lucide-react';
+import { Timer, Play, Square, Trash2, Clock, Droplets, CheckCircle2, Scale, StickyNote, CalendarDays, Bell, Pencil, UtensilsCrossed } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { motion } from 'framer-motion';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
 import FastingCalendarHeatmap from '@/components/health/FastingCalendarHeatmap';
 import FastingTimerRing from '@/components/health/FastingTimerRing';
+import PlanSelectorSheet, { type Plan } from '@/components/health/PlanSelectorSheet';
 import FastingEducationCards from '@/components/health/FastingEducationCards';
 import FastingTipsCard from '@/components/health/FastingTipsCard';
 import FastingFAQCard from '@/components/health/FastingFAQCard';
@@ -41,16 +42,14 @@ const HEALTH_SIBLINGS = [
   { path: '/health/if-timer', label: 'IF Timer' },
 ];
 
-const MODES = [
-  { label: '14:10', hours: 14 },
-  { label: '16:8', hours: 16 },
-  { label: '18:6', hours: 18 },
-  { label: '20:4', hours: 20 },
-  { label: '24h', hours: 24 },
-  { label: '36h', hours: 36 },
+const MODES: Plan[] = [
+  { label: '14:10', hours: 14, eating: 10 },
+  { label: '16:8', hours: 16, eating: 8 },
+  { label: '18:6', hours: 18, eating: 6 },
+  { label: '20:4', hours: 20, eating: 4 },
+  { label: '24h', hours: 24, eating: 0 },
+  { label: '36h', hours: 36, eating: 0 },
 ];
-
-const CUSTOM_DURATIONS = [12, 14, 16, 18, 20, 24];
 
 function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
   const completedDates = new Set(
@@ -73,15 +72,12 @@ function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
 
 const HealthIFTimer = () => {
   const navigate = useNavigate();
-  const { loading: profileLoading, completed: profileCompleted } = useHealthProfile();
+  const { profile, loading: profileLoading, completed: profileCompleted, saveProfile } = useHealthProfile();
   const [active, setActive] = useState(getActiveIF);
-  const [selectedMode, setSelectedMode] = useState(MODES[1]);
+  const [selectedMode, setSelectedMode] = useState<Plan>(MODES[1]);
   const [now, setNow] = useState(Date.now());
   const [sessions, setSessions] = useState(getIFSessions);
-  const [showCustom, setShowCustom] = useState(false);
-  const [customTab, setCustomTab] = useState<'duration' | 'endtime'>('duration');
-  const [customDurationHours, setCustomDurationHours] = useState(16);
-  const [customEndTime, setCustomEndTime] = useState('19:00');
+  const [showPlanSheet, setShowPlanSheet] = useState(false);
   const prevLevelRef = useRef<number | undefined>(undefined);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showEndReview, setShowEndReview] = useState(false);
@@ -126,22 +122,37 @@ const HealthIFTimer = () => {
     setActive(getActiveIF());
   };
 
-  const handleCustomDurationStart = () => {
-    startIF(`Custom ${customDurationHours}h`, customDurationHours);
-    setActive(getActiveIF());
-    setShowCustom(false);
+  const handlePlanSelect = (plan: Plan) => {
+    setSelectedMode(plan);
+    saveProfile({ recommended_protocol: plan.label });
   };
 
-  const handleCustomEndTimeStart = () => {
-    const [h, m] = customEndTime.split(':').map(Number);
-    const endDate = new Date();
-    endDate.setHours(h, m, 0, 0);
-    if (endDate.getTime() <= Date.now()) endDate.setDate(endDate.getDate() + 1);
-    const durationHours = (endDate.getTime() - Date.now()) / 3600000;
-    startIF(`Until ${customEndTime}`, Math.round(durationHours * 10) / 10);
-    setActive(getActiveIF());
-    setShowCustom(false);
-  };
+  // Initialize selected mode from profile
+  useEffect(() => {
+    if (profile?.recommended_protocol) {
+      const found = MODES.find(m => m.label === profile.recommended_protocol);
+      if (found) setSelectedMode(found);
+      else if (profile.recommended_protocol.startsWith('Custom')) {
+        const h = parseInt(profile.recommended_protocol.replace(/\D/g, '')) || 16;
+        setSelectedMode({ label: profile.recommended_protocol, hours: h, eating: Math.max(0, 24 - h) });
+      }
+    }
+  }, [profile?.recommended_protocol]);
+
+  // Time since last fast
+  const timeSinceLastFast = useMemo(() => {
+    const completed = sessions.filter(s => s.completed && s.endTime);
+    if (completed.length === 0) return 0;
+    const lastEnd = new Date(completed[0].endTime!).getTime();
+    return Math.max(0, now - lastEnd);
+  }, [sessions, now]);
+
+  // Tick for inactive view too
+  useEffect(() => {
+    if (active) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [active]);
 
   const handleOpenEndReview = () => {
     if (!active) return;
@@ -294,7 +305,7 @@ const HealthIFTimer = () => {
 
       <div className="space-y-5">
         {/* ===== ACTIVE FASTING VIEW ===== */}
-        {active && !showCustom && !showEndReview && (
+        {active && !showEndReview && (
           <>
             {/* Header */}
             <motion.div
@@ -323,6 +334,8 @@ const HealthIFTimer = () => {
               progress={progress}
               level={currentStage?.level || 1}
               mode={active.mode}
+              planLabel={active.mode}
+              isActive={true}
             />
 
             {/* Start/End Timeline */}
@@ -373,53 +386,98 @@ const HealthIFTimer = () => {
         )}
 
         {/* ===== INACTIVE VIEW ===== */}
-        {!active && !showCustom && (
+        {!active && (
           <>
-            {/* Mode selector pills */}
-            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {MODES.map(m => (
-                <button key={m.label} onClick={() => { setSelectedMode(m); setShowCustom(false); }}
-                  className={`flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all ${
-                    selectedMode.label === m.label
-                      ? 'bg-primary text-primary-foreground shadow-md shadow-primary/20 scale-105'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                  }`}>{m.label}</button>
-              ))}
-              <button onClick={() => setShowCustom(true)}
-                className="flex-shrink-0 px-4 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-1.5 bg-secondary text-secondary-foreground hover:bg-secondary/80">
-                <Settings2 className="h-3.5 w-3.5" /> Custom
-              </button>
-            </div>
+            {/* Header */}
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+              <h2 className="text-xl font-black tracking-tight">Get ready to fast!</h2>
+              <p className="text-xs text-muted-foreground">Choose your plan and start when you're ready</p>
+            </motion.div>
 
-            {/* Timer ring (inactive) */}
-            <div className="flex flex-col items-center py-4">
-              <div className="relative w-56 h-56">
-                <svg className="w-56 h-56 -rotate-90" viewBox="0 0 160 160">
+            {/* Log your meal card */}
+            <button
+              onClick={() => navigate('/health/hydration')}
+              className="w-full flex items-center gap-3 p-3.5 rounded-2xl border border-orange-200 dark:border-orange-800/40 bg-orange-50/60 dark:bg-orange-950/20 text-left transition-all active:scale-[0.98]"
+            >
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
+                <UtensilsCrossed className="h-5 w-5 text-orange-500" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold">Log your meal!</p>
+                <p className="text-[10px] text-muted-foreground">Track hydration & nutrition</p>
+              </div>
+              <span className="text-lg text-orange-400">+</span>
+            </button>
+
+            {/* Inactive Timer Ring */}
+            <div className="flex flex-col items-center py-2">
+              <div className="relative w-60 h-60">
+                {/* Warm glow */}
+                <motion.div
+                  className="absolute inset-2 rounded-full"
+                  animate={{
+                    boxShadow: [
+                      '0 0 20px 4px rgba(234, 179, 8, 0.15)',
+                      '0 0 35px 8px rgba(234, 179, 8, 0.2)',
+                      '0 0 20px 4px rgba(234, 179, 8, 0.15)',
+                    ],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                />
+                <svg className="w-60 h-60 -rotate-90" viewBox="0 0 160 160">
                   <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(var(--secondary))" strokeWidth="5" opacity="0.5" />
-                  <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeDasharray="4 8" opacity="0.15" />
+                  <circle cx="80" cy="80" r="72" fill="none" stroke="hsl(45 90% 65%)" strokeWidth="5" strokeDasharray="6 10" opacity="0.4" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.08, 1] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                  {/* Plan label with pencil */}
+                  <button
+                    onClick={() => setShowPlanSheet(true)}
+                    className="flex items-center gap-1.5 mb-1 px-3 py-1 rounded-full hover:bg-secondary transition-colors"
                   >
-                    <Timer className="h-9 w-9 text-primary mb-2" />
-                  </motion.div>
-                  <p className="text-2xl font-black tracking-tight">{selectedMode.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{selectedMode.hours}h fasting · {24 - selectedMode.hours}h eating</p>
+                    <span className="text-sm font-bold">{selectedMode.label}</span>
+                    <Pencil className="h-3 w-3 text-muted-foreground" />
+                  </button>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                    Time since last fast
+                  </p>
+                  <p className="text-[28px] font-bold font-mono tracking-tight leading-tight">
+                    {(() => {
+                      const sec = Math.floor(timeSinceLastFast / 1000);
+                      const h = Math.floor(sec / 3600);
+                      const m = Math.floor((sec % 3600) / 60);
+                      const s = sec % 60;
+                      return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                    })()}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Start button + Log Past Fast */}
+            {/* Action buttons */}
             <div className="flex flex-col items-center gap-3">
-              <Button onClick={handleStart} className="gap-2 px-10 shadow-lg shadow-primary/20" size="lg">
-                <Play className="h-4 w-4" /> Start Fast
+              <Button onClick={handleStart} className="gap-2 px-10 shadow-lg shadow-primary/20 bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
+                <Play className="h-4 w-4" /> Start {selectedMode.label} Fasting
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-400"
+                onClick={() => toast('Reminder feature coming soon!')}
+              >
+                <Bell className="h-3.5 w-3.5" /> Remind me later
               </Button>
               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground gap-1.5" onClick={() => setShowLogPast(true)}>
                 <CalendarDays className="h-3.5 w-3.5" /> Log a past fast
               </Button>
             </div>
+
+            {/* Plan Selector Sheet */}
+            <PlanSelectorSheet
+              open={showPlanSheet}
+              onOpenChange={setShowPlanSheet}
+              onSelect={handlePlanSelect}
+              currentLabel={selectedMode.label}
+            />
           </>
         )}
 
@@ -493,62 +551,6 @@ const HealthIFTimer = () => {
             </div>
           </DialogContent>
         </Dialog>
-
-        {/* ===== CUSTOM VIEW ===== */}
-        {!active && showCustom && (
-          <div className="space-y-4">
-            <Card>
-              <CardContent className="p-4 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Timer className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold">Custom Fast</span>
-                </div>
-                <div className="flex rounded-lg bg-secondary p-0.5">
-                  <button onClick={() => setCustomTab('duration')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-colors ${
-                      customTab === 'duration' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
-                    }`}><Target className="h-3.5 w-3.5" /> Set Duration</button>
-                  <button onClick={() => setCustomTab('endtime')}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium rounded-md transition-colors ${
-                      customTab === 'endtime' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
-                    }`}><Clock className="h-3.5 w-3.5" /> Set End Time</button>
-                </div>
-                {customTab === 'duration' && (
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">How long do you want to fast?</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {CUSTOM_DURATIONS.map(h => (
-                        <button key={h} onClick={() => setCustomDurationHours(h)}
-                          className={`py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                            customDurationHours === h ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'
-                          }`}>{h}h</button>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">Or enter:</span>
-                      <Input type="number" min={1} max={168} value={customDurationHours}
-                        onChange={e => setCustomDurationHours(Number(e.target.value))} className="w-20 h-8 text-sm" />
-                      <span className="text-xs text-muted-foreground">hours</span>
-                    </div>
-                  </div>
-                )}
-                {customTab === 'endtime' && (
-                  <div className="space-y-3">
-                    <p className="text-xs text-muted-foreground">When do you plan to break your fast?</p>
-                    <Input type="time" value={customEndTime} onChange={e => setCustomEndTime(e.target.value)} className="h-10 text-sm" />
-                    <p className="text-[10px] text-muted-foreground">If the time is earlier than now, it will be set for tomorrow.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="outline" onClick={() => setShowCustom(false)}>Cancel</Button>
-              <Button onClick={customTab === 'duration' ? handleCustomDurationStart : handleCustomEndTimeStart} className="gap-2">
-                <Play className="h-4 w-4" /> Start Fast
-              </Button>
-            </div>
-          </div>
-        )}
 
         {/* ===== END FAST REVIEW ===== */}
         {showEndReview && endReviewSnapshot && (
