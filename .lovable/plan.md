@@ -1,173 +1,92 @@
-## Family Module Fixes -- Implementation Plan
 
-This plan addresses all 8 items from the request in priority order. Changes span 1 database migration and 7 file edits.  
-  
-Skip the implemented
 
----
+## IF Timer Plan Selection Redesign
 
-### CRITICAL FIXES
-
-#### 1. Per-Category Privacy Toggles (RPC + UI)
-
-**Database migration:** Replace the `get_family_leaderboard` RPC to wrap each metric in `CASE WHEN COALESCE(fps.show_X, true) THEN ... ELSE 0 END`. The `iman_score` will also only count visible categories. This means if a member sets `show_prayer = false`, their `prayers_this_week` returns `0` to all viewers.
-
-**LeaderboardCard.tsx:** Show "--" instead of "0" when a metric is hidden. Add a new `show_prayer`/`show_quran`/`show_fasting`/`show_streaks` fields to the RPC return type and `LeaderboardEntry` interface so the UI can distinguish "0 prayers" from "hidden."
-
-**TodaySnapshot.tsx:** Same logic -- show a dash/lock icon for hidden categories instead of empty circle.
-
-**MemberProfile.tsx:** Currently shows all stats for other members. Will check the returned privacy flags and show "--" or "Private" for hidden categories on other members' profiles.
-
-**useFamilyDashboard.ts:** Update `LeaderboardEntry` interface to include the 4 new boolean fields from the RPC.
-
-#### 2. Prevent Admin-Less Group
-
-**useFamily.ts (`leaveFamily`):** Before deleting membership, query admins and total members. If sole admin with other members, show toast and return false.
-
-**FamilySettings.tsx (`handleLeave`):** The `leaveFamily` hook handles validation. Additionally, show inline warning text near the Leave button when the user is the sole admin with other members, suggesting they transfer admin first.
-
-#### 3. Deduplicate Feed Events
-
-**Database migration (same migration):** Add a unique index on `(family_id, user_id, activity_type, created_at::date)` to prevent duplicates at DB level. Use `CREATE UNIQUE INDEX ... ON family_activity_feed (family_id, user_id, activity_type, (created_at::date))`.
-
-**family-feed.ts:** Before inserting, check for existing same-day entry with same user + activity_type + family. Skip if found. For streak milestones, also match on message to allow different milestone values.
+Replace the horizontal pill selector with an in-ring plan label and a beautiful bottom sheet plan picker, matching the reference screenshots.
 
 ---
 
-### IMPORTANT FIXES
+### Changes Overview
 
-#### 4. Fix "Today's Snapshot" -- Show Real Today Data
+#### 1. New Component: `PlanSelectorSheet.tsx`
 
-**Database migration (same migration):** Add a new RPC `get_family_today_snapshot` that returns per-member today-specific data:
+Create `src/components/health/PlanSelectorSheet.tsx` -- a bottom drawer (using the existing `vaul` Drawer component) titled "Change your plan".
 
-- `prayers_today` (count of prayers logged today, max 5)
-- `quran_today` (boolean -- has quran_daily_log for today with target_met)
-- `fasting_today` (boolean -- has fasting_log entry for today)
-- `dhikr_today` (sum of dhikr_sessions count for today)
+Contains 7 scrollable plan cards (14:10, 16:8, 18:6, 20:4, 24h, 36h, Custom) each with:
+- Large bold plan name (e.g. "16:8")
+- Colored lightning bolts for difficulty (using Zap icon with varying opacity/color)
+- Bullet points: "X hours fasting" / "X hours eating period"
+- Watermark "1 DAY" text on the right (or "1.5 DAYS" for 36h)
+- Unique background color per card:
+  - 14:10: warm peach `bg-orange-50`
+  - 16:8: soft blue `bg-blue-50`
+  - 18:6: warm cream `bg-amber-50`
+  - 20:4: light grey-green `bg-stone-100`
+  - 24h: darker `bg-slate-100`
+  - 36h: darkest `bg-slate-200`
+  - Custom: neutral `bg-secondary`
+- Custom card shows a number input for hours
 
-Also respects privacy toggles. Returns only non-ghost members.
+Tapping a card calls `onSelect(mode)` and closes the sheet.
 
-**useFamilyDashboard.ts:** Add `TodaySnapshotEntry` interface and `todaySnapshot` state. Load via new RPC.
+#### 2. Update `FastingTimerRing.tsx`
 
-**TodaySnapshot.tsx:** Update to use new `TodaySnapshotEntry` type with today-specific data. Show "3/5" for prayers, checkmark for quran, moon for fasting, dhikr count.
+Add an `onPlanTap` callback prop and `planLabel` prop. Inside the ring center, show the plan label with a pencil icon that triggers `onPlanTap`. This replaces the current `mode` text shown below the ring.
 
-**FamilyDashboard.tsx:** Pass `todaySnapshot` data instead of leaderboard data to the Today's Snapshot section.
+For active fasts: show plan label inside ring (read-only, no pencil -- plan can't change mid-fast).
+For inactive state: show plan label + pencil icon, tappable.
 
-#### 5. Add Dhikr to Leaderboard
+#### 3. Redesign Inactive View in `HealthIFTimer.tsx`
 
-**Database migration (same migration):** Add `dhikr_this_week` to the `get_family_leaderboard` RPC return. Sum `dhikr_sessions.count` for the current week. Add dhikr weight to iman_score (up to 10 points: count/100 * 2, capped at 10). Respect `show_health` or add a new `show_dhikr` toggle (reuse `show_health` since dhikr is spiritual, not health -- actually better to always show dhikr on leaderboard or tie to a general toggle). Will tie to `show_prayer` since dhikr is ibadah.
+Remove the horizontal pill selector (`MODES.map` pills + Custom button, lines 378-392).
 
-Actually, dhikr is its own category. Since there's no `show_dhikr` column, we'll add it to the RPC unconditionally (dhikr is always visible unless ghost_mode). This is the simplest approach.
+Replace with:
+- Header: "Get ready to fast!" (bold)
+- Warm card: "Log your meal!" with + icon (links to hydration or is decorative)
+- Inactive timer ring with yellow/warm stroke color showing:
+  - "[Plan name] pencil-icon" (tappable to open sheet)
+  - "Time since last fast"
+  - Counting-up timer from last fast end
+- Two buttons below ring:
+  - "Start [Plan] Fasting" -- filled primary/green button
+  - "Remind me later" -- outline button (placeholder, just shows toast)
 
-**LeaderboardCard.tsx:** Add dhikr count display.
+#### 4. Save Selected Plan to Health Profile
 
-**useFamilyDashboard.ts:** Add `dhikr_this_week` to `LeaderboardEntry`.
+Use `useHealthProfile.saveProfile({ recommended_protocol: mode.label })` to persist the selected plan. On load, initialize `selectedMode` from `profile?.recommended_protocol`.
 
-#### 6. Add Feed Comments
+#### 5. Remove Custom View
 
-**Database migration (same migration):** Create `family_comments` table:
+Remove the `showCustom` state and the entire custom view section (lines 498-551). The Custom option is now a card inside the PlanSelectorSheet that includes an inline hour input. Selecting it sets the mode to "Custom Xh".
 
-- `id` uuid PK
-- `feed_id` uuid NOT NULL (references family_activity_feed)
-- `user_id` uuid NOT NULL
-- `message` text NOT NULL
-- `created_at` timestamptz DEFAULT now()
+#### 6. Update PROGRESS.md
 
-RLS: Members can insert (own user_id + must be member of the feed's family). Members can view (same family check). Users can delete own comments.
-
-**ActivityFeedItem.tsx:** Add "Comment" button. Show inline text input on tap. Display existing comments below reactions.
-
-**useFamilyDashboard.ts:** Load comments alongside feed items. Add `postComment` function.
-
-#### 7. Leaderboard Reset Countdown
-
-**FamilyDashboard.tsx:** Calculate time until next Sunday midnight. Show "Resets in X days Y hours" below the leaderboard header. Pure frontend calculation, no DB changes.
-
-#### 8. Delete Family Group (Admin)
-
-**FamilySettings.tsx:** Add "Delete Group" section (admin only). Show confirmation dialog requiring the user to type the group name. On confirm, delete all family_members, then delete the family row. Navigate to /family.
+Add entry for IF Timer plan selection redesign.
 
 ---
-
-### Files Changed Summary
-
-```text
-+-----------------------------------------------+--------------------------------------------+
-| File                                          | Changes                                    |
-+-----------------------------------------------+--------------------------------------------+
-| Database migration                            | Update get_family_leaderboard RPC          |
-|                                               | (privacy + dhikr), add                     |
-|                                               | get_family_today_snapshot RPC,             |
-|                                               | add unique index on feed,                  |
-|                                               | create family_comments table               |
-+-----------------------------------------------+--------------------------------------------+
-| src/hooks/useFamilyDashboard.ts               | Update LeaderboardEntry (privacy flags,    |
-|                                               | dhikr), add TodaySnapshotEntry,            |
-|                                               | load today snapshot, load comments,        |
-|                                               | postComment function                       |
-+-----------------------------------------------+--------------------------------------------+
-| src/hooks/useFamily.ts                        | Add last-admin guard in leaveFamily        |
-+-----------------------------------------------+--------------------------------------------+
-| src/lib/family-feed.ts                        | Add dedup check before insert              |
-+-----------------------------------------------+--------------------------------------------+
-| src/components/family/LeaderboardCard.tsx      | Show "--" for hidden categories,           |
-|                                               | add dhikr display                          |
-+-----------------------------------------------+--------------------------------------------+
-| src/components/family/TodaySnapshot.tsx        | Use TodaySnapshotEntry with today data     |
-+-----------------------------------------------+--------------------------------------------+
-| src/components/family/ActivityFeedItem.tsx     | Add comment button + comment display       |
-+-----------------------------------------------+--------------------------------------------+
-| src/pages/family/FamilyDashboard.tsx           | Pass today snapshot, reset countdown       |
-+-----------------------------------------------+--------------------------------------------+
-| src/pages/family/FamilySettings.tsx            | Sole-admin warning, delete group           |
-+-----------------------------------------------+--------------------------------------------+
-| src/pages/family/MemberProfile.tsx             | Respect privacy flags on stats             |
-+-----------------------------------------------+--------------------------------------------+
-| PROGRESS.md                                   | Update with audit fixes                    |
-+-----------------------------------------------+--------------------------------------------+
-```
 
 ### Technical Details
 
-**RPC privacy wrapping pattern:**
-
-```sql
-CASE WHEN COALESCE(fps.show_prayer, true) THEN
-  (SELECT COUNT(DISTINCT sl.date || sl.prayer_name) ...)
-ELSE 0 END AS prayers_this_week,
-COALESCE(fps.show_prayer, true) AS show_prayer,
-```
-
-**Dedup unique index:**
-
-```sql
-CREATE UNIQUE INDEX idx_feed_dedup 
-ON family_activity_feed (family_id, user_id, activity_type, (created_at::date));
-```
-
-**Last-admin guard:**
-
+**Plan data structure:**
 ```typescript
-const { data: admins } = await supabase
-  .from('family_members').select('user_id')
-  .eq('family_id', familyId).eq('role', 'admin');
-const { count: total } = await supabase
-  .from('family_members').select('*', { count: 'exact', head: true })
-  .eq('family_id', familyId);
-if (admins?.length === 1 && admins[0].user_id === user.id && (total ?? 0) > 1) {
-  toast({ title: 'Transfer admin first', description: '...', variant: 'destructive' });
-  return false;
-}
+const PLANS = [
+  { label: '14:10', hours: 14, eating: 10, bolts: 4, boltColors: ['orange','orange/50','orange/30','orange/20'], bg: 'bg-orange-50', watermark: '1 DAY' },
+  { label: '16:8',  hours: 16, eating: 8,  bolts: 4, boltColors: ['blue','blue/50','blue/30','blue/20'], bg: 'bg-blue-50', watermark: '1 DAY' },
+  { label: '18:6',  hours: 18, eating: 6,  bolts: 3, boltColors: ['amber','amber/60','amber/30'], bg: 'bg-amber-50', watermark: '1 DAY' },
+  { label: '20:4',  hours: 20, eating: 4,  bolts: 3, boltColors: ['green','green/60','green/30'], bg: 'bg-stone-100', watermark: '1 DAY' },
+  { label: '24h',   hours: 24, eating: 0,  bolts: 2, boltColors: ['slate','slate/40'], bg: 'bg-slate-100', watermark: '1 DAY' },
+  { label: '36h',   hours: 36, eating: 0,  bolts: 2, boltColors: ['slate','slate/40'], bg: 'bg-slate-200', watermark: '1.5 DAYS' },
+];
 ```
 
-**Reset countdown (pure frontend):**
-
-```typescript
-const now = new Date();
-const nextSunday = new Date(now);
-nextSunday.setDate(now.getDate() + (7 - now.getDay()));
-nextSunday.setHours(0, 0, 0, 0);
-const diff = nextSunday.getTime() - now.getTime();
-const days = Math.floor(diff / 86400000);
-const hours = Math.floor((diff % 86400000) / 3600000);
+**Files changed:**
+```text
+src/components/health/PlanSelectorSheet.tsx  -- NEW
+src/components/health/FastingTimerRing.tsx    -- Add planLabel + onPlanTap
+src/pages/health/HealthIFTimer.tsx            -- Remove pills, add sheet, redesign inactive view
+PROGRESS.md                                  -- Update
 ```
+
+**Inactive ring:** Uses a warm yellow stroke (`hsl(45, 90%, 65%)`) with dashed pattern to match the reference's eating-window aesthetic. The ring shows elapsed time since last completed fast.
+
+**"Time since last fast" counter:** Calculated from the most recent completed session's `endTime`. If no sessions exist, shows "00:00:00".
