@@ -1,7 +1,16 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-22
+> **Last Updated:** 2026-02-25
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
+
+---
+
+## 🐛 BUG FIXES (2026-02-25)
+
+| Fix | Status | Notes |
+|-----|--------|-------|
+| IF Onboarding loops every visit | ✅ | Skip button now saves `completed_at` to DB before navigating |
+| IF Timer flashes onboarding briefly | ✅ | Shows loading spinner while checking profile, prevents flash |
 
 ---
 

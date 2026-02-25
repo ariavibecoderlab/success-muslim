@@ -275,7 +275,11 @@ const HealthIFTimer = () => {
   const today = startOfDay(new Date());
   const minPastDate = subDays(today, 90);
 
-  if (profileLoading) return null;
+  if (profileLoading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+    </div>
+  );
 
   return (
     <SubPageLayout title="IF Timer" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/if-timer">
