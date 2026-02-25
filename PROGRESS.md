@@ -5,6 +5,21 @@
 
 ---
 
+## 🎨 IF Timer Custom Fast Flow (2026-02-25)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| StartFastingSheet scroll wheel picker | ✅ | iOS-style 3-column drum roll (Day/Hour/Minute) with snap scrolling |
+| Scheduled fast countdown | ✅ | Future start times show blue ring + countdown + "Your fasting starts at" |
+| Immediate fast for past times | ✅ | Past/current times start fast immediately with custom startTime |
+| Edit scheduled start time | ✅ | Pencil icon next to scheduled time re-opens picker |
+| Cancel scheduled fast | ✅ | "End Plan" button cancels scheduled fast |
+| Content cards horizontal scroll | ✅ | Islamic-themed cards: niyyah, sunnah tips, why Muslims fast, dua |
+| startIF accepts custom start time | ✅ | `health-storage.ts` updated with optional `customStartTime` param |
+| scrollbar-hide utility CSS | ✅ | Added to index.css for clean scroll UI |
+
+---
+
 ## 🎨 IF Timer Plan Selection Redesign (2026-02-25)
 
 | Change | Status | Notes |

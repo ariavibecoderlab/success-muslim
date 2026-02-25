@@ -233,8 +233,8 @@ export function getActiveIF(): IFActive | null {
   return get<IFActive | null>(KEYS.ifActive, null);
 }
 
-export function startIF(mode: string, fastingHours: number) {
-  const startTime = new Date().toISOString();
+export function startIF(mode: string, fastingHours: number, customStartTime?: string) {
+  const startTime = customStartTime || new Date().toISOString();
   set(KEYS.ifActive, { mode, startTime, fastingHours });
   syncIFStart(mode, startTime, fastingHours);
 }
