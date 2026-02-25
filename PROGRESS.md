@@ -5,6 +5,19 @@
 
 ---
 
+## 🎨 IF Timer Plan Selection Redesign (2026-02-25)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| PlanSelectorSheet bottom drawer | ✅ | 7 plan cards (14:10–36h + Custom) with difficulty bolts, unique colors, watermarks |
+| In-ring plan label with pencil icon | ✅ | Tappable when inactive, read-only when fasting |
+| Inactive view redesign | ✅ | "Get ready to fast!" header, warm ring, time-since-last-fast counter |
+| Remove horizontal pill selector | ✅ | Replaced by bottom sheet plan picker |
+| Remove custom view screen | ✅ | Custom option now inline in sheet |
+| Plan persisted to database | ✅ | Saves to `recommended_protocol` in `user_health_profiles` |
+
+---
+
 ## 🐛 BUG FIXES (2026-02-25)
 
 | Fix | Status | Notes |
