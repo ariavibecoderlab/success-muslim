@@ -157,13 +157,13 @@ const Health = () => {
     }
   };
 
-  let ifRemaining = 0;
+  let ifElapsed = 0;
   let ifProgress = 0;
   if (activeIF) {
     const start = new Date(activeIF.startTime).getTime();
     const total = activeIF.fastingHours * 3600 * 1000;
     const elapsed = now - start;
-    ifRemaining = Math.max(0, total - elapsed);
+    ifElapsed = Math.max(0, elapsed);
     ifProgress = total > 0 ? Math.min((elapsed / total) * 100, 100) : 0;
   }
 
@@ -207,7 +207,7 @@ const Health = () => {
                         </span>
                         <p className="text-xs font-semibold text-white/80">Fasting Active</p>
                       </div>
-                      <p className="text-2xl font-black tracking-tight">{formatCountdown(ifRemaining)}</p>
+                      <p className="text-2xl font-black tracking-tight">{formatCountdown(ifElapsed)}</p>
                     </div>
                   </div>
                   <StatsRing pct={ifProgress} size={52} stroke={4} color="white">
