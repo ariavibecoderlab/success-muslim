@@ -5,6 +5,13 @@
 
 ---
 
+## 🐛 IF Timer Hero Card Fix (2026-02-26)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Show elapsed time instead of remaining | ✅ | `formatCountdown(ifElapsed)` replaces `ifRemaining` |
+| Progress ring unchanged | ✅ | Already correct: elapsed/total capped at 100% |
+
 ## 🎨 IF Timer Custom Card Polish (2026-02-25)
 
 | Change | Status | Notes |
