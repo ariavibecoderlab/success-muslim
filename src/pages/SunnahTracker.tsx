@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   getSunnahItems, saveSunnahItems, toggleSunnahItem, type SunnahItem,
 } from '@/lib/sunnah-storage';
 import { useSunnahLog, useSunnahStats } from '@/hooks/useSunnahQuery';
+import { useAuth } from '@/hooks/useAuth';
 import SubPageLayout from '@/components/SubPageLayout';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -39,6 +41,8 @@ const SunnahTracker = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const [items, setItems] = useState(getSunnahItems);
   const { data: dayLog } = useSunnahLog(dateKey);
@@ -59,7 +63,7 @@ const SunnahTracker = () => {
 
   const handleToggle = (itemId: string) => {
     const updated = toggleSunnahItem(itemId, dateKey);
-    // dayLog updates via React Query invalidation
+    queryClient.invalidateQueries({ queryKey: ['sunnah', user?.id ?? 'anon', dateKey] });
     
     const newCompleted = updated.completed.filter(id => enabledItems.find(i => i.id === id)).length;
     if (newCompleted === enabledItems.length && enabledItems.length > 0 && isToday) {
