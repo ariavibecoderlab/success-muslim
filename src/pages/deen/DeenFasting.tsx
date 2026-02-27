@@ -7,7 +7,7 @@ import SubPageLayout from '@/components/SubPageLayout';
 import { useFastingLog, useFastingToggle } from '@/hooks/useHealthQuery';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes, formatPrayerTime, getEffectiveTime, type PrayerTimesData } from '@/lib/prayer-times';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isFuture } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isFuture, subDays, isBefore, startOfDay } from 'date-fns';
 import { useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
@@ -54,6 +54,7 @@ const DeenFasting = () => {
   }, [settingsLoading, loadPrayer]);
 
   // fastingLog is held in state above
+  const minDate = subDays(startOfDay(new Date()), 90);
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -241,19 +242,21 @@ const DeenFasting = () => {
                 const isWhiteDay = day.getDate() >= 13 && day.getDate() <= 15;
                 const today = isToday(day);
                 const future = isFuture(day);
+                const tooOld = isBefore(startOfDay(day), minDate);
+                const disabled = future || tooOld;
                 return (
                   <motion.button
                     key={key}
-                    onClick={() => !future && handleToggle(key)}
-                    whileTap={!future ? { scale: 0.9 } : {}}
+                    onClick={() => !disabled && handleToggle(key)}
+                    whileTap={!disabled ? { scale: 0.9 } : {}}
                     className={`aspect-square rounded-lg text-xs flex flex-col items-center justify-center transition-all relative
                       ${fasted ? 'bg-primary text-primary-foreground shadow-sm' : 
                         recommended ? (isWhiteDay ? 'bg-accent/30 hover:bg-accent/50' : 'bg-secondary hover:bg-secondary/80') : 
                         'hover:bg-secondary/50'}
                       ${today ? 'ring-2 ring-primary/50 ring-offset-1 ring-offset-background' : ''}
-                      ${future ? 'opacity-40' : 'cursor-pointer'}
+                      ${disabled ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
                     `}
-                    disabled={future}
+                    disabled={disabled}
                   >
                     <span className="font-medium">{day.getDate()}</span>
                     {fasted && <Check className="h-2 w-2 absolute bottom-0.5" />}
