@@ -1,110 +1,49 @@
 
 
-## Revamp Landing Page + Create Features & About Pages
+## Add App Screenshots to Features Page
 
-Inspired by the Muslim Pro reference, this plan creates a professional marketing site with a proper navigation header, dedicated feature pages, and an About page -- all aligned with Success Muslim's brand identity (green primary, smlogo, Islamic calm aesthetic).
+Copy the 6 uploaded screenshots into `src/assets/features/` and embed them as phone mockup images in the `/features` page, each mapped to its corresponding section.
 
-### Overview of Changes
+### Image Mapping
 
-1. **Shared marketing layout component** with sticky top nav and footer
-2. **Redesigned Landing page** (`/`) -- Muslim Pro-inspired with nav header, hero with phone mockup illustration, feature showcase sections
-3. **New Features page** (`/features`) -- detailed breakdown of all core features across Iman, Health, Wealth, Productivity, and Family
-4. **New About page** (`/about`) -- mission, vision, and story of Success Muslim
-5. **Route registration** in `App.tsx`
+| File | Section |
+|------|---------|
+| `lifescore.webp` | Hero section (showcase the Life Score dashboard) |
+| `iman.webp` | Iman pillar |
+| `health.webp` | Health pillar |
+| `start-fasting.webp` | Health pillar (secondary -- IF Timer idle state) |
+| `if-timer-running.webp` | Health pillar (secondary -- IF Timer active state) |
+| `ifasting.webp` | Health pillar (secondary -- IF summary state) |
 
----
+### Changes
 
-### New Files
+**File: `src/pages/Features.tsx`**
 
-#### 1. `src/components/MarketingLayout.tsx`
-Shared wrapper for all public marketing pages with:
-- **Sticky top nav**: Logo (smlogo) + brand name on left, nav links (Features, About) in center, CTA buttons (Sign In, Get Started) on right
-- **Mobile**: Hamburger menu for nav links
-- **Footer**: Logo, nav links, copyright, "Built for the Ummah" tagline
-- Uses the same green primary color scheme
+1. **Add an `image` field to `PillarSection` interface** -- optional string for the primary screenshot, plus an optional `extraImages` array for pillars with multiple screenshots (Health has 4).
 
-#### 2. `src/pages/Features.tsx`
-Dedicated features page showcasing all 5 pillars in detail:
-- Hero banner: "Everything You Need to Grow"
-- **Iman section**: Prayer tracking, Quran reader, Dhikr counter, Zakat calculator, Fasting log, Sadaqah tracker
-- **Health section**: BMI tracker, Hydration, Sleep, Steps, IF Timer, Weight tracking
-- **Wealth section**: Halal budgeting, Savings goals, Zakat calculator
-- **Productivity section**: Daily MITs, Habit streaks, Life areas
-- **Family section**: Family dashboard, Leaderboard, Activity feed
-- Each section: icon, title, description, feature list with small icons
-- Alternating layout (text-left/image-right, then flip) similar to Muslim Pro style
-- Bottom CTA: "Start Your Journey"
+2. **Update pillar data** -- assign imported image paths to each pillar:
+   - Iman: `iman.webp`
+   - Health: `health.webp` as primary, with `ifasting.webp`, `if-timer-running.webp`, `start-fasting.webp` as extra images
+   - Wealth, Productivity, Family: no image (keep current layout)
 
-#### 3. `src/pages/About.tsx`
-About page with:
-- Hero: "Your Islamic App Companion" headline with descriptive paragraphs about the mission
-- **Our Mission**: Help Muslims optimize their life for both worlds through consistent daily tracking
-- **Our Vision**: The most comprehensive Muslim lifestyle platform
-- **Core Values**: Consistency, Privacy, Holistic Growth, Community
-- Islamic quote section with hadith
-- Bottom CTA to sign up
+3. **Modify the pillar section layout** -- when a pillar has an `image`, replace the feature grid with a phone mockup display:
+   - Show the primary screenshot in a styled phone frame (rounded-3xl, shadow, border)
+   - For Health section specifically, show a mini gallery of 2-3 additional screenshots below/beside the primary one
+   - Pillars without images keep the existing feature card grid
 
-### Modified Files
+4. **Add Life Score screenshot to the Hero** -- place the `lifescore.webp` image as a centered phone mockup below the hero text to immediately showcase the app.
 
-#### 4. `src/pages/Landing.tsx` (redesigned)
-- Add `MarketingLayout` wrapper (nav + footer)
-- **Hero section**: Keep the current clean hero but add the nav header from MarketingLayout
-- Keep existing sections (Life Score, Pillars, How It Works, Personas, CTA) but wrap in MarketingLayout
-- Remove the inline footer (now in MarketingLayout)
-- Add a new "Explore Our Features" link/button pointing to `/features`
+5. **Phone frame styling** -- each screenshot gets a consistent treatment:
+   - `rounded-[2rem]` border-radius to simulate a phone screen
+   - Subtle shadow (`shadow-2xl`)
+   - `border border-border/60` frame
+   - Max width ~280px on desktop, responsive on mobile
+   - Slight rotation/tilt on alternating sections for visual interest
 
-#### 5. `src/App.tsx`
-- Import and register new routes:
-  - `/features` -> `Features`
-  - `/about` -> `About`
-- Both are public routes (no AuthGuard)
+### Files
 
----
-
-### Technical Details
-
-**MarketingLayout component structure:**
-```text
-+--------------------------------------------------+
-|  [logo] Success Muslim   Features  About  | Sign In  Get Started |
-+--------------------------------------------------+
-|                                                    |
-|              {children} (page content)             |
-|                                                    |
-+--------------------------------------------------+
-|  [logo] Success Muslim  |  Features  About  |  (c) 2026  |
-+--------------------------------------------------+
-```
-
-**Nav behavior:**
-- Desktop: horizontal links + CTA buttons
-- Mobile: hamburger icon opens a slide-down menu
-- Sticky with `bg-background/80 backdrop-blur-lg` glassmorphism
-- Active link highlighted with primary color
-
-**Design tokens used:**
-- Primary green: `hsl(120, 61%, 24%)` -- already defined
-- All sections use `bg-background` with `border-b border-border/40` dividers (consistent with current landing)
-- Cards use `bg-card rounded-2xl border border-border`
-- Motion animations reuse the existing `fade` variant pattern
-
-**Features page layout pattern:**
-Each feature section alternates between:
-- Left: Icon grid / feature list
-- Right: Section description
-This mirrors the Muslim Pro reference screenshot's two-column layout
-
-**About page structure:**
-- Full-width hero with centered text
-- Two-column "Our Values" grid
-- Hadith quote banner (reuses the primary bg CTA pattern)
-
-### Files Summary
 | File | Action |
 |------|--------|
-| `src/components/MarketingLayout.tsx` | Create |
-| `src/pages/Features.tsx` | Create |
-| `src/pages/About.tsx` | Create |
-| `src/pages/Landing.tsx` | Modify (wrap in MarketingLayout, remove inline footer) |
-| `src/App.tsx` | Modify (add 2 routes) |
+| 6 images | Copy from `user-uploads://` to `src/assets/features/` |
+| `src/pages/Features.tsx` | Add imports, update data, modify layout |
 
