@@ -67,6 +67,8 @@ import AdminSystem from "./pages/admin/AdminSystem";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Install from "./pages/Install";
+import Features from "./pages/Features";
+import About from "./pages/About";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +97,8 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/about" element={<About />} />
 
               {/* Protected pillar pages with bottom nav */}
               <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
