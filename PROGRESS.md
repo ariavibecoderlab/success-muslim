@@ -5,6 +5,15 @@
 
 ---
 
+## 🔧 Life Score Refactor — Pure Function (2026-02-27)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| `calculateLifeScore` accepts `LifeScoreInput` param | ✅ | No more direct localStorage reads |
+| Dashboard passes React Query data into score calc | ✅ | salah, dhikr, sunnah, hydration from RQ hooks |
+| Deen.tsx passes RQ data into `calcIman()` | ✅ | Clean imports, no `require()` hacks |
+| `calculateLifeScoreFromStorage()` kept as fallback | ✅ | For non-RQ consumers (family feed) |
+
 ## 🏗️ Major State Management Refactor (2026-02-27)
 
 | Phase | Status | Notes |

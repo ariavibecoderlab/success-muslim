@@ -24,7 +24,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import EditableText from "@/components/cms/EditableText";
 import OnboardingTooltips from "@/components/OnboardingTooltips";
-import { calculateLifeScore, saveCurrentDayScore, getScoreColor, getScoreLabel, getWeeklyScores } from "@/lib/life-score";
+import { calculateLifeScore, saveCurrentDayScore, getScoreColor, getScoreLabel, getWeeklyScores, type LifeScoreInput } from "@/lib/life-score";
+import { useDhikrDaily } from "@/hooks/useDhikrQuery";
+import { useSunnahLog } from "@/hooks/useSunnahQuery";
+import { useHydration } from "@/hooks/useHealthQuery";
+import { useTodaySalahCount } from "@/hooks/useSalahQuery";
+import { getSunnahItems } from "@/lib/sunnah-storage";
+import { getDailyTasks, getHabits, getHabitLog, getTodayKey as getProdTodayKey } from "@/lib/productivity-storage";
+import { getSleepLog, getFastingLog, todayKey } from "@/lib/health-storage";
+import { getQuranDay } from "@/lib/quran-storage";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useSalahLog } from "@/hooks/useSalahQuery";
 import { getTodayKey } from "@/lib/calculations";
@@ -113,8 +121,47 @@ const Dashboard = () => {
 
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
 
-  // Life Score
-  const lifeScore = useMemo(() => calculateLifeScore(), [salahLog]);
+  // Gather React Query data for Life Score
+  const salahCount = useTodaySalahCount();
+  const { data: dailyDhikr } = useDhikrDaily();
+  const sunnahItemsAll = getSunnahItems();
+  const { data: sunnahLog } = useSunnahLog();
+  const { data: hydration } = useHydration();
+
+  const lifeScoreInput = useMemo((): LifeScoreInput => {
+    const enabledSunnah = (sunnahItemsAll ?? []).filter((i: any) => i.enabled);
+    const sunnahDone = (sunnahLog?.completed ?? []).filter((id: string) =>
+      enabledSunnah.find((i: any) => i.id === id)
+    ).length;
+    const quranDay = getQuranDay();
+    const tk = todayKey();
+    const fastingLog = getFastingLog();
+    const sleepLog = getSleepLog();
+    const todaySleep = sleepLog.find((e: any) => e.date === tk);
+    const daily = getDailyTasks();
+    const mits = daily.tasks.filter((t: any) => t.isMIT);
+    const habits = getHabits();
+    const habitLog = getHabitLog();
+    const today = getProdTodayKey();
+
+    return {
+      salah: { onTime: salahCount.onTime, late: salahCount.late, logged: salahCount.logged },
+      quranPagesRead: quranDay.pagesRead,
+      sunnahEnabled: enabledSunnah.length,
+      sunnahCompleted: sunnahDone,
+      dhikrCount: dailyDhikr?.totalCount ?? 0,
+      isFastingToday: !!fastingLog[tk],
+      hydrationCups: hydration?.cups ?? 0,
+      hydrationGoal: hydration?.goal ?? 8,
+      sleepHours: todaySleep?.duration ?? null,
+      mitsTotal: mits.length,
+      mitsCompleted: mits.filter((t: any) => t.completed).length,
+      habitsTotal: habits.length,
+      habitsDoneToday: habitLog[today]?.length || 0,
+    };
+  }, [salahLog, salahCount, dailyDhikr, sunnahItemsAll, sunnahLog, hydration]);
+
+  const lifeScore = useMemo(() => calculateLifeScore(lifeScoreInput), [lifeScoreInput]);
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
   const weeklyScores = useMemo(() => getWeeklyScores(), []);
 
