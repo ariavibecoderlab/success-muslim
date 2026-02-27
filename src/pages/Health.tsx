@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Heart, Scale, Droplets, BedDouble, Moon, Timer, TrendingUp, Footprints, ChevronRight, Smile, UtensilsCrossed } from 'lucide-react';
+import { Heart, Scale, Droplets, BedDouble, Weight, Timer, Footprints, ChevronRight, Smile, UtensilsCrossed } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
@@ -78,11 +78,11 @@ const StatsRing = ({ pct, size = 56, stroke = 4, color, children }: {
 
 const features = [
   { icon: Scale, title: 'BMI Calculator', desc: 'Body metrics & calorie needs', path: '/health/bmi', gradient: 'from-emerald-500 to-emerald-600' },
-  { icon: TrendingUp, title: 'Weight Tracker', desc: 'Log weight & view trends', path: '/health/weight', gradient: 'from-amber-500 to-amber-600' },
+  { icon: Weight, title: 'Weight Tracker', desc: 'Log weight & view trends', path: '/health/weight', gradient: 'from-amber-500 to-amber-600' },
   { icon: Droplets, title: 'Hydration', desc: 'Daily water intake tracker', path: '/health/hydration', gradient: 'from-blue-500 to-blue-600' },
   { icon: BedDouble, title: 'Sleep Tracker', desc: 'Track sleep quality', path: '/health/sleep', gradient: 'from-indigo-500 to-indigo-600' },
   { icon: Footprints, title: 'Steps Tracker', desc: 'Daily step count & goals', path: '/health/steps', gradient: 'from-orange-500 to-orange-600' },
-  { icon: Moon, title: 'Sunnah Fasting', desc: 'Mon, Thu & White Days', path: '/health/fasting', gradient: 'from-purple-500 to-purple-600' },
+  { icon: UtensilsCrossed, title: 'Sunnah Fasting', desc: 'Mon, Thu & White Days', path: '/health/fasting', gradient: 'from-purple-500 to-purple-600' },
 ];
 
 // ── Quick Actions config ──────────────────────────
@@ -389,7 +389,7 @@ const Health = () => {
             <Card className="border-0 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 shadow-sm">
               <CardContent className="p-4 text-center space-y-2">
                 <div className="w-10 h-10 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center mx-auto">
-                  <Moon className="h-5 w-5 text-amber-600" />
+                  <UtensilsCrossed className="h-5 w-5 text-amber-600" />
                 </div>
                 <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">
                   It's {today.getDay() === 1 ? 'Monday' : 'Thursday'} — a Sunnah fasting day!
