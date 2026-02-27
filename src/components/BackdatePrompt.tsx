@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-import { CalendarDays, Clock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useState, useEffect, useRef } from 'react';
+import { CalendarDays } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface BackdatePromptProps {
-  moduleKey: string; // unique key per module, e.g. 'prayer', 'quran'
+  moduleKey: string;
   onLogPastData: () => void;
 }
 
@@ -28,50 +27,75 @@ function dismiss(moduleKey: string) {
 }
 
 const BackdatePrompt = ({ moduleKey, onLogPastData }: BackdatePromptProps) => {
-  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!isDismissed(moduleKey)) {
-      // Show after a short delay so it doesn't flash
-      const timer = setTimeout(() => setOpen(true), 800);
-      return () => clearTimeout(timer);
+      const showTimer = setTimeout(() => setVisible(true), 600);
+      return () => clearTimeout(showTimer);
     }
   }, [moduleKey]);
 
-  const handleStartFresh = () => {
+  // Auto-dismiss after 8 seconds
+  useEffect(() => {
+    if (visible) {
+      timerRef.current = setTimeout(() => {
+        dismiss(moduleKey);
+        setVisible(false);
+      }, 8000);
+      return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+    }
+  }, [visible, moduleKey]);
+
+  const handleDismiss = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     dismiss(moduleKey);
-    setOpen(false);
+    setVisible(false);
   };
 
   const handleLogPast = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
     dismiss(moduleKey);
-    setOpen(false);
+    setVisible(false);
     onLogPastData();
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleStartFresh(); else setOpen(v); }}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5 text-primary" />
-            Log past entries?
-          </DialogTitle>
-          <DialogDescription>
-            Did you do this before joining? You can log past entries going back 90 days.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid grid-cols-2 gap-3 pt-2">
-          <Button variant="outline" onClick={handleStartFresh}>
-            Start Fresh Today
-          </Button>
-          <Button onClick={handleLogPast} className="gap-1.5">
-            <CalendarDays className="h-4 w-4" />
-            Log Past Data
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -20, opacity: 0 }}
+          transition={{ duration: 0.3, ease: 'easeOut' }}
+          className="mb-4 rounded-lg border-l-4 border-amber-400 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 shadow-sm"
+        >
+          <div className="flex items-start gap-2.5">
+            <CalendarDays className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                Have past data to log? You can go back up to 90 days.
+              </p>
+              <div className="flex gap-3 mt-1.5">
+                <button
+                  onClick={handleLogPast}
+                  className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                >
+                  Log past data
+                </button>
+                <button
+                  onClick={handleDismiss}
+                  className="text-xs text-amber-600/60 dark:text-amber-400/60 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

@@ -38,6 +38,7 @@ const DhikrCounter = () => {
   const [newTarget, setNewTarget] = useState('33');
   const [editingTarget, setEditingTarget] = useState(false);
   const [editTargetValue, setEditTargetValue] = useState('');
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const rippleId = useRef(0);
 
   const { streak, history } = useDhikrStats();
@@ -126,12 +127,12 @@ const DhikrCounter = () => {
 
   return (
     <SubPageLayout title="Dhikr Counter" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/dhikr">
-      <BackdatePrompt moduleKey="dhikr" onLogPastData={() => {}} />
+      <BackdatePrompt moduleKey="dhikr" onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); setHighlightPicker(true); }} />
       <div className="space-y-5">
 
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} />
         </div>
 
         {/* Streak + Stats Bar */}

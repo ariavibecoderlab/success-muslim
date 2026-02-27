@@ -22,6 +22,7 @@ const HEALTH_SIBLINGS = [
 
 const HealthHydration = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
   const { data: today } = useHydration(dateKey);
@@ -34,11 +35,11 @@ const HealthHydration = () => {
 
   return (
     <SubPageLayout title="Hydration Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/hydration">
-      <BackdatePrompt moduleKey="hydration" onLogPastData={() => {}} />
+      <BackdatePrompt moduleKey="hydration" onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); setHighlightPicker(true); }} />
       <div className="space-y-5">
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); }} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); }} compact highlight={highlightPicker} />
         </div>
 
         {/* Progress ring */}
