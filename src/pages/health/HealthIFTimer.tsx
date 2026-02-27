@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, addCup, logPastIF, editIFSession } from '@/lib/health-storage';
+import { getActiveIF, getIFSessions, startIF, stopIF, deleteIF, logPastIF, editIFSession } from '@/lib/health-storage';
+import { useHydrationMutation } from '@/hooks/useHealthQuery';
 import { format, subDays, startOfDay, isAfter, isBefore } from 'date-fns';
 import { motion } from 'framer-motion';
 import FastingStageCard, { StagesTimeline } from '@/components/health/FastingStageCard';
@@ -74,6 +75,7 @@ function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
 
 const HealthIFTimer = () => {
   const navigate = useNavigate();
+  const { addCup: addCupMutation } = useHydrationMutation();
   const { profile, loading: profileLoading, completed: profileCompleted, saveProfile } = useHealthProfile();
   const fastingStore = useFastingStore();
   const [active, setActive] = useState(getActiveIF);
@@ -280,7 +282,7 @@ const HealthIFTimer = () => {
 
   const handleDeleteFast = () => { deleteIF(); setActive(null); fastingStore.endFast(false); };
 
-  const handleQuickWater = () => { addCup(); toast('Water logged!'); };
+  const handleQuickWater = () => { addCupMutation.mutate(undefined); toast('Water logged!'); };
 
   const handleLogPastFast = () => {
     const hours = parseFloat(pastHours);

@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import SubPageLayout from '@/components/SubPageLayout';
-import { useHydration, useHydrationMutation } from '@/hooks/useHealthQuery';
-import { getHydrationHistory } from '@/lib/health-storage';
+import { useHydration, useHydrationMutation, useHydrationHistory } from '@/hooks/useHealthQuery';
 import EditableText from '@/components/cms/EditableText';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -28,7 +27,7 @@ const HealthHydration = () => {
   const { data: today } = useHydration(dateKey);
   const { addCup: addCupMutation, removeCup: removeCupMutation } = useHydrationMutation();
   const progress = Math.min((today.cups / today.goal) * 100, 100);
-  const history = getHydrationHistory(7);
+  const { data: history } = useHydrationHistory(7);
 
   const circumference = 2 * Math.PI * 70;
   const dashOffset = circumference - (progress / 100) * circumference;

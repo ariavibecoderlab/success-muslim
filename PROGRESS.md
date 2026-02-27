@@ -11,7 +11,7 @@
 |-------|--------|-------|
 | Phase 1: AuthContext provider | ✅ | Single onAuthStateChange listener, useAuth re-exported |
 | Phase 2: React Query migration | ✅ | 8 hooks migrated to useQuery/useMutation |
-| Phase 3: localStorage → RQ | 🔜 | Deferred — DB sync works, refetchOnWindowFocus handles staleness |
+| Phase 3: localStorage → RQ | ✅ | React Query is source of truth; 4 bypass issues fixed (DhikrCounter, HydrationHistory, SunnahTracker invalidation, IFTimer addCup) |
 | Phase 4: Zustand stores | ✅ | fastingStore + uiStore created; fastingStore wired to HealthIFTimer (writer), IFFastingWidget + Health.tsx (readers) |
 | Phase 5: forceUpdate removal | ✅ | Removed from all files — zero renderKey/useState(0) hacks remain |
 

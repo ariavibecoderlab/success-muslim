@@ -45,6 +45,7 @@ export function useHydrationMutation() {
     onSuccess: (_, dateKey) => {
       const key = dateKey || todayKey();
       queryClient.invalidateQueries({ queryKey: ['health-hydration', user?.id ?? 'anon', key] });
+      queryClient.invalidateQueries({ queryKey: ['health-hydration-history', user?.id ?? 'anon'] });
     },
   });
 
@@ -55,10 +56,47 @@ export function useHydrationMutation() {
     onSuccess: (_, dateKey) => {
       const key = dateKey || todayKey();
       queryClient.invalidateQueries({ queryKey: ['health-hydration', user?.id ?? 'anon', key] });
+      queryClient.invalidateQueries({ queryKey: ['health-hydration-history', user?.id ?? 'anon'] });
     },
   });
 
   return { addCup: addCupMutation, removeCup: removeCupMutation };
+}
+
+// ── Hydration History ─────────────────────────────
+
+export function useHydrationHistory(days: number = 7) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['health-hydration-history', user?.id ?? 'anon', days],
+    queryFn: async () => {
+      if (!user) return getHydrationHistory(days);
+      const today = new Date();
+      const dates: string[] = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        dates.push(d.toISOString().split('T')[0]);
+      }
+      const { data } = await supabase
+        .from('hydration_log')
+        .select('date, cups')
+        .eq('user_id', user.id)
+        .in('date', dates);
+      if (!data?.length) return getHydrationHistory(days);
+      const dbMap = new Map(data.map(r => [r.date, r.cups]));
+      const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return dates.map(date => {
+        const d = new Date(date + 'T00:00:00');
+        return {
+          date: dayLabels[d.getDay()],
+          cups: dbMap.get(date) ?? 0,
+        };
+      });
+    },
+    initialData: () => getHydrationHistory(days),
+    staleTime: 60_000,
+  });
 }
 
 // ── Sleep ──────────────────────────────────────────
