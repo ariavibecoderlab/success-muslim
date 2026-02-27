@@ -23,10 +23,9 @@ const HEALTH_SIBLINGS = [
 const HealthHydration = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const [renderKey, setRenderKey] = useState(0);
-  const refresh = () => setRenderKey(n => n + 1);
 
-  const today = getHydration(dateKey);
+  const [today, setToday] = useState(() => getHydration(dateKey));
+  const refreshHydration = () => setToday(getHydration(dateKey));
   const progress = Math.min((today.cups / today.goal) * 100, 100);
   const history = getHydrationHistory(7);
 
@@ -39,7 +38,7 @@ const HealthHydration = () => {
       <div className="space-y-5">
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setToday(getHydration(format(d, 'yyyy-MM-dd'))); }} compact />
         </div>
 
         {/* Progress ring */}
@@ -67,10 +66,10 @@ const HealthHydration = () => {
 
         {/* Controls */}
         <div className="flex justify-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => { removeCup(dateKey); refresh(); }}>
+          <Button variant="outline" size="icon" onClick={() => { removeCup(dateKey); refreshHydration(); }}>
             <Minus className="h-4 w-4" />
           </Button>
-          <Button size="lg" onClick={() => { addCup(dateKey); refresh(); }} className="gap-2 px-8">
+          <Button size="lg" onClick={() => { addCup(dateKey); refreshHydration(); }} className="gap-2 px-8">
             <Plus className="h-4 w-4" /> Add Glass
           </Button>
         </div>

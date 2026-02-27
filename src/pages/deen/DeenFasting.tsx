@@ -34,7 +34,7 @@ const FASTING_TYPES: Record<FastingType, { label: string; description: string }>
 
 const DeenFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [renderKey, setRenderKey] = useState(0);
+  const [fastingLog, setFastingLog] = useState(() => getFastingLog());
   const { settings, loading: settingsLoading } = usePrayerSettings();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
 
@@ -48,7 +48,7 @@ const DeenFasting = () => {
     if (!settingsLoading) loadPrayer();
   }, [settingsLoading, loadPrayer]);
 
-  const fastingLog = getFastingLog();
+  // fastingLog is held in state above
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -69,7 +69,7 @@ const DeenFasting = () => {
 
   const handleToggle = (dateKey: string) => {
     toggleFasting(dateKey);
-    setRenderKey(n => n + 1);
+    setFastingLog(getFastingLog());
   };
 
   // Stats

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import { Footprints, Plus, Trash2, TrendingUp, Flame, MapPin, Link } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,20 +45,23 @@ const MILESTONES = [
 ];
 
 const HealthSteps = () => {
-  const [renderKey, setRenderKey] = useState(0);
-  const refresh = useCallback(() => setRenderKey(n => n + 1), []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stepsInput, setStepsInput] = useState('');
   const [activityType, setActivityType] = useState<ActivityType>('walking');
   const [showTargetPicker, setShowTargetPicker] = useState(false);
   const [customTarget, setCustomTarget] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
+  const refreshSteps = () => {
+    const data = isToday ? getStepsToday() : getStepsForDate(dateKey);
+    setStepsData(data);
+  };
+
+  const [stepsData, setStepsData] = useState(() => isToday ? getStepsToday() : getStepsForDate(dateKey));
   const prefs = getStepsPrefs();
-  const { total: daySteps, logs: dayLogs } = isToday ? getStepsToday() : getStepsForDate(dateKey);
+  const { total: daySteps, logs: dayLogs } = stepsData;
   const progress = Math.min((daySteps / prefs.dailyTarget) * 100, 100);
   const targetHit = daySteps >= prefs.dailyTarget;
   const history = getStepsHistory(7);
@@ -80,19 +83,18 @@ const HealthSteps = () => {
     setStepsInput('');
     setActivityType('walking');
     setDialogOpen(false);
-    refresh();
+    refreshSteps();
   };
 
   const handleDelete = (id: string) => {
     deleteStepLog(id);
-    refresh();
+    refreshSteps();
   };
 
   const handleSetTarget = (target: number) => {
     setStepsTarget(target);
     setShowTargetPicker(false);
     setCustomTarget('');
-    refresh();
   };
 
   const handleBackdatePrompt = () => {
@@ -115,7 +117,7 @@ const HealthSteps = () => {
       <div className="space-y-5">
         {/* Backdate */}
         <BackdatePrompt moduleKey="steps" onLogPastData={handleBackdatePrompt} />
-        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setStepsData(getStepsForDate(format(d, 'yyyy-MM-dd'))); }} />
 
         {/* Hero Ring */}
         <div className="flex flex-col items-center">
