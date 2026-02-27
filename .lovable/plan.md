@@ -1,46 +1,92 @@
 
 
-## Fix BackdatePrompt Design + No-op Callbacks
+## Add Backdate Support to 5 Missing Modules
 
-Two changes: redesign the shared BackdatePrompt component from a blocking modal to a gentle top banner, and fix the 4 modules where "Log past data" does nothing.
+The no-op callbacks in Hydration, Sleep, Sunnah, and Dhikr are already fixed. This plan adds `BackdateDatePicker` and `BackdatePrompt` to the 5 modules that currently lack them.
+
+### Modules to Update
+
+| Module | File | Notes |
+|--------|------|-------|
+| Sunnah Fasting (Health) | `src/pages/health/HealthFasting.tsx` | Calendar-based; add date picker + prompt above calendar |
+| Sunnah Fasting (Deen) | `src/pages/deen/DeenFasting.tsx` | Calendar-based; same treatment |
+| Sadaqah Tracker | `src/pages/deen/SadaqahTracker.tsx` | Already has a date input in the "Add Donation" dialog -- no BackdateDatePicker needed on the main page, but add BackdatePrompt that opens the Add dialog |
+| Qiyam Planner | `src/pages/deen/QiyamPlanner.tsx` | Currently logs only "today"; add date picker + prompt so user can log past nights |
+| Daily Tasks | `src/pages/productivity/DailyTasks.tsx` | localStorage-based; add date picker + prompt, pass dateKey to storage functions |
 
 ---
 
-### 1. Redesign BackdatePrompt (src/components/BackdatePrompt.tsx)
+### 1. HealthFasting.tsx
 
-Replace the Dialog/modal with a non-blocking animated banner:
+- Import `BackdateDatePicker` and `BackdatePrompt`
+- Add `selectedDate` and `highlightPicker` state
+- Add `BackdatePrompt` above content with callback to set yesterday + highlight
+- Add `BackdateDatePicker` centered below month nav
+- The existing month calendar still works for toggling days; the date picker gives quick access to backdate context
+- No storage changes needed -- `handleToggle` already accepts any date key
 
-- **Layout**: A small card/banner rendered inline at the top of page content (not a modal overlay)
-- **Style**: `bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400` with rounded corners, soft shadow
-- **Content**: Calendar icon + single line "Have past data to log? You can go back 90 days." + two small ghost/link buttons: "Log past data" | "Dismiss"
-- **Animation**: Framer Motion `slide down` on enter (y: -20 to 0, opacity 0 to 1), `slide up` on dismiss (reverse)
-- **Auto-dismiss**: `setTimeout` of 8 seconds that calls dismiss, cleared if user interacts
-- **No longer blocks**: Remove Dialog import entirely; render as a simple `AnimatePresence` + `motion.div` inline element
-- **Props unchanged**: Same `moduleKey` and `onLogPastData` interface so all consumers work without changes
+### 2. DeenFasting.tsx
 
-### 2. Fix no-op callbacks in 4 modules
+- Same approach as HealthFasting
+- Import both components, add state, render prompt + picker
+- Existing calendar toggle already supports any date key
 
-Each of these already has `selectedDate` state and a `BackdateDatePicker`. The fix: replace `() => {}` with a function that sets selectedDate to yesterday.
+### 3. SadaqahTracker.tsx
 
-| File | Current | Fix |
-|------|---------|-----|
-| `src/pages/DhikrCounter.tsx` (line 129) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); }}` |
-| `src/pages/health/HealthHydration.tsx` (line 37) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); }}` |
-| `src/pages/health/HealthSleep.tsx` (line 86) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); }}` |
-| `src/pages/SunnahTracker.tsx` (line 126) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); }}` |
+- Add `BackdatePrompt` only (not a date picker on the main page)
+- The "Log past data" callback opens the Add Donation dialog (`setAddOpen(true)`) and sets the date form field to yesterday
+- This is the most natural flow since donations already have a date field in the dialog
 
-### 3. Add pulse highlight to BackdateDatePicker
+### 4. QiyamPlanner.tsx
 
-- Add an optional `highlight` prop to `BackdateDatePicker` (boolean, default false)
-- When `highlight` is true, apply a 2-second `animate-pulse` ring effect around the date button, then auto-clear
-- In each of the 4 fixed modules, set a `highlightPicker` state to `true` when "Log past data" is tapped, pass it to `BackdateDatePicker`, and auto-clear after 2s
+- Import both components, add `selectedDate` and `highlightPicker` state
+- Add `BackdatePrompt` + `BackdateDatePicker` at the top
+- Change `today` constant to use `selectedDate` so the "Log Tonight's Qiyam" button and `todayLog` reference the selected date instead of always today
+- The `confirmLogQiyam` function will use the selected date key instead of hardcoded `today`
 
-### Files modified
-- `src/components/BackdatePrompt.tsx` -- full redesign (banner, animations, auto-dismiss)
-- `src/components/BackdateDatePicker.tsx` -- add optional `highlight` prop with pulse effect
-- `src/pages/DhikrCounter.tsx` -- fix callback + add highlight state
-- `src/pages/health/HealthHydration.tsx` -- fix callback + add highlight state
-- `src/pages/health/HealthSleep.tsx` -- fix callback + add highlight state
-- `src/pages/SunnahTracker.tsx` -- fix callback + add highlight state
-- `PROGRESS.md` -- update changelog
+### 5. DailyTasks.tsx
+
+- Import both components, add `selectedDate` and `highlightPicker` state
+- Add `BackdatePrompt` + `BackdateDatePicker` at the top
+- Change `getDailyTasks()` to accept a dateKey parameter so it loads the correct day's tasks
+- The `addTask`, `toggleTask`, `deleteTask` calls will pass the selected dateKey
+- Note: The productivity-storage functions currently use `todayKey()` internally -- these need to accept an optional date parameter
+
+### Technical Details
+
+**Pattern for each module (except Sadaqah):**
+```
+const [selectedDate, setSelectedDate] = useState(new Date());
+const [highlightPicker, setHighlightPicker] = useState(false);
+const dateKey = format(selectedDate, 'yyyy-MM-dd');
+
+// In JSX:
+<BackdatePrompt moduleKey="<module>" onLogPastData={() => {
+  const y = new Date();
+  y.setDate(y.getDate() - 1);
+  setSelectedDate(y);
+  setHighlightPicker(true);
+}} />
+<BackdateDatePicker
+  selectedDate={selectedDate}
+  onDateChange={setSelectedDate}
+  compact
+  highlight={highlightPicker}
+/>
+```
+
+**Productivity storage changes (`src/lib/productivity-storage.ts`):**
+- `getDailyTasks(dateKey?)` -- accept optional date parameter, default to today
+- `addTask(text, isMIT, dateKey?)` -- same
+- `toggleTask(id, dateKey?)` -- same
+- `deleteTask(id, dateKey?)` -- same
+
+### Files Modified
+- `src/pages/health/HealthFasting.tsx`
+- `src/pages/deen/DeenFasting.tsx`
+- `src/pages/deen/SadaqahTracker.tsx`
+- `src/pages/deen/QiyamPlanner.tsx`
+- `src/pages/productivity/DailyTasks.tsx`
+- `src/lib/productivity-storage.ts` (add optional dateKey param)
+- `PROGRESS.md`
 
