@@ -1,218 +1,88 @@
 
 
-## Major State Management Refactor
+## Fix Two Remaining State Management Issues
 
-A 5-phase refactor to fix auth duplication, add React Query caching, modernize localStorage usage, add Zustand for client state, and remove forceUpdate hacks.
+### Issue 1 -- Wire Up fastingStore (3 files)
 
----
+The store exists with the right shape but has zero imports. Three components need changes:
 
-### Phase 1 -- Wrap useAuth in a Single Context Provider
+**Writer: `src/pages/health/HealthIFTimer.tsx`**
+- Import `useFastingStore`
+- On mount: call `hydrate()` to sync store with localStorage
+- In the existing `setInterval` (line 119-121): call `store.tick()` alongside `setNow()`
+- In `handleStart`: call `store.startFast()` after `startIF()`
+- In `handleSaveFast` / `handleConfirmDiscard` / `handleDeleteFast`: call `store.endFast()` after `stopIF()`/`deleteIF()`
+- Keep existing local state (`active`, `now`) since HealthIFTimer needs them for its complex UI -- the store is for cross-component sync
 
-**Problem:** `useAuth()` is called independently in 35+ files, each creating its own `onAuthStateChange` listener.
+**Reader: `src/components/widgets/IFFastingWidget.tsx`**
+- Import `useFastingStore`
+- Call `hydrate()` on mount to ensure store is current
+- Read `isActiveFast`, `activeFast`, `elapsedSeconds` from store instead of local `useState(getActiveIF())`
+- Remove local `now` state and `setInterval` -- the store's `elapsedSeconds` is the source of truth (ticked by HealthIFTimer or hydrated on mount)
+- Add a local `useEffect` interval that calls `store.tick()` when active (so widget works standalone too)
+- "End Fast" button calls `store.endFast(true)` instead of local `stopIF()`
 
-**Changes:**
-
-1. **Create `src/contexts/AuthContext.tsx`** -- new file
-   - Single `AuthProvider` component with one `onAuthStateChange` listener
-   - `useAuthContext()` hook that reads from context
-   - Provides `{ user, session, loading, signOut }`
-
-2. **Update `src/App.tsx`**
-   - Wrap app in `<AuthProvider>` inside `<QueryClientProvider>`
-
-3. **Update `src/hooks/useAuth.ts`**
-   - Re-export `useAuthContext` as `useAuth` for backward compatibility
-   - All 35 files that import `useAuth` continue working with zero changes
-
-**Result:** One subscription, all consumers share the same context value.
-
----
-
-### Phase 2 -- Migrate DB Fetching to React Query
-
-**Problem:** All hooks use raw `useEffect` + `supabase.from()`. No caching, no deduplication.
-
-**Global config change in `src/App.tsx`:**
-```typescript
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,    // 5 minutes
-      refetchOnWindowFocus: true,
-      retry: 2,
-    },
-  },
-});
-```
-
-**Hooks to migrate (in priority order):**
-
-| Hook | Query Keys | Notes |
-|------|-----------|-------|
-| `useFamily` | `['families', userId]` | Most complex, 3 queries |
-| `usePrayerSettings` | `['prayer-settings', userId]` | Read + upsert mutation |
-| `useQuranReadingLog` | `['quran-log', userId]` | Already well-structured, wrap in useQuery |
-| `useQuranData` (4 hooks) | `['quran-prefs', userId]`, etc. | Prefs, daily target, bookmarks, memorization |
-| `useHealthProfile` | `['health-profile', userId]` | Read + upsert mutation |
-| `useWidgetPreferences` | `['widget-prefs', userId]` | Read + upsert mutation |
-| `useAdmin` | `['admin-role', userId]` | Simple RPC call |
-| `useFamilyDashboard` | `['family-dashboard', familyId]` | Leaderboard, staleTime: 30s |
-| `useAdminAudit` | `['admin-audit']` | Admin-only |
-
-**Pattern for each hook:**
-```typescript
-// Before
-const [data, setData] = useState(null);
-useEffect(() => { supabase.from('x').select().then(setData); }, [user]);
-
-// After
-const { data, isLoading } = useQuery({
-  queryKey: ['x', user?.id],
-  queryFn: () => supabase.from('x').select()...,
-  enabled: !!user,
-});
-```
-
-**Mutations use `useMutation` + `invalidateQueries`** so UI auto-updates.
+**Reader: `src/pages/Health.tsx`**
+- Import `useFastingStore`
+- Call `hydrate()` on mount
+- Read `isActiveFast`, `activeFast`, `elapsedSeconds` from store instead of `getActiveIF()` + local `now` interval
+- Add a `useEffect` interval calling `store.tick()` when active
+- Compute `ifElapsed` and `ifProgress` from `elapsedSeconds` and `activeFast`
+- "End Fast" button calls `store.endFast(true)`
 
 ---
 
-### Phase 3 -- Replace localStorage Reads with React Query
+### Issue 2 -- Remove renderKey from 5 Files
 
-**Problem:** Health, Salah, Steps, etc. read localStorage directly. Update in one component doesn't reflect in another.
+Since these modules still use localStorage (Phase 3 was deferred), the fix is to hold data in state and update it directly after mutations, instead of using a renderKey counter to force re-reads.
 
-**New pattern:** React Query is source of truth, localStorage provides `initialData` for instant display, DB is persisted via mutations.
+**Pattern for each file:**
+```
+// BEFORE (hack)
+const [renderKey, setRenderKey] = useState(0);
+const data = readFromLocalStorage(); // re-read on every render
+const handleUpdate = () => { writeToLocalStorage(); setRenderKey(k => k + 1); };
 
-**Modules to migrate:**
-
-| Storage File | Query Key | Current Pattern |
-|-------------|-----------|----------------|
-| `health-storage.ts` | `['health-bmi']`, `['health-hydration', date]`, etc. | Direct localStorage reads |
-| `salah-storage.ts` | `['salah', date]` | Direct localStorage reads |
-| `sunnah-storage.ts` | `['sunnah', date]` | Direct localStorage reads |
-| `dhikr-storage.ts` | `['dhikr', date]` | Direct localStorage reads |
-| `steps-storage.ts` | `['steps', date]` | Direct localStorage reads |
-
-**For each module, create a React Query hook:**
-```typescript
-export function useHydration(dateKey?: string) {
-  const key = dateKey || todayKey();
-  return useQuery({
-    queryKey: ['health-hydration', key],
-    queryFn: async () => {
-      // fetch from DB if user logged in, else localStorage
-    },
-    initialData: () => getHydration(key), // instant from localStorage
-  });
-}
+// AFTER (clean)
+const [data, setData] = useState(() => readFromLocalStorage());
+const handleUpdate = () => { writeToLocalStorage(); setData(readFromLocalStorage()); };
 ```
 
-**Mutations write to DB first, then invalidate query, localStorage updates as side effect.**
+**File 1: `src/pages/health/HealthFasting.tsx`**
+- Remove `renderKey` state
+- Add `const [fastingLog, setFastingLog] = useState(() => getFastingLog())`
+- `handleToggle`: after `toggleFasting(key)`, call `setFastingLog(getFastingLog())`
+- Derive `totalFasted`, `recommendedHit` from the state variable
 
-Note: The raw storage functions remain for offline fallback. The hooks just wrap them in React Query for reactivity.
+**File 2: `src/pages/deen/DeenFasting.tsx`**
+- Same pattern: remove `renderKey`, hold `fastingLog` in state, update after toggle
 
----
+**File 3: `src/pages/health/HealthSteps.tsx`**
+- Remove `renderKey` and `refresh` callback
+- Hold steps data in state, update after logging steps
 
-### Phase 4 -- Add Zustand for Global Client State
+**File 4: `src/pages/health/HealthHydration.tsx`**
+- Remove `renderKey` and `refresh`
+- Hold hydration data in state, update after add/reset
 
-**Install:** `zustand` package
-
-**Store 1: `src/stores/fastingStore.ts`**
-```typescript
-interface FastingStore {
-  isActiveFast: boolean;
-  activeFast: IFActive | null;
-  elapsedSeconds: number;
-  startFast: (details: IFActive) => void;
-  endFast: () => void;
-  tick: () => void;
-}
-```
-Why: IF Timer widget on /dashboard, active banner on /health, and /health/if-timer all need same fasting state. Currently they fetch independently.
-
-**Store 2: `src/stores/uiStore.ts`**
-```typescript
-interface UIStore {
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
-}
-```
-Why: Simple UI state shared across navigation.
-
-Note: Notification store is NOT needed -- `sonner` toast already provides a global API via `toast()`. No point duplicating it.
-
----
-
-### Phase 5 -- Kill All forceUpdate Hacks
-
-After phases 1-4, search and remove:
-
-| File | Pattern | Replacement |
-|------|---------|-------------|
-| `Dashboard.tsx` | `useState(0)` + `window.focus` listener | React Query `refetchOnWindowFocus` handles this |
-| `Deen.tsx` | `useState(0)` + `window.focus` listener | Same |
-| `HealthFasting.tsx` | `useState(0)` rerender | React Query cache invalidation |
-| `HealthSteps.tsx` | `useState(0)` rerender | React Query cache invalidation |
-| `DeenFasting.tsx` | `useState(0)` rerender | React Query cache invalidation |
-| `HealthHydration.tsx` | `useState(0)` rerender | React Query cache invalidation |
-| `QuranTracker.tsx` | `useState(0)` rerender | React Query cache invalidation |
-
-Total: 7 files with forceUpdate hacks to remove.
+**File 5: `src/pages/QuranTracker.tsx`**
+- Remove `renderKey` and `refresh`
+- Hold quran day data in state
+- Update state after `addQuranPages`, `logQuranPages`, date change
 
 ---
 
 ### Files Changed Summary
 
 ```text
-NEW FILES:
-  src/contexts/AuthContext.tsx          -- Auth context provider
-  src/stores/fastingStore.ts            -- Zustand fasting store
-  src/stores/uiStore.ts                 -- Zustand UI store
-
-MODIFIED FILES (Phase 1):
-  src/hooks/useAuth.ts                  -- Re-export from context
-  src/App.tsx                           -- Add AuthProvider + QueryClient config
-
-MODIFIED FILES (Phase 2 - hooks):
-  src/hooks/useFamily.ts
-  src/hooks/usePrayerSettings.ts
-  src/hooks/useQuranReadingLog.ts
-  src/hooks/useQuranData.ts
-  src/hooks/useHealthProfile.ts
-  src/hooks/useWidgetPreferences.ts
-  src/hooks/useAdmin.ts
-  src/hooks/useFamilyDashboard.ts
-  src/hooks/useAdminAudit.ts
-
-MODIFIED FILES (Phase 3 - storage hooks):
-  src/lib/health-storage.ts             -- Keep functions, add query hooks
-  src/lib/salah-storage.ts
-  src/lib/sunnah-storage.ts
-  src/lib/dhikr-storage.ts
-  src/lib/steps-storage.ts
-
-MODIFIED FILES (Phase 5 - remove hacks):
-  src/pages/Dashboard.tsx
-  src/pages/Deen.tsx
-  src/pages/health/HealthFasting.tsx
-  src/pages/health/HealthSteps.tsx
-  src/pages/health/HealthHydration.tsx
-  src/pages/deen/DeenFasting.tsx
-  src/pages/QuranTracker.tsx
-
-UPDATED:
-  PROGRESS.md
-  package.json                          -- Add zustand
+MODIFIED:
+  src/pages/health/HealthIFTimer.tsx     -- Write to fastingStore on start/end/tick
+  src/components/widgets/IFFastingWidget.tsx -- Read from fastingStore
+  src/pages/Health.tsx                   -- Read from fastingStore
+  src/pages/health/HealthFasting.tsx     -- Remove renderKey
+  src/pages/deen/DeenFasting.tsx         -- Remove renderKey
+  src/pages/health/HealthSteps.tsx       -- Remove renderKey
+  src/pages/health/HealthHydration.tsx   -- Remove renderKey
+  src/pages/QuranTracker.tsx             -- Remove renderKey
+  PROGRESS.md                           -- Document completion
 ```
-
-### Execution Order
-
-Phase 1 first (auth context), then Phase 2 (React Query hooks), then Phase 3 (localStorage migration), then Phase 4 (Zustand), then Phase 5 (cleanup). Each phase builds on the previous.
-
-### Risk Mitigation
-
-- Phase 1 uses re-export so all 35 import sites need zero changes
-- Phase 2 preserves hook return signatures so consumers don't break
-- Phase 3 keeps raw storage functions as fallback
-- Zustand stores are additive, not replacing existing code initially
-
