@@ -9,6 +9,13 @@ import {
 import { Button } from '@/components/ui/button';
 import MarketingLayout from '@/components/MarketingLayout';
 
+import imgLifescore from '@/assets/features/lifescore.webp';
+import imgIman from '@/assets/features/iman.webp';
+import imgHealth from '@/assets/features/health.webp';
+import imgIfasting from '@/assets/features/ifasting.webp';
+import imgIfTimerRunning from '@/assets/features/if-timer-running.webp';
+import imgStartFasting from '@/assets/features/start-fasting.webp';
+
 const fade = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
@@ -30,6 +37,8 @@ interface PillarSection {
   description: string;
   color: string;
   features: FeatureItem[];
+  image?: string;
+  extraImages?: string[];
 }
 
 const pillars: PillarSection[] = [
@@ -39,6 +48,7 @@ const pillars: PillarSection[] = [
     subtitle: 'Strengthen Your Faith',
     description: 'Track your spiritual practices consistently. From daily prayers to Quran reading, build habits that bring you closer to Allah.',
     color: 'text-primary',
+    image: imgIman,
     features: [
       { icon: Clock, title: 'Prayer Times & Tracking', desc: 'Accurate prayer times with full salah logging and streak tracking.' },
       { icon: BookOpen, title: 'Quran Reader & Tracker', desc: 'Read, bookmark, and track your daily Quran reading progress.' },
@@ -54,6 +64,8 @@ const pillars: PillarSection[] = [
     subtitle: 'Honor Your Body',
     description: 'Your body is an amanah. Track BMI, hydration, sleep, steps, and intermittent fasting to maintain optimal health.',
     color: 'text-red-500',
+    image: imgHealth,
+    extraImages: [imgIfasting, imgIfTimerRunning, imgStartFasting],
     features: [
       { icon: Scale, title: 'BMI & Weight Tracking', desc: 'Monitor your BMI, TDEE, and weight trends over time.' },
       { icon: Droplets, title: 'Hydration Tracker', desc: 'Hit your daily water intake goals with visual progress.' },
@@ -101,6 +113,13 @@ const pillars: PillarSection[] = [
   },
 ];
 
+/* Reusable phone frame */
+const PhoneMockup = ({ src, alt, className = '' }: { src: string; alt: string; className?: string }) => (
+  <div className={`rounded-[2rem] border border-border/60 shadow-2xl overflow-hidden bg-card ${className}`}>
+    <img src={src} alt={alt} className="w-full h-auto block" loading="lazy" />
+  </div>
+);
+
 const Features = () => (
   <MarketingLayout>
     {/* Hero */}
@@ -112,19 +131,21 @@ const Features = () => (
             to Grow
           </span>
         </h1>
-        <p className="text-lg text-muted-foreground max-w-xl mx-auto">
+        <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-10">
           Five pillars of growth in one app — Iman, Health, Wealth, Productivity, and Family. Explore every feature designed to help you thrive in dunya and akhirah.
         </p>
+      </motion.div>
+
+      {/* Life Score phone mockup */}
+      <motion.div initial="hidden" animate="visible" variants={fade} custom={1} className="flex justify-center">
+        <PhoneMockup src={imgLifescore} alt="Life Score Dashboard" className="max-w-[280px] sm:max-w-[300px]" />
       </motion.div>
     </section>
 
     {/* Pillar Sections */}
     {pillars.map((pillar, idx) => (
-      <section
-        key={pillar.title}
-        className="py-20 px-6 border-t border-border/40"
-      >
-        <div className={`max-w-5xl mx-auto flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-12 items-start`}>
+      <section key={pillar.title} className="py-20 px-6 border-t border-border/40">
+        <div className={`max-w-5xl mx-auto flex flex-col ${idx % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-12 items-center`}>
           {/* Text side */}
           <motion.div
             initial="hidden"
@@ -143,31 +164,78 @@ const Features = () => (
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
               {pillar.subtitle}
             </h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed mb-6">
               {pillar.description}
             </p>
+
+            {/* Feature list (shown for all pillars as compact list when image present, or as grid when no image) */}
+            {pillar.image && (
+              <ul className="space-y-3">
+                {pillar.features.map((f) => (
+                  <li key={f.title} className="flex items-start gap-3">
+                    <div className="w-8 h-8 shrink-0 rounded-lg bg-primary/10 flex items-center justify-center mt-0.5">
+                      <f.icon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground text-sm">{f.title}</p>
+                      <p className="text-xs text-muted-foreground">{f.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </motion.div>
 
-          {/* Feature grid */}
-          <div className="flex-1 grid sm:grid-cols-2 gap-4">
-            {pillar.features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fade}
-                custom={i + 1}
-                className="rounded-xl border border-border bg-card p-5 hover:shadow-md hover:shadow-primary/5 transition-shadow"
-              >
-                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
-                  <f.icon className="h-4 w-4 text-primary" />
+          {/* Visual side */}
+          {pillar.image ? (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={fade}
+              custom={1}
+              className="flex-1 flex flex-col items-center gap-6"
+            >
+              <PhoneMockup
+                src={pillar.image}
+                alt={`${pillar.title} screenshot`}
+                className={`max-w-[260px] sm:max-w-[280px] ${idx % 2 === 0 ? 'rotate-1' : '-rotate-1'}`}
+              />
+              {/* Extra images gallery for Health */}
+              {pillar.extraImages && pillar.extraImages.length > 0 && (
+                <div className="flex gap-4 justify-center flex-wrap">
+                  {pillar.extraImages.map((img, i) => (
+                    <PhoneMockup
+                      key={i}
+                      src={img}
+                      alt={`${pillar.title} screenshot ${i + 2}`}
+                      className={`max-w-[140px] sm:max-w-[160px] ${i % 2 === 0 ? 'rotate-2' : '-rotate-2'}`}
+                    />
+                  ))}
                 </div>
-                <h3 className="font-semibold text-foreground text-sm mb-1">{f.title}</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-              </motion.div>
-            ))}
-          </div>
+              )}
+            </motion.div>
+          ) : (
+            <div className="flex-1 grid sm:grid-cols-2 gap-4">
+              {pillar.features.map((f, i) => (
+                <motion.div
+                  key={f.title}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fade}
+                  custom={i + 1}
+                  className="rounded-xl border border-border bg-card p-5 hover:shadow-md hover:shadow-primary/5 transition-shadow"
+                >
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center mb-3">
+                    <f.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">{f.title}</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     ))}
