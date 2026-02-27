@@ -1,10 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
-import { ArrowRight, Moon, Heart, Wallet, ListChecks, BookOpen } from 'lucide-react';
+import { ArrowRight, Heart, Wallet, ListChecks, BookOpen, Star, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import EditableText from '@/components/cms/EditableText';
+import smlogo from '@/assets/smlogo.webp';
 
 const fade = {
   hidden: { opacity: 0, y: 24 },
@@ -15,7 +16,7 @@ const fade = {
 };
 
 const pillars = [
-  { icon: Moon, title: 'Iman', desc: 'Prayer, Quran, Dhikr & Zakat' },
+  { icon: BookOpen, title: 'Iman', desc: 'Prayer, Quran, Dhikr & Zakat' },
   { icon: Heart, title: 'Wellness', desc: 'BMI, sleep, hydration & fasting' },
   { icon: Wallet, title: 'Wealth', desc: 'Halal budgeting & savings goals' },
   { icon: ListChecks, title: 'Productivity', desc: 'Daily MITs, habits & streaks' },
@@ -25,6 +26,30 @@ const steps = [
   { num: '01', title: 'Track', desc: 'Log prayers, health, and goals.' },
   { num: '02', title: 'Score', desc: 'Get your daily Life Score.' },
   { num: '03', title: 'Improve', desc: 'Build streaks, see trends.' },
+];
+
+const highlights = [
+  { value: '5', label: 'Pillars Tracked', icon: Star },
+  { value: '90+', label: 'Features', icon: Zap },
+  { value: '100%', label: 'Free Forever', icon: Heart },
+];
+
+const personas = [
+  {
+    title: 'The Practicing Muslim',
+    desc: 'Track salah, Quran reading, dhikr, and fasting — all with beautiful streaks and reminders.',
+    icon: BookOpen,
+  },
+  {
+    title: 'The Health-Conscious Muslim',
+    desc: 'Monitor BMI, hydration, sleep, steps, and intermittent fasting with an Islamic-aligned approach.',
+    icon: Heart,
+  },
+  {
+    title: 'The Ambitious Muslim',
+    desc: 'Set daily MITs, build habits, manage halal budgets, and track savings goals — all in one place.',
+    icon: Zap,
+  },
 ];
 
 /* Animated ring for Life Score */
@@ -63,9 +88,7 @@ const Landing = () => {
       <nav className="fixed top-0 inset-x-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Moon className="h-4 w-4 text-primary" />
-            </div>
+            <img src={smlogo} alt="Success Muslim" className="w-8 h-8 rounded-xl object-contain" />
             <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" className="text-base font-semibold text-foreground" />
           </Link>
           <div className="flex items-center gap-3">
@@ -81,7 +104,6 @@ const Landing = () => {
 
       {/* ── Hero ── */}
       <section className="relative pt-36 pb-28 px-6">
-        {/* Radial glow */}
         <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto text-center">
@@ -96,9 +118,9 @@ const Landing = () => {
           </motion.div>
 
           <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
-            className="text-lg text-muted-foreground max-w-md mx-auto mb-10"
+            className="text-lg text-muted-foreground max-w-lg mx-auto mb-10"
           >
-            Track your iman, health, and goals — all in one place.
+            The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score and grow in dunya and akhirah.
           </motion.p>
 
           <motion.div initial="hidden" animate="visible" variants={fade} custom={2}>
@@ -112,6 +134,25 @@ const Landing = () => {
           >
             Free forever. No credit card required.
           </motion.p>
+        </div>
+      </section>
+
+      {/* ── Features at a Glance ── */}
+      <section className="py-10 px-6 border-y border-border/50 bg-secondary/30">
+        <div className="max-w-3xl mx-auto flex items-center justify-center gap-8 sm:gap-16 flex-wrap">
+          {highlights.map((h, i) => (
+            <motion.div key={h.label} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
+              className="flex items-center gap-3 text-center"
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <h.icon className="h-5 w-5 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="text-2xl font-bold text-foreground">{h.value}</p>
+                <p className="text-xs text-muted-foreground">{h.label}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 
@@ -195,7 +236,6 @@ const Landing = () => {
 
           {/* Desktop: horizontal */}
           <div className="hidden md:flex items-start justify-between relative">
-            {/* Connecting line */}
             <div className="absolute top-6 left-[calc(16.67%+12px)] right-[calc(16.67%+12px)] h-px bg-border" />
             {steps.map((s, i) => (
               <motion.div key={s.num} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
@@ -234,6 +274,34 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* ── Who It's For ── */}
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
+            className="text-center mb-12"
+          >
+            <EditableText elementKey="personas.heading" defaultText="Built For You" tag="h2"
+              className="text-3xl sm:text-4xl font-bold mb-3" />
+            <EditableText elementKey="personas.desc" defaultText="No matter where you are in your journey." tag="p"
+              className="text-muted-foreground" />
+          </motion.div>
+
+          <div className="grid sm:grid-cols-3 gap-5">
+            {personas.map((p, i) => (
+              <motion.div key={p.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
+                className="rounded-2xl border border-border bg-card p-6 hover:shadow-lg hover:shadow-primary/5 transition-shadow duration-300"
+              >
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <p.icon className="h-5 w-5 text-primary" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-2">{p.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Bottom CTA ── */}
       <section className="py-28 px-6 bg-primary text-primary-foreground">
         <div className="max-w-2xl mx-auto text-center">
@@ -252,14 +320,19 @@ const Landing = () => {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-8 px-6 border-t border-border">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="text-sm font-medium text-primary flex items-center gap-1.5">
-            <Moon className="h-3.5 w-3.5" />
-            <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
-          </span>
-          <EditableText elementKey="footer.copyright" defaultText="© 2026 Success Muslim" tag="p"
-            className="text-xs text-muted-foreground" />
+      <footer className="py-10 px-6 border-t border-border">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              <img src={smlogo} alt="Success Muslim" className="w-6 h-6 rounded-lg object-contain" />
+              <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
+            </span>
+            <EditableText elementKey="footer.copyright" defaultText="© 2026 Success Muslim" tag="p"
+              className="text-xs text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Built for the Ummah 🌙</p>
+          </div>
         </div>
       </footer>
     </div>
