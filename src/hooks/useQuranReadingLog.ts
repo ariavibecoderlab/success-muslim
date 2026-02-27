@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useQuranPrefs } from './useQuranData';
@@ -10,6 +11,7 @@ import {
   globalAyahIndex,
 } from '@/lib/quran-mapping';
 import { gregorianToHijri } from '@/lib/hijri';
+import { useMemo } from 'react';
 
 export interface ReadingLogEntry {
   id: string;
@@ -26,29 +28,30 @@ export interface ReadingLogEntry {
   created_at: string;
 }
 
+async function fetchLogs(userId: string): Promise<ReadingLogEntry[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - 90);
+  const { data } = await supabase
+    .from('quran_reading_log' as any)
+    .select('*')
+    .eq('user_id', userId)
+    .gte('date', since.toISOString().split('T')[0])
+    .order('created_at', { ascending: false });
+  return (data || []) as unknown as ReadingLogEntry[];
+}
+
 export function useQuranReadingLog() {
   const { user } = useAuth();
   const { prefs, savePrefs } = useQuranPrefs();
-  const [logs, setLogs] = useState<ReadingLogEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const today = new Date().toISOString().split('T')[0];
 
-  const loadLogs = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
-    const since = new Date();
-    since.setDate(since.getDate() - 90);
-    const { data } = await supabase
-      .from('quran_reading_log' as any)
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('date', since.toISOString().split('T')[0])
-      .order('created_at', { ascending: false });
-    setLogs((data || []) as unknown as ReadingLogEntry[]);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { loadLogs(); }, [loadLogs]);
+  const { data: logs = [], isLoading: loading } = useQuery({
+    queryKey: ['quran-log', user?.id],
+    queryFn: () => fetchLogs(user!.id),
+    enabled: !!user,
+  });
 
   const todayLogs = useMemo(() => logs.filter(l => l.date === today), [logs, today]);
   const todayTotalAyahs = useMemo(() => todayLogs.reduce((s, l) => s + l.ayah_count, 0), [todayLogs]);
@@ -57,7 +60,6 @@ export function useQuranReadingLog() {
   const allTimeTotalPages = useMemo(() => logs.reduce((s, l) => s + Number(l.page_count), 0), [logs]);
   const hasDoneToday = todayLogs.length > 0;
 
-  // Streak: consecutive days ending today (or yesterday) with at least 1 log
   const streak = useMemo(() => {
     const datesWithLogs = new Set(logs.map(l => l.date));
     let count = 0;
@@ -71,21 +73,16 @@ export function useQuranReadingLog() {
     return count;
   }, [logs, today]);
 
-  // Last position from most recent log's end position, fallback to prefs
   const lastPosition = useMemo(() => {
     const prefPos = { surah: prefs.last_surah, ayah: prefs.last_ayah };
     if (logs.length === 0) return prefPos;
-
     const latest = logs[0];
     const logPos = { surah: latest.end_surah, ayah: latest.end_ayah };
-
-    // Use whichever position is further in the Quran
     const logIdx = globalAyahIndex(logPos.surah, logPos.ayah);
     const prefIdx = globalAyahIndex(prefPos.surah, prefPos.ayah);
     return prefIdx > logIdx ? prefPos : logPos;
   }, [logs, prefs.last_surah, prefs.last_ayah]);
 
-  // Last 7 days grouped
   const last7DaysLogs = useMemo(() => {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - 7);
@@ -93,7 +90,6 @@ export function useQuranReadingLog() {
     return logs.filter(l => l.date >= cutoffStr && l.date !== today);
   }, [logs, today]);
 
-  // Hijri month pages: sum page_count for logs in the current Hijri month
   const hijriMonthPages = useMemo(() => {
     const now = new Date();
     const currentHijri = gregorianToHijri(now);
@@ -106,6 +102,10 @@ export function useQuranReadingLog() {
       return sum;
     }, 0);
   }, [logs]);
+
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['quran-log', user?.id] });
+  }, [queryClient, user?.id]);
 
   const addLog = useCallback(async (entry: {
     log_type: string;
@@ -133,10 +133,8 @@ export function useQuranReadingLog() {
       juz_segments,
     });
 
-    // Update last position
     await savePrefs({ last_surah: entry.end_surah, last_ayah: entry.end_ayah });
 
-    // Backward compat: upsert quran_daily_log
     await supabase.from('quran_daily_log' as any).upsert({
       user_id: user.id,
       date: today,
@@ -145,7 +143,6 @@ export function useQuranReadingLog() {
       ayah_number: entry.end_ayah,
     }, { onConflict: 'user_id,date' });
 
-    // Family feed notification (first log of day)
     if (!hasDoneToday) {
       const { data: profile } = await supabase
         .from('profiles')
@@ -160,9 +157,9 @@ export function useQuranReadingLog() {
       }
     }
 
-    await loadLogs();
+    invalidate();
     return { ayah_count, page_count, juz_segments };
-  }, [user, today, hasDoneToday, streak, savePrefs, loadLogs]);
+  }, [user, today, hasDoneToday, streak, savePrefs, invalidate]);
 
   const updateLog = useCallback(async (id: string, updates: {
     start_surah: number;
@@ -180,8 +177,8 @@ export function useQuranReadingLog() {
       .update({ ...updates, ayah_count, page_count, juz_segments })
       .eq('id', id)
       .eq('user_id', user.id);
-    await loadLogs();
-  }, [user, loadLogs]);
+    invalidate();
+  }, [user, invalidate]);
 
   const deleteLog = useCallback(async (id: string) => {
     if (!user) return;
@@ -189,8 +186,8 @@ export function useQuranReadingLog() {
       .delete()
       .eq('id', id)
       .eq('user_id', user.id);
-    await loadLogs();
-  }, [user, loadLogs]);
+    invalidate();
+  }, [user, invalidate]);
 
   const checkOverlap = useCallback((startS: number, startA: number, endS: number, endA: number) => {
     const newFrom = globalAyahIndex(startS, startA);
@@ -219,6 +216,6 @@ export function useQuranReadingLog() {
     updateLog,
     deleteLog,
     checkOverlap,
-    reload: loadLogs,
+    reload: invalidate,
   };
 }

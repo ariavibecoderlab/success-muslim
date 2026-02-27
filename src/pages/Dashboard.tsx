@@ -65,7 +65,7 @@ const QUICK_LOGS = [
 ];
 
 const Dashboard = () => {
-  const [, forceUpdate] = useState(0);
+  // forceUpdate removed — React Query refetchOnWindowFocus handles this
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [announcements, setAnnouncements] = useState<{ id: string; title: string; content: string }[]>([]);
@@ -86,11 +86,7 @@ const Dashboard = () => {
     setIsFirstTime,
   } = useWidgetPreferences();
 
-  useEffect(() => {
-    const onFocus = () => forceUpdate((n) => n + 1);
-    window.addEventListener("focus", onFocus);
-    return () => window.removeEventListener("focus", onFocus);
-  }, []);
+  // Window focus listener removed — React Query refetchOnWindowFocus handles this
 
   useEffect(() => {
     if (user) {
@@ -117,7 +113,7 @@ const Dashboard = () => {
   const quote = QUOTES[new Date().getDate() % QUOTES.length];
 
   // Life Score
-  const lifeScore = useMemo(() => calculateLifeScore(), [salahLog, forceUpdate]);
+  const lifeScore = useMemo(() => calculateLifeScore(), [salahLog]);
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
   const weeklyScores = useMemo(() => getWeeklyScores(), []);
 

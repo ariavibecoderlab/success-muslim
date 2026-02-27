@@ -23,8 +23,8 @@ const HEALTH_SIBLINGS = [
 const HealthHydration = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const [, rerender] = useState(0);
-  const refresh = () => rerender(n => n + 1);
+  const [renderKey, setRenderKey] = useState(0);
+  const refresh = () => setRenderKey(n => n + 1);
 
   const today = getHydration(dateKey);
   const progress = Math.min((today.cups / today.goal) * 100, 100);

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { AuthProvider } from "./contexts/AuthContext";
 import { EditModeProvider } from "./contexts/EditModeContext";
 import EditModeToggle from "./components/cms/EditModeToggle";
 import AppLayout from "./components/AppLayout";
@@ -67,10 +68,19 @@ import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import Install from "./pages/Install";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: true,
+      retry: 2,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <AuthProvider>
     <TooltipProvider>
       <ErrorBoundary>
         <Toaster />
@@ -155,6 +165,7 @@ const App = () => (
         </BrowserRouter>
       </ErrorBoundary>
     </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
