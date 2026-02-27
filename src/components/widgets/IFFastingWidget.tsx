@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Timer, Flame, Play } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { getActiveIF, getIFSessions, stopIF } from '@/lib/health-storage';
+import { getIFSessions } from '@/lib/health-storage';
 import { getCurrentStage, getNextStage } from '@/lib/fasting-stages';
 import { format } from 'date-fns';
 import type { WidgetSize } from '@/lib/widget-registry';
+import { useFastingStore } from '@/stores/fastingStore';
 
 function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
   const completedDates = new Set(
@@ -29,18 +30,19 @@ function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
 }
 
 export default function IFFastingWidget({ size }: { size: WidgetSize }) {
-  const [active, setActive] = useState(getActiveIF());
-  const [now, setNow] = useState(Date.now());
+  const { isActiveFast, activeFast: active, elapsedSeconds, hydrate, tick, endFast } = useFastingStore();
   const sessions = getIFSessions();
 
+  useEffect(() => { hydrate(); }, []);
+
   useEffect(() => {
-    if (!active) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
+    if (!isActiveFast) return;
+    const interval = setInterval(() => tick(), 1000);
     return () => clearInterval(interval);
-  }, [active]);
+  }, [isActiveFast]);
 
   // ===== INACTIVE STATE =====
-  if (!active) {
+  if (!isActiveFast || !active) {
     const lastFast = sessions.find(s => s.completed);
     const streak = calculateStreak(sessions);
 
@@ -81,18 +83,18 @@ export default function IFFastingWidget({ size }: { size: WidgetSize }) {
   }
 
   // ===== ACTIVE STATE =====
-  const start = new Date(active.startTime).getTime();
-  const elapsed = Math.max(0, now - start);
-  const elapsedHours = elapsed / 3600000;
+  const elapsed = elapsedSeconds * 1000;
+  const elapsedHours = elapsedSeconds / 3600;
   const total = active.fastingHours * 3600000;
   const remaining = Math.max(0, total - elapsed);
   const progress = total > 0 ? Math.min((elapsed / total) * 100, 100) : 0;
 
+  const start = new Date(active.startTime).getTime();
   const stage = getCurrentStage(elapsedHours);
   const next = getNextStage(elapsedHours);
   const endTime = new Date(start + total);
 
-  const totalSec = Math.floor(elapsed / 1000);
+  const totalSec = elapsedSeconds;
   const h = Math.floor(totalSec / 3600);
   const m = Math.floor((totalSec % 3600) / 60);
   const s = totalSec % 60;
@@ -139,7 +141,7 @@ export default function IFFastingWidget({ size }: { size: WidgetSize }) {
             )}
             <Button
               size="sm" variant="outline" className="text-xs h-6 px-2"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); stopIF(true); setActive(null); }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); endFast(true); }}
             >
               End Fast
             </Button>

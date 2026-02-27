@@ -24,14 +24,13 @@ const IMAN_SIBLINGS = [
 ];
 
 const QuranTracker = () => {
-  const [renderKey, setRenderKey] = useState(0);
-  const refresh = () => setRenderKey(n => n + 1);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === todayKey();
 
-  const dayData = getQuranDay(dateKey);
+  const [dayData, setDayData] = useState(() => getQuranDay(dateKey));
+  const refreshDay = () => setDayData(getQuranDay(dateKey));
   const totalPages = getTotalPagesRead();
   const khatamCount = getKhatamCount();
   const khatamProgress = getCurrentKhatamProgress();
@@ -42,18 +41,18 @@ const QuranTracker = () => {
 
   const handleAddPages = (amount: number) => {
     addQuranPages(amount, dateKey);
-    refresh();
+    refreshDay();
   };
 
   const handleSurahChange = (surah: string) => {
     logQuranPages(dayData.pagesRead, dayData.juzNumber, surah, dayData.notes, dateKey);
-    refresh();
+    refreshDay();
   };
 
   const handleJuzChange = (juz: string) => {
     const num = parseInt(juz) || null;
     logQuranPages(dayData.pagesRead, num, dayData.surahName, dayData.notes, dateKey);
-    refresh();
+    refreshDay();
   };
 
   const handleBackdatePrompt = () => {
@@ -74,7 +73,7 @@ const QuranTracker = () => {
       <div className="space-y-5">
         {/* Backdate */}
         <BackdatePrompt moduleKey="quran" onLogPastData={handleBackdatePrompt} />
-        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); refresh(); }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setDayData(getQuranDay(format(d, 'yyyy-MM-dd'))); }} />
 
         {/* Khatam Progress Ring */}
         <div className="flex flex-col items-center">

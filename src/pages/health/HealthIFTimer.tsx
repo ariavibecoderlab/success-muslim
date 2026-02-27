@@ -23,6 +23,7 @@ import FastingChallenges from '@/components/health/FastingChallenges';
 import FastingStreakCelebration, { shouldShowCelebration } from '@/components/health/FastingStreakCelebration';
 import { getCurrentStage } from '@/lib/fasting-stages';
 import { useHealthProfile } from '@/hooks/useHealthProfile';
+import { useFastingStore } from '@/stores/fastingStore';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
@@ -74,6 +75,7 @@ function calculateStreak(sessions: ReturnType<typeof getIFSessions>): number {
 const HealthIFTimer = () => {
   const navigate = useNavigate();
   const { profile, loading: profileLoading, completed: profileCompleted, saveProfile } = useHealthProfile();
+  const fastingStore = useFastingStore();
   const [active, setActive] = useState(getActiveIF);
   const [selectedMode, setSelectedMode] = useState<Plan>(MODES[1]);
   const [now, setNow] = useState(Date.now());
@@ -115,9 +117,12 @@ const HealthIFTimer = () => {
     }
   }, [profileLoading, profileCompleted, navigate]);
 
+  // Hydrate fasting store on mount
+  useEffect(() => { fastingStore.hydrate(); }, []);
+
   useEffect(() => {
     if (!active) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
+    const interval = setInterval(() => { setNow(Date.now()); fastingStore.tick(); }, 1000);
     return () => clearInterval(interval);
   }, [active]);
 
@@ -126,6 +131,7 @@ const HealthIFTimer = () => {
     startIF(selectedMode.label, selectedMode.hours, startTimeStr);
     setActive(getActiveIF());
     setScheduledStart(null);
+    fastingStore.hydrate();
   };
 
   const handleStartPickerConfirm = (startTime: Date) => {
@@ -247,6 +253,7 @@ const HealthIFTimer = () => {
     const endDt = getEndReviewEndTime();
     stopIF(true, endDt?.toISOString());
     setActive(null);
+    fastingStore.endFast(true, endDt?.toISOString());
     const newSessions = getIFSessions();
     setSessions(newSessions);
     setShowEndReview(false);
@@ -264,13 +271,14 @@ const HealthIFTimer = () => {
   const handleConfirmDiscard = () => {
     deleteIF();
     setActive(null);
+    fastingStore.endFast(false);
     setShowEndReview(false);
     setShowDeleteConfirm(false);
     setSessions(getIFSessions());
     toast('Fast discarded');
   };
 
-  const handleDeleteFast = () => { deleteIF(); setActive(null); };
+  const handleDeleteFast = () => { deleteIF(); setActive(null); fastingStore.endFast(false); };
 
   const handleQuickWater = () => { addCup(); toast('Water logged!'); };
 

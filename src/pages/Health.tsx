@@ -6,10 +6,11 @@ import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { getBMI, getHydration, getSleepLog, bmiCategory, getActiveIF, getIFSessions, stopIF, addCup } from '@/lib/health-storage';
+import { getBMI, getHydration, getSleepLog, bmiCategory, getIFSessions, addCup } from '@/lib/health-storage';
 import { getStepsToday, getStepsPrefs } from '@/lib/steps-storage';
 import EditableText from '@/components/cms/EditableText';
 import { toast } from 'sonner';
+import { useFastingStore } from '@/stores/fastingStore';
 
 // ── Animation variants ────────────────────────────
 
@@ -111,10 +112,12 @@ const Health = () => {
   const sleepPct = lastSleep ? Math.min(Math.round((lastSleep.duration / 8) * 100), 100) : 0;
   const bmiPct = bmi ? Math.min(Math.round((Math.max(0, 25 - Math.abs(bmi.bmi - 22)) / 25) * 100), 100) : 0;
 
-  const [activeIF, setActiveIF] = useState(getActiveIF);
-  const [now, setNow] = useState(Date.now());
+  const { isActiveFast, activeFast: activeIF, elapsedSeconds, hydrate, tick, endFast } = useFastingStore();
   const [quoteIndex, setQuoteIndex] = useState(0);
   const lastSession = getIFSessions()[0];
+
+  // Hydrate fasting store on mount
+  useEffect(() => { hydrate(); }, []);
 
   // Rotate quote daily based on day-of-year
   useEffect(() => {
@@ -123,14 +126,13 @@ const Health = () => {
   }, []);
 
   useEffect(() => {
-    if (!activeIF) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
+    if (!isActiveFast) return;
+    const interval = setInterval(() => tick(), 1000);
     return () => clearInterval(interval);
-  }, [activeIF]);
+  }, [isActiveFast]);
 
   const handleBreakFast = () => {
-    stopIF(false);
-    setActiveIF(null);
+    endFast(false);
   };
 
   const handleQuickAction = (action: string) => {
@@ -159,12 +161,10 @@ const Health = () => {
 
   let ifElapsed = 0;
   let ifProgress = 0;
-  if (activeIF) {
-    const start = new Date(activeIF.startTime).getTime();
+  if (isActiveFast && activeIF) {
     const total = activeIF.fastingHours * 3600 * 1000;
-    const elapsed = now - start;
-    ifElapsed = Math.max(0, elapsed);
-    ifProgress = total > 0 ? Math.min((elapsed / total) * 100, 100) : 0;
+    ifElapsed = elapsedSeconds * 1000;
+    ifProgress = total > 0 ? Math.min((ifElapsed / total) * 100, 100) : 0;
   }
 
   const formatCountdown = (ms: number) => {
@@ -187,7 +187,7 @@ const Health = () => {
 
         {/* ── IF Timer Hero ──────────────────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
-          {activeIF ? (
+          {isActiveFast && activeIF ? (
             <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-orange-500 to-amber-600 text-white">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">

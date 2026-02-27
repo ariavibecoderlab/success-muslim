@@ -21,9 +21,7 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const HealthFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [renderKey, setRenderKey] = useState(0);
-
-  const fastingLog = getFastingLog();
+  const [fastingLog, setFastingLog] = useState(() => getFastingLog());
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -37,7 +35,7 @@ const HealthFasting = () => {
 
   const handleToggle = (dateKey: string) => {
     toggleFasting(dateKey);
-    setRenderKey(n => n + 1);
+    setFastingLog(getFastingLog());
   };
 
   const totalFasted = days.filter(d => fastingLog[format(d, 'yyyy-MM-dd')]).length;
