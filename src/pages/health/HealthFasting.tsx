@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import SubPageLayout from '@/components/SubPageLayout';
 import { useFastingLog, useFastingToggle } from '@/hooks/useHealthQuery';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, subDays, isBefore, startOfDay, isFuture } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -27,6 +27,7 @@ const HealthFasting = () => {
   const [highlightPicker, setHighlightPicker] = useState(false);
   const { data: fastingLog } = useFastingLog();
   const fastingToggle = useFastingToggle();
+  const minDate = subDays(startOfDay(new Date()), 90);
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -77,12 +78,17 @@ const HealthFasting = () => {
                 const fasted = !!fastingLog[key];
                 const recommended = isRecommended(day);
                 const isWhiteDay = day.getDate() >= 13 && day.getDate() <= 15;
+                const tooOld = isBefore(startOfDay(day), minDate);
+                const future = isFuture(day);
+                const disabled = tooOld || future;
                 return (
                   <button
                     key={key}
-                    onClick={() => handleToggle(key)}
+                    onClick={() => !disabled && handleToggle(key)}
+                    disabled={disabled}
                     className={`aspect-square rounded-md text-xs flex flex-col items-center justify-center transition-colors relative
                       ${fasted ? 'bg-primary text-primary-foreground' : recommended ? (isWhiteDay ? 'bg-accent/30' : 'bg-secondary') : 'hover:bg-secondary'}
+                      ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
                     `}
                   >
                     <span>{day.getDate()}</span>
