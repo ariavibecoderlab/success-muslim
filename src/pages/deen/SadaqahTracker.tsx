@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import BackdatePrompt from '@/components/BackdatePrompt';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import SubPageLayout from '@/components/SubPageLayout';
@@ -148,6 +149,11 @@ const SadaqahTracker = () => {
   return (
     <SubPageLayout title="Sadaqah Tracker" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/sadaqah">
       <div className="space-y-5">
+        <BackdatePrompt moduleKey="sadaqah" onLogPastData={() => {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          setDate(y.toISOString().split('T')[0]);
+          setAddOpen(true);
+        }} />
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3">

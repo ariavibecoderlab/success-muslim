@@ -6,6 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import SubPageLayout from '@/components/SubPageLayout';
 import { motion, AnimatePresence } from 'framer-motion';
+import { format } from 'date-fns';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 import {
   getDailyTasks,
   addTask,
@@ -22,10 +25,20 @@ const SIBLING_ROUTES = [
 ];
 
 const DailyTasksPage = () => {
-  const [daily, setDaily] = useState<DailyTasksType>(() => getDailyTasks());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const [daily, setDaily] = useState<DailyTasksType>(() => getDailyTasks(dateKey));
   const [newText, setNewText] = useState('');
   const [isMIT, setIsMIT] = useState(false);
   const streak = getTaskStreak();
+
+  // Reload tasks when date changes
+  const handleDateChange = useCallback((d: Date) => {
+    setSelectedDate(d);
+    const key = format(d, 'yyyy-MM-dd');
+    setDaily(getDailyTasks(key));
+  }, []);
 
   const mitCount = daily.tasks.filter(t => t.isMIT).length;
   const mitsCompleted = daily.tasks.filter(t => t.isMIT && t.completed).length;
@@ -33,21 +46,21 @@ const DailyTasksPage = () => {
 
   const handleAdd = useCallback(() => {
     if (!newText.trim()) return;
-    const updated = addTask(newText.trim(), isMIT);
+    const updated = addTask(newText.trim(), isMIT, dateKey);
     setDaily({ ...updated });
     setNewText('');
     setIsMIT(false);
-  }, [newText, isMIT]);
+  }, [newText, isMIT, dateKey]);
 
   const handleToggle = useCallback((id: string) => {
-    const updated = toggleTask(id);
+    const updated = toggleTask(id, dateKey);
     setDaily({ ...updated });
-  }, []);
+  }, [dateKey]);
 
   const handleDelete = useCallback((id: string) => {
-    const updated = deleteTask(id);
+    const updated = deleteTask(id, dateKey);
     setDaily({ ...updated });
-  }, []);
+  }, [dateKey]);
 
   const mits = daily.tasks.filter(t => t.isMIT);
   const others = daily.tasks.filter(t => !t.isMIT);
@@ -60,6 +73,12 @@ const DailyTasksPage = () => {
       currentPath="/productivity/tasks"
     >
       <div className="space-y-6">
+        <BackdatePrompt moduleKey="daily-tasks" onLogPastData={() => {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          handleDateChange(y); setHighlightPicker(true);
+        }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} />
+
         {/* Stats bar */}
         <div className="flex items-center gap-3">
           <Card className="flex-1">

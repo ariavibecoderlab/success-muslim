@@ -14,6 +14,9 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes } from '@/lib/prayer-times';
+import { format } from 'date-fns';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const IMAN_SIBLINGS = [
   { path: '/iman/prayer-times', label: 'Prayer Times' },
@@ -74,7 +77,9 @@ const QiyamPlanner = () => {
   const [fajrTime, setFajrTime] = useState('05:30');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [tempSettings, setTempSettings] = useState<QiyamSettings>(DEFAULT_SETTINGS);
-  const today = new Date().toISOString().split('T')[0];
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
+  const today = format(selectedDate, 'yyyy-MM-dd');
 
   // Load Fajr time
   useEffect(() => {
@@ -218,6 +223,12 @@ const QiyamPlanner = () => {
   return (
     <SubPageLayout title="Qiyam Planner" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/qiyam">
       <div className="space-y-5">
+        <BackdatePrompt moduleKey="qiyam" onLogPastData={() => {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          setSelectedDate(y); setHighlightPicker(true);
+        }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} compact highlight={highlightPicker} />
+
         {/* Tahajjud Window Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">

@@ -6,6 +6,8 @@ import SubPageLayout from '@/components/SubPageLayout';
 import { useFastingLog, useFastingToggle } from '@/hooks/useHealthQuery';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const HEALTH_SIBLINGS = [
   { path: '/health/bmi', label: 'BMI' },
@@ -21,6 +23,8 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const HealthFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const { data: fastingLog } = useFastingLog();
   const fastingToggle = useFastingToggle();
   const monthStart = startOfMonth(currentMonth);
@@ -45,6 +49,12 @@ const HealthFasting = () => {
   return (
     <SubPageLayout title="Sunnah Fasting" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/fasting">
       <div className="space-y-5">
+        <BackdatePrompt moduleKey="health-fasting" onLogPastData={() => {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          setSelectedDate(y); setCurrentMonth(y); setHighlightPicker(true);
+        }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setCurrentMonth(d); }} compact highlight={highlightPicker} />
+
         {/* Month nav */}
         <div className="flex items-center justify-between">
           <Button variant="ghost" size="sm" onClick={() => setCurrentMonth(m => subMonths(m, 1))}>← Prev</Button>
