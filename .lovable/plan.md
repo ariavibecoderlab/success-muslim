@@ -1,42 +1,35 @@
 
 
-## Fix Back Button Navigation Across All Sub-Pages
+## Polish Landing Page: More Engaging + Better SEO + Official Logo
 
-### Root Cause
-The Back button logic lives in a single shared component: `SubPageLayout.tsx` (line 47). Every sub-page passes a `backTo` prop (e.g., `backTo="/health"`), and the Back button does `navigate(backTo)`. This means it always goes to a hardcoded parent, not where the user actually came from.
+### 1. Replace Moon icon with official `smlogo.webp` logo
 
-### Solution
-Fix it once in `SubPageLayout.tsx` -- no need to touch 30+ individual page files.
+**Nav (line 66-68):** Replace the `<div>` with Moon icon with `<img src={smlogo}>` matching the AppHeader style (rounded-xl, 32x32).
 
-### Changes
+**Footer (line 257-259):** Replace Moon icon with the same `<img>` logo.
 
-**File: `src/components/SubPageLayout.tsx`**
+**Import:** Add `import smlogo from '@/assets/smlogo.webp'` and remove unused `Moon` from lucide imports.
 
-Replace the Back button's `onClick` handler (line 47) with a history-aware function:
+### 2. Improve SEO meta tags in `index.html`
 
-```typescript
-const handleBack = () => {
-  if (window.history.length > 1) {
-    navigate(-1);
-  } else {
-    navigate(backTo); // fallback for direct URL access
-  }
-};
-```
+- Update `<title>` to: `Success Muslim — Track Iman, Health & Goals in One App`
+- Update `<meta name="description">` to a richer, keyword-dense description: `Success Muslim is the all-in-one Muslim lifestyle app. Track prayers, Quran, fasting, health, wealth, and productivity. Get your daily Life Score and grow in both worlds.`
+- Add structured data (`application/ld+json`) for Organization schema
+- Add `<meta name="keywords">` with relevant terms (Muslim app, prayer tracker, Quran tracker, Islamic productivity, halal budgeting, etc.)
+- Update OG/Twitter descriptions to match the new description
+- Add `<link rel="canonical" href="https://successmuslim.app/" />`
 
-Then use `onClick={handleBack}` on the Back button.
+### 3. Make the page more engaging
 
-The `backTo` prop stays in the interface as the fallback destination -- no changes needed to any sub-page files.
+**Add a "Features at a Glance" strip** between Hero and Life Score sections -- a horizontal row of quick stats/highlights with animated counters (e.g., "5 Pillars Tracked", "90+ Features", "100% Free").
 
-**File: `PROGRESS.md`**
+**Add a "Who It's For" section** before the bottom CTA -- three persona cards (The Practicing Muslim, The Health-Conscious Muslim, The Ambitious Muslim) to help visitors self-identify.
 
-Add entry documenting the fix.
+**Enhance the Hero subtitle** to be more compelling and SEO-rich.
 
-### Why This Works
-- Normal flow: user navigates from one page to another, `history.length > 1`, so `navigate(-1)` goes back correctly
-- Direct URL access: no prior history, falls back to the parent route via `backTo`
-- All 30+ sub-pages fixed automatically since they all use `SubPageLayout`
+**Add a second CTA in the footer area** with app store-style badges placeholder and a "Built for the Ummah" tagline.
 
 ### Files Modified
-- `src/components/SubPageLayout.tsx` (1 line change)
-- `PROGRESS.md` (append entry)
+- `src/pages/Landing.tsx` -- logo swap, new sections, richer copy
+- `index.html` -- SEO meta tags, structured data, canonical URL
+
