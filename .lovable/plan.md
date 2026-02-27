@@ -1,30 +1,54 @@
 
 
-## Fix Health Page Icons to Match Feature Names
+## Polish /iman Page to Match /health Design Language
 
-A quick icon update to ensure each feature card and quick action uses an icon that accurately represents its function.
+Aligning the Iman page with the Health page's colorful, energetic "Apple Health meets Islamic wellness" aesthetic.
 
-### Current Issues
+### Key Design Gaps
 
-| Feature | Current Icon | Problem |
-|---------|-------------|---------|
-| Weight Tracker | `TrendingUp` (chart line) | Doesn't convey "weight" -- looks like a stock chart |
-| Sunnah Fasting | `Moon` (crescent) | Moon = night/sleep, not fasting |
+| Element | Health (current) | Iman (current) |
+|---------|-----------------|----------------|
+| Hero card | Gradient bg (emerald/orange), border-0, shadow-lg, animated icon | Flat primary/10 bg, standard border |
+| Stats strip | Animated SVG StatsRings with colors | Plain cards, no rings, no color |
+| Feature grid | Gradient icon badges + ChevronRight arrows | Monochrome primary/10 icons, no arrows |
+| Quote banner | Rotating Islamic quotes with dots | None |
+| Quick actions | 6 colorful gradient circle buttons | None |
+| Animations | staggerContainer + staggerItem variants | Basic fadeUp only |
 
-### Proposed Fix
+### Changes to `src/pages/Deen.tsx`
 
-| Feature | New Icon | Why |
-|---------|----------|-----|
-| Weight Tracker | `Weight` | Directly represents body weight |
-| Sunnah Fasting | `UtensilsCrossed` | Universal symbol for food/fasting (utensils crossed out = not eating) |
+**1. Prayer Hero Card -- gradient treatment**
+- Change from `bg-gradient-to-br from-primary/10 via-primary/5` to a rich gradient like `from-emerald-600 to-teal-700 text-white border-0 shadow-lg`
+- Add animated icon wrapper (pulsing scale like Health's Timer)
+- White text styling for prayer names and countdown
 
-### File Changed
+**2. Add Iman Quote Banner**
+- Add a rotating Islamic/spiritual quote section (tap to cycle) matching Health's quote card
+- Quotes focused on iman, salah, Quran
 
-**`src/pages/Health.tsx`**
-- Line 3: Update imports -- replace `TrendingUp` with `Weight`, keep `UtensilsCrossed` (already imported)
-- Line 81: Weight Tracker feature card -- change `TrendingUp` to `Weight`
-- Line 85: Sunnah Fasting feature card -- change `Moon` to `UtensilsCrossed`
-- Line 93: Quick action "Meal" -- keep `UtensilsCrossed` as-is (still appropriate for meal logging)
+**3. Iman Summary Strip -- use StatsRings**
+- Replace plain cards with 4 animated StatsRings (Salah, Dhikr, Quran, Sunnah)
+- Each ring gets a unique color (green, pink, amber, purple)
+- Reuse the same StatsRing component from Health
 
-Note: `Moon` import can be removed if not used elsewhere in this file.
+**4. Spiritual Tools Grid -- colorful gradient icons + ChevronRight**
+- Give each tool card a unique gradient for the icon badge (e.g., Quran = amber, Dhikr = pink, Sunnah = purple, Prayer Times = blue, Zakat = emerald, Sadaqah = rose, Qiyam = indigo, Ramadan = orange, Hajj = teal, Da'wah = violet)
+- Add `ChevronRight` arrow on each card (matching Health's feature cards)
+- Use compact `p-3.5` padding with horizontal layout like Health
+
+**5. Add stagger animations**
+- Import and use `staggerContainer` + `staggerItem` variants for the tools grid
+- Consistent timing with Health (0.06s stagger, 0.4s duration)
+
+**6. Active Trackers section -- add gradient icon badges**
+- Give Qada, Ramadhan, Fidyah tracker cards gradient icon badges instead of flat primary/10
+
+### Files Modified
+- `src/pages/Deen.tsx` (single file, all changes)
+
+### What stays the same
+- All data logic, hooks, and calculations unchanged
+- Prayer times strip layout (already good)
+- Active tracker progress bars
+- Bottom setup actions grid
 
