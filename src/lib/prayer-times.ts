@@ -14,7 +14,7 @@ export interface PrayerTimesData {
   city: string;
   country: string;
   hijriDate?: string;
-  source?: 'jakim' | 'aladhan';
+  source?: 'jakim';
 }
 
 export interface PrayerSettings {
@@ -171,8 +171,8 @@ export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): 
     }
   }
 
-  // Fallback to Aladhan
-  return fetchFromAladhan(settings, today, cacheKey);
+  // JAKIM only covers Malaysia — return null for other countries
+  return null;
 }
 
 async function fetchFromJakim(city: string, settings: Partial<PrayerSettings>): Promise<PrayerTimesData | null> {
@@ -250,58 +250,6 @@ function formatJakimHijri(hijri: string): string {
   return `${day} ${monthName} ${year} H`;
 }
 
-async function fetchFromAladhan(settings: Partial<PrayerSettings>, today: string, cacheKey: string): Promise<PrayerTimesData | null> {
-  const method = settings.calculation_method ?? 3;
-  const school = settings.madhab === 'hanafi' ? 1 : 0;
-
-  let apiUrl: string;
-  if (settings.latitude != null && settings.longitude != null) {
-    apiUrl = `https://api.aladhan.com/v1/timings?latitude=${settings.latitude}&longitude=${settings.longitude}&method=${method}&school=${school}`;
-  } else {
-    const city = settings.city || 'Kuala Lumpur';
-    const country = settings.country || 'Malaysia';
-    apiUrl = `https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${method}&school=${school}`;
-  }
-
-  try {
-    const res = await fetch(apiUrl);
-    const json = await res.json();
-    if (json.code !== 200) return null;
-
-    const mosqueKeys: Record<string, string | null | undefined> = {
-      Fajr: settings.mosque_fajr,
-      Dhuhr: settings.mosque_dhuhr,
-      Asr: settings.mosque_asr,
-      Maghrib: settings.mosque_maghrib,
-      Isha: settings.mosque_isha,
-    };
-
-    const timings: PrayerTime[] = PRAYER_KEYS.map(key => ({
-      name: PRAYER_DISPLAY[key],
-      time: json.data.timings[key],
-      key,
-      mosqueTime: settings.mosque_enabled ? mosqueKeys[key] || null : null,
-    }));
-
-    const hijriData = json.data.date?.hijri;
-    const hijriDate = hijriData
-      ? `${hijriData.day} ${hijriData.month?.en || ''} ${hijriData.year} H`
-      : undefined;
-
-    const result: PrayerTimesData = {
-      timings,
-      date: today,
-      city: settings.city || json.data.meta?.timezone || '',
-      country: settings.country || '',
-      hijriDate,
-      source: 'aladhan',
-    };
-    try { localStorage.setItem(cacheKey, JSON.stringify(result)); } catch {}
-    return result;
-  } catch {
-    return null;
-  }
-}
 
 export function getEffectiveTime(prayer: PrayerTime): string {
   return prayer.mosqueTime || prayer.time;
