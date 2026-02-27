@@ -10,6 +10,8 @@ import { fetchPrayerTimes, formatPrayerTime, getEffectiveTime, type PrayerTimesD
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isFuture } from 'date-fns';
 import { useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 
 const IMAN_SIBLINGS = [
   { path: '/iman/dhikr', label: 'Dhikr' },
@@ -34,6 +36,8 @@ const FASTING_TYPES: Record<FastingType, { label: string; description: string }>
 
 const DeenFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const { data: fastingLog } = useFastingLog();
   const fastingToggle = useFastingToggle();
   const { settings, loading: settingsLoading } = usePrayerSettings();
@@ -118,6 +122,11 @@ const DeenFasting = () => {
   return (
     <SubPageLayout title="Fasting Tracker" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/fasting">
       <div className="space-y-5">
+        <BackdatePrompt moduleKey="deen-fasting" onLogPastData={() => {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          setSelectedDate(y); setCurrentMonth(y); setHighlightPicker(true);
+        }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setCurrentMonth(d); }} compact highlight={highlightPicker} />
 
         {/* Suhoor & Iftar Card */}
         {prayerData && fajrTime && maghribTime && (

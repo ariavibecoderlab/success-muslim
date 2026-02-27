@@ -5,6 +5,18 @@
 
 ---
 
+## 🔧 Backdate Support — 5 Missing Modules (2026-02-27)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| HealthFasting backdate picker + prompt | ✅ | Navigates calendar month on date change |
+| DeenFasting backdate picker + prompt | ✅ | Same pattern |
+| SadaqahTracker backdate prompt | ✅ | Opens Add dialog with yesterday's date |
+| QiyamPlanner backdate picker + prompt | ✅ | `today` derived from selectedDate |
+| DailyTasks backdate picker + prompt | ✅ | dateKey passed to all storage functions |
+
+---
+
 ## 🔧 BackdatePrompt Redesign + No-op Fix (2026-02-27)
 
 | Change | Status | Notes |
