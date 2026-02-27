@@ -52,6 +52,7 @@ const HEALTH_SIBLINGS = [
 
 const HealthSleep = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
@@ -83,11 +84,11 @@ const HealthSleep = () => {
 
   return (
     <SubPageLayout title="Sleep Tracker" backTo="/health" siblingRoutes={HEALTH_SIBLINGS} currentPath="/health/sleep">
-      <BackdatePrompt moduleKey="sleep" onLogPastData={() => {}} />
+      <BackdatePrompt moduleKey="sleep" onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); setHighlightPicker(true); }} />
       <div className="space-y-5">
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={setSelectedDate} compact highlight={highlightPicker} />
         </div>
 
         {/* Input */}

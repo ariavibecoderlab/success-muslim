@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ interface BackdateDatePickerProps {
   maxDaysBack?: number;
   className?: string;
   compact?: boolean;
+  highlight?: boolean;
 }
 
 const BackdateDatePicker = ({
@@ -20,11 +21,21 @@ const BackdateDatePicker = ({
   maxDaysBack = 90,
   className,
   compact = false,
+  highlight = false,
 }: BackdateDatePickerProps) => {
   const [open, setOpen] = useState(false);
+  const [pulse, setPulse] = useState(false);
   const today = startOfDay(new Date());
   const minDate = subDays(today, maxDaysBack);
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+
+  useEffect(() => {
+    if (highlight) {
+      setPulse(true);
+      const t = setTimeout(() => setPulse(false), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [highlight]);
 
   const goBack = () => {
     const prev = subDays(selectedDate, 1);
@@ -47,7 +58,11 @@ const BackdateDatePicker = ({
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button variant="outline" size="sm"
-            className={cn('gap-1.5 text-xs h-7 font-medium', compact && 'px-2')}>
+            className={cn(
+              'gap-1.5 text-xs h-7 font-medium',
+              compact && 'px-2',
+              pulse && 'ring-2 ring-amber-400 ring-offset-2 animate-pulse'
+            )}>
             <CalendarDays className="h-3 w-3" />
             {isToday ? 'Today' : format(selectedDate, compact ? 'd MMM' : 'EEE, d MMM yyyy')}
           </Button>

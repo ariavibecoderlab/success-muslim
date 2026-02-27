@@ -51,6 +51,7 @@ const SunnahTracker = () => {
   const [newLabel, setNewLabel] = useState('');
   const [newCategory, setNewCategory] = useState<string>('other');
   const [celebrateVisible, setCelebrateVisible] = useState(false);
+  const [highlightPicker, setHighlightPicker] = useState(false);
   const { streak, weekData } = useSunnahStats();
 
   const handleDateChange = (date: Date) => {
@@ -123,12 +124,12 @@ const SunnahTracker = () => {
         </button>
       }
     >
-      <BackdatePrompt moduleKey="sunnah" onLogPastData={() => {}} />
+      <BackdatePrompt moduleKey="sunnah" onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); setHighlightPicker(true); }} />
       <div className="space-y-5">
 
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} />
         </div>
 
         {/* Hero Summary with Ring */}

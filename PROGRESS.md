@@ -5,6 +5,19 @@
 
 ---
 
+## 🔧 BackdatePrompt Redesign + No-op Fix (2026-02-27)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| BackdatePrompt → inline banner (not modal) | ✅ | Framer Motion slide-down, auto-dismiss 8s |
+| Fix Dhikr onLogPastData no-op | ✅ | Sets date to yesterday + highlight pulse |
+| Fix Hydration onLogPastData no-op | ✅ | Same pattern |
+| Fix Sleep onLogPastData no-op | ✅ | Same pattern |
+| Fix Sunnah onLogPastData no-op | ✅ | Same pattern |
+| BackdateDatePicker highlight prop | ✅ | 2s pulse ring when triggered |
+
+---
+
 ## 🔧 Life Score Refactor — Pure Function (2026-02-27)
 
 | Change | Status | Notes |
