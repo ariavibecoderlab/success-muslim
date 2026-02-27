@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -27,7 +28,7 @@ export interface FamilyMember {
   avatar_url?: string | null;
 }
 
-const INVITE_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no O,0,I,1
+const INVITE_CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function generateInviteCode(): string {
   let code = '';
@@ -37,57 +38,54 @@ function generateInviteCode(): string {
   return code;
 }
 
+async function fetchFamilies(userId: string): Promise<Family[]> {
+  const { data: memberRows } = await supabase
+    .from('family_members')
+    .select('family_id, role')
+    .eq('user_id', userId);
+
+  if (!memberRows || memberRows.length === 0) return [];
+
+  const familyIds = memberRows.map(r => r.family_id);
+  const { data: familyRows } = await supabase
+    .from('families')
+    .select('*')
+    .in('id', familyIds);
+
+  if (!familyRows) return [];
+
+  const withCounts: Family[] = await Promise.all(
+    familyRows.map(async (f) => {
+      const { count } = await supabase
+        .from('family_members')
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', f.id);
+      const role = memberRows.find(r => r.family_id === f.id)?.role || 'member';
+      return { ...f, member_count: count ?? 0, user_role: role };
+    })
+  );
+
+  return withCounts;
+}
+
 export function useFamily() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [families, setFamilies] = useState<Family[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const loadFamilies = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
-    setLoading(true);
+  const { data: families = [], isLoading: loading } = useQuery({
+    queryKey: ['families', user?.id],
+    queryFn: () => fetchFamilies(user!.id),
+    enabled: !!user,
+  });
 
-    const { data: memberRows } = await supabase
-      .from('family_members')
-      .select('family_id, role')
-      .eq('user_id', user.id);
-
-    if (!memberRows || memberRows.length === 0) {
-      setFamilies([]);
-      setLoading(false);
-      return;
-    }
-
-    const familyIds = memberRows.map(r => r.family_id);
-    const { data: familyRows } = await supabase
-      .from('families')
-      .select('*')
-      .in('id', familyIds);
-
-    if (!familyRows) { setFamilies([]); setLoading(false); return; }
-
-    // get member counts
-    const withCounts: Family[] = await Promise.all(
-      familyRows.map(async (f) => {
-        const { count } = await supabase
-          .from('family_members')
-          .select('*', { count: 'exact', head: true })
-          .eq('family_id', f.id);
-        const role = memberRows.find(r => r.family_id === f.id)?.role || 'member';
-        return { ...f, member_count: count ?? 0, user_role: role };
-      })
-    );
-
-    setFamilies(withCounts);
-    setLoading(false);
-  }, [user]);
-
-  useEffect(() => { loadFamilies(); }, [loadFamilies]);
+  const invalidate = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['families', user?.id] });
+  }, [queryClient, user?.id]);
 
   const createFamily = async (name: string): Promise<Family | null> => {
     if (!user) return null;
 
-    // enforce max 2 families per user
     const { count } = await supabase
       .from('family_members')
       .select('*', { count: 'exact', head: true })
@@ -98,7 +96,6 @@ export function useFamily() {
       return null;
     }
 
-    // generate unique code
     let invite_code = generateInviteCode();
     let attempts = 0;
     while (attempts < 5) {
@@ -125,21 +122,19 @@ export function useFamily() {
       return null;
     }
 
-    // add creator as admin
     await supabase.from('family_members').insert({
       family_id: family.id,
       user_id: user.id,
       role: 'admin',
     });
 
-    await loadFamilies();
+    invalidate();
     return family;
   };
 
   const joinFamily = async (code: string): Promise<Family | null> => {
     if (!user) return null;
 
-    // enforce max 2 families per user
     const { count: myCount } = await supabase
       .from('family_members')
       .select('*', { count: 'exact', head: true })
@@ -161,7 +156,6 @@ export function useFamily() {
       return null;
     }
 
-    // check already a member
     const { data: existing } = await supabase
       .from('family_members')
       .select('id')
@@ -174,7 +168,6 @@ export function useFamily() {
       return family;
     }
 
-    // enforce max 20 members
     const { count: memberCount } = await supabase
       .from('family_members')
       .select('*', { count: 'exact', head: true })
@@ -194,7 +187,7 @@ export function useFamily() {
       return null;
     }
 
-    await loadFamilies();
+    invalidate();
     toast({ title: `Welcome to ${family.name}!`, description: 'You have joined the family group.' });
     return family;
   };
@@ -230,7 +223,7 @@ export function useFamily() {
       return false;
     }
 
-    await loadFamilies();
+    invalidate();
     toast({ title: 'You left the group' });
     return true;
   };
@@ -246,7 +239,7 @@ export function useFamily() {
       return false;
     }
 
-    await loadFamilies();
+    invalidate();
     toast({ title: 'Family renamed!' });
     return true;
   };
@@ -287,7 +280,7 @@ export function useFamily() {
       return false;
     }
 
-    await loadFamilies();
+    invalidate();
     toast({ title: 'Admin transferred!' });
     return true;
   };
@@ -326,7 +319,7 @@ export function useFamily() {
   return {
     families,
     loading,
-    loadFamilies,
+    loadFamilies: invalidate,
     createFamily,
     joinFamily,
     previewFamily,

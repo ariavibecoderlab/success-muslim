@@ -34,7 +34,7 @@ const FASTING_TYPES: Record<FastingType, { label: string; description: string }>
 
 const DeenFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [, rerender] = useState(0);
+  const [renderKey, setRenderKey] = useState(0);
   const { settings, loading: settingsLoading } = usePrayerSettings();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
 
@@ -69,7 +69,7 @@ const DeenFasting = () => {
 
   const handleToggle = (dateKey: string) => {
     toggleFasting(dateKey);
-    rerender(n => n + 1);
+    setRenderKey(n => n + 1);
   };
 
   // Stats

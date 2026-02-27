@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
@@ -21,46 +22,39 @@ export interface HealthProfile {
   completed_at: string | null;
 }
 
+async function fetchHealthProfile(userId: string): Promise<HealthProfile | null> {
+  const { data } = await supabase
+    .from('user_health_profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data ? (data as unknown as HealthProfile) : null;
+}
+
 export function useHealthProfile() {
   const { user, loading: authLoading } = useAuth();
-  const [profile, setProfile] = useState<HealthProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [completed, setCompleted] = useState(false);
+  const queryClient = useQueryClient();
 
-  const userId = user?.id;
+  const { data: profile = null, isLoading: queryLoading } = useQuery({
+    queryKey: ['health-profile', user?.id],
+    queryFn: () => fetchHealthProfile(user!.id),
+    enabled: !!user && !authLoading,
+  });
 
-  useEffect(() => {
-    if (authLoading) return; // Wait for auth to resolve first
-    if (!userId) { setLoading(false); return; }
+  const loading = authLoading || queryLoading;
+  const completed = !!profile?.completed_at;
 
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from('user_health_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (data) {
-        setProfile(data as unknown as HealthProfile);
-        setCompleted(!!data.completed_at);
-      }
-      setLoading(false);
-    };
-    fetchProfile();
-  }, [userId, authLoading]);
-
-  const saveProfile = async (updates: Partial<HealthProfile>) => {
-    if (!userId) return;
+  const saveProfile = useCallback(async (updates: Partial<HealthProfile>) => {
+    if (!user) return;
     const { data } = await supabase
       .from('user_health_profiles')
-      .upsert({ user_id: userId, ...updates } as any, { onConflict: 'user_id' })
+      .upsert({ user_id: user.id, ...updates } as any, { onConflict: 'user_id' })
       .select()
       .single();
     if (data) {
-      setProfile(data as unknown as HealthProfile);
-      setCompleted(!!data.completed_at);
+      queryClient.setQueryData(['health-profile', user.id], data as unknown as HealthProfile);
     }
-  };
+  }, [user, queryClient]);
 
   return { profile, loading, completed, saveProfile };
 }

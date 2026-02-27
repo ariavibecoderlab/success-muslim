@@ -45,8 +45,8 @@ const MILESTONES = [
 ];
 
 const HealthSteps = () => {
-  const [, rerender] = useState(0);
-  const refresh = useCallback(() => rerender(n => n + 1), []);
+  const [renderKey, setRenderKey] = useState(0);
+  const refresh = useCallback(() => setRenderKey(n => n + 1), []);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [stepsInput, setStepsInput] = useState('');
   const [activityType, setActivityType] = useState<ActivityType>('walking');

@@ -43,17 +43,13 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 };
 
 const Iman = () => {
-  const [, forceUpdate] = useState(0);
+  // forceUpdate removed — React Query refetchOnWindowFocus handles this
   const { settings, loading: settingsLoading } = usePrayerSettings();
   const { hasDoneToday: isDoneToday, streak: quranStreak, todayTotalPages, todayTotalAyahs } = useQuranReadingLog();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
   const [countdown, setCountdown] = useState('');
 
-  useEffect(() => {
-    const onFocus = () => forceUpdate(n => n + 1);
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
-  }, []);
+  // Window focus listener removed — React Query refetchOnWindowFocus handles this
 
   // Load prayer times
   const loadPrayer = useCallback(async () => {
