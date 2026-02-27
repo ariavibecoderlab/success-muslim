@@ -1,20 +1,19 @@
-import { useState } from 'react';
 import { Droplets, Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { getHydration, addCup } from '@/lib/health-storage';
+import { useHydration, useHydrationMutation } from '@/hooks/useHealthQuery';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function HydrationWidget({ size }: { size: WidgetSize }) {
-  const [hydration, setHydration] = useState(getHydration());
+  const { data: hydration } = useHydration();
+  const { addCup: addCupMutation } = useHydrationMutation();
   const pct = Math.round((hydration.cups / hydration.goal) * 100);
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addCup();
-    setHydration(getHydration());
+    addCupMutation.mutate(undefined);
   };
 
   if (size === 'small') {

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getFastingLog, toggleFasting } from '@/lib/health-storage';
+import { useFastingLog, useFastingToggle } from '@/hooks/useHealthQuery';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { fetchPrayerTimes, formatPrayerTime, getEffectiveTime, type PrayerTimesData } from '@/lib/prayer-times';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths, isToday, isFuture } from 'date-fns';
@@ -34,7 +34,8 @@ const FASTING_TYPES: Record<FastingType, { label: string; description: string }>
 
 const DeenFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [fastingLog, setFastingLog] = useState(() => getFastingLog());
+  const { data: fastingLog } = useFastingLog();
+  const fastingToggle = useFastingToggle();
   const { settings, loading: settingsLoading } = usePrayerSettings();
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
 
@@ -68,8 +69,7 @@ const DeenFasting = () => {
   };
 
   const handleToggle = (dateKey: string) => {
-    toggleFasting(dateKey);
-    setFastingLog(getFastingLog());
+    fastingToggle.mutate(dateKey);
   };
 
   // Stats

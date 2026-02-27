@@ -6,8 +6,10 @@ import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { getBMI, getHydration, getSleepLog, bmiCategory, getIFSessions, addCup } from '@/lib/health-storage';
-import { getStepsToday, getStepsPrefs } from '@/lib/steps-storage';
+import { bmiCategory, getIFSessions } from '@/lib/health-storage';
+import { useHydration, useSleepLog, useBMIData, useHydrationMutation } from '@/hooks/useHealthQuery';
+import { useStepsDay } from '@/hooks/useStepsQuery';
+import { getStepsPrefs } from '@/lib/steps-storage';
 import EditableText from '@/components/cms/EditableText';
 import { toast } from 'sonner';
 import { useFastingStore } from '@/stores/fastingStore';
@@ -98,12 +100,13 @@ const quickActions = [
 
 const Health = () => {
   const navigate = useNavigate();
-  const bmi = getBMI();
-  const hydration = getHydration();
-  const sleepLog = getSleepLog();
+  const { data: bmi } = useBMIData();
+  const { data: hydration } = useHydration();
+  const { data: sleepLog = [] } = useSleepLog();
   const lastSleep = sleepLog[sleepLog.length - 1];
   const cat = bmi ? bmiCategory(bmi.bmi) : null;
-  const { total: rawStepsToday } = getStepsToday();
+  const { data: stepsData } = useStepsDay();
+  const rawStepsToday = stepsData?.total ?? 0;
   // Cap display at 200k to prevent showing corrupt data
   const stepsToday = Math.min(rawStepsToday, 200000);
   const stepsPrefs = getStepsPrefs();
@@ -113,6 +116,7 @@ const Health = () => {
   const bmiPct = bmi ? Math.min(Math.round((Math.max(0, 25 - Math.abs(bmi.bmi - 22)) / 25) * 100), 100) : 0;
 
   const { isActiveFast, activeFast: activeIF, elapsedSeconds, hydrate, tick, endFast } = useFastingStore();
+  const { addCup: addCupMutation } = useHydrationMutation();
   const [quoteIndex, setQuoteIndex] = useState(0);
   const lastSession = getIFSessions()[0];
 
@@ -138,7 +142,7 @@ const Health = () => {
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'water':
-        addCup();
+        addCupMutation.mutate(undefined);
         toast.success('Water logged! 💧');
         break;
       case 'mood':

@@ -3,7 +3,7 @@ import { Check, Moon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getFastingLog, toggleFasting } from '@/lib/health-storage';
+import { useFastingLog, useFastingToggle } from '@/hooks/useHealthQuery';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths, subMonths } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 
@@ -21,7 +21,8 @@ const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const HealthFasting = () => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [fastingLog, setFastingLog] = useState(() => getFastingLog());
+  const { data: fastingLog } = useFastingLog();
+  const fastingToggle = useFastingToggle();
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -34,8 +35,7 @@ const HealthFasting = () => {
   };
 
   const handleToggle = (dateKey: string) => {
-    toggleFasting(dateKey);
-    setFastingLog(getFastingLog());
+    fastingToggle.mutate(dateKey);
   };
 
   const totalFasted = days.filter(d => fastingLog[format(d, 'yyyy-MM-dd')]).length;

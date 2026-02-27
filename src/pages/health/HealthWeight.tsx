@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getWeightLog, addWeightEntry, getWeightGoal, setWeightGoal as saveWeightGoal, todayKey, getBMI, saveBMI, calculateBMI, calculateTDEE } from '@/lib/health-storage';
+import { getWeightGoal, setWeightGoal as saveWeightGoal, todayKey, calculateBMI, calculateTDEE } from '@/lib/health-storage';
+import { useWeightLog, useWeightMutation, useBMIData, useBMIMutation } from '@/hooks/useHealthQuery';
 import { format, parseISO, differenceInDays, subDays, isAfter, startOfDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -77,7 +78,10 @@ function checkMilestones(log: { date: string; weight: number }[], goalWeight: nu
 }
 
 const HealthWeight = () => {
-  const [log, setLog] = useState(getWeightLog);
+  const { data: log = [] } = useWeightLog();
+  const weightMutation = useWeightMutation();
+  const { data: bmiData } = useBMIData();
+  const bmiMutation = useBMIMutation();
   const [newWeight, setNewWeight] = useState('');
   const [goalInput, setGoalInput] = useState('');
   const [goalDialogOpen, setGoalDialogOpen] = useState(false);
@@ -122,25 +126,20 @@ const HealthWeight = () => {
     if (!w || w < 20 || w > 300) return;
 
     const prevMilestones = checkMilestones(log, goalVal);
-    addWeightEntry({ date: dateKey, weight: w });
+    weightMutation.mutate({ date: dateKey, weight: w });
 
     // Auto-update BMI only if logging for today
-    if (isToday) {
-      const bmiData = getBMI();
-      if (bmiData) {
-        const newBmi = calculateBMI(w, bmiData.height);
-        const newTdee = calculateTDEE(w, bmiData.height, bmiData.age, bmiData.gender, bmiData.activityLevel);
-        saveBMI({ ...bmiData, weight: w, bmi: newBmi, tdee: newTdee, date: todayKey() });
-      }
+    if (isToday && bmiData) {
+      const newBmi = calculateBMI(w, bmiData.height);
+      const newTdee = calculateTDEE(w, bmiData.height, bmiData.age, bmiData.gender, bmiData.activityLevel);
+      bmiMutation.mutate({ ...bmiData, weight: w, bmi: newBmi, tdee: newTdee, date: todayKey() });
     }
 
-    const updatedLog = getWeightLog();
-    setLog(updatedLog);
     setNewWeight('');
     setLogDialogOpen(false);
 
     // Check for new milestones
-    const newMilestones = checkMilestones(updatedLog, goalVal);
+    const newMilestones = checkMilestones(log, goalVal);
     const justAchieved = newMilestones.filter(m => !prevMilestones.includes(m));
     if (justAchieved.length > 0) {
       const milestone = MILESTONES.find(m => m.key === justAchieved[justAchieved.length - 1]);

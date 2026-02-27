@@ -1,11 +1,13 @@
 import { Footprints } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getStepsToday, getStepsPrefs, getStepsStreak } from '@/lib/steps-storage';
+import { useStepsDay } from '@/hooks/useStepsQuery';
+import { getStepsPrefs, getStepsStreak } from '@/lib/steps-storage';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function StepsWidget({ size }: { size: WidgetSize }) {
-  const { total } = getStepsToday();
+  const { data: stepsData } = useStepsDay();
+  const total = stepsData?.total ?? 0;
   const prefs = getStepsPrefs();
   const streak = getStepsStreak();
   const pct = Math.min(Math.round((total / prefs.dailyTarget) * 100), 100);

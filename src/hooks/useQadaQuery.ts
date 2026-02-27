@@ -1,0 +1,63 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup,
+} from '@/lib/storage';
+import type { QadaSolatSetup, QadaSolatProgress, PrayerType } from '@/lib/types';
+
+export function useQadaSolat() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['qada', user?.id ?? 'anon'],
+    queryFn: async (): Promise<{ setup: QadaSolatSetup | null; progress: QadaSolatProgress }> => {
+      if (!user) return { setup: getQadaSetup(), progress: getQadaProgress() };
+      const { data } = await supabase
+        .from('qada_solat')
+        .select('setup, progress')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data) return { setup: getQadaSetup(), progress: getQadaProgress() };
+      return {
+        setup: data.setup as unknown as QadaSolatSetup,
+        progress: data.progress as unknown as QadaSolatProgress,
+      };
+    },
+    initialData: () => ({ setup: getQadaSetup(), progress: getQadaProgress() }),
+    staleTime: 60_000,
+  });
+}
+
+export function useQadaMutation() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const logPrayer = useMutation({
+    mutationFn: async (args: { prayer: PrayerType; count?: number; date?: string }) => {
+      return logQadaPrayer(args.prayer, args.count ?? 1, args.date);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qada', user?.id ?? 'anon'] });
+    },
+  });
+
+  const undoPrayer = useMutation({
+    mutationFn: async (args: { prayer: PrayerType; date?: string }) => {
+      return undoQadaPrayer(args.prayer, args.date);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qada', user?.id ?? 'anon'] });
+    },
+  });
+
+  const updateSetup = useMutation({
+    mutationFn: async (setup: QadaSolatSetup) => {
+      saveQadaSetup(setup);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qada', user?.id ?? 'anon'] });
+    },
+  });
+
+  return { logPrayer, undoPrayer, updateSetup };
+}

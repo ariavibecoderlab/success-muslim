@@ -1,12 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Star, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
+import { getSunnahItems } from '@/lib/sunnah-storage';
+import { useSunnahLog } from '@/hooks/useSunnahQuery';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function SolatSunatWidget({ size }: { size: WidgetSize }) {
   const items = getSunnahItems().filter(i => i.enabled && i.category === 'prayer');
-  const log = getDayLog();
+  const { data: log } = useSunnahLog();
   
   const prayerItems = [
     { id: 'dhuha', label: 'Dhuha' },

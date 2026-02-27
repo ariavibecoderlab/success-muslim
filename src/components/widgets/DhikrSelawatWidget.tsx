@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom';
 import { HandHeart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getDailyDhikr } from '@/lib/dhikr-storage';
+import { useDhikrDaily } from '@/hooks/useDhikrQuery';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function DhikrSelawatWidget({ size }: { size: WidgetSize }) {
-  const daily = getDailyDhikr();
+  const { data: daily } = useDhikrDaily();
   const selawatSession = daily.sessions.find(s => s.presetId === 'salawat');
   const selawatCount = selawatSession?.count || 0;
   const selawatTarget = selawatSession?.target || 100;

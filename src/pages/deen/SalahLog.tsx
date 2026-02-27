@@ -3,7 +3,8 @@ import { format } from 'date-fns';
 import { CheckCircle2, Clock, XCircle, Circle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { getSalahLog, logSalah, SALAH_NAMES, SalahName, SalahStatus } from '@/lib/salah-storage';
+import { SALAH_NAMES, type SalahName, type SalahStatus } from '@/lib/salah-storage';
+import { useSalahLog, useSalahMutation } from '@/hooks/useSalahQuery';
 import SubPageLayout from '@/components/SubPageLayout';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -27,19 +28,17 @@ const STATUS_CONFIG: { status: SalahStatus; label: string; icon: typeof CheckCir
 const SalahLog = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const [log, setLog] = useState(getSalahLog(dateKey));
+  const { data: log } = useSalahLog(dateKey);
+  const salahMutation = useSalahMutation();
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
-    const key = format(date, 'yyyy-MM-dd');
-    setLog(getSalahLog(key));
   };
 
   const handleStatus = (prayer: SalahName, status: SalahStatus) => {
     const current = log.prayers[prayer].status;
     const newStatus = current === status ? null : status;
-    const updated = logSalah(prayer, newStatus, dateKey);
-    setLog(updated);
+    salahMutation.mutate({ prayer, status: newStatus, date: dateKey });
   };
 
   const logged = SALAH_NAMES.filter(n => log.prayers[n].status !== null).length;

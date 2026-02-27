@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
-import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset, getDhikrStreak, getDhikrHistory } from '@/lib/dhikr-storage';
+import { getPresets, getDailyDhikr, saveDhikrCount, savePresets, type DhikrPreset } from '@/lib/dhikr-storage';
+import { useDhikrDaily, useDhikrMutation, useDhikrStats } from '@/hooks/useDhikrQuery';
 import SubPageLayout from '@/components/SubPageLayout';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -43,8 +44,9 @@ const DhikrCounter = () => {
   const [editTargetValue, setEditTargetValue] = useState('');
   const rippleId = useRef(0);
 
-  const streak = getDhikrStreak();
-  const history = getDhikrHistory(7);
+  const { streak, history } = useDhikrStats();
+  const { data: dailyData } = useDhikrDaily(dateKey);
+  const dhikrMutation = useDhikrMutation();
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
@@ -72,6 +74,7 @@ const DhikrCounter = () => {
     triggerHaptic();
     setTimeout(() => setPulse(false), 200);
     saveDhikrCount(selectedPreset.id, newCount, selectedPreset.target, dateKey);
+    dhikrMutation.mutate({ presetId: selectedPreset.id, count: newCount, target: selectedPreset.target, date: dateKey });
     
     const id = ++rippleId.current;
     setRipples(prev => [...prev, id]);
@@ -81,7 +84,8 @@ const DhikrCounter = () => {
   const handleReset = useCallback(() => {
     setCount(0);
     saveDhikrCount(selectedPreset.id, 0, selectedPreset.target, dateKey);
-  }, [selectedPreset, dateKey]);
+    dhikrMutation.mutate({ presetId: selectedPreset.id, count: 0, target: selectedPreset.target, date: dateKey });
+  }, [selectedPreset, dateKey, dhikrMutation]);
 
   const handleAddPreset = () => {
     if (!newName.trim()) return;

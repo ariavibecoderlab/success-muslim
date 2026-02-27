@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getSleepLog, addSleepEntry, calculateSleepDuration, sleepQuality, todayKey } from '@/lib/health-storage';
+import { calculateSleepDuration, sleepQuality, todayKey } from '@/lib/health-storage';
+import { useSleepLog, useSleepMutation } from '@/hooks/useHealthQuery';
 import { format, parseISO } from 'date-fns';
 import EditableText from '@/components/cms/EditableText';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
@@ -54,7 +55,8 @@ const HealthSleep = () => {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
-  const [log, setLog] = useState(getSleepLog);
+  const { data: log } = useSleepLog();
+  const sleepMutation = useSleepMutation();
   const [bedtime, setBedtime] = useState('23:00');
   const [wakeTime, setWakeTime] = useState('06:00');
   const [targets, setTargets] = useState(getSleepTargets);
@@ -64,8 +66,7 @@ const HealthSleep = () => {
 
   const handleAdd = () => {
     const duration = calculateSleepDuration(bedtime, wakeTime);
-    addSleepEntry({ date: dateKey, bedtime, wakeTime, duration });
-    setLog(getSleepLog());
+    sleepMutation.mutate({ date: dateKey, bedtime, wakeTime, duration });
   };
 
   // Show entry for selected date
