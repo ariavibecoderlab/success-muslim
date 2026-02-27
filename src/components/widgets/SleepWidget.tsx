@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom';
 import { BedDouble } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { getSleepLog, sleepQuality } from '@/lib/health-storage';
+import { sleepQuality } from '@/lib/health-storage';
+import { useSleepLog } from '@/hooks/useHealthQuery';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function SleepWidget({ size }: { size: WidgetSize }) {
-  const log = getSleepLog();
+  const { data: log = [] } = useSleepLog();
   const lastEntry = log.length > 0 ? log[log.length - 1] : null;
 
   if (!lastEntry) {

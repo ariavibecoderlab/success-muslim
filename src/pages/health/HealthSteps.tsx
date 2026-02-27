@@ -7,11 +7,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { BarChart, Bar, XAxis, ResponsiveContainer, ReferenceLine } from 'recharts';
 import SubPageLayout from '@/components/SubPageLayout';
 import {
-  getStepsToday, addStepLog, deleteStepLog, getStepsPrefs, setStepsTarget,
-  getStepsHistory, getStepsStreak, getTotalStepsAllTime, getBestDayThisWeek,
-  getWeeklyAverage, calcDistance, calcCalories, getAllLogs, getStepsForDate,
+  getStepsPrefs, setStepsTarget,
+  calcDistance, calcCalories, getAllLogs,
   type ActivityType,
 } from '@/lib/steps-storage';
+import { useStepsDay, useStepsMutation, useStepsStats } from '@/hooks/useStepsQuery';
 import { format, subDays } from 'date-fns';
 import StepsCalendarHeatmap from '@/components/health/StepsCalendarHeatmap';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
@@ -54,21 +54,14 @@ const HealthSteps = () => {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
-  const refreshSteps = () => {
-    const data = isToday ? getStepsToday() : getStepsForDate(dateKey);
-    setStepsData(data);
-  };
-
-  const [stepsData, setStepsData] = useState(() => isToday ? getStepsToday() : getStepsForDate(dateKey));
+  const { data: stepsData } = useStepsDay(dateKey);
+  const { addStep, deleteStep } = useStepsMutation();
+  const stats = useStepsStats();
   const prefs = getStepsPrefs();
-  const { total: daySteps, logs: dayLogs } = stepsData;
+  const { total: daySteps, logs: dayLogs } = stepsData ?? { total: 0, logs: [] };
   const progress = Math.min((daySteps / prefs.dailyTarget) * 100, 100);
   const targetHit = daySteps >= prefs.dailyTarget;
-  const history = getStepsHistory(7);
-  const streak = getStepsStreak();
-  const totalAllTime = getTotalStepsAllTime();
-  const bestDay = getBestDayThisWeek();
-  const weeklyAvg = getWeeklyAverage();
+  const { history, streak, totalAllTime, bestDay, weeklyAvg } = stats;
   const dayDistance = calcDistance(daySteps, prefs.strideLengthCm);
   const dayCalories = calcCalories(daySteps);
 
@@ -79,16 +72,14 @@ const HealthSteps = () => {
   const handleLog = () => {
     const steps = parseInt(stepsInput);
     if (!steps || steps <= 0) return;
-    addStepLog(steps, activityType, undefined, isToday ? undefined : dateKey);
+    addStep.mutate({ steps, activityType, date: isToday ? undefined : dateKey });
     setStepsInput('');
     setActivityType('walking');
     setDialogOpen(false);
-    refreshSteps();
   };
 
   const handleDelete = (id: string) => {
-    deleteStepLog(id);
-    refreshSteps();
+    deleteStep.mutate({ id, date: dateKey });
   };
 
   const handleSetTarget = (target: number) => {
@@ -117,7 +108,7 @@ const HealthSteps = () => {
       <div className="space-y-5">
         {/* Backdate */}
         <BackdatePrompt moduleKey="steps" onLogPastData={handleBackdatePrompt} />
-        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setStepsData(getStepsForDate(format(d, 'yyyy-MM-dd'))); }} />
+        <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); }} />
 
         {/* Hero Ring */}
         <div className="flex flex-col items-center">

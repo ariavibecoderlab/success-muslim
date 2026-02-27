@@ -10,9 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import {
-  getSunnahItems, saveSunnahItems, getDayLog, toggleSunnahItem, getSunnahStreak,
-  getSunnahWeekData, type SunnahItem,
+  getSunnahItems, saveSunnahItems, toggleSunnahItem, type SunnahItem,
 } from '@/lib/sunnah-storage';
+import { useSunnahLog, useSunnahStats } from '@/hooks/useSunnahQuery';
 import SubPageLayout from '@/components/SubPageLayout';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -41,19 +41,16 @@ const SunnahTracker = () => {
   const isToday = dateKey === format(new Date(), 'yyyy-MM-dd');
 
   const [items, setItems] = useState(getSunnahItems);
-  const [dayLog, setDayLog] = useState(() => getDayLog(dateKey));
+  const { data: dayLog } = useSunnahLog(dateKey);
   const [editing, setEditing] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabel, setNewLabel] = useState('');
   const [newCategory, setNewCategory] = useState<string>('other');
   const [celebrateVisible, setCelebrateVisible] = useState(false);
-  const streak = getSunnahStreak();
-  const weekData = getSunnahWeekData();
+  const { streak, weekData } = useSunnahStats();
 
   const handleDateChange = (date: Date) => {
     setSelectedDate(date);
-    const key = format(date, 'yyyy-MM-dd');
-    setDayLog(getDayLog(key));
   };
 
   const enabledItems = items.filter(i => i.enabled);
@@ -62,7 +59,7 @@ const SunnahTracker = () => {
 
   const handleToggle = (itemId: string) => {
     const updated = toggleSunnahItem(itemId, dateKey);
-    setDayLog(updated);
+    // dayLog updates via React Query invalidation
     
     const newCompleted = updated.completed.filter(id => enabledItems.find(i => i.id === id)).length;
     if (newCompleted === enabledItems.length && enabledItems.length > 0 && isToday) {

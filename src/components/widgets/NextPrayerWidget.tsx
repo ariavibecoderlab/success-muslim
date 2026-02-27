@@ -12,12 +12,12 @@ import {
   type PrayerTimesData,
 } from '@/lib/prayer-times';
 import {
-  getTodaySalah,
-  logSalah,
   type SalahStatus,
   type SalahName,
   SALAH_NAMES,
 } from '@/lib/salah-storage';
+import { useSalahLog, useSalahMutation } from '@/hooks/useSalahQuery';
+import { getTodayKey } from '@/lib/calculations';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 const PRAYER_ICONS = [Sunrise, Sun, CloudSun, Sunset, Moon];
@@ -34,7 +34,9 @@ const STATUS_OPTIONS: { value: SalahStatus; label: string; icon: typeof CheckCir
 
 export default function NextPrayerWidget({ size }: { size: WidgetSize }) {
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
-  const [salahLog, setSalahLog] = useState(getTodaySalah());
+  const today = getTodayKey();
+  const { data: salahLog } = useSalahLog(today);
+  const salahMutation = useSalahMutation();
   const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
@@ -51,8 +53,8 @@ export default function NextPrayerWidget({ size }: { size: WidgetSize }) {
   }, [prayerData]);
 
   const handleSalahStatus = useCallback((prayer: SalahName, status: SalahStatus) => {
-    setSalahLog(logSalah(prayer, status));
-  }, []);
+    salahMutation.mutate({ prayer, status, date: today });
+  }, [today, salahMutation]);
 
   if (!prayerData) return null;
 

@@ -10,9 +10,9 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
 import { estimateCompletionDays, formatYearsMonths, getTodayKey } from '@/lib/calculations';
-import { getSunnahStreak, getDayLog, getSunnahItems } from '@/lib/sunnah-storage';
-import { getDailyDhikr } from '@/lib/dhikr-storage';
-import { getTodaySalahCount } from '@/lib/salah-storage';
+import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
+import { useDhikrDaily } from '@/hooks/useDhikrQuery';
+import { useTodaySalahCount } from '@/hooks/useSalahQuery';
 import { useHijriDate } from '@/hooks/useHijriDate';
 import { calcIman } from '@/lib/life-score';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
@@ -91,12 +91,12 @@ const Iman = () => {
     return log ? Object.values(log).reduce((s: number, v: any) => s + v, 0) : 0;
   }, [qadaProgress]);
 
-  const sunnahStreak = getSunnahStreak();
-  const sunnahLog = getDayLog();
-  const sunnahItems = getSunnahItems().filter(i => i.enabled);
+  const { streak: sunnahStreak, items: allSunnahItems } = useSunnahStats();
+  const { data: sunnahLog } = useSunnahLog();
+  const sunnahItems = allSunnahItems.filter(i => i.enabled);
   const sunnahDone = sunnahLog.completed.filter(id => sunnahItems.find(i => i.id === id)).length;
-  const dailyDhikr = getDailyDhikr();
-  const salahCount = getTodaySalahCount();
+  const { data: dailyDhikr } = useDhikrDaily();
+  const salahCount = useTodaySalahCount();
 
   // Quran stats — real data from useQuranDailyTarget (isDoneToday, quranStreak, daysDone injected above)
 

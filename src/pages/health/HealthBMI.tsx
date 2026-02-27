@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getBMI, saveBMI, calculateBMI, calculateTDEE, bmiCategory, todayKey, type BMIData } from '@/lib/health-storage';
+import { calculateBMI, calculateTDEE, bmiCategory, todayKey, type BMIData } from '@/lib/health-storage';
+import { useBMIData, useBMIMutation } from '@/hooks/useHealthQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const HEALTH_SIBLINGS = [
@@ -109,7 +110,8 @@ const BMIGauge = ({ bmi }: { bmi: number }) => {
 };
 
 const HealthBMI = () => {
-  const saved = getBMI();
+  const { data: saved } = useBMIData();
+  const bmiMutation = useBMIMutation();
   const [weight, setWeight] = useState(saved?.weight?.toString() || '');
   const [height, setHeight] = useState(saved?.height?.toString() || '');
   const [age, setAge] = useState(saved?.age?.toString() || '');
@@ -126,7 +128,7 @@ const HealthBMI = () => {
     const bmi = calculateBMI(w, h);
     const tdee = calculateTDEE(w, h, a, gender, activity);
     const data: BMIData = { weight: w, height: h, age: a, gender, activityLevel: activity as any, bmi, tdee, date: todayKey() };
-    saveBMI(data);
+    bmiMutation.mutate(data);
     setResult(data);
     setShowForm(false);
   };

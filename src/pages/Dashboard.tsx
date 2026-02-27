@@ -26,7 +26,8 @@ import EditableText from "@/components/cms/EditableText";
 import OnboardingTooltips from "@/components/OnboardingTooltips";
 import { calculateLifeScore, saveCurrentDayScore, getScoreColor, getScoreLabel, getWeeklyScores } from "@/lib/life-score";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { getTodaySalah } from "@/lib/salah-storage";
+import { useSalahLog } from "@/hooks/useSalahQuery";
+import { getTodayKey } from "@/lib/calculations";
 import { useWidgetPreferences } from "@/hooks/useWidgetPreferences";
 import { WIDGET_REGISTRY, type WidgetSize } from "@/lib/widget-registry";
 import { useHijriDate } from "@/hooks/useHijriDate";
@@ -69,7 +70,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [announcements, setAnnouncements] = useState<{ id: string; title: string; content: string }[]>([]);
-  const [salahLog] = useState(getTodaySalah());
+  const { data: salahLog } = useSalahLog(getTodayKey());
   const [customizerOpen, setCustomizerOpen] = useState(false);
 
   const { isRamadan } = useHijriDate();

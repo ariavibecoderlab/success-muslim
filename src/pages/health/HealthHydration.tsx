@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import SubPageLayout from '@/components/SubPageLayout';
-import { getHydration, addCup, removeCup, getHydrationHistory } from '@/lib/health-storage';
+import { useHydration, useHydrationMutation } from '@/hooks/useHealthQuery';
+import { getHydrationHistory } from '@/lib/health-storage';
 import EditableText from '@/components/cms/EditableText';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -24,8 +25,8 @@ const HealthHydration = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
-  const [today, setToday] = useState(() => getHydration(dateKey));
-  const refreshHydration = () => setToday(getHydration(dateKey));
+  const { data: today } = useHydration(dateKey);
+  const { addCup: addCupMutation, removeCup: removeCupMutation } = useHydrationMutation();
   const progress = Math.min((today.cups / today.goal) * 100, 100);
   const history = getHydrationHistory(7);
 
@@ -38,7 +39,7 @@ const HealthHydration = () => {
       <div className="space-y-5">
         {/* Date Picker */}
         <div className="flex justify-center">
-          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); setToday(getHydration(format(d, 'yyyy-MM-dd'))); }} compact />
+          <BackdateDatePicker selectedDate={selectedDate} onDateChange={(d) => { setSelectedDate(d); }} compact />
         </div>
 
         {/* Progress ring */}
@@ -66,10 +67,10 @@ const HealthHydration = () => {
 
         {/* Controls */}
         <div className="flex justify-center gap-3">
-          <Button variant="outline" size="icon" onClick={() => { removeCup(dateKey); refreshHydration(); }}>
+          <Button variant="outline" size="icon" onClick={() => { removeCupMutation.mutate(dateKey); }}>
             <Minus className="h-4 w-4" />
           </Button>
-          <Button size="lg" onClick={() => { addCup(dateKey); refreshHydration(); }} className="gap-2 px-8">
+          <Button size="lg" onClick={() => { addCupMutation.mutate(dateKey); }} className="gap-2 px-8">
             <Plus className="h-4 w-4" /> Add Glass
           </Button>
         </div>

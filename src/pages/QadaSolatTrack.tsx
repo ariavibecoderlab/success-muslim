@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup } from '@/lib/storage';
+import { saveQadaSetup } from '@/lib/storage';
+import { useQadaSolat, useQadaMutation } from '@/hooks/useQadaQuery';
 import { estimateCompletionDays, getTodayKey, formatYearsMonths } from '@/lib/calculations';
 import { PRAYER_NAMES, PrayerType } from '@/lib/types';
 import { motion } from 'framer-motion';
@@ -25,8 +26,13 @@ const IMAN_TRACKERS = [
 ];
 
 const QadaSolatTrack = () => {
-  const [setup, setSetup] = useState(getQadaSetup());
-  const [progress, setProgress] = useState(getQadaProgress());
+  const { data: qadaData } = useQadaSolat();
+  const { logPrayer, undoPrayer, updateSetup } = useQadaMutation();
+  const setup = qadaData?.setup ?? null;
+  const progress = qadaData?.progress ?? {
+    completedByPrayer: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 },
+    totalCompleted: 0, currentStreak: 0, longestStreak: 0, lastCompletedDate: null, dailyLogs: {},
+  };
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [editOpen, setEditOpen] = useState(false);
   const [editTotal, setEditTotal] = useState('');
@@ -38,12 +44,12 @@ const QadaSolatTrack = () => {
   const dayTotal = Object.values(dayLog).reduce((s, v) => s + v, 0);
 
   const handleIncrement = (prayer: PrayerType) => {
-    setProgress(logQadaPrayer(prayer, 1, dateKey));
+    logPrayer.mutate({ prayer, count: 1, date: dateKey });
   };
 
   const handleDecrement = (prayer: PrayerType) => {
     if (dayLog[prayer] > 0) {
-      setProgress(undoQadaPrayer(prayer, dateKey));
+      undoPrayer.mutate({ prayer, date: dateKey });
     }
   };
 
@@ -65,8 +71,7 @@ const QadaSolatTrack = () => {
       dailyTarget: newDaily,
       totalByPrayer: { fajr: perPrayer, dhuhr: perPrayer, asr: perPrayer, maghrib: perPrayer, isha: perPrayer },
     };
-    saveQadaSetup(updatedSetup);
-    setSetup(updatedSetup);
+    updateSetup.mutate(updatedSetup);
     setEditOpen(false);
   };
 
