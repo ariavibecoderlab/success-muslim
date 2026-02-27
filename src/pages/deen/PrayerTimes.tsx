@@ -533,7 +533,7 @@ const PrayerTimes = () => {
 
         {/* Method note */}
         <p className="text-[10px] text-muted-foreground text-center">
-          Source: Aladhan API · Times may vary ±1-2 min from local authorities
+          Source: JAKIM e-Solat · Times may vary ±1-2 min
         </p>
       </div>
     </SubPageLayout>

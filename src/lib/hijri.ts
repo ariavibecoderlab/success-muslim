@@ -8,7 +8,7 @@ const HIJRI_MONTHS = [
 
 /**
  * Fetch Hijri date from JAKIM API via edge function proxy.
- * The proxy tries JAKIM first, then Aladhan as fallback.
+ * Falls back to local algorithmic conversion if JAKIM is unavailable.
  */
 export async function fetchJakimHijriDate(date: Date): Promise<string | null> {
   try {
