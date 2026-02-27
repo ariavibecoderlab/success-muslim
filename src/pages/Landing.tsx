@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import EditableText from '@/components/cms/EditableText';
-import smlogo from '@/assets/smlogo.webp';
+import MarketingLayout from '@/components/MarketingLayout';
 
 const fade = {
   hidden: { opacity: 0, y: 24 },
@@ -67,7 +67,7 @@ const AnimatedRing = () => {
         stroke="hsl(var(--primary))" strokeWidth="7" strokeLinecap="round"
         initial={{ strokeDasharray: `0 ${circumference}` }}
         animate={inView ? { strokeDasharray: `${target} ${circumference}` } : undefined}
-        transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 1.4, ease: [0.25, 0.1, 0.25, 1] as const }}
       />
     </svg>
   );
@@ -82,18 +82,13 @@ const Landing = () => {
   }, [user, loading, navigate]);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-
+    <MarketingLayout>
       {/* ── Hero ── */}
-      <section className="relative pt-24 pb-32 px-6">
+      <section className="relative pt-20 pb-28 px-6">
         <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[500px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={fade} custom={0}>
-            <img src={smlogo} alt="Success Muslim" className="w-12 h-12 mx-auto mb-8 rounded-xl shadow-lg shadow-primary/10" />
-          </motion.div>
-
-          <motion.div initial="hidden" animate="visible" variants={fade} custom={1}>
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-foreground leading-[1.08] tracking-tight mb-6">
               <EditableText elementKey="hero.title" defaultText="Optimize Your Life" tag="span" />
               <br />
@@ -103,24 +98,24 @@ const Landing = () => {
             </h1>
           </motion.div>
 
-          <motion.p initial="hidden" animate="visible" variants={fade} custom={2}
+          <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
             className="text-lg text-muted-foreground max-w-lg mx-auto mb-10"
           >
             The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score and grow in dunya and akhirah.
           </motion.p>
 
-          <motion.div initial="hidden" animate="visible" variants={fade} custom={3}
+          <motion.div initial="hidden" animate="visible" variants={fade} custom={2}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shadow-lg shadow-primary/20">
               <Link to="/auth">Start Your Journey <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
-            <Button asChild variant="ghost" size="lg" className="text-base text-muted-foreground">
-              <Link to="/auth">Sign In</Link>
+            <Button asChild variant="outline" size="lg" className="text-base">
+              <Link to="/features">Explore Features</Link>
             </Button>
           </motion.div>
 
-          <motion.p initial="hidden" animate="visible" variants={fade} custom={4}
+          <motion.p initial="hidden" animate="visible" variants={fade} custom={3}
             className="text-sm text-muted-foreground mt-6"
           >
             Free forever. No credit card required.
@@ -309,18 +304,7 @@ const Landing = () => {
           </Button>
         </div>
       </section>
-
-      {/* ── Footer ── */}
-      <footer className="py-8 px-6 border-t border-border/40">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground flex items-center gap-2">
-            <img src={smlogo} alt="Success Muslim" className="w-6 h-6 rounded-lg object-contain" />
-            <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
-          </span>
-          <p className="text-xs text-muted-foreground">Built for the Ummah 🌙 · © 2026</p>
-        </div>
-      </footer>
-    </div>
+    </MarketingLayout>
   );
 };
 
