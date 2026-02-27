@@ -1,34 +1,28 @@
 
-## Standardize IF Timer's "Log Past Fast" with Shared Backdate Components
 
-Replace the custom inline date picker in the "Log Past Fast" dialog with the shared `BackdateDatePicker` component, and add `BackdatePrompt` to the page for consistency.
+## Add 90-Day Limit Guard to Fasting Calendar Pages
 
-### Changes to `src/pages/health/HealthIFTimer.tsx`
+Both `HealthFasting.tsx` and `DeenFasting.tsx` currently allow toggling any past date without restriction. This plan adds a guard so dates older than 90 days are disabled and non-clickable.
 
-**1. Add imports**
-- Import `BackdateDatePicker` from `@/components/BackdateDatePicker`
-- Import `BackdatePrompt` from `@/components/BackdatePrompt`
+### Changes
 
-**2. Add BackdatePrompt to the inactive view**
-- Add `highlightPicker` state (boolean, default false)
-- Render `<BackdatePrompt moduleKey="if-timer" onLogPastData={...} />` at the top of the inactive view (before the header)
-- The `onLogPastData` callback opens the Log Past Fast dialog (`setShowLogPast(true)`)
+**1. HealthFasting.tsx (lines 7, 75-90)**
 
-**3. Replace custom date picker in Log Past Fast dialog (lines 628-651)**
-- Remove the custom `Popover` + `Calendar` block for date selection
-- Remove `pastCalOpen` state variable (line 113) since it's no longer needed
-- Replace with `<BackdateDatePicker selectedDate={pastDate} onDateChange={setPastDate} />` inside the dialog
-- Keep the rest of the dialog (Protocol selector, Duration input, Save button) unchanged
+- Add `subDays`, `isBefore`, `startOfDay`, `isFuture` to the `date-fns` import
+- Compute `const minDate = subDays(startOfDay(new Date()), 90)` at the top of the component
+- In the calendar day button: compute `tooOld = isBefore(startOfDay(day), minDate)` and `future = isFuture(day)`
+- Disable click: `onClick={() => !tooOld && !future && handleToggle(key)}`
+- Add disabled styling: `opacity-40 cursor-not-allowed` when `tooOld || future`
 
-**4. Cleanup unused imports**
-- Remove `Calendar` import (if not used elsewhere in the file -- it IS used in the end-review section, so keep it only if needed there)
-- Check if `Popover`/`PopoverContent`/`PopoverTrigger` are used elsewhere in the file; remove if not
+**2. DeenFasting.tsx (lines 237-264)**
 
-### What stays the same
-- The `logPastIF` storage function call and its parameters
-- Protocol selector and duration input in the dialog
-- End Fast Review section (has its own date editing, separate concern)
-- All active fasting view logic
+- Already imports `isFuture` and `isToday`; add `subDays`, `isBefore`, `startOfDay` to import
+- Compute `const minDate = subDays(startOfDay(new Date()), 90)` at the top
+- In the calendar day button: add `tooOld = isBefore(startOfDay(day), minDate)`
+- Update click guard: `onClick={() => !future && !tooOld && handleToggle(key)}`
+- Update disabled prop: `disabled={future || tooOld}`
+- Update styling class to apply `opacity-40` for `tooOld` days (same as `future`)
 
-### Files modified
-- `src/pages/health/HealthIFTimer.tsx` (single file)
+### Files Modified
+- `src/pages/health/HealthFasting.tsx`
+- `src/pages/deen/DeenFasting.tsx`
