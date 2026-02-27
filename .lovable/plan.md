@@ -1,35 +1,33 @@
 
 
-## Polish Landing Page: More Engaging + Better SEO + Official Logo
+## Polish Landing Page: Remove Header, Cleaner Design
 
-### 1. Replace Moon icon with official `smlogo.webp` logo
+### Changes
 
-**Nav (line 66-68):** Replace the `<div>` with Moon icon with `<img src={smlogo}>` matching the AppHeader style (rounded-xl, 32x32).
+**File: `src/pages/Landing.tsx`**
 
-**Footer (line 257-259):** Replace Moon icon with the same `<img>` logo.
+1. **Remove the fixed nav/header entirely** -- delete the `<nav>` block (lines 88-103). The hero will start from the top of the viewport for a full-bleed, immersive feel.
 
-**Import:** Add `import smlogo from '@/assets/smlogo.webp'` and remove unused `Moon` from lucide imports.
+2. **Integrate logo + CTA into the hero** -- add the `smlogo` as a centered element above the headline (small, elegant, ~40px). Move the "Sign In" and "Get Started" buttons inline below the hero subtitle, replacing the nav buttons.
 
-### 2. Improve SEO meta tags in `index.html`
+3. **Increase whitespace and breathing room**:
+   - Hero: `pt-24 pb-32` instead of `pt-36 pb-28` (no nav offset needed)
+   - Reduce visual noise: softer glow (`bg-primary/5` instead of `/8`), smaller blur
+   - Tighten section padding slightly for a more rhythmic flow
 
-- Update `<title>` to: `Success Muslim — Track Iman, Health & Goals in One App`
-- Update `<meta name="description">` to a richer, keyword-dense description: `Success Muslim is the all-in-one Muslim lifestyle app. Track prayers, Quran, fasting, health, wealth, and productivity. Get your daily Life Score and grow in both worlds.`
-- Add structured data (`application/ld+json`) for Organization schema
-- Add `<meta name="keywords">` with relevant terms (Muslim app, prayer tracker, Quran tracker, Islamic productivity, halal budgeting, etc.)
-- Update OG/Twitter descriptions to match the new description
-- Add `<link rel="canonical" href="https://successmuslim.app/" />`
+4. **Clean up section backgrounds** -- remove alternating `bg-secondary/40` and `bg-secondary/30` stripes. Use a single clean `bg-background` with subtle `border-b border-border/40` dividers between sections for a more minimal, Linear-style look.
 
-### 3. Make the page more engaging
+5. **Refine the highlights strip** -- make it borderless, lighter, just a simple flex row with no background box.
 
-**Add a "Features at a Glance" strip** between Hero and Life Score sections -- a horizontal row of quick stats/highlights with animated counters (e.g., "5 Pillars Tracked", "90+ Features", "100% Free").
+6. **Simplify footer** -- single line: logo + brand left, copyright right. Remove the separate "Built for the Ummah" line (or keep it inline).
 
-**Add a "Who It's For" section** before the bottom CTA -- three persona cards (The Practicing Muslim, The Health-Conscious Muslim, The Ambitious Muslim) to help visitors self-identify.
-
-**Enhance the Hero subtitle** to be more compelling and SEO-rich.
-
-**Add a second CTA in the footer area** with app store-style badges placeholder and a "Built for the Ummah" tagline.
+### Summary of Visual Effect
+- No sticky header -- page feels open and immersive
+- Logo centered in hero as a brand mark
+- Cleaner section separation (borders not backgrounds)
+- More whitespace, less visual clutter
+- Sign In / Get Started moved into hero area
 
 ### Files Modified
-- `src/pages/Landing.tsx` -- logo swap, new sections, richer copy
-- `index.html` -- SEO meta tags, structured data, canonical URL
+- `src/pages/Landing.tsx`
 
