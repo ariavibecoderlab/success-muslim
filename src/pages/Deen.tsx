@@ -14,7 +14,9 @@ import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
 import { useDhikrDaily } from '@/hooks/useDhikrQuery';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
 import { useHijriDate } from '@/hooks/useHijriDate';
-import { calcIman } from '@/lib/life-score';
+import { calcIman, type LifeScoreInput } from '@/lib/life-score';
+import { getQuranDay } from '@/lib/quran-storage';
+import { getFastingLog, todayKey } from '@/lib/health-storage';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { useQuranReadingLog } from '@/hooks/useQuranReadingLog';
 import {
@@ -105,7 +107,22 @@ const Iman = () => {
   const nextPrayer = prayerData?.timings[nextIdx];
 
   // Iman score from unified Life Score engine
-  const imanPillar = calcIman();
+  const imanInput = useMemo((): LifeScoreInput => {
+    const quranDay = getQuranDay();
+    const fastLog = getFastingLog();
+    const tk = todayKey();
+    return {
+      salah: { onTime: salahCount.onTime, late: salahCount.late, logged: salahCount.logged },
+      quranPagesRead: quranDay.pagesRead,
+      sunnahEnabled: sunnahItems.length,
+      sunnahCompleted: sunnahDone,
+      dhikrCount: dailyDhikr?.totalCount ?? 0,
+      isFastingToday: !!fastLog[tk],
+      hydrationCups: 0, hydrationGoal: 8, sleepHours: null,
+      mitsTotal: 0, mitsCompleted: 0, habitsTotal: 0, habitsDoneToday: 0,
+    };
+  }, [salahCount, sunnahItems, sunnahDone, dailyDhikr]);
+  const imanPillar = calcIman(imanInput);
   const imanScore = imanPillar.score;
 
   return (
