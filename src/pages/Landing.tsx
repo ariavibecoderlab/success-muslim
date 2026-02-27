@@ -84,30 +84,16 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
 
-      {/* ── Nav ── */}
-      <nav className="fixed top-0 inset-x-0 z-50 bg-background/70 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-5xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
-            <img src={smlogo} alt="Success Muslim" className="w-8 h-8 rounded-xl object-contain" />
-            <EditableText elementKey="nav.brand" defaultText="Success Muslim" tag="span" className="text-base font-semibold text-foreground" />
-          </Link>
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm" className="text-muted-foreground">
-              <Link to="/auth">Sign In</Link>
-            </Button>
-            <Button asChild size="sm" className="rounded-lg">
-              <Link to="/auth">Get Started <ArrowRight className="ml-1.5 h-3.5 w-3.5" /></Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
-
       {/* ── Hero ── */}
-      <section className="relative pt-36 pb-28 px-6">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
+      <section className="relative pt-24 pb-32 px-6">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[500px] h-[350px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative max-w-3xl mx-auto text-center">
           <motion.div initial="hidden" animate="visible" variants={fade} custom={0}>
+            <img src={smlogo} alt="Success Muslim" className="w-12 h-12 mx-auto mb-8 rounded-xl shadow-lg shadow-primary/10" />
+          </motion.div>
+
+          <motion.div initial="hidden" animate="visible" variants={fade} custom={1}>
             <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-foreground leading-[1.08] tracking-tight mb-6">
               <EditableText elementKey="hero.title" defaultText="Optimize Your Life" tag="span" />
               <br />
@@ -117,20 +103,25 @@ const Landing = () => {
             </h1>
           </motion.div>
 
-          <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
+          <motion.p initial="hidden" animate="visible" variants={fade} custom={2}
             className="text-lg text-muted-foreground max-w-lg mx-auto mb-10"
           >
             The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score and grow in dunya and akhirah.
           </motion.p>
 
-          <motion.div initial="hidden" animate="visible" variants={fade} custom={2}>
+          <motion.div initial="hidden" animate="visible" variants={fade} custom={3}
+            className="flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
             <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shadow-lg shadow-primary/20">
               <Link to="/auth">Start Your Journey <ArrowRight className="ml-2 h-5 w-5" /></Link>
             </Button>
+            <Button asChild variant="ghost" size="lg" className="text-base text-muted-foreground">
+              <Link to="/auth">Sign In</Link>
+            </Button>
           </motion.div>
 
-          <motion.p initial="hidden" animate="visible" variants={fade} custom={3}
-            className="text-sm text-muted-foreground mt-5"
+          <motion.p initial="hidden" animate="visible" variants={fade} custom={4}
+            className="text-sm text-muted-foreground mt-6"
           >
             Free forever. No credit card required.
           </motion.p>
@@ -138,7 +129,7 @@ const Landing = () => {
       </section>
 
       {/* ── Features at a Glance ── */}
-      <section className="py-10 px-6 border-y border-border/50 bg-secondary/30">
+      <section className="py-10 px-6 border-y border-border/40">
         <div className="max-w-3xl mx-auto flex items-center justify-center gap-8 sm:gap-16 flex-wrap">
           {highlights.map((h, i) => (
             <motion.div key={h.label} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
@@ -157,7 +148,7 @@ const Landing = () => {
       </section>
 
       {/* ── Life Score ── */}
-      <section className="py-24 px-6 bg-secondary/40">
+      <section className="py-24 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}>
             <EditableText elementKey="lifescore.title" defaultText="One score. Whole life." tag="h2"
@@ -195,7 +186,7 @@ const Landing = () => {
       </section>
 
       {/* ── Pillars (Bento) ── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 border-t border-border/40">
         <div className="max-w-4xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-12"
@@ -225,7 +216,7 @@ const Landing = () => {
       </section>
 
       {/* ── How It Works (Timeline) ── */}
-      <section className="py-24 px-6 bg-secondary/40">
+      <section className="py-24 px-6 border-t border-border/40">
         <div className="max-w-3xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-14"
@@ -275,7 +266,7 @@ const Landing = () => {
       </section>
 
       {/* ── Who It's For ── */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 border-t border-border/40">
         <div className="max-w-4xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-12"
@@ -320,19 +311,13 @@ const Landing = () => {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="py-10 px-6 border-t border-border">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-sm font-medium text-foreground flex items-center gap-2">
-              <img src={smlogo} alt="Success Muslim" className="w-6 h-6 rounded-lg object-contain" />
-              <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
-            </span>
-            <EditableText elementKey="footer.copyright" defaultText="© 2026 Success Muslim" tag="p"
-              className="text-xs text-muted-foreground" />
-          </div>
-          <div className="text-center">
-            <p className="text-xs text-muted-foreground">Built for the Ummah 🌙</p>
-          </div>
+      <footer className="py-8 px-6 border-t border-border/40">
+        <div className="max-w-5xl mx-auto flex items-center justify-between">
+          <span className="text-sm font-medium text-foreground flex items-center gap-2">
+            <img src={smlogo} alt="Success Muslim" className="w-6 h-6 rounded-lg object-contain" />
+            <EditableText elementKey="footer.brand" defaultText="Success Muslim" tag="span" />
+          </span>
+          <p className="text-xs text-muted-foreground">Built for the Ummah 🌙 · © 2026</p>
         </div>
       </footer>
     </div>
