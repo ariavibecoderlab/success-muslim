@@ -5,6 +5,16 @@
 
 ---
 
+## 🔧 Backdate Gaps Fixed (2026-02-27)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| Habit Streaks backdate support | ✅ | BackdateDatePicker + BackdatePrompt + date-aware toggling |
+| Settings "Log Past Data" re-trigger | ✅ | Clears dismissed prompts, module selector grid, navigates with ?backdate=1 |
+| 90-day limit on fasting calendars | ✅ | HealthFasting + DeenFasting disabled dates older than 90 days |
+
+---
+
 ## 🔧 Backdate Support — 5 Missing Modules (2026-02-27)
 
 | Change | Status | Notes |

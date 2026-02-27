@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Plus, Trash2, Flame, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import SubPageLayout from '@/components/SubPageLayout';
 import { motion } from 'framer-motion';
 import { format, subDays, startOfWeek, getDay } from 'date-fns';
+import { useSearchParams } from 'react-router-dom';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 import {
   getHabits,
   addHabit,
@@ -29,7 +32,21 @@ const HabitStreaksPage = () => {
   const [habits, setHabits] = useState<Habit[]>(() => getHabits());
   const [log, setLog] = useState<HabitLog>(() => getHabitLog());
   const [newName, setNewName] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [highlightPicker, setHighlightPicker] = useState(false);
+  const [searchParams] = useSearchParams();
+
   const today = getTodayKey();
+  const dateKey = format(selectedDate, 'yyyy-MM-dd');
+  const isToday = dateKey === today;
+
+  // Handle ?backdate=1 from Settings "Log Past Data"
+  useEffect(() => {
+    if (searchParams.get('backdate') === '1') {
+      setSelectedDate(subDays(new Date(), 1));
+      setHighlightPicker(true);
+    }
+  }, [searchParams]);
 
   const handleAdd = useCallback(() => {
     if (!newName.trim()) return;
@@ -42,7 +59,12 @@ const HabitStreaksPage = () => {
   }, []);
 
   const handleToggle = useCallback((habitId: string) => {
-    setLog(toggleHabitForDate(habitId));
+    setLog(toggleHabitForDate(habitId, dateKey));
+  }, [dateKey]);
+
+  const handleLogPastData = useCallback(() => {
+    setSelectedDate(subDays(new Date(), 1));
+    setHighlightPicker(true);
   }, []);
 
   const heatmap = getHeatmapData(112); // 16 weeks
@@ -55,6 +77,19 @@ const HabitStreaksPage = () => {
       currentPath="/productivity/habits"
     >
       <div className="space-y-6">
+        {/* Backdate prompt */}
+        <BackdatePrompt moduleKey="habits" onLogPastData={handleLogPastData} />
+
+        {/* Date picker */}
+        <div className="flex items-center justify-between">
+          <BackdateDatePicker
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
+            highlight={highlightPicker}
+            compact
+          />
+        </div>
+
         {/* Heatmap */}
         <Card>
           <CardContent className="p-4">
@@ -90,15 +125,15 @@ const HabitStreaksPage = () => {
           </Button>
         </div>
 
-        {/* Today's habits */}
+        {/* Habits for selected date */}
         {habits.length > 0 && (
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Today's Habits
+              {isToday ? "Today's Habits" : `Habits for ${format(selectedDate, 'd MMM yyyy')}`}
             </h3>
             <div className="space-y-2">
               {habits.map(habit => {
-                const done = log[today]?.includes(habit.id) || false;
+                const done = log[dateKey]?.includes(habit.id) || false;
                 const streak = getHabitStreak(habit.id);
                 return (
                   <motion.div
@@ -149,15 +184,13 @@ const HabitStreaksPage = () => {
 };
 
 function HeatmapGrid({ data }: { data: { date: string; count: number }[] }) {
-  // Group into weeks (columns)
   const weeks: { date: string; count: number }[][] = [];
   let currentWeek: { date: string; count: number }[] = [];
 
-  // Pad start to align with Sunday
   const firstDate = new Date(data[0]?.date || new Date());
   const dayOfWeek = getDay(firstDate);
   for (let i = 0; i < dayOfWeek; i++) {
-    currentWeek.push({ date: '', count: -1 }); // placeholder
+    currentWeek.push({ date: '', count: -1 });
   }
 
   data.forEach(d => {
