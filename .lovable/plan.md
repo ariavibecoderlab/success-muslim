@@ -1,94 +1,35 @@
 
 
-## Fix 4 Minor React Query Bypass Issues
+## Remove Aladhan API -- Use JAKIM as Single Source of Truth
 
-### Issue 1 -- DhikrCounter.tsx reads localStorage directly
+This plan removes all Aladhan API references from the codebase, making JAKIM the sole source for prayer times, imsak, and Hijri dates. The local algorithmic Hijri conversion remains as an offline fallback.
 
-**Problem:** Lines 31-34, 54, 61, and 130 call `getDailyDhikr()` directly instead of using the `useDhikrDaily` hook data that's already available as `dailyData`.
+### Changes
 
-**Fix in `src/pages/DhikrCounter.tsx`:**
-- Line 31-34: Change initial `count` state to derive from `dailyData` via `useEffect` instead of `getDailyDhikr()`
-- Line 54: In `handleDateChange`, remove `getDailyDhikr(key)` -- use an effect that watches `dailyData` changes
-- Line 61: In `selectPreset`, same -- derive from `dailyData`
-- Line 130: Replace `const daily = getDailyDhikr(dateKey)` with `const daily = dailyData`
-- Line 314: Replace `daily.sessions` reference to use `dailyData.sessions`
-- Remove `getDailyDhikr` from import (keep `saveDhikrCount` for the mutation's local write)
+**1. Edge Function: `supabase/functions/jakim-proxy/index.ts`**
+- Remove the entire Aladhan fallback block for `tarikhtakwim` (lines 60-82)
+- Remove the entire Aladhan fallback block for `takwimsolat` (lines 84-144), including the `zoneCoords` mapping
+- Keep only the JAKIM fetch logic -- if JAKIM fails, return 502 error (already handled)
 
-The pattern: use a `useEffect` that syncs the local `count` state whenever `dailyData` or `selectedPreset` changes:
-```typescript
-useEffect(() => {
-  const session = dailyData.sessions.find(s => s.presetId === selectedPreset.id);
-  setCount(session?.count || 0);
-}, [dailyData, selectedPreset.id]);
-```
+**2. Client: `src/lib/prayer-times.ts`**
+- Remove `fetchFromAladhan()` function entirely (lines 253-304)
+- Remove the Aladhan fallback call on line 174-175
+- Remove `'aladhan'` from the `source` type (line 17) -- simplify to just `'jakim'`
+- When JAKIM fails, return `null` (the UI already handles this gracefully with cached data)
 
-This removes the 4 direct `getDailyDhikr()` calls and makes `dailyData` from React Query the single source.
+**3. UI: `src/pages/deen/PrayerTimes.tsx`**
+- Update line 536: Change "Source: Aladhan API" text to "Source: JAKIM e-Solat" 
 
----
+**4. Comment update: `src/lib/hijri.ts`**
+- Update line 11 comment: Remove mention of "Aladhan as fallback" -- the proxy now only uses JAKIM, and the local algorithmic fallback handles failures
 
-### Issue 2 -- HealthHydration.tsx weekly chart bypasses React Query
+### What stays
+- JAKIM proxy edge function (primary source)
+- Local algorithmic Hijri conversion in `hijri.ts` (offline fallback)
+- `sessionStorage` caching for Hijri dates
+- `localStorage` caching for prayer times
 
-**Problem:** Line 31 calls `getHydrationHistory(7)` directly for the bar chart. This data never refreshes after mutations.
-
-**Fix:**
-1. Add `useHydrationHistory(days)` hook to `src/hooks/useHealthQuery.ts`:
-   - queryKey: `['health-hydration-history', userId, days]`
-   - queryFn: For logged-in users, query last N days from `hydration_log` table ordered by date. For anon, fall back to `getHydrationHistory(days)`.
-   - initialData: `getHydrationHistory(days)`
-   - staleTime: 60000
-   - Invalidated by `useHydrationMutation` (add to its `onSuccess`)
-
-2. In `src/pages/health/HealthHydration.tsx`:
-   - Replace `const history = getHydrationHistory(7)` with `const { data: history } = useHydrationHistory(7)`
-   - Remove `getHydrationHistory` from imports
-
----
-
-### Issue 3 -- SunnahTracker.tsx toggle missing invalidateQueries
-
-**Problem:** `handleToggle` on line 61 calls `toggleSunnahItem()` directly instead of using the `useSunnahToggle` mutation hook. The comment on line 62 says "dayLog updates via React Query invalidation" but no invalidation actually happens.
-
-**Fix in `src/pages/SunnahTracker.tsx`:**
-- Import `useSunnahToggle` from hooks (it already exists and correctly invalidates)
-- In `handleToggle`: call `sunnahToggle.mutate({ itemId, date: dateKey })` instead of `toggleSunnahItem(itemId, dateKey)` directly
-- The existing `useSunnahToggle` hook already calls `invalidateQueries` on success
-- Keep the celebration logic by reading the returned value from `toggleSunnahItem` inside the mutation's `onSuccess` or by using optimistic local state
-
-Refined approach: Since the celebration check needs the immediate result, keep the direct `toggleSunnahItem()` call but add explicit `queryClient.invalidateQueries`:
-```typescript
-const queryClient = useQueryClient();
-const { user } = useAuth();
-
-const handleToggle = (itemId: string) => {
-  const updated = toggleSunnahItem(itemId, dateKey);
-  queryClient.invalidateQueries({ queryKey: ['sunnah', user?.id ?? 'anon', dateKey] });
-  // celebration logic stays the same
-};
-```
-
----
-
-### Issue 4 -- HealthIFTimer.tsx addCup() bypasses mutation
-
-**Problem:** Line 283 calls `addCup()` directly from health-storage, bypassing `useHydrationMutation`. The hydration count won't sync to HydrationWidget or Health.tsx.
-
-**Fix in `src/pages/health/HealthIFTimer.tsx`:**
-- Import `useHydrationMutation` from `@/hooks/useHealthQuery`
-- Initialize: `const { addCup: addCupMutation } = useHydrationMutation()`
-- Replace line 283: `const handleQuickWater = () => { addCupMutation.mutate(); toast('Water logged!'); }`
-- Remove `addCup` from the health-storage import on line 11
-
----
-
-### Files Changed Summary
-
-```text
-MODIFIED:
-  src/pages/DhikrCounter.tsx           -- Use dailyData from hook, remove getDailyDhikr calls
-  src/hooks/useHealthQuery.ts          -- Add useHydrationHistory hook
-  src/pages/health/HealthHydration.tsx  -- Use useHydrationHistory hook
-  src/pages/SunnahTracker.tsx          -- Add queryClient.invalidateQueries after toggle
-  src/pages/health/HealthIFTimer.tsx   -- Use useHydrationMutation for quick water
-  PROGRESS.md                         -- Document fixes
-```
+### Technical notes
+- Non-Malaysian users will get `null` from `fetchPrayerTimes()` since JAKIM only covers Malaysian zones. The UI should handle this -- currently it shows nothing, which is correct since this is a Malaysia-focused app.
+- The `calculation_method`, `madhab`, and GPS coordinate settings in `PrayerSettings` become unused for API calls but can remain in the interface for future use.
 
