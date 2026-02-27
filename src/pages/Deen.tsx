@@ -104,16 +104,16 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 // ── Feature card config ───────────────────────────
 
 const spiritualTools = [
-  { icon: BookOpen, title: 'Quran', path: '/iman/quran', gradient: 'from-amber-500 to-amber-600' },
-  { icon: HandHeart, title: 'Dhikr Counter', path: '/iman/dhikr', gradient: 'from-pink-500 to-rose-600' },
-  { icon: ListChecks, title: 'Sunnah Tracker', path: '/iman/sunnah', gradient: 'from-purple-500 to-purple-600' },
-  { icon: Star, title: 'Prayer Times', path: '/iman/prayer-times', gradient: 'from-blue-500 to-blue-600' },
-  { icon: Calculator, title: 'Zakat', path: '/iman/zakat', gradient: 'from-emerald-500 to-emerald-600' },
-  { icon: Heart, title: 'Sadaqah', path: '/iman/sadaqah', gradient: 'from-rose-500 to-rose-600' },
-  { icon: Moon, title: 'Qiyam Planner', path: '/iman/qiyam', gradient: 'from-indigo-500 to-indigo-600' },
-  { icon: Star, title: 'Ramadan', path: '/iman/ramadan', gradient: 'from-orange-500 to-orange-600' },
-  { icon: Compass, title: 'Hajj & Umrah', path: '/iman/hajj', gradient: 'from-teal-500 to-teal-600' },
-  { icon: Megaphone, title: 'Daily Da\'wah', path: '/iman/dakwah', gradient: 'from-violet-500 to-violet-600' },
+  { icon: BookOpen, title: 'Quran', path: '/iman/quran', gradient: 'from-amber-400/80 to-amber-500/80' },
+  { icon: HandHeart, title: 'Dhikr Counter', path: '/iman/dhikr', gradient: 'from-pink-400/80 to-rose-500/80' },
+  { icon: ListChecks, title: 'Sunnah Tracker', path: '/iman/sunnah', gradient: 'from-purple-400/80 to-purple-500/80' },
+  { icon: Star, title: 'Prayer Times', path: '/iman/prayer-times', gradient: 'from-blue-400/80 to-blue-500/80' },
+  { icon: Calculator, title: 'Zakat', path: '/iman/zakat', gradient: 'from-emerald-400/80 to-emerald-500/80' },
+  { icon: Heart, title: 'Sadaqah', path: '/iman/sadaqah', gradient: 'from-rose-400/80 to-rose-500/80' },
+  { icon: Moon, title: 'Qiyam Planner', path: '/iman/qiyam', gradient: 'from-indigo-400/80 to-indigo-500/80' },
+  { icon: Star, title: 'Ramadan', path: '/iman/ramadan', gradient: 'from-orange-400/80 to-orange-500/80' },
+  { icon: Compass, title: 'Hajj & Umrah', path: '/iman/hajj', gradient: 'from-teal-400/80 to-teal-500/80' },
+  { icon: Megaphone, title: 'Daily Da\'wah', path: '/iman/dakwah', gradient: 'from-violet-400/80 to-violet-500/80' },
 ];
 
 const Iman = () => {
@@ -235,7 +235,7 @@ const Iman = () => {
         {/* ── Prayer Times Hero Card ──────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
           <Link to="/iman/prayer-times">
-            <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-600 to-teal-700 text-white">
+            <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-emerald-500/90 to-teal-600/90 text-white">
               <CardContent className="p-5">
                 {prayerData && nextPrayer ? (
                   <>
@@ -346,44 +346,44 @@ const Iman = () => {
         <motion.div className="grid grid-cols-4 gap-3" initial="hidden" animate="visible" variants={staggerContainer}>
           {/* Salah */}
           <motion.div variants={staggerItem} className="flex flex-col items-center gap-1.5">
-            <StatsRing pct={salahPct} color="hsl(160, 84%, 39%)">
+            <StatsRing pct={salahPct} color="hsl(160, 50%, 45%)">
               <span className="text-sm font-bold">{salahCount.logged}</span>
             </StatsRing>
             <div className="text-center">
-              <p className="text-[10px] font-semibold text-emerald-600">Salah</p>
+              <p className="text-[10px] font-semibold text-emerald-500/80">Salah</p>
               <p className="text-[9px] text-muted-foreground">{salahCount.logged}/5</p>
             </div>
           </motion.div>
 
           {/* Dhikr */}
           <motion.div variants={staggerItem} className="flex flex-col items-center gap-1.5">
-            <StatsRing pct={dhikrPct} color="hsl(330, 81%, 60%)">
+            <StatsRing pct={dhikrPct} color="hsl(330, 45%, 60%)">
               <span className="text-[10px] font-bold">{dailyDhikr?.totalCount ?? 0}</span>
             </StatsRing>
             <div className="text-center">
-              <p className="text-[10px] font-semibold text-pink-600">Dhikr</p>
+              <p className="text-[10px] font-semibold text-pink-500/80">Dhikr</p>
               <p className="text-[9px] text-muted-foreground">count</p>
             </div>
           </motion.div>
 
           {/* Quran */}
           <motion.div variants={staggerItem} className="flex flex-col items-center gap-1.5">
-            <StatsRing pct={quranPct} color="hsl(38, 92%, 50%)">
+            <StatsRing pct={quranPct} color="hsl(38, 55%, 50%)">
               <span className="text-sm font-bold">{isDoneToday ? '✓' : '—'}</span>
             </StatsRing>
             <div className="text-center">
-              <p className="text-[10px] font-semibold text-amber-600">Quran</p>
+              <p className="text-[10px] font-semibold text-amber-500/80">Quran</p>
               <p className="text-[9px] text-muted-foreground">{todayTotalPages > 0 ? `${todayTotalPages} pg` : 'today'}</p>
             </div>
           </motion.div>
 
           {/* Sunnah */}
           <motion.div variants={staggerItem} className="flex flex-col items-center gap-1.5">
-            <StatsRing pct={sunnahPct} color="hsl(271, 91%, 65%)">
+            <StatsRing pct={sunnahPct} color="hsl(271, 45%, 60%)">
               <span className="text-sm font-bold">{sunnahDone}</span>
             </StatsRing>
             <div className="text-center">
-              <p className="text-[10px] font-semibold text-purple-600">Sunnah</p>
+              <p className="text-[10px] font-semibold text-purple-500/80">Sunnah</p>
               <p className="text-[9px] text-muted-foreground">{sunnahDone}/{sunnahItems.length}</p>
             </div>
           </motion.div>
@@ -418,7 +418,7 @@ const Iman = () => {
             <motion.div variants={staggerItem}>
               <Card className="cursor-default">
                 <CardContent className="p-3.5 flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400/80 to-green-500/80 flex items-center justify-center shrink-0">
                     <BarChart3 className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -447,7 +447,7 @@ const Iman = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400/80 to-blue-500/80 flex items-center justify-center">
                             <Clock className="h-4 w-4 text-white" />
                           </div>
                           <div>
@@ -477,7 +477,7 @@ const Iman = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400/80 to-orange-500/80 flex items-center justify-center">
                             <CalendarCheck className="h-4 w-4 text-white" />
                           </div>
                           <div>
@@ -502,7 +502,7 @@ const Iman = () => {
                   <Card className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400/80 to-emerald-500/80 flex items-center justify-center">
                           <Calculator className="h-4 w-4 text-white" />
                         </div>
                         <div>
@@ -528,9 +528,9 @@ const Iman = () => {
           </h2>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { icon: Clock, title: 'Qada Solat', to: hasQada ? '/qada-solat/track' : '/qada-solat/setup', active: hasQada, gradient: 'from-blue-500 to-blue-600' },
-              { icon: CalendarCheck, title: 'Ramadhan', to: hasRamadhan ? '/ramadhan-qada/track' : '/ramadhan-qada/setup', active: hasRamadhan, gradient: 'from-orange-500 to-orange-600' },
-              { icon: Calculator, title: 'Fidyah', to: '/fidyah', active: hasFidyah, gradient: 'from-emerald-500 to-emerald-600' },
+              { icon: Clock, title: 'Qada Solat', to: hasQada ? '/qada-solat/track' : '/qada-solat/setup', active: hasQada, gradient: 'from-blue-400/80 to-blue-500/80' },
+              { icon: CalendarCheck, title: 'Ramadhan', to: hasRamadhan ? '/ramadhan-qada/track' : '/ramadhan-qada/setup', active: hasRamadhan, gradient: 'from-orange-400/80 to-orange-500/80' },
+              { icon: Calculator, title: 'Fidyah', to: '/fidyah', active: hasFidyah, gradient: 'from-emerald-400/80 to-emerald-500/80' },
             ].map(item => (
               <Link key={item.title} to={item.to}>
                 <Card className={`hover:shadow-sm transition-shadow ${item.active ? 'border-primary/20 bg-primary/5' : ''}`}>
