@@ -1,35 +1,30 @@
 
 
-## Remove Aladhan API -- Use JAKIM as Single Source of Truth
+## Fix Health Page Icons to Match Feature Names
 
-This plan removes all Aladhan API references from the codebase, making JAKIM the sole source for prayer times, imsak, and Hijri dates. The local algorithmic Hijri conversion remains as an offline fallback.
+A quick icon update to ensure each feature card and quick action uses an icon that accurately represents its function.
 
-### Changes
+### Current Issues
 
-**1. Edge Function: `supabase/functions/jakim-proxy/index.ts`**
-- Remove the entire Aladhan fallback block for `tarikhtakwim` (lines 60-82)
-- Remove the entire Aladhan fallback block for `takwimsolat` (lines 84-144), including the `zoneCoords` mapping
-- Keep only the JAKIM fetch logic -- if JAKIM fails, return 502 error (already handled)
+| Feature | Current Icon | Problem |
+|---------|-------------|---------|
+| Weight Tracker | `TrendingUp` (chart line) | Doesn't convey "weight" -- looks like a stock chart |
+| Sunnah Fasting | `Moon` (crescent) | Moon = night/sleep, not fasting |
 
-**2. Client: `src/lib/prayer-times.ts`**
-- Remove `fetchFromAladhan()` function entirely (lines 253-304)
-- Remove the Aladhan fallback call on line 174-175
-- Remove `'aladhan'` from the `source` type (line 17) -- simplify to just `'jakim'`
-- When JAKIM fails, return `null` (the UI already handles this gracefully with cached data)
+### Proposed Fix
 
-**3. UI: `src/pages/deen/PrayerTimes.tsx`**
-- Update line 536: Change "Source: Aladhan API" text to "Source: JAKIM e-Solat" 
+| Feature | New Icon | Why |
+|---------|----------|-----|
+| Weight Tracker | `Weight` | Directly represents body weight |
+| Sunnah Fasting | `UtensilsCrossed` | Universal symbol for food/fasting (utensils crossed out = not eating) |
 
-**4. Comment update: `src/lib/hijri.ts`**
-- Update line 11 comment: Remove mention of "Aladhan as fallback" -- the proxy now only uses JAKIM, and the local algorithmic fallback handles failures
+### File Changed
 
-### What stays
-- JAKIM proxy edge function (primary source)
-- Local algorithmic Hijri conversion in `hijri.ts` (offline fallback)
-- `sessionStorage` caching for Hijri dates
-- `localStorage` caching for prayer times
+**`src/pages/Health.tsx`**
+- Line 3: Update imports -- replace `TrendingUp` with `Weight`, keep `UtensilsCrossed` (already imported)
+- Line 81: Weight Tracker feature card -- change `TrendingUp` to `Weight`
+- Line 85: Sunnah Fasting feature card -- change `Moon` to `UtensilsCrossed`
+- Line 93: Quick action "Meal" -- keep `UtensilsCrossed` as-is (still appropriate for meal logging)
 
-### Technical notes
-- Non-Malaysian users will get `null` from `fetchPrayerTimes()` since JAKIM only covers Malaysian zones. The UI should handle this -- currently it shows nothing, which is correct since this is a Malaysia-focused app.
-- The `calculation_method`, `madhab`, and GPS coordinate settings in `PrayerSettings` become unused for API calls but can remain in the interface for future use.
+Note: `Moon` import can be removed if not used elsewhere in this file.
 
