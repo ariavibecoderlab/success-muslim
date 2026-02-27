@@ -5,6 +5,14 @@
 
 ---
 
+## 🔧 Back Button Navigation Fix (2026-02-27)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| History-aware Back button in SubPageLayout | ✅ | `navigate(-1)` with `backTo` fallback for direct URL access |
+
+---
+
 ## 🔧 Backdate Gaps Fixed (2026-02-27)
 
 | Change | Status | Notes |
