@@ -25,9 +25,8 @@ import FastingStreakCelebration, { shouldShowCelebration } from '@/components/he
 import { getCurrentStage } from '@/lib/fasting-stages';
 import { useHealthProfile } from '@/hooks/useHealthProfile';
 import { useFastingStore } from '@/stores/fastingStore';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
+import BackdateDatePicker from '@/components/BackdateDatePicker';
+import BackdatePrompt from '@/components/BackdatePrompt';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -110,7 +109,7 @@ const HealthIFTimer = () => {
   const [pastDate, setPastDate] = useState<Date>(subDays(new Date(), 1));
   const [pastMode, setPastMode] = useState('16:8');
   const [pastHours, setPastHours] = useState('16');
-  const [pastCalOpen, setPastCalOpen] = useState(false);
+  
 
   // Redirect to onboarding if not completed
   useEffect(() => {
@@ -427,6 +426,9 @@ const HealthIFTimer = () => {
         {/* ===== INACTIVE VIEW ===== */}
         {!active && (
           <>
+            {/* Backdate Prompt */}
+            <BackdatePrompt moduleKey="if-timer" onLogPastData={() => setShowLogPast(true)} />
+
             {/* Header */}
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
               <h2 className="text-xl font-black tracking-tight">
@@ -628,26 +630,7 @@ const HealthIFTimer = () => {
               {/* Date */}
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Date</label>
-                <Popover open={pastCalOpen} onOpenChange={setPastCalOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-start text-left text-sm font-normal gap-2">
-                      <CalendarDays className="h-4 w-4" />
-                      {format(pastDate, 'EEE, d MMM yyyy')}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={pastDate}
-                      onSelect={(d) => { if (d) { setPastDate(d); setPastCalOpen(false); } }}
-                      disabled={(date) =>
-                        isAfter(startOfDay(date), subDays(today, 1)) || isBefore(startOfDay(date), minPastDate)
-                      }
-                      initialFocus
-                      className="p-3 pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <BackdateDatePicker selectedDate={pastDate} onDateChange={setPastDate} />
               </div>
 
               {/* Protocol */}
