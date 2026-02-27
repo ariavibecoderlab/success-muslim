@@ -12,10 +12,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   UserCircle, LogOut, Save, Camera, Mail, MapPin, User, Shield,
-  Lock, Trash2, ChevronRight, Database, Clock
+  Lock, Trash2, ChevronRight, Database, Clock, CalendarDays
 } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { subDays } from 'date-fns';
 import FamilyPrivacySettings from '@/components/family/FamilyPrivacySettings';
 
 const stagger = {
@@ -289,6 +290,12 @@ const Settings = () => {
           <Card>
             <CardContent className="p-5 space-y-3">
               <SectionHeader icon={Database} title="Data & Storage" />
+
+              {/* Log Past Data */}
+              <LogPastDataRow navigate={navigate} toast={toast} />
+
+              <Separator />
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Trash2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -322,5 +329,67 @@ const Settings = () => {
     </div>
   );
 };
+const BACKDATE_MODULES = [
+  { label: 'Solat', path: '/iman/salah-log' },
+  { label: 'Quran', path: '/iman/quran' },
+  { label: 'Dhikr', path: '/iman/dhikr' },
+  { label: 'Sunnah', path: '/iman/sunnah' },
+  { label: 'Water', path: '/health/hydration' },
+  { label: 'Sleep', path: '/health/sleep' },
+  { label: 'Steps', path: '/health/steps' },
+  { label: 'Weight', path: '/health/weight' },
+  { label: 'Fasting', path: '/health/fasting' },
+  { label: 'Habits', path: '/productivity/habits' },
+];
+
+function LogPastDataRow({ navigate, toast }: { navigate: ReturnType<typeof useNavigate>; toast: ReturnType<typeof useToast>['toast'] }) {
+  const [showModules, setShowModules] = useState(false);
+
+  const handleOpen = () => {
+    // Clear all dismissed backdate prompts
+    localStorage.removeItem('backdate_prompt_dismissed');
+    setShowModules(true);
+    toast({ title: 'Backdate prompts reset', description: 'You will see the prompt again on each module.' });
+  };
+
+  const handleModuleClick = (path: string) => {
+    setShowModules(false);
+    navigate(`${path}?backdate=1`);
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <CalendarDays className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <div>
+            <p className="text-sm">Log past entries</p>
+            <p className="text-xs text-muted-foreground">Go back and fill in data you may have missed</p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleOpen}>Open</Button>
+      </div>
+      {showModules && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ height: 'auto', opacity: 1 }}
+          className="grid grid-cols-2 gap-2"
+        >
+          {BACKDATE_MODULES.map(m => (
+            <Button
+              key={m.path}
+              variant="outline"
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => handleModuleClick(m.path)}
+            >
+              {m.label}
+            </Button>
+          ))}
+        </motion.div>
+      )}
+    </div>
+  );
+}
 
 export default Settings;
