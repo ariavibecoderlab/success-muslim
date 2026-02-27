@@ -1,56 +1,46 @@
-## Make /iman Page More Elegant -- Softer, Less Bold Colors
 
-Toning down the saturated gradients to create a refined, calm aesthetic while keeping the same layout structure. polish desain more simple and easy to use.
 
-### Color Philosophy Change
+## Fix BackdatePrompt Design + No-op Callbacks
 
-From "Apple Health vibrant" to "refined Islamic calm" -- softer pastels, muted tones, and subtle gradients.
+Two changes: redesign the shared BackdatePrompt component from a blocking modal to a gentle top banner, and fix the 4 modules where "Log past data" does nothing.
 
-### Changes to `src/pages/Deen.tsx`
+---
 
-**1. Prayer Hero Card -- soften gradient**
+### 1. Redesign BackdatePrompt (src/components/BackdatePrompt.tsx)
 
-- Change `from-emerald-600 to-teal-700` to `from-emerald-500/90 to-teal-600/90`
-- Reduce `shadow-lg` to `shadow-md`
+Replace the Dialog/modal with a non-blocking animated banner:
 
-**2. Stats Ring colors -- muted tones**
+- **Layout**: A small card/banner rendered inline at the top of page content (not a modal overlay)
+- **Style**: `bg-amber-50 dark:bg-amber-950/30 border-l-4 border-amber-400` with rounded corners, soft shadow
+- **Content**: Calendar icon + single line "Have past data to log? You can go back 90 days." + two small ghost/link buttons: "Log past data" | "Dismiss"
+- **Animation**: Framer Motion `slide down` on enter (y: -20 to 0, opacity 0 to 1), `slide up` on dismiss (reverse)
+- **Auto-dismiss**: `setTimeout` of 8 seconds that calls dismiss, cleared if user interacts
+- **No longer blocks**: Remove Dialog import entirely; render as a simple `AnimatePresence` + `motion.div` inline element
+- **Props unchanged**: Same `moduleKey` and `onLogPastData` interface so all consumers work without changes
 
-- Salah: `hsl(160, 84%, 39%)` to `hsl(160, 50%, 45%)` (softer green)
-- Dhikr: `hsl(330, 81%, 60%)` to `hsl(330, 45%, 60%)` (muted rose)
-- Quran: `hsl(38, 92%, 50%)` to `hsl(38, 55%, 50%)` (softer amber)
-- Sunnah: `hsl(271, 91%, 65%)` to `hsl(271, 45%, 60%)` (muted purple)
-- Label colors: Change from `-600` shades to `-500/80` (e.g., `text-emerald-600` to `text-emerald-500/80`)
+### 2. Fix no-op callbacks in 4 modules
 
-**3. Spiritual Tools grid -- softer icon badges**
+Each of these already has `selectedDate` state and a `BackdateDatePicker`. The fix: replace `() => {}` with a function that sets selectedDate to yesterday.
 
-- Replace all saturated `-500 to -600` gradients with lighter `-400/80 to -500/80` versions:
-  - Quran: `from-amber-400/80 to-amber-500/80`
-  - Dhikr: `from-pink-400/80 to-rose-500/80`
-  - Sunnah: `from-purple-400/80 to-purple-500/80`
-  - Prayer Times: `from-blue-400/80 to-blue-500/80`
-  - Zakat: `from-emerald-400/80 to-emerald-500/80`
-  - Sadaqah: `from-rose-400/80 to-rose-500/80`
-  - Qiyam: `from-indigo-400/80 to-indigo-500/80`
-  - Ramadan: `from-orange-400/80 to-orange-500/80`
-  - Hajj: `from-teal-400/80 to-teal-500/80`
-  - Da'wah: `from-violet-400/80 to-violet-500/80`
-  - Iman Score: `from-emerald-400/80 to-green-500/80`
+| File | Current | Fix |
+|------|---------|-----|
+| `src/pages/DhikrCounter.tsx` (line 129) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); }}` |
+| `src/pages/health/HealthHydration.tsx` (line 37) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); }}` |
+| `src/pages/health/HealthSleep.tsx` (line 86) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); setSelectedDate(y); }}` |
+| `src/pages/SunnahTracker.tsx` (line 126) | `onLogPastData={() => {}}` | `onLogPastData={() => { const y = new Date(); y.setDate(y.getDate() - 1); handleDateChange(y); }}` |
 
-**4. Active Trackers -- softer badges**
+### 3. Add pulse highlight to BackdateDatePicker
 
-- Qada: `from-blue-400/80 to-blue-500/80`
-- Ramadhan: `from-orange-400/80 to-orange-500/80`
-- Fidyah: `from-emerald-400/80 to-emerald-500/80`
+- Add an optional `highlight` prop to `BackdateDatePicker` (boolean, default false)
+- When `highlight` is true, apply a 2-second `animate-pulse` ring effect around the date button, then auto-clear
+- In each of the 4 fixed modules, set a `highlightPicker` state to `true` when "Log past data" is tapped, pass it to `BackdateDatePicker`, and auto-clear after 2s
 
-**5. Setup Actions -- same treatment**
+### Files modified
+- `src/components/BackdatePrompt.tsx` -- full redesign (banner, animations, auto-dismiss)
+- `src/components/BackdateDatePicker.tsx` -- add optional `highlight` prop with pulse effect
+- `src/pages/DhikrCounter.tsx` -- fix callback + add highlight state
+- `src/pages/health/HealthHydration.tsx` -- fix callback + add highlight state
+- `src/pages/health/HealthSleep.tsx` -- fix callback + add highlight state
+- `src/pages/SunnahTracker.tsx` -- fix callback + add highlight state
+- `PROGRESS.md` -- update changelog
 
-- Match the softer gradient approach for setup action icon badges
-
-### What stays the same
-
-- Layout, spacing, animations, data logic -- all unchanged
-- Quote banner already has soft colors (emerald-50/teal-50) -- no change needed
-
-### File modified
-
-- `src/pages/Deen.tsx` (single file)
