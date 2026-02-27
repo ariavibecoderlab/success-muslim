@@ -14,6 +14,14 @@ interface SubPageLayoutProps {
 const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, currentPath }: SubPageLayoutProps) => {
   const navigate = useNavigate();
 
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(backTo);
+    }
+  };
+
   const currentIndex = siblingRoutes?.findIndex((r) => r.path === currentPath) ?? -1;
   const prevRoute = currentIndex > 0 ? siblingRoutes![currentIndex - 1] : null;
   const nextRoute = currentIndex >= 0 && currentIndex < (siblingRoutes?.length ?? 0) - 1 ? siblingRoutes![currentIndex + 1] : null;
@@ -44,7 +52,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
           </button>
 
           <button
-            onClick={() => navigate(backTo)}
+            onClick={handleBack}
             className="flex items-center gap-2 py-2 px-4 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium"
           >
             <ArrowLeft className="h-4 w-4" />
