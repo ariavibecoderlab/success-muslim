@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFamily } from '@/hooks/useFamily';
 import { getGroupTerms } from '@/lib/family-helpers';
-import { ArrowLeft, Users, Copy, Check, Share2, Home, GraduationCap } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Share2, Home, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 
@@ -62,57 +61,55 @@ const CreateFamily = () => {
     const TypeIcon = createdTerms.icon;
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-          <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/family/${created.id}/dashboard`)}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="max-w-lg mx-auto px-4 pt-3">
+          <div className="flex items-center gap-2 mb-6">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/family/${created.id}/dashboard`)}>
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="font-semibold">{createdTerms.groupLabel} Created!</h1>
+            <span className="text-xs text-muted-foreground">{createdTerms.groupLabel} Created</span>
           </div>
         </div>
 
         <motion.main
-          className="max-w-lg mx-auto px-4 py-8 space-y-6"
-          initial={{ opacity: 0, y: 20 }}
+          className="max-w-lg mx-auto px-4 space-y-5"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="text-center">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${createdTerms.headerGradient} flex items-center justify-center mx-auto mb-3`}>
-              <TypeIcon className="h-8 w-8 text-primary" />
+            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+              <TypeIcon className="h-5 w-5 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-bold">{created.name}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Your {createdTerms.groupLabel.toLowerCase()} is ready! Share the invite to add {created.group_type === 'class' ? 'students' : 'members'}.
+            <h2 className="text-base font-semibold">{created.name}</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Share the invite to add {created.group_type === 'class' ? 'students' : 'members'}.
             </p>
           </div>
 
-          <Card>
-            <CardContent className="p-5 space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground mb-1.5 font-medium uppercase tracking-wider">Invite Code</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 bg-muted rounded-lg px-4 py-3 font-mono text-xl font-bold tracking-widest text-center">
-                    {created.invite_code}
-                  </div>
-                  <Button variant="outline" size="icon" onClick={() => handleCopy(created.invite_code)}>
-                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+          <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">Invite Code</p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-muted rounded-lg px-3 py-2.5 font-mono text-lg font-bold tracking-widest text-center">
+                  {created.invite_code}
                 </div>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleCopy(created.invite_code)}>
+                  {copied ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
               </div>
+            </div>
 
-              <Button className="w-full" onClick={handleShare}>
-                <Share2 className="h-4 w-4 mr-2" />
-                Share Invite
-              </Button>
-            </CardContent>
-          </Card>
+            <Button className="w-full h-9 text-sm" onClick={handleShare}>
+              <Share2 className="h-3.5 w-3.5 mr-1.5" />
+              Share Invite
+            </Button>
+          </div>
 
           <Button
-            variant="outline"
-            className="w-full"
+            variant="ghost"
+            className="w-full text-xs text-muted-foreground"
             onClick={() => navigate(`/family/${created.id}/dashboard`)}
           >
-            Go to {createdTerms.groupLabel} Dashboard
+            Go to Dashboard →
           </Button>
         </motion.main>
       </div>
@@ -123,53 +120,45 @@ const CreateFamily = () => {
   if (!groupType) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-          <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/family')}>
-              <ArrowLeft className="h-5 w-5" />
+        <div className="max-w-lg mx-auto px-4 pt-3">
+          <div className="flex items-center gap-2 mb-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/family')}>
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="font-semibold">Create Group</h1>
+            <span className="text-xs text-muted-foreground">Create Group</span>
           </div>
         </div>
 
         <motion.main
-          className="max-w-lg mx-auto px-4 py-8 space-y-6"
-          initial={{ opacity: 0, y: 20 }}
+          className="max-w-lg mx-auto px-4 space-y-5"
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="text-center">
-            <h2 className="text-xl font-bold mb-1">What type of group?</h2>
-            <p className="text-sm text-muted-foreground">Choose the type that best fits your group.</p>
+          <div className="text-center mb-2">
+            <h2 className="text-base font-semibold mb-0.5">What type of group?</h2>
+            <p className="text-xs text-muted-foreground">Choose the type that fits.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
             <button
-              className="w-full rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 text-white text-left shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 border-b border-border"
               onClick={() => setGroupType('family')}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <Home className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold">Family</p>
-                  <p className="text-white/80 text-sm">For family members</p>
-                </div>
+              <Home className="h-4 w-4 text-emerald-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Family</p>
+                <p className="text-[11px] text-muted-foreground">For family members</p>
               </div>
             </button>
 
             <button
-              className="w-full rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-5 text-white text-left shadow-lg hover:shadow-xl transition-all active:scale-[0.98]"
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-muted/40 transition-colors active:bg-muted/60"
               onClick={() => setGroupType('class')}
             >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="h-7 w-7 text-white" />
-                </div>
-                <div>
-                  <p className="text-lg font-bold">Class</p>
-                  <p className="text-white/80 text-sm">For teachers and students</p>
-                </div>
+              <GraduationCap className="h-4 w-4 text-blue-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium">Class</p>
+                <p className="text-[11px] text-muted-foreground">For teachers and students</p>
               </div>
             </button>
           </div>
@@ -182,57 +171,45 @@ const CreateFamily = () => {
   const TypeIcon = terms.icon;
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => setGroupType(null)}>
-            <ArrowLeft className="h-5 w-5" />
+      <div className="max-w-lg mx-auto px-4 pt-3">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setGroupType(null)}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="font-semibold">Create {terms.groupLabel} Group</h1>
+          <span className="text-xs text-muted-foreground">Create {terms.groupLabel}</span>
         </div>
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-8 space-y-6"
-        initial={{ opacity: 0, y: 20 }}
+        className="max-w-lg mx-auto px-4 space-y-4"
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <div className="text-center">
-          <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${terms.headerGradient} flex items-center justify-center mx-auto mb-3`}>
-            <TypeIcon className="h-8 w-8 text-primary" />
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Give your {terms.groupLabel.toLowerCase()} a name. You'll get a unique invite code to share.
-          </p>
+        <div>
+          <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Group Name</label>
+          <Input
+            placeholder={groupType === 'class' ? 'e.g. Kelas 4 Arif' : 'e.g. Keluarga Ahmad'}
+            value={name}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleCreate()}
+            maxLength={50}
+            autoFocus
+            className="h-10"
+          />
+          <p className="text-[10px] text-muted-foreground mt-1">{name.length}/50</p>
         </div>
 
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Group Name</label>
-            <Input
-              placeholder={groupType === 'class' ? 'e.g. Kelas 4 Arif, Halaqah Group' : 'e.g. Keluarga Ahmad'}
-              value={name}
-              onChange={e => setName(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && handleCreate()}
-              maxLength={50}
-              autoFocus
-            />
-            <p className="text-xs text-muted-foreground mt-1">{name.length}/50</p>
-          </div>
+        <Button
+          className="w-full h-10 text-sm"
+          onClick={handleCreate}
+          disabled={!name.trim() || loading}
+        >
+          {loading ? 'Creating…' : `Create ${terms.groupLabel}`}
+        </Button>
 
-          <Button
-            className={`w-full h-12 bg-gradient-to-r ${terms.gradient} hover:opacity-90 text-white font-semibold rounded-xl`}
-            onClick={handleCreate}
-            disabled={!name.trim() || loading}
-          >
-            {loading ? 'Creating…' : `Create ${terms.groupLabel}`}
-          </Button>
-        </div>
-
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            You'll be the {terms.adminLabel.toLowerCase()}. Max 20 {groupType === 'class' ? 'students' : 'members'} per group.
-          </p>
-        </div>
+        <p className="text-[10px] text-muted-foreground text-center">
+          You'll be the {terms.adminLabel.toLowerCase()}. Max 20 {groupType === 'class' ? 'students' : 'members'}.
+        </p>
       </motion.main>
     </div>
   );
