@@ -11,12 +11,12 @@ const REACTION_ICONS: Record<string, React.ReactNode> = {
 };
 
 const BORDER_COLORS: Record<string, string> = {
-  achievement: 'border-l-emerald-500',
-  streak: 'border-l-amber-500',
-  milestone: 'border-l-purple-500',
-  prayer: 'border-l-emerald-500',
-  quran: 'border-l-blue-500',
-  fasting: 'border-l-purple-500',
+  achievement: 'border-l-emerald-400',
+  streak: 'border-l-amber-400',
+  milestone: 'border-l-purple-400',
+  prayer: 'border-l-emerald-400',
+  quran: 'border-l-blue-400',
+  fasting: 'border-l-purple-400',
 };
 
 interface ActivityFeedItemProps {
@@ -29,15 +29,15 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
     ? item.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
-  const borderColor = BORDER_COLORS[item.activity_type] || 'border-l-primary';
+  const borderColor = BORDER_COLORS[item.activity_type] || 'border-l-primary/40';
 
   return (
-    <Card className={`border-border/60 border-l-4 ${borderColor} overflow-hidden`}>
+    <Card className={`border-l-[3px] ${borderColor} rounded-xl shadow-sm`}>
       <CardContent className="p-3">
         <div className="flex items-start gap-2.5">
           <Avatar className="h-8 w-8 flex-shrink-0 mt-0.5 border border-border">
             {item.avatar_url && <AvatarImage src={item.avatar_url} />}
-            <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+            <AvatarFallback className="text-[10px] font-semibold bg-primary/5 text-primary">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -56,8 +56,8 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
                   onClick={() => onReact(item.id, r.type)}
                   className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
                     r.reacted
-                      ? 'border-primary/40 bg-primary/10 text-primary'
-                      : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/5'
+                      ? 'border-primary/30 bg-primary/5 text-primary'
+                      : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-primary/5'
                   }`}
                 >
                   <span>{REACTION_ICONS[r.type]}</span>
