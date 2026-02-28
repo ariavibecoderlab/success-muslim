@@ -1,13 +1,12 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
 import type { FeedItem } from '@/hooks/useFamilyDashboard';
 import { formatDistanceToNow } from 'date-fns';
 import { HandHelping, Heart, Flame } from 'lucide-react';
 
 const REACTION_ICONS: Record<string, React.ReactNode> = {
-  dua: <HandHelping className="h-3 w-3" />,
-  love: <Heart className="h-3 w-3" />,
-  fire: <Flame className="h-3 w-3" />,
+  dua: <HandHelping className="h-2.5 w-2.5" />,
+  love: <Heart className="h-2.5 w-2.5" />,
+  fire: <Flame className="h-2.5 w-2.5" />,
 };
 
 const BORDER_COLORS: Record<string, string> = {
@@ -29,46 +28,40 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
     ? item.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
-  const borderColor = BORDER_COLORS[item.activity_type] || 'border-l-primary/40';
+  const borderColor = BORDER_COLORS[item.activity_type] || 'border-l-border';
 
   return (
-    <Card className={`border-l-[3px] ${borderColor} rounded-xl shadow-sm`}>
-      <CardContent className="p-3">
-        <div className="flex items-start gap-2.5">
-          <Avatar className="h-8 w-8 flex-shrink-0 mt-0.5 border border-border">
-            {item.avatar_url && <AvatarImage src={item.avatar_url} />}
-            <AvatarFallback className="text-[10px] font-semibold bg-primary/5 text-primary">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
+    <div className={`border-l-2 ${borderColor} pl-3 py-2`}>
+      <div className="flex items-start gap-2">
+        <Avatar className="h-6 w-6 flex-shrink-0 mt-0.5">
+          {item.avatar_url && <AvatarImage src={item.avatar_url} />}
+          <AvatarFallback className="text-[8px] font-medium bg-muted text-muted-foreground">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
 
-          <div className="flex-1 min-w-0">
-            <p className="text-sm leading-snug">{item.message}</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs leading-relaxed">{item.message}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] text-muted-foreground">
               {formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}
-            </p>
-
-            {/* Reactions */}
-            <div className="flex gap-2 mt-2">
-              {item.reactions?.map(r => (
-                <button
-                  key={r.type}
-                  onClick={() => onReact(item.id, r.type)}
-                  className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                    r.reacted
-                      ? 'border-primary/30 bg-primary/5 text-primary'
-                      : 'border-border bg-card text-muted-foreground hover:border-primary/20 hover:bg-primary/5'
-                  }`}
-                >
-                  <span>{REACTION_ICONS[r.type]}</span>
-                  {r.count > 0 && <span className="font-medium">{r.count}</span>}
-                </button>
-              ))}
-            </div>
+            </span>
+            {item.reactions?.map(r => (
+              <button
+                key={r.type}
+                onClick={() => onReact(item.id, r.type)}
+                className={`flex items-center gap-0.5 text-[10px] transition-colors ${
+                  r.reacted ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {REACTION_ICONS[r.type]}
+                {r.count > 0 && <span>{r.count}</span>}
+              </button>
+            ))}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { LeaderboardEntry } from '@/hooks/useFamilyDashboard';
-import { CheckCircle2, Circle, Moon, Flame } from 'lucide-react';
+import { Flame } from 'lucide-react';
 
 interface TodaySnapshotProps {
   entry: LeaderboardEntry;
@@ -15,38 +15,28 @@ const TodaySnapshot = ({ entry, onClick }: TodaySnapshotProps) => {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2.5 w-full text-left py-2.5 px-1 hover:bg-muted/40 rounded-lg transition-colors"
+      className="flex items-center gap-2.5 w-full text-left py-2 px-1 hover:bg-muted/30 rounded-md transition-colors"
     >
-      <Avatar className="h-7 w-7 flex-shrink-0 border border-border">
+      <Avatar className="h-6 w-6 flex-shrink-0">
         {entry.avatar_url && <AvatarImage src={entry.avatar_url} />}
-        <AvatarFallback className="text-[9px] font-semibold bg-primary/5 text-primary">
+        <AvatarFallback className="text-[8px] font-medium bg-muted text-muted-foreground">
           {initials}
         </AvatarFallback>
       </Avatar>
       <span className="text-xs font-medium truncate flex-1 min-w-0">
         {entry.display_name || 'Member'}
       </span>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
-          entry.prayers_this_week > 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-muted text-muted-foreground/40'
-        }`}>
-          {entry.prayers_this_week > 0 ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
-          Prayer
-        </span>
-        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
-          entry.quran_days_this_week > 0 ? 'bg-blue-50 text-blue-600' : 'bg-muted text-muted-foreground/40'
-        }`}>
-          {entry.quran_days_this_week > 0 ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
-          Quran
-        </span>
-        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
-          entry.fasting_days_this_week > 0 ? 'bg-purple-50 text-purple-600' : 'bg-muted text-muted-foreground/40'
-        }`}>
-          <Moon className="h-2.5 w-2.5" />
-        </span>
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {/* Prayer dot */}
+        <div className={`w-2 h-2 rounded-full ${entry.prayers_this_week > 0 ? 'bg-emerald-400' : 'bg-border'}`} title="Prayer" />
+        {/* Quran dot */}
+        <div className={`w-2 h-2 rounded-full ${entry.quran_days_this_week > 0 ? 'bg-blue-400' : 'bg-border'}`} title="Quran" />
+        {/* Fasting dot */}
+        <div className={`w-2 h-2 rounded-full ${entry.fasting_days_this_week > 0 ? 'bg-purple-400' : 'bg-border'}`} title="Fasting" />
+        {/* Streak */}
         {entry.quran_streak > 0 && (
-          <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600">
-            <Flame className="h-2.5 w-2.5" />{entry.quran_streak}
+          <span className="text-[9px] text-amber-500 font-medium flex items-center gap-px ml-0.5">
+            {entry.quran_streak}<Flame className="h-2 w-2" />
           </span>
         )}
       </div>
