@@ -10,6 +10,15 @@ const REACTION_ICONS: Record<string, React.ReactNode> = {
   fire: <Flame className="h-3 w-3" />,
 };
 
+const BORDER_COLORS: Record<string, string> = {
+  achievement: 'border-l-emerald-500',
+  streak: 'border-l-amber-500',
+  milestone: 'border-l-purple-500',
+  prayer: 'border-l-emerald-500',
+  quran: 'border-l-blue-500',
+  fasting: 'border-l-purple-500',
+};
+
 interface ActivityFeedItemProps {
   item: FeedItem;
   onReact: (feedId: string, type: string) => void;
@@ -20,8 +29,10 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
     ? item.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
+  const borderColor = BORDER_COLORS[item.activity_type] || 'border-l-primary';
+
   return (
-    <Card className="border-border/60">
+    <Card className={`border-border/60 border-l-4 ${borderColor} overflow-hidden`}>
       <CardContent className="p-3">
         <div className="flex items-start gap-2.5">
           <Avatar className="h-8 w-8 flex-shrink-0 mt-0.5 border border-border">
@@ -43,7 +54,7 @@ const ActivityFeedItem = ({ item, onReact }: ActivityFeedItemProps) => {
                 <button
                   key={r.type}
                   onClick={() => onReact(item.id, r.type)}
-                  className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                  className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-colors ${
                     r.reacted
                       ? 'border-primary/40 bg-primary/10 text-primary'
                       : 'border-border bg-muted/40 text-muted-foreground hover:border-primary/30 hover:bg-primary/5'

@@ -8,6 +8,7 @@ export interface Family {
   id: string;
   name: string;
   mode: string;
+  group_type: string;
   created_by: string;
   invite_code: string;
   invite_link: string | null;
@@ -83,7 +84,7 @@ export function useFamily() {
     queryClient.invalidateQueries({ queryKey: ['families', user?.id] });
   }, [queryClient, user?.id]);
 
-  const createFamily = async (name: string): Promise<Family | null> => {
+  const createFamily = async (name: string, groupType: 'family' | 'class' = 'family'): Promise<Family | null> => {
     if (!user) return null;
 
     const { count } = await supabase
@@ -113,7 +114,7 @@ export function useFamily() {
 
     const { data: family, error } = await supabase
       .from('families')
-      .insert({ name: name.trim(), created_by: user.id, invite_code, invite_link })
+      .insert({ name: name.trim(), created_by: user.id, invite_code, invite_link, group_type: groupType } as any)
       .select()
       .single();
 

@@ -15,7 +15,7 @@ const TodaySnapshot = ({ entry, onClick }: TodaySnapshotProps) => {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2.5 w-full text-left py-2 px-0.5 hover:opacity-80 transition-opacity"
+      className="flex items-center gap-2.5 w-full text-left py-2.5 px-1 hover:bg-muted/50 rounded-lg transition-colors"
     >
       <Avatar className="h-7 w-7 flex-shrink-0 border border-border">
         {entry.avatar_url && <AvatarImage src={entry.avatar_url} />}
@@ -27,24 +27,26 @@ const TodaySnapshot = ({ entry, onClick }: TodaySnapshotProps) => {
         {entry.display_name || 'Member'}
       </span>
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        <span title="Prayer">
-          {entry.prayers_this_week > 0
-            ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
+          entry.prayers_this_week > 0 ? 'bg-emerald-500/15 text-emerald-600' : 'bg-muted text-muted-foreground/50'
+        }`}>
+          {entry.prayers_this_week > 0 ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
+          Prayer
         </span>
-        <span title="Quran">
-          {entry.quran_days_this_week > 0
-            ? <CheckCircle2 className="h-3.5 w-3.5 text-primary" />
-            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
+          entry.quran_days_this_week > 0 ? 'bg-blue-500/15 text-blue-600' : 'bg-muted text-muted-foreground/50'
+        }`}>
+          {entry.quran_days_this_week > 0 ? <CheckCircle2 className="h-2.5 w-2.5" /> : <Circle className="h-2.5 w-2.5" />}
+          Quran
         </span>
-        <span title="Fasting">
-          {entry.fasting_days_this_week > 0
-            ? <Moon className="h-3.5 w-3.5 text-primary" />
-            : <Circle className="h-3.5 w-3.5 text-muted-foreground/40" />}
+        <span className={`inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full ${
+          entry.fasting_days_this_week > 0 ? 'bg-purple-500/15 text-purple-600' : 'bg-muted text-muted-foreground/50'
+        }`}>
+          <Moon className="h-2.5 w-2.5" />
         </span>
         {entry.quran_streak > 0 && (
-          <span className="flex items-center gap-0.5 text-[10px] text-primary">
-            <Flame className="h-3 w-3" />{entry.quran_streak}
+          <span className="inline-flex items-center gap-0.5 text-[9px] font-medium px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600">
+            <Flame className="h-2.5 w-2.5" />{entry.quran_streak}
           </span>
         )}
       </div>
