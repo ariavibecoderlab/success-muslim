@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useFamily, type FamilyMember } from '@/hooks/useFamily';
 import { useAuth } from '@/hooks/useAuth';
-import { ArrowLeft, Crown, Loader2, Trash2, UserMinus, RefreshCw, Copy, Share2 } from 'lucide-react';
+import { getGroupTerms, getRoleLabel } from '@/lib/family-helpers';
+import { ArrowLeft, Crown, Loader2, Trash2, UserMinus, Copy, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,16 +12,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { motion } from 'framer-motion';
 
 const FamilySettings = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +30,8 @@ const FamilySettings = () => {
 
   const family = families.find(f => f.id === id);
   const isAdmin = family?.user_role === 'admin';
+  const terms = getGroupTerms(family?.group_type);
+  const TypeIcon = terms.icon;
 
   useEffect(() => {
     if (!id) return;
@@ -78,28 +75,43 @@ const FamilySettings = () => {
 
   const handleShare = async () => {
     if (!family) return;
-    const inviteLink = `https://www.successmuslim.app/family/join/${family.invite_code}`;
-    const text = `Join "${family.name}" on Success Muslim!\nCode: ${family.invite_code}\nLink: ${inviteLink}`;
+    const text = terms.inviteMessage(family.name, family.invite_code);
     if (navigator.share) { try { await navigator.share({ text }); } catch {} }
     else await navigator.clipboard.writeText(text).then(() => toast({ title: 'Copied!' }));
   };
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/family/${id}/dashboard`)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="font-semibold">Family Settings</h1>
+      {/* Header */}
+      <div className={`bg-gradient-to-br ${terms.gradient} text-white`}>
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => navigate(`/family/${id}/dashboard`)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="font-semibold text-white">{terms.groupLabel} Settings</h1>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+              <TypeIcon className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="font-bold">{family?.name}</p>
+              <p className="text-white/80 text-xs">{terms.groupLabel} · {members.length} {family?.group_type === 'class' ? 'students' : 'members'}</p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <main className="max-w-lg mx-auto px-4 py-5 space-y-5 pb-24">
+      <motion.main
+        className="max-w-lg mx-auto px-4 py-5 space-y-5 pb-24"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
         {/* Invite section */}
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="p-5 space-y-3">
-            <h2 className="text-sm font-semibold">Invite Members</h2>
+            <h2 className="text-sm font-semibold">Invite {family?.group_type === 'class' ? 'Students' : 'Members'}</h2>
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-muted rounded-lg px-4 py-2.5 font-mono font-bold tracking-widest text-center text-lg">
                 {family?.invite_code}
@@ -115,22 +127,14 @@ const FamilySettings = () => {
           </CardContent>
         </Card>
 
-        {/* Rename (admin only) */}
+        {/* Rename */}
         {isAdmin && (
-          <Card>
+          <Card className="rounded-2xl">
             <CardContent className="p-5 space-y-3">
               <h2 className="text-sm font-semibold">Group Name</h2>
               <div className="flex gap-2">
-                <Input
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  placeholder="Family name"
-                  maxLength={50}
-                />
-                <Button
-                  onClick={handleRename}
-                  disabled={renaming || !newName.trim() || newName === family?.name}
-                >
+                <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Group name" maxLength={50} />
+                <Button onClick={handleRename} disabled={renaming || !newName.trim() || newName === family?.name}>
                   {renaming ? 'Saving…' : 'Rename'}
                 </Button>
               </div>
@@ -139,9 +143,9 @@ const FamilySettings = () => {
         )}
 
         {/* Members */}
-        <Card>
+        <Card className="rounded-2xl">
           <CardContent className="p-5">
-            <h2 className="text-sm font-semibold mb-3">Members ({members.length}/20)</h2>
+            <h2 className="text-sm font-semibold mb-3">{family?.group_type === 'class' ? 'Students' : 'Members'} ({members.length}/20)</h2>
             {loading ? (
               <div className="flex justify-center py-4">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -164,10 +168,10 @@ const FamilySettings = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{m.display_name || 'Member'} {isMe && '(you)'}</p>
+                          <p className="text-sm font-medium truncate">{m.display_name || getRoleLabel(m.role, family?.group_type)} {isMe && '(you)'}</p>
                           {m.role === 'admin' && (
                             <span className="text-[10px] text-primary flex items-center gap-0.5">
-                              <Crown className="h-2.5 w-2.5" /> Admin
+                              <Crown className="h-2.5 w-2.5" /> {terms.adminLabel}
                             </span>
                           )}
                         </div>
@@ -176,15 +180,15 @@ const FamilySettings = () => {
                             {m.role !== 'admin' && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" title="Transfer admin">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7" title={`Transfer ${terms.adminLabel.toLowerCase()}`}>
                                     <Crown className="h-3.5 w-3.5 text-yellow-500" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                   <AlertDialogHeader>
-                                    <AlertDialogTitle>Transfer Admin</AlertDialogTitle>
+                                    <AlertDialogTitle>Transfer {terms.adminLabel}</AlertDialogTitle>
                                     <AlertDialogDescription>
-                                      Make {m.display_name || 'this member'} the new admin? You will become a regular member.
+                                      Make {m.display_name || 'this member'} the new {terms.adminLabel.toLowerCase()}? You will become a {terms.memberLabel.toLowerCase()}.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
                                   <AlertDialogFooter>
@@ -196,23 +200,20 @@ const FamilySettings = () => {
                             )}
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" title="Remove member">
+                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" title="Remove">
                                   <UserMinus className="h-3.5 w-3.5" />
                                 </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
-                                  <AlertDialogTitle>Remove Member</AlertDialogTitle>
+                                  <AlertDialogTitle>Remove {terms.memberLabel}</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Remove {m.display_name || 'this member'} from the group?
+                                    Remove {m.display_name || `this ${terms.memberLabel.toLowerCase()}`} from the group?
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleRemove(m.user_id)}
-                                    className="bg-destructive text-destructive-foreground"
-                                  >
+                                  <AlertDialogAction onClick={() => handleRemove(m.user_id)} className="bg-destructive text-destructive-foreground">
                                     Remove
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
@@ -229,30 +230,30 @@ const FamilySettings = () => {
           </CardContent>
         </Card>
 
-        {/* Leave group */}
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Leave Group
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Leave group?</AlertDialogTitle>
-              <AlertDialogDescription>
-                You will no longer see this family's progress. You can rejoin with the invite code later.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground">
-                Leave
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </main>
+        {/* Danger zone */}
+        <div className="pt-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" className="w-full rounded-xl">
+                <Trash2 className="h-4 w-4 mr-2" />
+                Leave Group
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Leave {terms.groupLabel.toLowerCase()}?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  You will no longer see this {terms.groupLabel.toLowerCase()}'s progress. You can rejoin with the invite code later.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground">Leave</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </motion.main>
     </div>
   );
 };

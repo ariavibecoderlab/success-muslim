@@ -1,7 +1,28 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-27
+> **Last Updated:** 2026-02-28
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
+
+---
+
+## 👨‍👩‍👧 FAMILY MODULE — Class Mode + UI Redesign (2026-02-28)
+
+| Change | Status | Notes |
+|--------|--------|-------|
+| DB: `group_type` column on `families` table | ✅ | Default 'family', supports 'class' |
+| Terminology helper (`family-helpers.ts`) | ✅ | `getGroupTerms()` returns labels, icons, gradients per type |
+| Create flow type selector | ✅ | Family (green) / Class (blue) cards before name input |
+| `useFamily` hook updated | ✅ | `createFamily(name, groupType)` passes `group_type` to DB |
+| Family list page redesign | ✅ | Gradient cards (green=family, blue=class), staggered animations |
+| Dashboard header banner | ✅ | Gradient header matching group type, icon + member count |
+| Leaderboard gold/silver/bronze | ✅ | Top 3 get gradient cards with glow animation for #1 |
+| Today's Snapshot colorful pills | ✅ | Green=prayer, blue=quran, purple=fasting, amber=streak |
+| Activity Feed colored borders | ✅ | Left border color based on activity_type |
+| Announcement banner redesign | ✅ | Amber gradient, "Teacher says:" for class groups |
+| Settings page terminology | ✅ | Admin→Teacher, Member→Student for class groups |
+| Join page redesign | ✅ | Gradient preview card matching group type |
+| Member Profile redesign | ✅ | Colorful header + gradient stat cards |
+| framer-motion animations | ✅ | Staggered fade-up, slide-in for leaderboard, viewport triggers |
 
 ---
 
@@ -343,11 +364,12 @@
 | Back button navigation fix | ✅ | All back buttons use explicit routes (no history loops) |
 | No hardcoded emojis | ✅ | All icons replaced with Lucide: Trophy, Medal, Award, CheckCircle2, Moon, Flame, HandHelping, Heart, BookOpen, BarChart2 |
 
-## 👨‍👩‍👧 FAMILY MODULE — Phase 2 (Planned)
+## 👨‍👩‍👧 FAMILY MODULE — Phase 2
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Class Mode | ❌ | Teacher controls, "Class" terminology, teacher sees all regardless of privacy |
+| Class Mode | ✅ | `group_type` column, type selector, Teacher/Student terminology |
+| Family UI Redesign | ✅ | Colorful gradients, gold/silver/bronze leaderboard, framer-motion animations |
 | Teacher announcements (push) | ❌ | Notification to all members |
 | Weekly progress CSV export | ❌ | Admin exports prayer %, quran target, streaks |
 | Family notifications | ❌ | Streak milestones, leaderboard reset, social nudges |

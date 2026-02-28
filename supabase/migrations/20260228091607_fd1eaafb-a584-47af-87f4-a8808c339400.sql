@@ -1,0 +1,1 @@
+ALTER TABLE public.families ADD COLUMN IF NOT EXISTS group_type text NOT NULL DEFAULT 'family';
