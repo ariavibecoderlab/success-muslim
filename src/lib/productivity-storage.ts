@@ -40,13 +40,13 @@ export interface LifeAreaEntry {
   scores: LifeAreaScore[];
 }
 
-export const LIFE_AREAS: { key: LifeAreaKey; label: string; emoji: string }[] = [
-  { key: 'iman', label: 'Iman', emoji: '🕌' },
-  { key: 'health', label: 'Health', emoji: '💪' },
-  { key: 'wealth', label: 'Wealth', emoji: '💰' },
-  { key: 'family', label: 'Family', emoji: '👨‍👩‍👧‍👦' },
-  { key: 'knowledge', label: 'Knowledge', emoji: '📚' },
-  { key: 'career', label: 'Career', emoji: '🎯' },
+export const LIFE_AREAS: { key: LifeAreaKey; label: string; icon: string }[] = [
+  { key: 'iman', label: 'Iman', icon: 'Moon' },
+  { key: 'health', label: 'Health', icon: 'Heart' },
+  { key: 'wealth', label: 'Wealth', icon: 'Wallet' },
+  { key: 'family', label: 'Family', icon: 'Users' },
+  { key: 'knowledge', label: 'Knowledge', icon: 'BookOpen' },
+  { key: 'career', label: 'Career', icon: 'Target' },
 ];
 
 // ─── Storage Keys ────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Save } from 'lucide-react';
+import { Save, icons } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import SubPageLayout from '@/components/SubPageLayout';
@@ -108,7 +108,8 @@ const LifeAreasPage = () => {
             <div key={area.key} className="space-y-1">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium flex items-center gap-1.5">
-                  <span className="text-sm">{area.emoji}</span> {area.label}
+                  {(() => { const Icon = icons[area.icon as keyof typeof icons]; return Icon ? <Icon className="h-3.5 w-3.5 text-muted-foreground" /> : null; })()}
+                  {area.label}
                 </label>
                 <span className="text-xs font-semibold text-primary">{scores[area.key]}</span>
               </div>
