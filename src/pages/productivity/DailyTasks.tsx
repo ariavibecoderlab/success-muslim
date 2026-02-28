@@ -2,8 +2,6 @@ import { useState, useCallback } from 'react';
 import { Plus, Trash2, Star, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import SubPageLayout from '@/components/SubPageLayout';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
@@ -33,7 +31,6 @@ const DailyTasksPage = () => {
   const [isMIT, setIsMIT] = useState(false);
   const streak = getTaskStreak();
 
-  // Reload tasks when date changes
   const handleDateChange = useCallback((d: Date) => {
     setSelectedDate(d);
     const key = format(d, 'yyyy-MM-dd');
@@ -72,50 +69,42 @@ const DailyTasksPage = () => {
       siblingRoutes={SIBLING_ROUTES}
       currentPath="/productivity/tasks"
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <BackdatePrompt moduleKey="daily-tasks" onLogPastData={() => {
           const y = new Date(); y.setDate(y.getDate() - 1);
           handleDateChange(y); setHighlightPicker(true);
         }} />
         <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} />
 
-        {/* Stats bar */}
-        <div className="flex items-center gap-3">
-          <Card className="flex-1">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-primary">{mitsCompleted}/{mitCount}</p>
-              <p className="text-xs text-muted-foreground">MITs Done</p>
-            </CardContent>
-          </Card>
-          <Card className="flex-1">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-primary">{totalCompleted}/{daily.tasks.length}</p>
-              <p className="text-xs text-muted-foreground">Total Done</p>
-            </CardContent>
-          </Card>
-          <Card className="flex-1">
-            <CardContent className="p-3 text-center">
-              <p className="text-2xl font-bold text-accent">{streak}</p>
-              <p className="text-xs text-muted-foreground">Day Streak</p>
-            </CardContent>
-          </Card>
+        {/* Stats */}
+        <div className="flex gap-2">
+          {[
+            { label: 'MITs', value: `${mitsCompleted}/${mitCount}` },
+            { label: 'Total', value: `${totalCompleted}/${daily.tasks.length}` },
+            { label: 'Streak', value: `${streak}d` },
+          ].map(s => (
+            <div key={s.label} className="flex-1 bg-card rounded-lg border border-border py-2 text-center">
+              <p className="text-base font-semibold">{s.value}</p>
+              <p className="text-[10px] text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* Add task */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <div className="flex gap-2">
             <Input
               placeholder="Add a task..."
               value={newText}
               onChange={e => setNewText(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAdd()}
-              className="flex-1"
+              className="flex-1 h-9 text-sm"
             />
-            <Button onClick={handleAdd} size="icon" disabled={!newText.trim()}>
-              <Plus className="h-4 w-4" />
+            <Button onClick={handleAdd} size="icon" className="h-9 w-9" disabled={!newText.trim()}>
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
             <input
               type="checkbox"
               checked={isMIT}
@@ -123,21 +112,18 @@ const DailyTasksPage = () => {
               disabled={mitCount >= 3 && !isMIT}
               className="rounded"
             />
-            <Star className="h-3.5 w-3.5 text-accent" />
-            Mark as MIT ({mitCount}/3)
+            <Star className="h-3 w-3 text-amber-500" />
+            MIT ({mitCount}/3)
           </label>
         </div>
 
-        {/* MITs section */}
+        {/* MITs */}
         {mits.length > 0 && (
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Star className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Most Important Tasks
-              </h3>
-            </div>
-            <div className="space-y-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+              Most Important Tasks
+            </p>
+            <div className="space-y-1">
               <AnimatePresence>
                 {mits.map(task => (
                   <TaskItem key={task.id} task={task} onToggle={handleToggle} onDelete={handleDelete} />
@@ -147,13 +133,13 @@ const DailyTasksPage = () => {
           </div>
         )}
 
-        {/* Other tasks */}
+        {/* Others */}
         {others.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
               Other Tasks
-            </h3>
-            <div className="space-y-2">
+            </p>
+            <div className="space-y-1">
               <AnimatePresence>
                 {others.map(task => (
                   <TaskItem key={task.id} task={task} onToggle={handleToggle} onDelete={handleDelete} />
@@ -164,9 +150,9 @@ const DailyTasksPage = () => {
         )}
 
         {daily.tasks.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">No tasks yet. Add up to 3 MITs to focus your day.</p>
-          </div>
+          <p className="text-xs text-muted-foreground text-center py-8">
+            No tasks yet. Add up to 3 MITs to focus your day.
+          </p>
         )}
       </div>
     </SubPageLayout>
@@ -185,26 +171,24 @@ function TaskItem({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: -8 }}
+      initial={{ opacity: 0, y: -6 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, x: -40 }}
-      className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-        task.completed ? 'bg-muted/50 border-border' : task.isMIT ? 'bg-accent/5 border-accent/20' : 'bg-card border-border'
-      }`}
+      exit={{ opacity: 0, x: -30 }}
+      className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border bg-card"
     >
       <button onClick={() => onToggle(task.id)} className="flex-shrink-0">
         {task.completed ? (
-          <CheckCircle2 className="h-5 w-5 text-primary" />
+          <CheckCircle2 className="h-4 w-4 text-primary" />
         ) : (
-          <Circle className="h-5 w-5 text-muted-foreground" />
+          <Circle className="h-4 w-4 text-muted-foreground/40" />
         )}
       </button>
       <span className={`flex-1 text-sm ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
         {task.text}
       </span>
-      {task.isMIT && <Badge variant="outline" className="text-accent border-accent/30 text-xs">MIT</Badge>}
-      <button onClick={() => onDelete(task.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-        <Trash2 className="h-4 w-4" />
+      {task.isMIT && <Star className="h-3 w-3 text-amber-500 flex-shrink-0" />}
+      <button onClick={() => onDelete(task.id)} className="text-muted-foreground/40 hover:text-destructive transition-colors flex-shrink-0">
+        <Trash2 className="h-3.5 w-3.5" />
       </button>
     </motion.div>
   );

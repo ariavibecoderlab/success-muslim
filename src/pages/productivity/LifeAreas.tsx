@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Save, TrendingUp } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import SubPageLayout from '@/components/SubPageLayout';
 import { toast } from 'sonner';
@@ -51,7 +50,7 @@ const LifeAreasPage = () => {
       score: scores[a.key],
     }));
     saveLifeAreaEntry({ date: monthKey, scores: scoreArray });
-    toast.success('Life areas assessment saved!');
+    toast.success('Assessment saved!');
   }, [scores, monthKey]);
 
   const radarData = LIFE_AREAS.map(a => ({
@@ -69,54 +68,49 @@ const LifeAreasPage = () => {
       siblingRoutes={SIBLING_ROUTES}
       currentPath="/productivity/life-areas"
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         {/* Radar chart */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-primary" />
-                Self-Assessment
-              </h3>
-              <span className="text-sm font-bold text-primary">{average}/10</span>
-            </div>
-            <div className="w-full aspect-square max-w-[280px] mx-auto">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
-                  <PolarGrid stroke="hsl(var(--border))" />
-                  <PolarAngleAxis
-                    dataKey="area"
-                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <PolarRadiusAxis
-                    angle={30}
-                    domain={[0, 10]}
-                    tick={{ fontSize: 9 }}
-                    tickCount={6}
-                  />
-                  <Radar
-                    name="Score"
-                    dataKey="score"
-                    stroke="hsl(var(--primary))"
-                    fill="hsl(var(--primary))"
-                    fillOpacity={0.2}
-                    strokeWidth={2}
-                  />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-card rounded-xl border border-border p-3">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Self-Assessment</p>
+            <span className="text-sm font-semibold text-primary">{average}/10</span>
+          </div>
+          <div className="w-full aspect-square max-w-[240px] mx-auto">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="hsl(var(--border))" />
+                <PolarAngleAxis
+                  dataKey="area"
+                  tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <PolarRadiusAxis
+                  angle={30}
+                  domain={[0, 10]}
+                  tick={{ fontSize: 8 }}
+                  tickCount={6}
+                />
+                <Radar
+                  name="Score"
+                  dataKey="score"
+                  stroke="hsl(var(--primary))"
+                  fill="hsl(var(--primary))"
+                  fillOpacity={0.15}
+                  strokeWidth={1.5}
+                />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
 
         {/* Sliders */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {LIFE_AREAS.map(area => (
-            <div key={area.key} className="space-y-1.5">
+            <div key={area.key} className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-medium flex items-center gap-2">
-                  <span>{area.emoji}</span> {area.label}
+                <label className="text-xs font-medium flex items-center gap-1.5">
+                  <span className="text-sm">{area.emoji}</span> {area.label}
                 </label>
-                <span className="text-sm font-bold text-primary">{scores[area.key]}</span>
+                <span className="text-xs font-semibold text-primary">{scores[area.key]}</span>
               </div>
               <Slider
                 value={[scores[area.key]]}
@@ -130,28 +124,26 @@ const LifeAreasPage = () => {
           ))}
         </div>
 
-        <Button onClick={handleSave} className="w-full" size="lg">
-          <Save className="h-4 w-4 mr-2" /> Save Assessment
+        <Button onClick={handleSave} className="w-full h-9 text-sm">
+          <Save className="h-3.5 w-3.5 mr-1.5" /> Save
         </Button>
 
         {/* History */}
         {entries.length > 1 && (
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
               Past Assessments
-            </h3>
-            <div className="space-y-2">
+            </p>
+            <div className="bg-card rounded-xl border border-border divide-y divide-border">
               {entries.slice(0, 6).map(entry => {
                 const avg = (entry.scores.reduce((a, s) => a + s.score, 0) / entry.scores.length).toFixed(1);
                 return (
-                  <Card key={entry.date} className="bg-muted/30">
-                    <CardContent className="p-3 flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {format(new Date(entry.date), 'MMMM yyyy')}
-                      </span>
-                      <span className="text-sm font-bold text-primary">{avg}/10</span>
-                    </CardContent>
-                  </Card>
+                  <div key={entry.date} className="flex items-center justify-between px-3 py-2">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(entry.date), 'MMM yyyy')}
+                    </span>
+                    <span className="text-xs font-semibold text-primary">{avg}/10</span>
+                  </div>
                 );
               })}
             </div>
