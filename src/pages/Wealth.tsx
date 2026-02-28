@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Wallet, PiggyBank, Receipt, Calculator, HandCoins, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
+import { PiggyBank, Receipt, Calculator, HandCoins, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import AppHeader from '@/components/AppHeader';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -48,54 +47,42 @@ const Wealth = () => {
     <div className="min-h-screen bg-background">
       <AppHeader title="Wealth & Finance" />
 
-      <main className="max-w-4xl mx-auto px-5 py-6">
+      <main className="max-w-4xl mx-auto px-4 py-4">
         {/* Quick stats */}
         {(stats.income > 0 || stats.goalsCount > 0) && (
-          <div className="grid grid-cols-3 gap-2 mb-6">
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-3 text-center">
-                <TrendingUp className="h-4 w-4 text-primary mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground">{format(new Date(), 'MMM')} Income</p>
-                <p className="text-sm font-bold text-primary">{stats.income.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-3 text-center">
-                <TrendingDown className="h-4 w-4 text-destructive mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground">{format(new Date(), 'MMM')} Expenses</p>
-                <p className="text-sm font-bold text-destructive">{stats.expense.toLocaleString()}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-sm">
-              <CardContent className="p-3 text-center">
-                <PiggyBank className="h-4 w-4 text-primary mx-auto mb-1" />
-                <p className="text-[10px] text-muted-foreground">Total Saved</p>
-                <p className="text-sm font-bold text-primary">{stats.totalSaved.toLocaleString()}</p>
-              </CardContent>
-            </Card>
+          <div className="flex gap-2 mb-4">
+            {[
+              { label: `${format(new Date(), 'MMM')} Income`, value: stats.income.toLocaleString(), icon: TrendingUp, color: 'text-primary' },
+              { label: `${format(new Date(), 'MMM')} Expense`, value: stats.expense.toLocaleString(), icon: TrendingDown, color: 'text-destructive' },
+              { label: 'Total Saved', value: stats.totalSaved.toLocaleString(), icon: PiggyBank, color: 'text-primary' },
+            ].map(s => (
+              <div key={s.label} className="flex-1 bg-card rounded-lg border border-border py-2.5 text-center">
+                <s.icon className={`h-3.5 w-3.5 mx-auto mb-0.5 ${s.color}`} />
+                <p className={`text-sm font-semibold ${s.color}`}>{s.value}</p>
+                <p className="text-[10px] text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Feature cards */}
-        <div className="space-y-2">
+        {/* Feature list */}
+        <div className="bg-card rounded-xl border border-border divide-y divide-border">
           {features.map((f) => (
-            <Card
+            <button
               key={f.title}
-              className={`transition-all ${f.ready ? 'cursor-pointer hover:shadow-md hover:border-primary/20 active:scale-[0.99]' : 'border-dashed opacity-50'}`}
+              className={`w-full flex items-center gap-3 px-3 py-3 text-left transition-colors ${f.ready ? 'hover:bg-muted/50 active:bg-muted' : 'opacity-40 cursor-default'}`}
               onClick={() => f.ready && navigate(f.path)}
+              disabled={!f.ready}
             >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${f.ready ? 'bg-primary/10' : 'bg-muted'}`}>
-                  <f.icon className={`h-5 w-5 ${f.ready ? 'text-primary' : 'text-muted-foreground'}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{f.title}</p>
-                  <p className="text-xs text-muted-foreground">{f.desc}</p>
-                </div>
-                {f.ready && <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
-                {!f.ready && <span className="text-[10px] text-muted-foreground flex-shrink-0">Soon</span>}
-              </CardContent>
-            </Card>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${f.ready ? 'bg-primary/10' : 'bg-muted'}`}>
+                <f.icon className={`h-4 w-4 ${f.ready ? 'text-primary' : 'text-muted-foreground'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{f.title}</p>
+                <p className="text-[11px] text-muted-foreground">{f.desc}</p>
+              </div>
+              {f.ready ? <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" /> : <span className="text-[10px] text-muted-foreground flex-shrink-0">Soon</span>}
+            </button>
           ))}
         </div>
       </main>
