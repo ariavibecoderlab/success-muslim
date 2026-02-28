@@ -7,8 +7,6 @@ import { getGroupTerms } from '@/lib/family-helpers';
 import { ArrowLeft, Flame, Loader2, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 
@@ -55,10 +53,10 @@ const MemberProfile = () => {
 
   if (!entry && !loadingPrivacy) {
     return (
-      <div className="min-h-screen bg-muted/30 flex flex-col items-center justify-center gap-4">
-        <EyeOff className="h-10 w-10 text-muted-foreground" />
-        <p className="text-muted-foreground text-sm">This {terms.memberLabel.toLowerCase()}'s profile is private.</p>
-        <Button variant="outline" onClick={() => navigate(`/family/${familyId}/dashboard`)}>Go back</Button>
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
+        <EyeOff className="h-8 w-8 text-muted-foreground/40" />
+        <p className="text-muted-foreground text-xs">This profile is private.</p>
+        <Button variant="ghost" size="sm" className="text-xs" onClick={() => navigate(`/family/${familyId}/dashboard`)}>Go back</Button>
       </div>
     );
   }
@@ -67,75 +65,67 @@ const MemberProfile = () => {
     ? entry.display_name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
 
-  const STAT_CARDS = [
-    { label: 'Prayers this week', value: entry?.prayers_this_week ?? '—', bgColor: 'bg-emerald-50', textColor: 'text-emerald-600' },
-    { label: 'Quran days', value: `${entry?.quran_days_this_week ?? '—'}/7`, bgColor: 'bg-blue-50', textColor: 'text-blue-600' },
-    { label: 'Fasting days', value: entry?.fasting_days_this_week ?? '—', bgColor: 'bg-purple-50', textColor: 'text-purple-600' },
-    { label: 'Day streak', value: entry?.quran_streak ?? '—', bgColor: 'bg-amber-50', textColor: 'text-amber-600', icon: true },
+  const stats = [
+    { label: 'Prayers', value: entry?.prayers_this_week ?? '—', color: 'text-emerald-500' },
+    { label: 'Quran', value: `${entry?.quran_days_this_week ?? '—'}/7`, color: 'text-blue-500' },
+    { label: 'Fasting', value: entry?.fasting_days_this_week ?? '—', color: 'text-purple-500' },
+    { label: 'Streak', value: entry?.quran_streak ?? '—', color: 'text-amber-500', icon: true },
   ];
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      {/* Header — light */}
-      <div className="bg-card border-b border-border">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="font-medium text-sm text-muted-foreground">{terms.memberLabel} Profile</h1>
-          </div>
-          <div className="flex flex-col items-center text-center">
-            <Avatar className="h-16 w-16 border-2 border-border mb-3">
-              {entry?.avatar_url && <AvatarImage src={entry.avatar_url} />}
-              <AvatarFallback className="text-lg font-bold bg-primary/5 text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-lg font-bold tracking-tight">{entry?.display_name || terms.memberLabel}</h2>
-            <p className="text-muted-foreground text-xs mt-0.5">{family?.name}</p>
-            {isOwnProfile && (
-              <Badge className="mt-1.5 text-[9px] bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-50">You</Badge>
-            )}
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="max-w-lg mx-auto px-4 pt-3 pb-4">
+        <div className="flex items-center gap-2 mb-6">
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground">{terms.memberLabel} Profile</span>
+        </div>
+        <div className="flex flex-col items-center text-center">
+          <Avatar className="h-14 w-14 mb-2">
+            {entry?.avatar_url && <AvatarImage src={entry.avatar_url} />}
+            <AvatarFallback className="text-base font-medium bg-muted text-muted-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <h2 className="text-base font-semibold">{entry?.display_name || terms.memberLabel}</h2>
+          <p className="text-[11px] text-muted-foreground">{family?.name}</p>
+          {isOwnProfile && (
+            <span className="text-[9px] text-primary font-medium mt-0.5">you</span>
+          )}
         </div>
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-5 space-y-4 pb-24"
-        initial={{ opacity: 0, y: 16 }}
+        className="max-w-lg mx-auto px-4 space-y-4 pb-24"
+        initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >
         {/* Iman Score */}
-        <Card className="rounded-xl shadow-sm">
-          <CardContent className="p-5 text-center">
-            <p className="text-3xl font-bold text-primary">{entry?.iman_score ?? '—'}</p>
-            <p className="text-xs text-muted-foreground mt-1">Iman Score this week</p>
-          </CardContent>
-        </Card>
+        <div className="text-center py-4 bg-card rounded-xl border border-border">
+          <p className="text-3xl font-bold text-primary">{entry?.iman_score ?? '—'}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Iman Score</p>
+        </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {STAT_CARDS.map(stat => (
-            <Card key={stat.label} className="rounded-xl shadow-sm">
-              <CardContent className={`p-4 text-center ${stat.bgColor}`}>
-                <p className={`text-xl font-bold ${stat.textColor} flex items-center justify-center gap-1`}>
-                  {stat.icon && <Flame className="h-4 w-4" />}
-                  {stat.value}
-                </p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</p>
-              </CardContent>
-            </Card>
+        {/* Stats */}
+        <div className="grid grid-cols-4 gap-2">
+          {stats.map(stat => (
+            <div key={stat.label} className="text-center py-3 bg-card rounded-lg border border-border">
+              <p className={`text-lg font-semibold ${stat.color} flex items-center justify-center gap-0.5`}>
+                {stat.icon && <Flame className="h-3.5 w-3.5" />}
+                {stat.value}
+              </p>
+              <p className="text-[9px] text-muted-foreground">{stat.label}</p>
+            </div>
           ))}
         </div>
 
         {entry?.ghost_mode && !isOwnProfile && (
-          <Card className="border-dashed rounded-xl">
-            <CardContent className="p-4 flex items-center gap-2 text-muted-foreground">
-              <EyeOff className="h-4 w-4 flex-shrink-0" />
-              <p className="text-xs">This {terms.memberLabel.toLowerCase()} has enabled ghost mode — some data is hidden.</p>
-            </CardContent>
-          </Card>
+          <div className="flex items-center gap-2 text-muted-foreground px-1 py-2">
+            <EyeOff className="h-3.5 w-3.5 flex-shrink-0" />
+            <p className="text-[11px]">Some data is hidden (ghost mode).</p>
+          </div>
         )}
       </motion.main>
     </div>

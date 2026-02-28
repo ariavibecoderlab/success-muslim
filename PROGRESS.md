@@ -5,24 +5,21 @@
 
 ---
 
-## 👨‍👩‍👧 FAMILY MODULE — Class Mode + UI Redesign (2026-02-28)
+## 👨‍👩‍👧 FAMILY MODULE — Compact Redesign (2026-02-28)
 
 | Change | Status | Notes |
 |--------|--------|-------|
 | DB: `group_type` column on `families` table | ✅ | Default 'family', supports 'class' |
-| Terminology helper (`family-helpers.ts`) | ✅ | `getGroupTerms()` returns labels, icons, gradients per type |
-| Create flow type selector | ✅ | Family (green) / Class (blue) cards before name input |
-| `useFamily` hook updated | ✅ | `createFamily(name, groupType)` passes `group_type` to DB |
-| Family list page redesign | ✅ | Gradient cards (green=family, blue=class), staggered animations |
-| Dashboard header banner | ✅ | Gradient header matching group type, icon + member count |
-| Leaderboard gold/silver/bronze | ✅ | Top 3 get gradient cards with glow animation for #1 |
-| Today's Snapshot colorful pills | ✅ | Green=prayer, blue=quran, purple=fasting, amber=streak |
-| Activity Feed colored borders | ✅ | Left border color based on activity_type |
-| Announcement banner redesign | ✅ | Amber gradient, "Teacher says:" for class groups |
-| Settings page terminology | ✅ | Admin→Teacher, Member→Student for class groups |
-| Join page redesign | ✅ | Gradient preview card matching group type |
-| Member Profile redesign | ✅ | Colorful header + gradient stat cards |
-| framer-motion animations | ✅ | Staggered fade-up, slide-in for leaderboard, viewport triggers |
+| Terminology helper (`family-helpers.ts`) | ✅ | `getGroupTerms()` returns labels, icons per type |
+| Create flow type selector | ✅ | Family / Class selection before name input |
+| My Groups: compact list layout | ✅ | No cards/borders, simple divider rows, muted role text, "+ New" top right |
+| Dashboard: tight header | ✅ | Inline icon + name, no gradient banner |
+| Leaderboard: numbered rank circles | ✅ | Gold/silver/bronze circles, no trophy icons, compact rows |
+| Today's Snapshot: status dots | ✅ | Filled/empty dots for prayer/quran/fasting, compact rows |
+| Activity Feed: minimal style | ✅ | 2px left border, small avatars, inline reactions |
+| Announcements: inline border style | ✅ | Left amber border, no card wrapping |
+| Member Profile: clean stats grid | ✅ | 4-col grid, no gradient fills |
+| Overall: compact padding (12px max) | ✅ | Duolingo/Apple Health density throughout |
 
 ---
 
