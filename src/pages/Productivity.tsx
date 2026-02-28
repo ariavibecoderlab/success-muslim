@@ -1,10 +1,10 @@
 import { useNavigate } from 'react-router-dom';
-import { ListChecks, Target, Flame, CheckCircle2, Star } from 'lucide-react';
-import AppHeader from '@/components/AppHeader';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { ListChecks, Target, Flame, Star, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getDailyTasks, getTaskStreak, getHabits, getHabitLog, getTodayKey, getLatestLifeAreaEntry } from '@/lib/productivity-storage';
+
+const container = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
+const item = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
 const Productivity = () => {
   const navigate = useNavigate();
@@ -22,105 +22,73 @@ const Productivity = () => {
     ? (latestLA.scores.reduce((a, s) => a + s.score, 0) / latestLA.scores.length).toFixed(1)
     : '—';
 
-  const features = [
-    {
-      icon: ListChecks,
-      title: 'Daily Tasks',
-      desc: '3 MITs to focus your day',
-      stat: `${mitsCompleted}/${mitCount} MITs`,
-      path: '/productivity/tasks',
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-    },
-    {
-      icon: Flame,
-      title: 'Habit Streaks',
-      desc: 'Build consistency with heatmaps',
-      stat: `${habitsToday}/${habits.length} today`,
-      path: '/productivity/habits',
-      color: 'text-accent',
-      bg: 'bg-accent/10',
-    },
-    {
-      icon: Target,
-      title: 'Life Areas',
-      desc: 'Monthly self-assessment radar',
-      stat: `${avgScore}/10 avg`,
-      path: '/productivity/life-areas',
-      color: 'text-primary',
-      bg: 'bg-primary/10',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title="Productivity" />
+      <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+        <h1 className="text-base font-semibold">Productivity</h1>
+      </div>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
-        {/* Hero stats */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-            <ListChecks className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold mb-1">Plan with Purpose</h1>
-          <p className="text-muted-foreground text-sm max-w-sm">
-            Execute with tawakkul. Your Islamic productivity hub.
-          </p>
-        </div>
-
+      <motion.main
+        className="max-w-lg mx-auto px-4 py-3 space-y-4"
+        variants={container}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Star className="h-4 w-4 text-accent mx-auto mb-1" />
-              <p className="text-lg font-bold">{mitsCompleted}/{mitCount}</p>
-              <p className="text-xs text-muted-foreground">MITs</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Flame className="h-4 w-4 text-accent mx-auto mb-1" />
-              <p className="text-lg font-bold">{streak}</p>
-              <p className="text-xs text-muted-foreground">Day Streak</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Target className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{avgScore}</p>
-              <p className="text-xs text-muted-foreground">Life Score</p>
-            </CardContent>
-          </Card>
-        </div>
+        <motion.div variants={item} className="flex gap-2">
+          {[
+            { label: 'MITs', value: `${mitsCompleted}/${mitCount}`, icon: Star, color: 'text-amber-500' },
+            { label: 'Streak', value: `${streak}d`, icon: Flame, color: 'text-amber-500' },
+            { label: 'Life', value: avgScore, icon: Target, color: 'text-primary' },
+          ].map(s => (
+            <div key={s.label} className="flex-1 bg-card rounded-lg border border-border py-2.5 text-center">
+              <p className={`text-lg font-semibold ${s.color}`}>{s.value}</p>
+              <p className="text-[10px] text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
+        </motion.div>
 
-        {/* Feature cards */}
-        <div className="space-y-3">
-          {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <Card
-                className="cursor-pointer hover:shadow-md transition-shadow border-border"
+        {/* Feature list */}
+        <motion.div variants={item}>
+          <div className="bg-card rounded-xl border border-border overflow-hidden">
+            {[
+              {
+                icon: ListChecks,
+                title: 'Daily Tasks',
+                sub: `${mitsCompleted}/${mitCount} MITs done`,
+                path: '/productivity/tasks',
+              },
+              {
+                icon: Flame,
+                title: 'Habit Streaks',
+                sub: `${habitsToday}/${habits.length} today`,
+                path: '/productivity/habits',
+              },
+              {
+                icon: Target,
+                title: 'Life Areas',
+                sub: `${avgScore}/10 avg`,
+                path: '/productivity/life-areas',
+              },
+            ].map((f, idx, arr) => (
+              <button
+                key={f.title}
+                className={`w-full flex items-center gap-3 px-3 py-3 text-left hover:bg-muted/40 transition-colors active:bg-muted/60 ${
+                  idx < arr.length - 1 ? 'border-b border-border' : ''
+                }`}
                 onClick={() => navigate(f.path)}
               >
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className={`w-11 h-11 rounded-xl ${f.bg} flex items-center justify-center flex-shrink-0`}>
-                    <f.icon className={`h-5 w-5 ${f.color}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{f.title}</p>
-                    <p className="text-xs text-muted-foreground">{f.desc}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-xs flex-shrink-0">{f.stat}</Badge>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </main>
+                <f.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{f.title}</p>
+                  <p className="text-[11px] text-muted-foreground">{f.sub}</p>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+              </button>
+            ))}
+          </div>
+        </motion.div>
+      </motion.main>
     </div>
   );
 };

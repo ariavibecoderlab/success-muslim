@@ -2,10 +2,9 @@ import { useState, useCallback, useEffect } from 'react';
 import { Plus, Trash2, Flame, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent } from '@/components/ui/card';
 import SubPageLayout from '@/components/SubPageLayout';
 import { motion } from 'framer-motion';
-import { format, subDays, startOfWeek, getDay } from 'date-fns';
+import { format, subDays, getDay } from 'date-fns';
 import { useSearchParams } from 'react-router-dom';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
@@ -40,7 +39,6 @@ const HabitStreaksPage = () => {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateKey === today;
 
-  // Handle ?backdate=1 from Settings "Log Past Data"
   useEffect(() => {
     if (searchParams.get('backdate') === '1') {
       setSelectedDate(subDays(new Date(), 1));
@@ -67,7 +65,7 @@ const HabitStreaksPage = () => {
     setHighlightPicker(true);
   }, []);
 
-  const heatmap = getHeatmapData(112); // 16 weeks
+  const heatmap = getHeatmapData(112);
 
   return (
     <SubPageLayout
@@ -76,40 +74,27 @@ const HabitStreaksPage = () => {
       siblingRoutes={SIBLING_ROUTES}
       currentPath="/productivity/habits"
     >
-      <div className="space-y-6">
-        {/* Backdate prompt */}
+      <div className="space-y-4">
         <BackdatePrompt moduleKey="habits" onLogPastData={handleLogPastData} />
-
-        {/* Date picker */}
-        <div className="flex items-center justify-between">
-          <BackdateDatePicker
-            selectedDate={selectedDate}
-            onDateChange={setSelectedDate}
-            highlight={highlightPicker}
-            compact
-          />
-        </div>
+        <BackdateDatePicker
+          selectedDate={selectedDate}
+          onDateChange={setSelectedDate}
+          highlight={highlightPicker}
+          compact
+        />
 
         {/* Heatmap */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Flame className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold">Activity Heatmap</h3>
-            </div>
-            <HeatmapGrid data={heatmap} />
-            <div className="flex items-center justify-end gap-1 mt-2 text-xs text-muted-foreground">
-              <span>Less</span>
-              {[0, 1, 2, 3, 4].map(level => (
-                <div
-                  key={level}
-                  className={`w-3 h-3 rounded-sm ${getHeatColor(level)}`}
-                />
-              ))}
-              <span>More</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="bg-card rounded-xl border border-border p-3">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-2">Activity</p>
+          <HeatmapGrid data={heatmap} />
+          <div className="flex items-center justify-end gap-0.5 mt-1.5 text-[9px] text-muted-foreground">
+            <span>Less</span>
+            {[0, 1, 2, 3, 4].map(level => (
+              <div key={level} className={`w-2.5 h-2.5 rounded-sm ${getHeatColor(level)}`} />
+            ))}
+            <span>More</span>
+          </div>
+        </div>
 
         {/* Add habit */}
         <div className="flex gap-2">
@@ -118,20 +103,20 @@ const HabitStreaksPage = () => {
             value={newName}
             onChange={e => setNewName(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
-            className="flex-1"
+            className="flex-1 h-9 text-sm"
           />
-          <Button onClick={handleAdd} size="icon" disabled={!newName.trim()}>
-            <Plus className="h-4 w-4" />
+          <Button onClick={handleAdd} size="icon" className="h-9 w-9" disabled={!newName.trim()}>
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         </div>
 
-        {/* Habits for selected date */}
+        {/* Habits list */}
         {habits.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              {isToday ? "Today's Habits" : `Habits for ${format(selectedDate, 'd MMM yyyy')}`}
-            </h3>
-            <div className="space-y-2">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
+              {isToday ? "Today's Habits" : format(selectedDate, 'd MMM yyyy')}
+            </p>
+            <div className="space-y-1">
               {habits.map(habit => {
                 const done = log[dateKey]?.includes(habit.id) || false;
                 const streak = getHabitStreak(habit.id);
@@ -139,31 +124,29 @@ const HabitStreaksPage = () => {
                   <motion.div
                     key={habit.id}
                     layout
-                    className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                      done ? 'bg-primary/5 border-primary/20' : 'bg-card border-border'
-                    }`}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg border border-border bg-card"
                   >
                     <button
                       onClick={() => handleToggle(habit.id)}
-                      className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
+                        done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground/40'
                       }`}
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-3 w-3" />
                     </button>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${done ? 'text-primary' : ''}`}>{habit.name}</p>
+                      <p className="text-sm">{habit.name}</p>
                       {streak > 0 && (
-                        <p className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Flame className="h-3 w-3 text-accent" /> {streak} day streak
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                          <Flame className="h-2.5 w-2.5 text-amber-500" /> {streak}d
                         </p>
                       )}
                     </div>
                     <button
                       onClick={() => handleDelete(habit.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors"
+                      className="text-muted-foreground/30 hover:text-destructive transition-colors flex-shrink-0"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </motion.div>
                 );
@@ -173,10 +156,9 @@ const HabitStreaksPage = () => {
         )}
 
         {habits.length === 0 && (
-          <div className="text-center py-12 text-muted-foreground">
-            <Flame className="h-10 w-10 mx-auto mb-3 text-accent/40" />
-            <p className="text-sm">Add habits to start building streaks!</p>
-          </div>
+          <p className="text-xs text-muted-foreground text-center py-8">
+            Add habits to start building streaks.
+          </p>
         )}
       </div>
     </SubPageLayout>
@@ -203,14 +185,14 @@ function HeatmapGrid({ data }: { data: { date: string; count: number }[] }) {
   if (currentWeek.length > 0) weeks.push(currentWeek);
 
   return (
-    <div className="flex gap-0.5 overflow-x-auto">
+    <div className="flex gap-px overflow-x-auto">
       {weeks.map((week, wi) => (
-        <div key={wi} className="flex flex-col gap-0.5">
+        <div key={wi} className="flex flex-col gap-px">
           {week.map((day, di) => (
             <div
               key={di}
-              className={`w-3 h-3 rounded-sm ${day.count < 0 ? 'bg-transparent' : getHeatColor(day.count)}`}
-              title={day.date ? `${day.date}: ${day.count} habits` : ''}
+              className={`w-2.5 h-2.5 rounded-sm ${day.count < 0 ? 'bg-transparent' : getHeatColor(day.count)}`}
+              title={day.date ? `${day.date}: ${day.count}` : ''}
             />
           ))}
         </div>
