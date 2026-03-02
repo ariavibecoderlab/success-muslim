@@ -39,7 +39,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
         {children}
       </main>
 
-      <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50">
+      <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => prevRoute && navigate(prevRoute.path)}

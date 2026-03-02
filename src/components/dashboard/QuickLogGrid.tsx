@@ -29,7 +29,7 @@ export default function QuickLogGrid() {
                   <div className={`w-9 h-9 rounded-xl flex items-center justify-center bg-gradient-to-br ${q.gradient}`}>
                     <q.icon className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-[10px] font-medium">{q.label}</span>
+                  <span className="text-[11px] font-medium">{q.label}</span>
                 </CardContent>
               </Card>
             </Link>
