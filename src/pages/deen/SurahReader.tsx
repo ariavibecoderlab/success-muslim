@@ -267,7 +267,11 @@ const SurahReader = () => {
   };
 
   const goToSurah = (n: number) => {
-    if (n >= 1 && n <= 114) navigate(`/iman/quran/read/${n}`);
+    if (n >= 1 && n <= 114) navigate(`/iman/quran/read/${n}`, { replace: true });
+  };
+
+  const handleBack = () => {
+    navigate('/iman/quran', { replace: true });
   };
 
   const handleBookmarkToggle = (ayahNum: number, surah?: number) => {
@@ -305,7 +309,7 @@ const SurahReader = () => {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/iman/quran')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="text-center">
@@ -314,7 +318,7 @@ const SurahReader = () => {
               {surahInfo?.arabic} · {surahInfo?.ayahs} ayahs · {surahInfo?.type}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/iman/quran')}>
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleBack}>
             <BookOpen className="h-4 w-4" />
           </Button>
         </div>
@@ -527,6 +531,39 @@ const SurahReader = () => {
           </div>
         </>
       )}
+
+      {/* Sticky bottom nav bar */}
+      <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50">
+        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={() => num > 1 && goToSurah(num - 1)}
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              num > 1 ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'
+            }`}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            <span className="max-w-[80px] truncate">{num > 1 ? SURAH_NAMES[num - 2]?.name : ''}</span>
+          </button>
+
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 py-2 px-4 rounded-full bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back to Quran
+          </button>
+
+          <button
+            onClick={() => num < 114 && goToSurah(num + 1)}
+            className={`flex items-center gap-1 text-xs transition-colors ${
+              num < 114 ? 'text-muted-foreground hover:text-foreground' : 'text-transparent pointer-events-none'
+            }`}
+          >
+            <span className="max-w-[80px] truncate">{num < 114 ? SURAH_NAMES[num]?.name : ''}</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
