@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useQuranPrefs, useQuranBookmarks, useQuranMemorization } from '@/hooks/useQuranData';
 import { fetchAyahs, fetchTafsir, SURAH_NAMES, TRANSLATION_IDS, type Ayah } from '@/lib/quran-api';
-import { getPageForSurah } from '@/lib/quran-mapping';
+import { getPageForSurah, pageToSurahAyah } from '@/lib/quran-mapping';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,8 +52,18 @@ const SurahReader = () => {
     return saved === 'mushaf' ? 'mushaf' : 'ayah';
   });
 
+  const mushafPageRef = useRef(getPageForSurah(num));
+
   const handleModeChange = (val: string) => {
     if (val === 'ayah' || val === 'mushaf') {
+      if (val === 'ayah' && readingMode === 'mushaf') {
+        // Sync mushaf page position back to ayah mode
+        const pos = pageToSurahAyah(mushafPageRef.current);
+        if (pos.surah === num) {
+          const targetPage = Math.ceil(pos.ayah / AYAHS_PER_PAGE);
+          setCurrentPage(targetPage);
+        }
+      }
       setReadingMode(val);
       localStorage.setItem('quran_reading_mode', val);
     }
@@ -351,6 +361,7 @@ const SurahReader = () => {
           onTafsir={(s, a) => handleTafsir(a, s)}
           onBookmark={(s, a) => handleBookmarkToggle(a, s)}
           onMemorize={(s, a) => { toggleMemorized(s, a); toast(isMemorized(s, a) ? 'Unmarked' : 'Marked as memorized'); }}
+          onPageChange={(p) => { mushafPageRef.current = p; }}
         />
       ) : (
         /* ── Ayah-by-Ayah Mode ── */
