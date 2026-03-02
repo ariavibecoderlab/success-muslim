@@ -14,10 +14,10 @@ export default function DailyQuoteCard() {
 
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={2}>
-      <Card className="bg-primary/5 border-primary/10">
+      <Card className="bg-gradient-to-r from-amber-50 to-orange-50/50 border-amber-100">
         <CardContent className="p-5 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Heart className="h-4 w-4 text-primary" />
+          <div className="w-8 h-8 rounded-lg bg-rose-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Heart className="h-4 w-4 text-rose-500" />
           </div>
           <div>
             <p className="text-sm italic leading-relaxed">{quote.text}</p>

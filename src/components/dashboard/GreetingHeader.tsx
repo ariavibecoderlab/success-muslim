@@ -15,7 +15,7 @@ export default function GreetingHeader({ displayName, onCustomize }: Props) {
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold mb-0.5">
-            Assalamualaikum{displayName ? `, ${displayName}` : ''} 👋
+            Assalamualaikum{displayName ? <span className="text-emerald-700">, {displayName}</span> : ''} 👋
           </h1>
           <EditableText
             elementKey="greeting.subtitle"

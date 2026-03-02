@@ -13,7 +13,7 @@ export default function AnnouncementsBanner({ announcements }: Props) {
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
       {announcements.map((a) => (
-        <Card key={a.id} className="bg-accent/10 border-accent/20 mb-2">
+        <Card key={a.id} className="bg-accent/10 border-accent/20 border-l-4 border-l-amber-400 mb-2">
           <CardContent className="p-3 flex items-start gap-3">
             <Megaphone className="h-4 w-4 text-accent-foreground flex-shrink-0 mt-0.5" />
             <div>
