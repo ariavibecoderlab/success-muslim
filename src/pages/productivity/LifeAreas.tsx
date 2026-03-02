@@ -15,12 +15,10 @@ import {
 } from 'recharts';
 import {
   LIFE_AREAS,
-  getLifeAreaEntries,
-  getLatestLifeAreaEntry,
-  saveLifeAreaEntry,
-  LifeAreaKey,
-  LifeAreaScore,
+  type LifeAreaKey,
+  type LifeAreaScore,
 } from '@/lib/productivity-storage';
+import { useLifeAreaEntries, useLatestLifeAreaEntry, useSaveLifeAreaEntry } from '@/hooks/useLifeAreasQuery';
 
 const SIBLING_ROUTES = [
   { path: '/productivity/tasks', label: 'Daily Tasks' },
@@ -30,7 +28,9 @@ const SIBLING_ROUTES = [
 
 const LifeAreasPage = () => {
   const monthKey = format(startOfMonth(new Date()), 'yyyy-MM-dd');
-  const existing = getLatestLifeAreaEntry();
+  const existing = useLatestLifeAreaEntry();
+  const { data: entries = [] } = useLifeAreaEntries();
+  const saveEntry = useSaveLifeAreaEntry();
 
   const [scores, setScores] = useState<Record<LifeAreaKey, number>>(() => {
     const defaults: Record<LifeAreaKey, number> = {
@@ -42,16 +42,14 @@ const LifeAreasPage = () => {
     return defaults;
   });
 
-  const entries = getLifeAreaEntries();
-
   const handleSave = useCallback(() => {
     const scoreArray: LifeAreaScore[] = LIFE_AREAS.map(a => ({
       area: a.key,
       score: scores[a.key],
     }));
-    saveLifeAreaEntry({ date: monthKey, scores: scoreArray });
+    saveEntry.mutate({ date: monthKey, scores: scoreArray });
     toast.success('Assessment saved!');
-  }, [scores, monthKey]);
+  }, [scores, monthKey, saveEntry]);
 
   const radarData = LIFE_AREAS.map(a => ({
     area: a.label,

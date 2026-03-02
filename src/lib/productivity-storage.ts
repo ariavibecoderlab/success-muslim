@@ -1,5 +1,4 @@
 import { format, subDays } from 'date-fns';
-import { syncTaskAdd, syncTaskToggle, syncTaskDelete, syncHabitAdd, syncHabitDelete, syncHabitLogToggle, syncLifeAreaScores } from './db-sync';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -96,7 +95,6 @@ export function addTask(text: string, isMIT: boolean, date?: string): DailyTasks
   };
   d.tasks.push(task);
   saveDailyTasks(d);
-  syncTaskAdd(task.id, d.date, text, task.isMIT);
   return d;
 }
 
@@ -105,7 +103,6 @@ export function toggleTask(taskId: string, date?: string): DailyTasks {
   const task = d.tasks.find(t => t.id === taskId);
   if (task) {
     task.completed = !task.completed;
-    syncTaskToggle(taskId, task.completed);
   }
   saveDailyTasks(d);
   return d;
@@ -115,7 +112,6 @@ export function deleteTask(taskId: string, date?: string): DailyTasks {
   const d = getDailyTasks(date);
   d.tasks = d.tasks.filter(t => t.id !== taskId);
   saveDailyTasks(d);
-  syncTaskDelete(taskId);
   return d;
 }
 
@@ -150,14 +146,12 @@ export function addHabit(name: string, icon: string = 'Check', color: string = '
   const id = crypto.randomUUID();
   habits.push({ id, name, icon, color, createdAt: new Date().toISOString() });
   saveHabits(habits);
-  syncHabitAdd(id, name, icon, color);
   return habits;
 }
 
 export function deleteHabit(id: string): Habit[] {
   const habits = getHabits().filter(h => h.id !== id);
   saveHabits(habits);
-  syncHabitDelete(id);
   return habits;
 }
 
@@ -180,7 +174,6 @@ export function toggleHabitForDate(habitId: string, date?: string): HabitLog {
   if (idx >= 0) log[key].splice(idx, 1);
   else log[key].push(habitId);
   saveHabitLog(log);
-  syncHabitLogToggle(habitId, key, isCompleted);
   return log;
 }
 
@@ -222,7 +215,6 @@ export function saveLifeAreaEntry(entry: LifeAreaEntry) {
   else entries.push(entry);
   entries.sort((a, b) => b.date.localeCompare(a.date));
   localStorage.setItem(LIFE_AREAS_KEY, JSON.stringify(entries));
-  syncLifeAreaScores(entry.date, entry.scores);
 }
 
 export function getLatestLifeAreaEntry(): LifeAreaEntry | null {

@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 import { ListChecks } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { getDailyTasks } from '@/lib/productivity-storage';
+import { useDailyTasks } from '@/hooks/useTasksQuery';
+import { getTodayKey } from '@/lib/productivity-storage';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function TasksTodayWidget({ size }: { size: WidgetSize }) {
-  const daily = getDailyTasks();
-  const total = daily.tasks.length;
-  const done = daily.tasks.filter(t => t.completed).length;
+  const { data: daily } = useDailyTasks(getTodayKey());
+  const tasks = daily?.tasks ?? [];
+  const total = tasks.length;
+  const done = tasks.filter(t => t.completed).length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   if (size === 'small') {
