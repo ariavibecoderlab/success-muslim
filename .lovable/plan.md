@@ -1,50 +1,25 @@
 
 
-## Polish Mushaf Page View to Match Physical Mushaf
+## Fix Quran Reader Navigation Issues
 
-### Reference Analysis
-The uploaded screenshot shows a professional Quran app with:
-- **Top bar**: Bookmark icon + "Page 50" on left, "Juz 3 / Hizb 5" on right
-- **Surah bar**: "3. Ali 'Imran" with dropdown, mode toggle icons (list/mushaf/font), settings gear
-- **Content area**: Large Uthmani text with generous line-height (~2.6), decorative circular ayah markers with numbers inside
-- **Page number**: Centered at bottom ("50")
-- **Overall feel**: Clean, cream/white background, no heavy borders, spacious
+### Problems Identified
+1. **SurahReader has no obvious exit**: The page has only a small header back button. In Mushaf mode especially, there's no persistent way to leave the page.
+2. **Navigation loop**: QuranReader's SubPageLayout uses `navigate(-1)` which goes back to SurahReader instead of `/iman`, creating a back-button loop between the two pages.
 
 ### Changes
 
-#### 1. MushafPageView.tsx -- Major Visual Overhaul
+#### 1. SurahReader.tsx -- Add a sticky bottom bar with Back button
+Add a simple sticky bottom bar (similar to SubPageLayout's pattern) with:
+- A centered "Back to Quran" button that navigates to `/iman/quran` using `navigate('/iman/quran', { replace: true })` -- using `replace` breaks the history loop
+- Previous/Next surah navigation on either side (compact chevrons with surah name)
 
-**Header redesign**:
-- Left side: Bookmark icon + "Page {n}" label
-- Right side: "Juz {n} / Hizb {h}" (add Hizb calculation from page number)
-- Subtle separator line below
+This gives users a persistent, visible exit from the Quran reader in both Ayah and Mushaf modes.
 
-**Content area**:
-- Increase line-height from `2.4` to `2.6` for more breathing room
-- Make ayah end markers decorative circles: render verse number inside a circular border (`inline-flex w-7 h-7 rounded-full border border-muted-foreground/40 items-center justify-center text-[0.5em]`) instead of the bracket style
-- Increase default minimum font size from 26 to 28px
-- Add subtle warm background tint: `bg-[#fefcf7] dark:bg-background` for a parchment feel
-- Generous padding: `px-6 py-8`
+#### 2. SurahReader.tsx -- Fix header back button to use `replace`
+Change the header's `ChevronLeft` button from `navigate('/iman/quran')` to `navigate('/iman/quran', { replace: true })` so it replaces the history entry instead of pushing, preventing the back-loop.
 
-**Surah header**:
-- Show surah number prefix: "3. Ali 'Imran"
-- More elegant styling with a decorative divider line
-- Bismillah in larger size with more spacing
-
-**Bottom navigation**:
-- Simplified: just centered page number ("50") as primary element
-- Prev/Next as subtle ghost arrows on either side
-- Remove "Next"/"Prev" text labels, just use chevron icons
-
-**Green accent line**: Add a thin teal/emerald accent line at the top of the content area (matching the green line visible in the reference image below the surah header)
-
-#### 2. quran-mapping.ts -- Add Hizb Helper
-
-Add `hizbForPage(page: number): number` function. Each hizb spans ~8 pages (604 pages / 60 hizb). This can be derived from the juz (each juz has 2 hizbs) and the page position within the juz.
-
-#### 3. SurahReader.tsx -- Header Polish for Mushaf Mode
-
-When in mushaf mode, update the header bar to show the surah name with number prefix and a more compact mode toggle that matches the reference (icons instead of text labels).
+#### 3. QuranReader (SubPageLayout) -- No changes needed
+The SubPageLayout's `navigate(-1)` is correct for general use. The fix is on SurahReader's side by using `replace: true` when going back, so the SurahReader entry is removed from history and SubPageLayout's back button won't return to it.
 
 ---
 
@@ -52,12 +27,10 @@ When in mushaf mode, update the header bar to show the surah name with number pr
 
 | File | Change |
 |------|--------|
-| `src/components/quran/MushafPageView.tsx` | Complete visual overhaul: decorative ayah circles, parchment bg, header with hizb, elegant surah headers, bottom page number |
-| `src/lib/quran-mapping.ts` | Add `hizbForPage()` helper |
-| `src/pages/deen/SurahReader.tsx` | Polish header for mushaf mode (numbered surah name, compact mode toggle) |
+| `src/pages/deen/SurahReader.tsx` | Add sticky bottom nav bar with "Back to Quran" + prev/next surah; fix header back to use `replace: true` |
 
 ### Technical Notes
-- Parchment tint uses `bg-[#fefcf7]` which is warm cream, only in light mode
-- Hizb calculation: `Math.ceil(page / (604/60))` gives approximate hizb
-- Ayah number circles use inline-flex with fixed dimensions for consistent sizing
-- No new dependencies needed
+- Using `replace: true` on navigation removes the SurahReader from the history stack, breaking the loop
+- Bottom bar uses the same styling pattern as SubPageLayout (sticky, backdrop-blur, border-t)
+- The `pb-24` on the ayah container already provides space for a bottom bar
+- In Mushaf mode, the MushafPageView's own bottom page nav is separate from this navigation bar
