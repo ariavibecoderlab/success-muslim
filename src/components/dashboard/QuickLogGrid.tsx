@@ -6,14 +6,14 @@ import EditableText from '@/components/cms/EditableText';
 import { fadeUp } from './constants';
 
 const QUICK_LOGS = [
-  { icon: Star, label: 'Prayer', to: '/iman/prayer-times', color: 'bg-primary/10 text-primary' },
-  { icon: BookOpen, label: 'Quran', to: '/iman/quran', color: 'bg-primary/10 text-primary' },
-  { icon: HandHeart, label: 'Dhikr', to: '/iman/dhikr', color: 'bg-accent/20 text-accent-foreground' },
-  { icon: Moon, label: 'Fast', to: '/health/fasting', color: 'bg-secondary text-secondary-foreground' },
+  { icon: Star, label: 'Prayer', to: '/iman/prayer-times', color: 'bg-emerald-500/10 text-emerald-600' },
+  { icon: BookOpen, label: 'Quran', to: '/iman/quran', color: 'bg-sky-500/10 text-sky-600' },
+  { icon: HandHeart, label: 'Dhikr', to: '/iman/dhikr', color: 'bg-violet-500/10 text-violet-600' },
+  { icon: Moon, label: 'Fast', to: '/health/fasting', color: 'bg-amber-500/10 text-amber-600' },
   { icon: Droplets, label: 'Water', to: '/health/hydration', color: 'bg-blue-500/10 text-blue-600' },
-  { icon: BedDouble, label: 'Sleep', to: '/health/sleep', color: 'bg-secondary text-secondary-foreground' },
-  { icon: ListChecks, label: 'Tasks', to: '/productivity/tasks', color: 'bg-accent/20 text-accent-foreground' },
-  { icon: Dumbbell, label: 'Habits', to: '/productivity/habits', color: 'bg-primary/10 text-primary' },
+  { icon: BedDouble, label: 'Sleep', to: '/health/sleep', color: 'bg-indigo-500/10 text-indigo-600' },
+  { icon: ListChecks, label: 'Tasks', to: '/productivity/tasks', color: 'bg-rose-500/10 text-rose-600' },
+  { icon: Dumbbell, label: 'Habits', to: '/productivity/habits', color: 'bg-teal-500/10 text-teal-600' },
 ];
 
 export default function QuickLogGrid() {

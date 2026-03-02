@@ -15,7 +15,7 @@ interface Props {
 export default function LifeScoreCard({ lifeScore, weeklyScores }: Props) {
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.5}>
-      <Card className="bg-primary/5 border-primary/10">
+      <Card className="bg-gradient-to-br from-emerald-50 to-teal-50/50 border-emerald-100 border-l-4 border-l-emerald-400">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
