@@ -198,3 +198,8 @@ export function advanceByOneHizb(surah: number, ayah: number): { surah: number; 
   const targetPage = Math.min(604, currentPage + 10);
   return lastAyahOnPage(targetPage);
 }
+
+/** Returns the starting Mushaf page for a given surah (1-114) */
+export function getPageForSurah(surahNumber: number): number {
+  return pageForAyah(surahNumber, 1);
+}

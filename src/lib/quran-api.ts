@@ -231,3 +231,16 @@ export const SURAH_NAMES: { number: number; name: string; arabic: string; ayahs:
 
 export const TOTAL_AYAHS = SURAH_NAMES.reduce((s, v) => s + v.ayahs, 0); // 6236
 export const TOTAL_PAGES = 604;
+
+/** Fetch all ayahs on a given Mushaf page (1-604) */
+export async function fetchAyahsByPage(
+  page: number,
+  translationId: number = 131,
+): Promise<{ verses: (Ayah & { chapter_id: number })[]; meta: { page: number } }> {
+  const url = `${BASE}/verses/by_page/${page}?language=en&translations=${translationId}&fields=text_uthmani,chapter_id&per_page=50`;
+  const data = await cachedFetch<any>(url);
+  return {
+    verses: data.verses.map((v: any) => ({ ...v, chapter_id: v.chapter_id ?? Number(v.verse_key?.split(':')[0]) })),
+    meta: { page },
+  };
+}
