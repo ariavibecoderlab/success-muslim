@@ -1,111 +1,112 @@
 
 
-## React Query Migration — Productivity & Quran Modules
+## React Query Migration -- Productivity and Quran Modules
 
-### Goal
-Migrate Productivity (Tasks, Habits, Life Areas) and Quran (quran-storage) from localStorage-first to React Query as source of truth, matching the pattern used by Salah, Dhikr, Sunnah, Health, and Steps modules.
+### Overview
+Migrate 4 sub-modules from localStorage-first (with fire-and-forget DB sync) to React Query as single source of truth. This matches the proven pattern already used by Salah, Dhikr, Sunnah, Health, Steps, and Qada modules.
 
-### Pattern (existing, proven)
-1. Create `useXxxQuery.ts` hook with `useQuery` + `useMutation`
-2. DB is source of truth; localStorage used only as `initialData` for instant UI
-3. Mutations: write DB → invalidate cache → update localStorage as side effect
-4. All consumers use the hook instead of direct storage function calls
-
----
-
-### Part 1: Productivity — Daily Tasks
-
-**New hook: `src/hooks/useTasksQuery.ts`**
-- `useDailyTasks(date)` — fetches from `daily_tasks` table where `date = date`
-  - `initialData` from `getDailyTasks(date)` localStorage
-- `useAddTask()` — mutation: insert into `daily_tasks`, invalidate
-- `useToggleTask()` — mutation: update `completed`, invalidate
-- `useDeleteTask()` — mutation: delete from `daily_tasks`, invalidate
-- `useTaskStreak()` — derived: query last 365 days of tasks, compute streak
-
-**Update consumers:**
-- `src/pages/productivity/DailyTasks.tsx` — use hooks instead of `addTask()`, `toggleTask()`, `deleteTask()`
-- `src/pages/Dashboard.tsx` — use `useDailyTasks()` for life score MITs
+### Architecture Pattern (matching existing `useSalahQuery.ts`)
+- `useQuery` fetches from DB when user is logged in, falls back to localStorage for anonymous/offline
+- `initialData` from localStorage for instant UI (zero flash)
+- `useMutation` writes to DB, then invalidates query cache
+- localStorage updated as side-effect (offline fallback)
 
 ---
 
-### Part 2: Productivity — Habits
+### Part 1: Daily Tasks Hook
 
-**New hook: `src/hooks/useHabitsQuery.ts`**
-- `useHabits()` — fetches from `habits` table
-  - `initialData` from `getHabits()` localStorage
-- `useHabitLog(days?)` — fetches from `habit_log` table, builds `{ [date]: string[] }` map
-  - `initialData` from `getHabitLog()` localStorage
-- `useAddHabit()` — mutation: insert into `habits`, invalidate
-- `useDeleteHabit()` — mutation: delete from `habits` + related `habit_log`, invalidate
-- `useToggleHabit()` — mutation: insert/delete `habit_log` row, invalidate
-- `useHabitStreak(habitId)` — derived from habit log data
-- `useHeatmapData(days)` — derived from habit log data
+**New file: `src/hooks/useTasksQuery.ts`**
 
-**Update consumers:**
-- `src/pages/productivity/HabitStreaks.tsx`
-- `src/pages/Dashboard.tsx` — habit count for life score
+| Hook | Query Key | DB Table | localStorage Fallback |
+|------|-----------|----------|----------------------|
+| `useDailyTasks(date)` | `['tasks', userId, date]` | `daily_tasks` WHERE date = date | `getDailyTasks(date)` |
+| `useAddTask()` | mutation, invalidates tasks | INSERT `daily_tasks` | `saveDailyTasks()` |
+| `useToggleTask()` | mutation, invalidates tasks | UPDATE `daily_tasks.completed` | `saveDailyTasks()` |
+| `useDeleteTask()` | mutation, invalidates tasks | DELETE `daily_tasks` | `saveDailyTasks()` |
+| `useTaskStreak()` | `['task-streak', userId]` | query last 365 days | `getTaskStreak()` |
 
----
-
-### Part 3: Productivity — Life Areas
-
-**New hook: `src/hooks/useLifeAreasQuery.ts`**
-- `useLifeAreaEntries()` — fetches from `life_area_scores` table, groups by date
-  - `initialData` from `getLifeAreaEntries()` localStorage
-- `useSaveLifeAreaEntry()` — mutation: upsert scores, invalidate
-
-**Update consumers:**
-- `src/pages/productivity/LifeAreas.tsx`
+**Consumer updates:**
+- `DailyTasks.tsx` -- replace `useState(() => getDailyTasks())` with `useDailyTasks(dateKey)`
+- `TasksTodayWidget.tsx` -- use `useDailyTasks()`
 
 ---
 
-### Part 4: Quran Storage
+### Part 2: Habits Hook
 
-**New hook: `src/hooks/useQuranStorageQuery.ts`**
-- `useQuranDay(date)` — fetches from `quran_log` table
-  - `initialData` from `getQuranDay(date)` localStorage
-- `useLogQuranPages()` — mutation: upsert into `quran_log`, invalidate
-- `useQuranStats()` — fetches all quran_log entries, computes totalPages, khatamCount, streak
-  - `initialData` from localStorage
+**New file: `src/hooks/useHabitsQuery.ts`**
 
-**Update consumers:**
-- `src/pages/QuranTracker.tsx`
-- `src/pages/Dashboard.tsx` — quran pages for life score
+| Hook | DB Table | localStorage Fallback |
+|------|----------|----------------------|
+| `useHabits()` | `habits` | `getHabits()` |
+| `useHabitLog(days?)` | `habit_log` | `getHabitLog()` |
+| `useAddHabit()` | INSERT `habits` | `saveHabits()` |
+| `useDeleteHabit()` | DELETE `habits` + related logs | `saveHabits()` |
+| `useToggleHabit()` | INSERT/DELETE `habit_log` | `saveHabitLog()` |
 
----
-
-### Part 5: Cleanup
-
-- Remove direct `syncXxx()` calls from storage files (no longer needed — mutations handle DB)
-- Keep storage functions as `initialData` helpers only
-- Update `PROGRESS.md` with migration status
+**Consumer updates:**
+- `HabitStreaks.tsx` -- replace direct storage calls with hooks
 
 ---
 
-### Technical Notes
+### Part 3: Life Areas Hook
 
-**Tables already exist** (no migrations needed):
-- `daily_tasks` — has user_id, date, text, completed, is_mit
-- `habits` — has user_id, name, icon, color
-- `habit_log` — has user_id, habit_id, date
-- `life_area_scores` — has user_id, area, date, score
-- `quran_log` — has user_id, date, pages_read, juz_number, surah_name, notes
+**New file: `src/hooks/useLifeAreasQuery.ts`**
 
-**RLS policies already in place** for all tables.
+| Hook | DB Table | localStorage Fallback |
+|------|----------|----------------------|
+| `useLifeAreaEntries()` | `life_area_scores` (grouped by date) | `getLifeAreaEntries()` |
+| `useSaveLifeAreaEntry()` | UPSERT `life_area_scores` | `saveLifeAreaEntry()` |
 
-**Files to create:**
+**Consumer updates:**
+- `LifeAreas.tsx` -- replace direct storage calls with hooks
+
+---
+
+### Part 4: Quran Storage Hook
+
+**New file: `src/hooks/useQuranStorageQuery.ts`**
+
+| Hook | DB Table | localStorage Fallback |
+|------|----------|----------------------|
+| `useQuranDay(date)` | `quran_log` WHERE date = date | `getQuranDay(date)` |
+| `useLogQuranPages()` | UPSERT `quran_log` | `logQuranPages()` |
+| `useQuranStats()` | all `quran_log` rows | computed from localStorage |
+
+**Consumer updates:**
+- `QuranTracker.tsx` -- replace `useState(() => getQuranDay())` with `useQuranDay(dateKey)`
+
+---
+
+### Part 5: Dashboard and Cleanup
+
+**Dashboard.tsx** -- Update life score computation to use the new hooks instead of direct `getDailyTasks()`, `getHabits()`, `getHabitLog()`, `getQuranDay()` calls.
+
+**Storage files cleanup:**
+- `productivity-storage.ts` -- remove `syncTaskAdd`, `syncTaskToggle`, `syncTaskDelete`, `syncHabitAdd`, `syncHabitDelete`, `syncHabitLogToggle`, `syncLifeAreaScores` import/calls. Keep functions as localStorage helpers only.
+- `quran-storage.ts` -- remove `syncQuranLog` import/call. Keep functions as localStorage helpers only.
+- `db-sync.ts` -- the sync functions remain available but are no longer called from storage files (mutations handle DB writes directly).
+
+**Update `PROGRESS.md`** with migration completion status.
+
+---
+
+### Files Summary
+
+**New files (4):**
 - `src/hooks/useTasksQuery.ts`
 - `src/hooks/useHabitsQuery.ts`
 - `src/hooks/useLifeAreasQuery.ts`
 - `src/hooks/useQuranStorageQuery.ts`
 
-**Files to modify:**
+**Modified files (8):**
 - `src/pages/productivity/DailyTasks.tsx`
 - `src/pages/productivity/HabitStreaks.tsx`
 - `src/pages/productivity/LifeAreas.tsx`
 - `src/pages/QuranTracker.tsx`
 - `src/pages/Dashboard.tsx`
-- `src/lib/productivity-storage.ts` (strip sync calls, keep as initialData helpers)
-- `src/lib/quran-storage.ts` (strip sync calls, keep as initialData helpers)
-- `PROGRESS.md`
+- `src/components/widgets/TasksTodayWidget.tsx`
+- `src/lib/productivity-storage.ts`
+- `src/lib/quran-storage.ts`
+
+**No database migrations needed** -- all tables (`daily_tasks`, `habits`, `habit_log`, `life_area_scores`, `quran_log`) already exist with proper RLS policies.
+
