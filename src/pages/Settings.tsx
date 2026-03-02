@@ -155,7 +155,7 @@ const Settings = () => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute -bottom-0.5 -right-0.5 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm"
+              className="absolute -bottom-0.5 -right-0.5 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-sm"
             >
               <Camera className="h-3 w-3" />
             </button>

@@ -533,7 +533,7 @@ const SurahReader = () => {
       )}
 
       {/* Sticky bottom nav bar */}
-      <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50">
+      <div className="sticky bottom-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border/50 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={() => num > 1 && goToSurah(num - 1)}

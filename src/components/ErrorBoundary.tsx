@@ -33,7 +33,7 @@ class ErrorBoundary extends Component<Props, State> {
             <Button
               onClick={() => {
                 this.setState({ hasError: false });
-                window.location.href = '/dashboard';
+                window.location.replace('/dashboard');
               }}
             >
               Return to Dashboard

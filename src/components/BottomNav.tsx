@@ -24,7 +24,7 @@ const BottomNav = () => {
             <Link
               key={tab.path}
               to={tab.path}
-              className={`relative flex flex-col items-center gap-1 px-3 py-2 rounded-lg transition-colors ${
+              className={`relative flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] px-2 py-2 rounded-lg transition-colors ${
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -36,7 +36,7 @@ const BottomNav = () => {
                 />
               )}
               <tab.icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[9px] font-medium leading-none">{tab.label}</span>
+              <span className="text-[11px] font-medium leading-none">{tab.label}</span>
             </Link>
           );
         })}
