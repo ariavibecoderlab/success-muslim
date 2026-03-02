@@ -1,51 +1,65 @@
 
 
-## Polish Dashboard: Colorful, Simple, Elegant
+## Polish Dashboard to Match Iman Page Style
 
-### Vision
-Add distinct, vibrant colors to each dashboard section while keeping the clean "Human & Compact" aesthetic. The goal is visual variety through soft color accents -- not loud gradients or heavy backgrounds.
+### Key Iman Page Patterns to Adopt
+- Gradient icon backgrounds (`bg-gradient-to-br from-X-400/80 to-X-500/80` with white icons)
+- Stagger animations on grid items (`staggerContainer` + `staggerItem`)
+- Interactive quote banner with tap-to-rotate and dot indicators
+- Cards with `hover:shadow-md active:scale-[0.98]` micro-interactions
+- Section headers: `text-xs font-semibold text-muted-foreground uppercase tracking-wider`
+- Quote card: `border-0 shadow-sm` with subtle gradient
+
+---
 
 ### Changes
 
-#### 1. QuickLogGrid -- Unique Colors Per Icon
-Currently most icons share `bg-primary/10 text-primary` or `bg-secondary`. Give each a distinct pastel color:
+#### 1. QuickLogGrid -- Gradient Icons + Stagger Animation
+Replace flat pastel icon backgrounds with gradient pill icons matching Iman's spiritual tools style. Add stagger animation to each grid item.
 
-| Item | Color |
-|------|-------|
-| Prayer | `bg-emerald-500/10 text-emerald-600` |
-| Quran | `bg-sky-500/10 text-sky-600` |
-| Dhikr | `bg-violet-500/10 text-violet-600` |
-| Fast | `bg-amber-500/10 text-amber-600` |
-| Water | `bg-blue-500/10 text-blue-600` (keep) |
-| Sleep | `bg-indigo-500/10 text-indigo-600` |
-| Tasks | `bg-rose-500/10 text-rose-600` |
-| Habits | `bg-teal-500/10 text-teal-600` |
+| Item | Gradient |
+|------|----------|
+| Prayer | `from-emerald-400/80 to-emerald-500/80` |
+| Quran | `from-amber-400/80 to-amber-500/80` |
+| Dhikr | `from-pink-400/80 to-rose-500/80` |
+| Fast | `from-orange-400/80 to-orange-500/80` |
+| Water | `from-blue-400/80 to-blue-500/80` |
+| Sleep | `from-indigo-400/80 to-indigo-500/80` |
+| Tasks | `from-rose-400/80 to-rose-500/80` |
+| Habits | `from-teal-400/80 to-teal-500/80` |
 
-#### 2. LifeScoreCard -- Subtle Gradient Background
-Replace the flat `bg-primary/5` with a soft gradient: `bg-gradient-to-br from-emerald-50 to-teal-50/50 border-emerald-100`. Score number gets a warm color based on value (already has `getScoreColor`). Add a thin left accent border for elegance.
+Icon class changes to `text-white`. Cards get `hover:shadow-md active:scale-[0.98]`. Grid items wrapped in `motion.div` with stagger variants.
 
-#### 3. DailyQuoteCard -- Warm Accent
-Change from `bg-primary/5` to a warm `bg-gradient-to-r from-amber-50 to-orange-50/50 border-amber-100`. Heart icon uses `text-rose-500` with `bg-rose-50`. This differentiates it from the Life Score card.
+#### 2. LifeScoreCard -- Border-0, Shadow
+Update card to use `border-0 shadow-md` (matching Iman hero card feel). Keep the existing gradient background. The pillar icon backgrounds already use gradient -- no change needed.
 
-#### 4. AnnouncementsBanner -- Softer Styling
-Keep `bg-accent/10` but add a left border accent: `border-l-4 border-l-amber-400` for visual emphasis without being loud.
+#### 3. DailyQuoteCard -- Tap-to-Rotate with Dot Indicators
+Match Iman's quote banner exactly:
+- Add `useState` for quote index, click-to-rotate with `AnimatePresence`
+- Add dot indicators below quote
+- Change card to `border-0 shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20`
+- Expand QUOTES array to 7 items (matching Iman's richer set)
 
-#### 5. GreetingHeader -- Subtle Color Touch
-Add a soft text gradient on the greeting name or a small colored dot/bar accent. Keep it minimal -- just make `Assalamualaikum` text slightly colored with `text-emerald-700` on the name portion.
+#### 4. constants.ts -- Add Stagger Variants
+Add `staggerContainer` and `staggerItem` animation variants (matching Iman page) so QuickLogGrid and other components can use them.
 
-### Files Modified (5)
+#### 5. WidgetGrid -- Micro-interactions
+No structural changes, but widgets already have their own styling. Ensure consistent `hover:shadow-md` on widget cards.
+
+---
+
+### Files Modified (4)
 
 | File | Change |
 |------|--------|
-| `src/components/dashboard/QuickLogGrid.tsx` | Update QUICK_LOGS color array |
-| `src/components/dashboard/LifeScoreCard.tsx` | Gradient background + left accent border |
-| `src/components/dashboard/DailyQuoteCard.tsx` | Warm gradient + rose heart icon |
-| `src/components/dashboard/AnnouncementsBanner.tsx` | Left border accent |
-| `src/components/dashboard/GreetingHeader.tsx` | Colored name text |
+| `src/components/dashboard/constants.ts` | Add `staggerContainer` and `staggerItem` variants |
+| `src/components/dashboard/QuickLogGrid.tsx` | Gradient icons, white text, stagger animation, `hover:shadow-md active:scale-[0.98]` |
+| `src/components/dashboard/DailyQuoteCard.tsx` | Tap-to-rotate quotes, AnimatePresence, dot indicators, Iman-matching gradient |
+| `src/components/dashboard/LifeScoreCard.tsx` | `border-0 shadow-md` styling |
 
 ### Technical Notes
-- All colors use Tailwind's built-in palette (no CSS variable changes needed)
-- No new dependencies
-- Purely visual -- no behavioral changes
-- Maintains the "Refined Islamic Calm" aesthetic with just enough color variety to feel alive
+- All patterns directly copied from the proven Iman page implementation
+- No new dependencies (framer-motion already imported in all components)
+- Dark mode support added via `dark:from-emerald-950/20 dark:to-teal-950/20` on quote card
+- Purely visual -- no data/behavioral changes
 
