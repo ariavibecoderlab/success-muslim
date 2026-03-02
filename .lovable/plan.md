@@ -1,112 +1,99 @@
 
 
-## React Query Migration -- Productivity and Quran Modules
+## Refactor Dashboard.tsx into Best-Practice Components
 
-### Overview
-Migrate 4 sub-modules from localStorage-first (with fire-and-forget DB sync) to React Query as single source of truth. This matches the proven pattern already used by Salah, Dhikr, Sunnah, Health, Steps, and Qada modules.
+### Problem
+`Dashboard.tsx` is a 387-line monolith mixing data fetching, score calculation, UI rendering, and modal state. This makes it hard to maintain, test, and extend.
 
-### Architecture Pattern (matching existing `useSalahQuery.ts`)
-- `useQuery` fetches from DB when user is logged in, falls back to localStorage for anonymous/offline
-- `initialData` from localStorage for instant UI (zero flash)
-- `useMutation` writes to DB, then invalidates query cache
-- localStorage updated as side-effect (offline fallback)
+### Approach
+Extract into focused, single-responsibility components and a custom hook. The page file becomes a thin orchestrator (~60 lines).
 
----
+### New Files
 
-### Part 1: Daily Tasks Hook
+**1. `src/hooks/useDashboardData.ts`** -- Custom hook consolidating ALL data fetching and Life Score computation.
+- Moves the 12+ React Query hooks, `useEffect` for profile/announcements, `lifeScoreInput` memo, `lifeScore` calculation, and `weeklyScores` into one place.
+- Converts the raw `useEffect` profile/announcements fetch into proper `useQuery` calls (best practice -- no manual `useState` + `useEffect` for data fetching).
+- Returns: `{ displayName, announcements, lifeScore, weeklyScores, widgetPrefs, customizerActions }`.
 
-**New file: `src/hooks/useTasksQuery.ts`**
+**2. `src/components/dashboard/AnnouncementsBanner.tsx`** -- Renders announcement cards.
+- Props: `announcements: { id, title, content }[]`
+- Wrapped in `motion.div` with fadeUp animation.
 
-| Hook | Query Key | DB Table | localStorage Fallback |
-|------|-----------|----------|----------------------|
-| `useDailyTasks(date)` | `['tasks', userId, date]` | `daily_tasks` WHERE date = date | `getDailyTasks(date)` |
-| `useAddTask()` | mutation, invalidates tasks | INSERT `daily_tasks` | `saveDailyTasks()` |
-| `useToggleTask()` | mutation, invalidates tasks | UPDATE `daily_tasks.completed` | `saveDailyTasks()` |
-| `useDeleteTask()` | mutation, invalidates tasks | DELETE `daily_tasks` | `saveDailyTasks()` |
-| `useTaskStreak()` | `['task-streak', userId]` | query last 365 days | `getTaskStreak()` |
+**3. `src/components/dashboard/GreetingHeader.tsx`** -- Greeting text + customize button.
+- Props: `displayName: string`, `onCustomize: () => void`
 
-**Consumer updates:**
-- `DailyTasks.tsx` -- replace `useState(() => getDailyTasks())` with `useDailyTasks(dateKey)`
-- `TasksTodayWidget.tsx` -- use `useDailyTasks()`
+**4. `src/components/dashboard/LifeScoreCard.tsx`** -- The Life Score card with pillar progress bars and 7-day trend chart.
+- Props: `lifeScore: LifeScore`, `weeklyScores: DailyScoreEntry[]`
+- Contains the Recharts `BarChart` and `Progress` bars.
 
----
+**5. `src/components/dashboard/QuickLogGrid.tsx`** -- The 4x2 grid of quick-log shortcut buttons.
+- Self-contained with the `QUICK_LOGS` constant and Link rendering.
 
-### Part 2: Habits Hook
+**6. `src/components/dashboard/DailyQuoteCard.tsx`** -- Inspirational quote card.
+- Self-contained with the `QUOTES` constant and date-based selection.
 
-**New file: `src/hooks/useHabitsQuery.ts`**
+**7. `src/components/dashboard/WidgetGrid.tsx`** -- Dynamic widget rendering logic.
+- Props: `preferences`, `isRamadan`, `activeIF`
+- Contains the smart visibility filter and maps over `WIDGET_REGISTRY`.
 
-| Hook | DB Table | localStorage Fallback |
-|------|----------|----------------------|
-| `useHabits()` | `habits` | `getHabits()` |
-| `useHabitLog(days?)` | `habit_log` | `getHabitLog()` |
-| `useAddHabit()` | INSERT `habits` | `saveHabits()` |
-| `useDeleteHabit()` | DELETE `habits` + related logs | `saveHabits()` |
-| `useToggleHabit()` | INSERT/DELETE `habit_log` | `saveHabitLog()` |
+**8. `src/components/dashboard/FirstTimeDialog.tsx`** -- First-time customization dialog.
+- Props: `open`, `onClose`, `onCustomize`, `onInitialize`
 
-**Consumer updates:**
-- `HabitStreaks.tsx` -- replace direct storage calls with hooks
+### Modified Files
 
----
+**`src/pages/Dashboard.tsx`** -- Becomes a slim ~50-line orchestrator:
+```
+const Dashboard = () => {
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const { displayName, announcements, lifeScore, weeklyScores, widgetPrefs } = useDashboardData();
 
-### Part 3: Life Areas Hook
+  return (
+    <div>
+      <AppHeader />
+      <main>
+        <AnnouncementsBanner announcements={announcements} />
+        <GreetingHeader displayName={displayName} onCustomize={() => setCustomizerOpen(true)} />
+        <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
+        <QuickLogGrid />
+        <WidgetGrid ... />
+        <DailyQuoteCard />
+      </main>
+      <WidgetCustomizer ... />
+      <FirstTimeDialog ... />
+    </div>
+  );
+};
+```
 
-**New file: `src/hooks/useLifeAreasQuery.ts`**
+### Key Best-Practice Improvements
 
-| Hook | DB Table | localStorage Fallback |
-|------|----------|----------------------|
-| `useLifeAreaEntries()` | `life_area_scores` (grouped by date) | `getLifeAreaEntries()` |
-| `useSaveLifeAreaEntry()` | UPSERT `life_area_scores` | `saveLifeAreaEntry()` |
+| Before | After |
+|--------|-------|
+| Raw `useEffect` + `useState` for profile/announcements | Proper `useQuery` with caching and refetch |
+| 12 hooks + 3 memos inline in page | Single `useDashboardData()` hook |
+| `QUOTES` and `QUICK_LOGS` constants in page file | Co-located with their rendering components |
+| `fadeUp` animation variant duplicated | Shared constant in a `dashboard/constants.ts` or co-located |
+| 387 lines in one file | ~50-line page + 7 focused components (~40-80 lines each) |
 
-**Consumer updates:**
-- `LifeAreas.tsx` -- replace direct storage calls with hooks
+### Technical Details
 
----
+- **No behavioral changes** -- purely structural refactor, identical UI output.
+- Animation indices (`custom` prop on `motion.div`) preserved exactly.
+- All existing imports (EditableText, OnboardingTooltips, etc.) move to their respective sub-components.
+- The `constants.ts` file exports the shared `fadeUp` variant used by multiple dashboard components.
 
-### Part 4: Quran Storage Hook
+### File Summary
 
-**New file: `src/hooks/useQuranStorageQuery.ts`**
-
-| Hook | DB Table | localStorage Fallback |
-|------|----------|----------------------|
-| `useQuranDay(date)` | `quran_log` WHERE date = date | `getQuranDay(date)` |
-| `useLogQuranPages()` | UPSERT `quran_log` | `logQuranPages()` |
-| `useQuranStats()` | all `quran_log` rows | computed from localStorage |
-
-**Consumer updates:**
-- `QuranTracker.tsx` -- replace `useState(() => getQuranDay())` with `useQuranDay(dateKey)`
-
----
-
-### Part 5: Dashboard and Cleanup
-
-**Dashboard.tsx** -- Update life score computation to use the new hooks instead of direct `getDailyTasks()`, `getHabits()`, `getHabitLog()`, `getQuranDay()` calls.
-
-**Storage files cleanup:**
-- `productivity-storage.ts` -- remove `syncTaskAdd`, `syncTaskToggle`, `syncTaskDelete`, `syncHabitAdd`, `syncHabitDelete`, `syncHabitLogToggle`, `syncLifeAreaScores` import/calls. Keep functions as localStorage helpers only.
-- `quran-storage.ts` -- remove `syncQuranLog` import/call. Keep functions as localStorage helpers only.
-- `db-sync.ts` -- the sync functions remain available but are no longer called from storage files (mutations handle DB writes directly).
-
-**Update `PROGRESS.md`** with migration completion status.
-
----
-
-### Files Summary
-
-**New files (4):**
-- `src/hooks/useTasksQuery.ts`
-- `src/hooks/useHabitsQuery.ts`
-- `src/hooks/useLifeAreasQuery.ts`
-- `src/hooks/useQuranStorageQuery.ts`
-
-**Modified files (8):**
-- `src/pages/productivity/DailyTasks.tsx`
-- `src/pages/productivity/HabitStreaks.tsx`
-- `src/pages/productivity/LifeAreas.tsx`
-- `src/pages/QuranTracker.tsx`
-- `src/pages/Dashboard.tsx`
-- `src/components/widgets/TasksTodayWidget.tsx`
-- `src/lib/productivity-storage.ts`
-- `src/lib/quran-storage.ts`
-
-**No database migrations needed** -- all tables (`daily_tasks`, `habits`, `habit_log`, `life_area_scores`, `quran_log`) already exist with proper RLS policies.
+| Action | File |
+|--------|------|
+| Create | `src/hooks/useDashboardData.ts` |
+| Create | `src/components/dashboard/constants.ts` |
+| Create | `src/components/dashboard/AnnouncementsBanner.tsx` |
+| Create | `src/components/dashboard/GreetingHeader.tsx` |
+| Create | `src/components/dashboard/LifeScoreCard.tsx` |
+| Create | `src/components/dashboard/QuickLogGrid.tsx` |
+| Create | `src/components/dashboard/DailyQuoteCard.tsx` |
+| Create | `src/components/dashboard/WidgetGrid.tsx` |
+| Create | `src/components/dashboard/FirstTimeDialog.tsx` |
+| Modify | `src/pages/Dashboard.tsx` (reduce to ~50 lines) |
 
