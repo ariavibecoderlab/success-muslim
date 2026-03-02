@@ -1,48 +1,83 @@
 
 
-## Polish the "Log Past Data" Components
+## Add Uthmani Font, Mushaf Mode, and Long-Press Ayah Menu
 
-### Current State
-Three components make up the backdate feature:
-1. **BackdatePrompt** -- amber banner that appears on module pages (auto-dismisses in 8s)
-2. **BackdateDatePicker** -- date picker with chevron arrows and calendar popover
-3. **LogPastDataRow** (in Settings) -- expandable row showing module grid buttons
-
-All three are functional but visually plain -- flat buttons, no icons on modules, no color coding, basic grid layout.
-
-### Changes
-
-#### 1. BackdatePrompt -- Gradient Icon + Better Buttons
-- Replace plain `CalendarDays` icon with a gradient pill background (`bg-gradient-to-br from-amber-400/80 to-orange-500/80` with white icon), matching the Iman page style
-- Convert text-only "Log past data" / "Dismiss" links into small pill buttons with proper hover states
-- Add a subtle progress bar that shows the 8-second auto-dismiss countdown
-- Slightly rounder card with `rounded-xl`
-
-#### 2. BackdateDatePicker -- Refined Styling
-- Add a subtle amber gradient background to the "Backdating" badge: `bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full`
-- Style the date button with a light amber tint when not on today: `bg-amber-50 border-amber-200`
-- Improve "Go to Today" button in popover with a small `Sunrise` icon
-
-#### 3. LogPastDataRow (Settings) -- Colorful Module Grid
-- Add unique icons and colors to each module button, matching the dashboard Quick Log style:
-  - Solat: emerald, Quran: amber, Dhikr: violet, Sunnah: pink, Water: blue, Sleep: indigo, Steps: teal, Weight: orange, Fasting: orange, Habits: teal
-- Each button gets a small colored dot or icon alongside the label
-- Add stagger animation to grid items using `motion.div`
-- Slightly larger buttons with `h-8` for better tap targets
+### Overview
+Three enhancements to the Quran reader:
+1. **Uthmani font** -- load "Amiri Quran" from Google Fonts for authentic Mushaf typography
+2. **Two reading modes** -- toggle between current "Ayah-by-Ayah" mode and a new "Mushaf Page" mode that renders continuous Arabic text like a printed Mushaf (matching the reference image)
+3. **Long-press context menu** -- hold on any ayah to reveal action menu (Tafsir, Play, Bookmark, Memorize, Copy, Share)
 
 ---
 
-### Files Modified (3)
+### Changes
 
-| File | Change |
-|------|--------|
-| `src/components/BackdatePrompt.tsx` | Gradient icon pill, pill buttons, countdown bar, rounded-xl |
-| `src/components/BackdateDatePicker.tsx` | Amber tint when backdating, styled badge, icon on "Go to Today" |
-| `src/pages/Settings.tsx` | Colored icons per module, stagger animation, larger tap targets in LogPastDataRow |
+#### 1. Load Amiri Quran Font (`index.html`)
+Add Google Fonts import for "Amiri Quran" -- an Uthmani script designed for Quran display. This replaces the generic `serif` currently used for Arabic text.
+
+```html
+<link href="https://fonts.googleapis.com/css2?family=Amiri+Quran&display=swap" rel="stylesheet">
+```
+
+#### 2. New API Function (`quran-api.ts`)
+Add `fetchAyahsByPage(pageNumber)` -- calls Quran.com's `verses/by_page/{page}` endpoint to get all ayahs on a specific Mushaf page. Returns ayahs with surah info for rendering surah headers mid-page.
+
+#### 3. Mushaf Page Component (`src/components/quran/MushafPageView.tsx`)
+New component that renders a single Mushaf page:
+- Fetches ayahs for the given Mushaf page number (1-604)
+- Renders Arabic text in continuous RTL flow (no line breaks between ayahs)
+- Inline ayah number markers styled as decorative circles (matching the reference image's `۝` end-of-ayah markers)
+- Surah Bismillah header rendered when a new surah starts mid-page
+- Page number displayed at the bottom
+- Uses `font-family: 'Amiri Quran'` with larger font size (~28px)
+- Swipe left/right or arrow buttons to navigate pages
+
+#### 4. Long-Press Context Menu (`src/components/quran/AyahContextMenu.tsx`)
+New component using Radix Popover (not native context menu -- better for mobile):
+- Triggered by `onTouchStart`/`onTouchEnd` (500ms hold) and right-click on desktop
+- Menu items with icons:
+  - Play/Pause audio
+  - Open Tafsir
+  - Bookmark ayah
+  - Mark as memorized
+  - Copy Arabic text
+  - Share (Web Share API)
+- Appears near the touch point
+- Works in both Ayah-by-Ayah and Mushaf modes
+
+#### 5. Updated SurahReader (`SurahReader.tsx`)
+- Add mode toggle button in header: "Ayah" / "Mushaf" (two-segment toggle)
+- Save selected mode to QuranPrefs (`reading_mode: 'ayah' | 'mushaf'`)
+- When mode is "mushaf":
+  - Calculate starting Mushaf page from surah number using `quran-mapping.ts`
+  - Render `MushafPageView` instead of ayah list
+  - Navigate by Mushaf page (1-604) instead of ayah pagination
+- When mode is "ayah":
+  - Keep current behavior but apply Amiri Quran font
+  - Replace inline action buttons with long-press menu
+  - Keep the action row for quick access but make it more compact
+- Apply `font-family: 'Amiri Quran', serif` to all Arabic text in both modes
+
+#### 6. Quran Mapping Helper (`quran-mapping.ts`)
+Add `getPageForSurah(surahNumber)` -- returns the starting Mushaf page for a given surah (needed to initialize Mushaf mode at the right page).
+
+---
+
+### Files Modified / Created
+
+| File | Action | Change |
+|------|--------|--------|
+| `index.html` | Modified | Add Amiri Quran Google Font link |
+| `src/lib/quran-api.ts` | Modified | Add `fetchAyahsByPage()` function |
+| `src/lib/quran-mapping.ts` | Modified | Add `getPageForSurah()` helper |
+| `src/components/quran/MushafPageView.tsx` | **New** | Mushaf page renderer with continuous flow |
+| `src/components/quran/AyahContextMenu.tsx` | **New** | Long-press popover menu component |
+| `src/pages/deen/SurahReader.tsx` | Modified | Mode toggle, font update, integrate context menu + mushaf view |
 
 ### Technical Notes
-- No behavioral changes -- same 8s auto-dismiss, same 90-day limit, same localStorage persistence
-- All colors use Tailwind's built-in palette
-- Dark mode variants included for all new colors
-- Stagger animation reuses the same pattern from Iman/Dashboard pages
+- Amiri Quran is ~200KB, loaded async via Google Fonts (`display=swap` prevents FOIT)
+- Quran.com API `verses/by_page` returns surah boundaries, enabling mid-page Bismillah headers
+- Long-press uses 500ms touch timer (standard mobile UX pattern), with cleanup on scroll/move
+- Mushaf page navigation preserves session tracking (start/end positions still recorded)
+- No database changes needed -- reading mode preference stored in existing `quran_preferences` via the flexible prefs pattern
 
