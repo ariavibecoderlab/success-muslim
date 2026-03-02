@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format, subDays, isAfter, isBefore, startOfDay } from 'date-fns';
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Sunrise } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -61,6 +61,7 @@ const BackdateDatePicker = ({
             className={cn(
               'gap-1.5 text-xs h-7 font-medium',
               compact && 'px-2',
+              !isToday && 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/40',
               pulse && 'ring-2 ring-amber-400 ring-offset-2 animate-pulse'
             )}>
             <CalendarDays className="h-3 w-3" />
@@ -79,8 +80,9 @@ const BackdateDatePicker = ({
             className="p-3 pointer-events-auto"
           />
           <div className="px-3 pb-3">
-            <Button variant="ghost" size="sm" className="w-full text-xs h-7"
+            <Button variant="ghost" size="sm" className="w-full text-xs h-7 gap-1.5"
               onClick={() => { onDateChange(today); setOpen(false); }}>
+              <Sunrise className="h-3 w-3" />
               Go to Today
             </Button>
           </div>
@@ -93,7 +95,9 @@ const BackdateDatePicker = ({
       </Button>
 
       {!isToday && (
-        <span className="text-[10px] text-amber-500 font-medium ml-1">Backdating</span>
+        <span className="text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded-full ml-1">
+          Backdating
+        </span>
       )}
     </div>
   );
