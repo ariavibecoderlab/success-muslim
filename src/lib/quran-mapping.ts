@@ -203,3 +203,8 @@ export function advanceByOneHizb(surah: number, ayah: number): { surah: number; 
 export function getPageForSurah(surahNumber: number): number {
   return pageForAyah(surahNumber, 1);
 }
+
+/** Returns the hizb number (1-60) for a given Mushaf page */
+export function hizbForPage(page: number): number {
+  return Math.min(60, Math.ceil(page / (604 / 60)));
+}

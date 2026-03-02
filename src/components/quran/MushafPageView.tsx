@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { fetchAyahsByPage, SURAH_NAMES, type Ayah } from '@/lib/quran-api';
-import { juzForAyah } from '@/lib/quran-mapping';
+import { juzForAyah, hizbForPage } from '@/lib/quran-mapping';
 import { AyahContextMenu } from './AyahContextMenu';
 
 interface MushafPageViewProps {
@@ -57,14 +57,13 @@ export function MushafPageView({
     if (touchStartX === null) return;
     const diff = e.changedTouches[0].clientX - touchStartX;
     if (Math.abs(diff) > 60) {
-      // RTL: swipe right = next page (lower number in mushaf = forward)
       navigate(diff > 0 ? -1 : 1);
     }
     setTouchStartX(null);
   };
 
-  // Group verses by surah for rendering bismillah headers
   const juz = verses.length > 0 ? juzForAyah(verses[0].chapter_id, verses[0].verse_number) : 1;
+  const hizb = hizbForPage(page);
 
   if (loading) {
     return (
@@ -80,17 +79,20 @@ export function MushafPageView({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Page header */}
-      <div className="flex items-center justify-between px-4 py-2 text-xs text-muted-foreground border-b">
-        <span>Juz {juz}</span>
-        <span>Page {page}</span>
+      {/* Page header — Juz / Hizb info */}
+      <div className="flex items-center justify-between px-5 py-2.5 text-xs text-muted-foreground">
+        <span className="font-medium">Page {page}</span>
+        <span>Juz {juz} · Hizb {hizb}</span>
       </div>
+
+      {/* Green accent line */}
+      <div className="h-[2px] bg-emerald-600/70 dark:bg-emerald-500/50" />
 
       {/* Mushaf content */}
       <div
-        className="px-5 py-6 min-h-[60vh]"
+        className="px-6 py-8 min-h-[60vh] bg-[#fefcf7] dark:bg-background"
         dir="rtl"
-        style={{ fontFamily: "'Amiri Quran', serif", fontSize: Math.max(fontSize, 26) }}
+        style={{ fontFamily: "'Amiri Quran', serif", fontSize: Math.max(fontSize, 28) }}
       >
         {verses.map((verse, idx) => {
           const prevVerse = idx > 0 ? verses[idx - 1] : null;
@@ -103,14 +105,23 @@ export function MushafPageView({
             <span key={verse.verse_key}>
               {/* Surah header */}
               {isNewSurah && (
-                <div className="w-full text-center my-4 clear-both" dir="ltr">
-                  <div className="inline-flex items-center gap-2 bg-secondary/60 px-4 py-2 rounded-xl">
-                    <span className="text-sm font-semibold text-foreground">{surahMeta?.name}</span>
-                    <span className="text-lg" style={{ fontFamily: "'Amiri Quran', serif" }}>{surahMeta?.arabic}</span>
+                <div className="w-full text-center my-6 clear-both" dir="ltr">
+                  {/* Decorative surah banner */}
+                  <div className="relative inline-flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 px-6 py-2.5 rounded-2xl">
+                    <span className="text-sm font-semibold text-foreground">
+                      {verse.chapter_id}. {surahMeta?.name}
+                    </span>
+                    <span className="text-base opacity-70" style={{ fontFamily: "'Amiri Quran', serif" }}>
+                      {surahMeta?.arabic}
+                    </span>
                   </div>
-                  {/* Bismillah for non-Fatiha, non-Tawbah */}
+                  {/* Bismillah */}
                   {verse.chapter_id !== 1 && verse.chapter_id !== 9 && verse.verse_number === 1 && (
-                    <p className="text-xl mt-3 mb-2" dir="rtl" style={{ fontFamily: "'Amiri Quran', serif" }}>
+                    <p
+                      className="text-2xl mt-4 mb-3 text-foreground/80"
+                      dir="rtl"
+                      style={{ fontFamily: "'Amiri Quran', serif" }}
+                    >
                       بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
                     </p>
                   )}
@@ -132,12 +143,15 @@ export function MushafPageView({
                 onMemorize={() => onMemorize(verse.chapter_id, verse.verse_number)}
               >
                 <span
-                  className={`leading-[2.4] inline ${ayahPlaying ? 'text-primary' : ''}`}
+                  className={`leading-[2.6] inline ${ayahPlaying ? 'text-primary' : ''}`}
                 >
                   {verse.text_uthmani}
-                  {/* Ayah end marker */}
-                  <span className="inline-flex items-center justify-center mx-1 text-muted-foreground/60" style={{ fontSize: '0.6em' }}>
-                    ﴿{verse.verse_number.toLocaleString('ar-SA')}﴾
+                  {/* Decorative ayah number circle */}
+                  <span
+                    className="inline-flex items-center justify-center w-7 h-7 rounded-full border border-muted-foreground/40 mx-1 align-middle text-muted-foreground/70"
+                    style={{ fontSize: '0.45em', fontFamily: 'system-ui, sans-serif' }}
+                  >
+                    {verse.verse_number.toLocaleString('ar-SA')}
                   </span>
                 </span>
               </AyahContextMenu>
@@ -146,14 +160,27 @@ export function MushafPageView({
         })}
       </div>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between px-4 py-3 border-t">
-        <Button variant="ghost" size="sm" disabled={page >= 604} onClick={() => navigate(1)}>
-          <ChevronRight className="h-4 w-4 mr-1" /> Next
+      {/* Bottom navigation — simplified */}
+      <div className="h-[2px] bg-emerald-600/70 dark:bg-emerald-500/50" />
+      <div className="flex items-center justify-between px-6 py-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground"
+          disabled={page >= 604}
+          onClick={() => navigate(1)}
+        >
+          <ChevronRight className="h-5 w-5" />
         </Button>
-        <span className="text-xs text-muted-foreground font-medium">{page} / 604</span>
-        <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => navigate(-1)}>
-          Prev <ChevronLeft className="h-4 w-4 ml-1" />
+        <span className="text-sm font-semibold text-muted-foreground">{page}</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground"
+          disabled={page <= 1}
+          onClick={() => navigate(-1)}
+        >
+          <ChevronLeft className="h-5 w-5" />
         </Button>
       </div>
     </div>
