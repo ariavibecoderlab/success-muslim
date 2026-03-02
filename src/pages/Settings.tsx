@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import {
   LogOut, Save, Camera, Mail, MapPin, Shield,
-  Lock, Trash2, ChevronRight, Database, Clock, CalendarDays
+  Lock, Trash2, ChevronRight, Database, Clock, CalendarDays,
+  BookOpen, Sparkles, Heart, Droplets, Moon, Footprints, Weight, Flame, Target
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import FamilyPrivacySettings from '@/components/family/FamilyPrivacySettings';
@@ -291,17 +292,26 @@ const Settings = () => {
 };
 
 const BACKDATE_MODULES = [
-  { label: 'Solat', path: '/iman/salah-log' },
-  { label: 'Quran', path: '/iman/quran' },
-  { label: 'Dhikr', path: '/iman/dhikr' },
-  { label: 'Sunnah', path: '/iman/sunnah' },
-  { label: 'Water', path: '/health/hydration' },
-  { label: 'Sleep', path: '/health/sleep' },
-  { label: 'Steps', path: '/health/steps' },
-  { label: 'Weight', path: '/health/weight' },
-  { label: 'Fasting', path: '/health/fasting' },
-  { label: 'Habits', path: '/productivity/habits' },
+  { label: 'Solat', path: '/iman/salah-log', icon: Sparkles, color: 'from-emerald-400/80 to-emerald-500/80' },
+  { label: 'Quran', path: '/iman/quran', icon: BookOpen, color: 'from-amber-400/80 to-amber-500/80' },
+  { label: 'Dhikr', path: '/iman/dhikr', icon: Heart, color: 'from-violet-400/80 to-violet-500/80' },
+  { label: 'Sunnah', path: '/iman/sunnah', icon: Sparkles, color: 'from-pink-400/80 to-pink-500/80' },
+  { label: 'Water', path: '/health/hydration', icon: Droplets, color: 'from-blue-400/80 to-blue-500/80' },
+  { label: 'Sleep', path: '/health/sleep', icon: Moon, color: 'from-indigo-400/80 to-indigo-500/80' },
+  { label: 'Steps', path: '/health/steps', icon: Footprints, color: 'from-teal-400/80 to-teal-500/80' },
+  { label: 'Weight', path: '/health/weight', icon: Weight, color: 'from-orange-400/80 to-orange-500/80' },
+  { label: 'Fasting', path: '/health/fasting', icon: Flame, color: 'from-orange-400/80 to-amber-500/80' },
+  { label: 'Habits', path: '/productivity/habits', icon: Target, color: 'from-teal-400/80 to-cyan-500/80' },
 ];
+
+const staggerGrid = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04 } },
+};
+const staggerItem = {
+  hidden: { opacity: 0, y: 6 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+};
 
 function LogPastDataRow({ navigate, toast }: { navigate: ReturnType<typeof useNavigate>; toast: ReturnType<typeof useToast>['toast'] }) {
   const [showModules, setShowModules] = useState(false);
@@ -331,21 +341,29 @@ function LogPastDataRow({ navigate, toast }: { navigate: ReturnType<typeof useNa
       </div>
       {showModules && (
         <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ height: 'auto', opacity: 1 }}
+          variants={staggerGrid}
+          initial="hidden"
+          animate="show"
           className="grid grid-cols-2 gap-1.5"
         >
-          {BACKDATE_MODULES.map(m => (
-            <Button
-              key={m.path}
-              variant="outline"
-              size="sm"
-              className="text-[10px] h-7"
-              onClick={() => handleModuleClick(m.path)}
-            >
-              {m.label}
-            </Button>
-          ))}
+          {BACKDATE_MODULES.map(m => {
+            const Icon = m.icon;
+            return (
+              <motion.div key={m.path} variants={staggerItem}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-[10px] h-8 gap-1.5 justify-start hover:shadow-sm active:scale-[0.98] transition-all"
+                  onClick={() => handleModuleClick(m.path)}
+                >
+                  <div className={`h-4 w-4 rounded bg-gradient-to-br ${m.color} flex items-center justify-center shrink-0`}>
+                    <Icon className="h-2.5 w-2.5 text-white" />
+                  </div>
+                  {m.label}
+                </Button>
+              </motion.div>
+            );
+          })}
         </motion.div>
       )}
     </div>
