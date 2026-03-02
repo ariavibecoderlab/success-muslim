@@ -1,5 +1,4 @@
 import { format, subDays } from 'date-fns';
-import { syncQuranLog } from './db-sync';
 
 // ── Types ──────────────────────────────────────────
 
@@ -53,7 +52,6 @@ export function logQuranPages(pages: number, juzNumber?: number | null, surahNam
   
   all[key] = existing;
   saveAll(all);
-  syncQuranLog(key, existing.pagesRead, existing.juzNumber, existing.surahName, existing.notes);
   return existing;
 }
 

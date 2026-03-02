@@ -7,14 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
-import {
-  getDailyTasks,
-  addTask,
-  toggleTask,
-  deleteTask,
-  getTaskStreak,
-  DailyTasks as DailyTasksType,
-} from '@/lib/productivity-storage';
+import { useDailyTasks, useAddTask, useToggleTask, useDeleteTask, useTaskStreak } from '@/hooks/useTasksQuery';
 
 const SIBLING_ROUTES = [
   { path: '/productivity/tasks', label: 'Daily Tasks' },
@@ -26,41 +19,40 @@ const DailyTasksPage = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [highlightPicker, setHighlightPicker] = useState(false);
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
-  const [daily, setDaily] = useState<DailyTasksType>(() => getDailyTasks(dateKey));
+  const { data: daily } = useDailyTasks(dateKey);
+  const addTask = useAddTask();
+  const toggleTask = useToggleTask();
+  const deleteTask = useDeleteTask();
+  const { data: streak = 0 } = useTaskStreak();
   const [newText, setNewText] = useState('');
   const [isMIT, setIsMIT] = useState(false);
-  const streak = getTaskStreak();
 
   const handleDateChange = useCallback((d: Date) => {
     setSelectedDate(d);
-    const key = format(d, 'yyyy-MM-dd');
-    setDaily(getDailyTasks(key));
   }, []);
 
-  const mitCount = daily.tasks.filter(t => t.isMIT).length;
-  const mitsCompleted = daily.tasks.filter(t => t.isMIT && t.completed).length;
-  const totalCompleted = daily.tasks.filter(t => t.completed).length;
+  const tasks = daily?.tasks ?? [];
+  const mitCount = tasks.filter(t => t.isMIT).length;
+  const mitsCompleted = tasks.filter(t => t.isMIT && t.completed).length;
+  const totalCompleted = tasks.filter(t => t.completed).length;
 
   const handleAdd = useCallback(() => {
     if (!newText.trim()) return;
-    const updated = addTask(newText.trim(), isMIT, dateKey);
-    setDaily({ ...updated });
+    addTask.mutate({ text: newText.trim(), isMIT: isMIT && mitCount < 3, date: dateKey });
     setNewText('');
     setIsMIT(false);
-  }, [newText, isMIT, dateKey]);
+  }, [newText, isMIT, dateKey, mitCount, addTask]);
 
   const handleToggle = useCallback((id: string) => {
-    const updated = toggleTask(id, dateKey);
-    setDaily({ ...updated });
-  }, [dateKey]);
+    toggleTask.mutate({ taskId: id, date: dateKey });
+  }, [dateKey, toggleTask]);
 
   const handleDelete = useCallback((id: string) => {
-    const updated = deleteTask(id, dateKey);
-    setDaily({ ...updated });
-  }, [dateKey]);
+    deleteTask.mutate({ taskId: id, date: dateKey });
+  }, [dateKey, deleteTask]);
 
-  const mits = daily.tasks.filter(t => t.isMIT);
-  const others = daily.tasks.filter(t => !t.isMIT);
+  const mits = tasks.filter(t => t.isMIT);
+  const others = tasks.filter(t => !t.isMIT);
 
   return (
     <SubPageLayout
@@ -80,7 +72,7 @@ const DailyTasksPage = () => {
         <div className="flex gap-2">
           {[
             { label: 'MITs', value: `${mitsCompleted}/${mitCount}` },
-            { label: 'Total', value: `${totalCompleted}/${daily.tasks.length}` },
+            { label: 'Total', value: `${totalCompleted}/${tasks.length}` },
             { label: 'Streak', value: `${streak}d` },
           ].map(s => (
             <div key={s.label} className="flex-1 bg-card rounded-lg border border-border py-2 text-center">
@@ -149,7 +141,7 @@ const DailyTasksPage = () => {
           </div>
         )}
 
-        {daily.tasks.length === 0 && (
+        {tasks.length === 0 && (
           <p className="text-xs text-muted-foreground text-center py-8">
             No tasks yet. Add up to 3 MITs to focus your day.
           </p>

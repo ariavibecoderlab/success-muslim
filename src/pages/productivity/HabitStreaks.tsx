@@ -9,17 +9,10 @@ import { useSearchParams } from 'react-router-dom';
 import BackdateDatePicker from '@/components/BackdateDatePicker';
 import BackdatePrompt from '@/components/BackdatePrompt';
 import {
-  getHabits,
-  addHabit,
-  deleteHabit,
-  getHabitLog,
-  toggleHabitForDate,
-  getHabitStreak,
-  getHeatmapData,
-  getTodayKey,
-  Habit,
-  HabitLog,
-} from '@/lib/productivity-storage';
+  useHabits, useHabitLog, useAddHabit, useDeleteHabit, useToggleHabit,
+  getHabitStreak, getHeatmapData,
+} from '@/hooks/useHabitsQuery';
+import { getTodayKey } from '@/lib/productivity-storage';
 
 const SIBLING_ROUTES = [
   { path: '/productivity/tasks', label: 'Daily Tasks' },
@@ -28,8 +21,11 @@ const SIBLING_ROUTES = [
 ];
 
 const HabitStreaksPage = () => {
-  const [habits, setHabits] = useState<Habit[]>(() => getHabits());
-  const [log, setLog] = useState<HabitLog>(() => getHabitLog());
+  const { data: habits = [] } = useHabits();
+  const { data: log = {} } = useHabitLog();
+  const addHabitMut = useAddHabit();
+  const deleteHabitMut = useDeleteHabit();
+  const toggleHabitMut = useToggleHabit();
   const [newName, setNewName] = useState('');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [highlightPicker, setHighlightPicker] = useState(false);
@@ -48,17 +44,17 @@ const HabitStreaksPage = () => {
 
   const handleAdd = useCallback(() => {
     if (!newName.trim()) return;
-    setHabits(addHabit(newName.trim()));
+    addHabitMut.mutate({ name: newName.trim() });
     setNewName('');
-  }, [newName]);
+  }, [newName, addHabitMut]);
 
   const handleDelete = useCallback((id: string) => {
-    setHabits(deleteHabit(id));
-  }, []);
+    deleteHabitMut.mutate(id);
+  }, [deleteHabitMut]);
 
   const handleToggle = useCallback((habitId: string) => {
-    setLog(toggleHabitForDate(habitId, dateKey));
-  }, [dateKey]);
+    toggleHabitMut.mutate({ habitId, date: dateKey });
+  }, [dateKey, toggleHabitMut]);
 
   const handleLogPastData = useCallback(() => {
     setSelectedDate(subDays(new Date(), 1));

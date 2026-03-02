@@ -30,9 +30,11 @@ import { useSunnahLog } from "@/hooks/useSunnahQuery";
 import { useHydration } from "@/hooks/useHealthQuery";
 import { useTodaySalahCount } from "@/hooks/useSalahQuery";
 import { getSunnahItems } from "@/lib/sunnah-storage";
-import { getDailyTasks, getHabits, getHabitLog, getTodayKey as getProdTodayKey } from "@/lib/productivity-storage";
+import { getTodayKey as getProdTodayKey } from "@/lib/productivity-storage";
 import { getSleepLog, getFastingLog, todayKey } from "@/lib/health-storage";
-import { getQuranDay } from "@/lib/quran-storage";
+import { useDailyTasks } from "@/hooks/useTasksQuery";
+import { useHabits, useHabitLog } from "@/hooks/useHabitsQuery";
+import { useQuranDay } from "@/hooks/useQuranStorageQuery";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { useSalahLog } from "@/hooks/useSalahQuery";
 import { getTodayKey } from "@/lib/calculations";
@@ -128,25 +130,27 @@ const Dashboard = () => {
   const { data: sunnahLog } = useSunnahLog();
   const { data: hydration } = useHydration();
 
+  // React Query hooks for life score inputs
+  const todayProd = getProdTodayKey();
+  const { data: dailyTasks } = useDailyTasks(todayProd);
+  const { data: habitsData = [] } = useHabits();
+  const { data: habitLogData = {} } = useHabitLog();
+  const { data: quranDay } = useQuranDay(todayProd);
+
   const lifeScoreInput = useMemo((): LifeScoreInput => {
     const enabledSunnah = (sunnahItemsAll ?? []).filter((i: any) => i.enabled);
     const sunnahDone = (sunnahLog?.completed ?? []).filter((id: string) =>
       enabledSunnah.find((i: any) => i.id === id)
     ).length;
-    const quranDay = getQuranDay();
     const tk = todayKey();
     const fastingLog = getFastingLog();
     const sleepLog = getSleepLog();
     const todaySleep = sleepLog.find((e: any) => e.date === tk);
-    const daily = getDailyTasks();
-    const mits = daily.tasks.filter((t: any) => t.isMIT);
-    const habits = getHabits();
-    const habitLog = getHabitLog();
-    const today = getProdTodayKey();
+    const mits = (dailyTasks?.tasks ?? []).filter((t: any) => t.isMIT);
 
     return {
       salah: { onTime: salahCount.onTime, late: salahCount.late, logged: salahCount.logged },
-      quranPagesRead: quranDay.pagesRead,
+      quranPagesRead: quranDay?.pagesRead ?? 0,
       sunnahEnabled: enabledSunnah.length,
       sunnahCompleted: sunnahDone,
       dhikrCount: dailyDhikr?.totalCount ?? 0,
@@ -156,10 +160,10 @@ const Dashboard = () => {
       sleepHours: todaySleep?.duration ?? null,
       mitsTotal: mits.length,
       mitsCompleted: mits.filter((t: any) => t.completed).length,
-      habitsTotal: habits.length,
-      habitsDoneToday: habitLog[today]?.length || 0,
+      habitsTotal: habitsData.length,
+      habitsDoneToday: habitLogData[todayProd]?.length || 0,
     };
-  }, [salahLog, salahCount, dailyDhikr, sunnahItemsAll, sunnahLog, hydration]);
+  }, [salahLog, salahCount, dailyDhikr, sunnahItemsAll, sunnahLog, hydration, dailyTasks, habitsData, habitLogData, quranDay]);
 
   const lifeScore = useMemo(() => calculateLifeScore(lifeScoreInput), [lifeScoreInput]);
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
