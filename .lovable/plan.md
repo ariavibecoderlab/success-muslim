@@ -1,99 +1,51 @@
 
 
-## Refactor Dashboard.tsx into Best-Practice Components
+## Polish Dashboard: Colorful, Simple, Elegant
 
-### Problem
-`Dashboard.tsx` is a 387-line monolith mixing data fetching, score calculation, UI rendering, and modal state. This makes it hard to maintain, test, and extend.
+### Vision
+Add distinct, vibrant colors to each dashboard section while keeping the clean "Human & Compact" aesthetic. The goal is visual variety through soft color accents -- not loud gradients or heavy backgrounds.
 
-### Approach
-Extract into focused, single-responsibility components and a custom hook. The page file becomes a thin orchestrator (~60 lines).
+### Changes
 
-### New Files
+#### 1. QuickLogGrid -- Unique Colors Per Icon
+Currently most icons share `bg-primary/10 text-primary` or `bg-secondary`. Give each a distinct pastel color:
 
-**1. `src/hooks/useDashboardData.ts`** -- Custom hook consolidating ALL data fetching and Life Score computation.
-- Moves the 12+ React Query hooks, `useEffect` for profile/announcements, `lifeScoreInput` memo, `lifeScore` calculation, and `weeklyScores` into one place.
-- Converts the raw `useEffect` profile/announcements fetch into proper `useQuery` calls (best practice -- no manual `useState` + `useEffect` for data fetching).
-- Returns: `{ displayName, announcements, lifeScore, weeklyScores, widgetPrefs, customizerActions }`.
+| Item | Color |
+|------|-------|
+| Prayer | `bg-emerald-500/10 text-emerald-600` |
+| Quran | `bg-sky-500/10 text-sky-600` |
+| Dhikr | `bg-violet-500/10 text-violet-600` |
+| Fast | `bg-amber-500/10 text-amber-600` |
+| Water | `bg-blue-500/10 text-blue-600` (keep) |
+| Sleep | `bg-indigo-500/10 text-indigo-600` |
+| Tasks | `bg-rose-500/10 text-rose-600` |
+| Habits | `bg-teal-500/10 text-teal-600` |
 
-**2. `src/components/dashboard/AnnouncementsBanner.tsx`** -- Renders announcement cards.
-- Props: `announcements: { id, title, content }[]`
-- Wrapped in `motion.div` with fadeUp animation.
+#### 2. LifeScoreCard -- Subtle Gradient Background
+Replace the flat `bg-primary/5` with a soft gradient: `bg-gradient-to-br from-emerald-50 to-teal-50/50 border-emerald-100`. Score number gets a warm color based on value (already has `getScoreColor`). Add a thin left accent border for elegance.
 
-**3. `src/components/dashboard/GreetingHeader.tsx`** -- Greeting text + customize button.
-- Props: `displayName: string`, `onCustomize: () => void`
+#### 3. DailyQuoteCard -- Warm Accent
+Change from `bg-primary/5` to a warm `bg-gradient-to-r from-amber-50 to-orange-50/50 border-amber-100`. Heart icon uses `text-rose-500` with `bg-rose-50`. This differentiates it from the Life Score card.
 
-**4. `src/components/dashboard/LifeScoreCard.tsx`** -- The Life Score card with pillar progress bars and 7-day trend chart.
-- Props: `lifeScore: LifeScore`, `weeklyScores: DailyScoreEntry[]`
-- Contains the Recharts `BarChart` and `Progress` bars.
+#### 4. AnnouncementsBanner -- Softer Styling
+Keep `bg-accent/10` but add a left border accent: `border-l-4 border-l-amber-400` for visual emphasis without being loud.
 
-**5. `src/components/dashboard/QuickLogGrid.tsx`** -- The 4x2 grid of quick-log shortcut buttons.
-- Self-contained with the `QUICK_LOGS` constant and Link rendering.
+#### 5. GreetingHeader -- Subtle Color Touch
+Add a soft text gradient on the greeting name or a small colored dot/bar accent. Keep it minimal -- just make `Assalamualaikum` text slightly colored with `text-emerald-700` on the name portion.
 
-**6. `src/components/dashboard/DailyQuoteCard.tsx`** -- Inspirational quote card.
-- Self-contained with the `QUOTES` constant and date-based selection.
+### Files Modified (5)
 
-**7. `src/components/dashboard/WidgetGrid.tsx`** -- Dynamic widget rendering logic.
-- Props: `preferences`, `isRamadan`, `activeIF`
-- Contains the smart visibility filter and maps over `WIDGET_REGISTRY`.
+| File | Change |
+|------|--------|
+| `src/components/dashboard/QuickLogGrid.tsx` | Update QUICK_LOGS color array |
+| `src/components/dashboard/LifeScoreCard.tsx` | Gradient background + left accent border |
+| `src/components/dashboard/DailyQuoteCard.tsx` | Warm gradient + rose heart icon |
+| `src/components/dashboard/AnnouncementsBanner.tsx` | Left border accent |
+| `src/components/dashboard/GreetingHeader.tsx` | Colored name text |
 
-**8. `src/components/dashboard/FirstTimeDialog.tsx`** -- First-time customization dialog.
-- Props: `open`, `onClose`, `onCustomize`, `onInitialize`
-
-### Modified Files
-
-**`src/pages/Dashboard.tsx`** -- Becomes a slim ~50-line orchestrator:
-```
-const Dashboard = () => {
-  const [customizerOpen, setCustomizerOpen] = useState(false);
-  const { displayName, announcements, lifeScore, weeklyScores, widgetPrefs } = useDashboardData();
-
-  return (
-    <div>
-      <AppHeader />
-      <main>
-        <AnnouncementsBanner announcements={announcements} />
-        <GreetingHeader displayName={displayName} onCustomize={() => setCustomizerOpen(true)} />
-        <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
-        <QuickLogGrid />
-        <WidgetGrid ... />
-        <DailyQuoteCard />
-      </main>
-      <WidgetCustomizer ... />
-      <FirstTimeDialog ... />
-    </div>
-  );
-};
-```
-
-### Key Best-Practice Improvements
-
-| Before | After |
-|--------|-------|
-| Raw `useEffect` + `useState` for profile/announcements | Proper `useQuery` with caching and refetch |
-| 12 hooks + 3 memos inline in page | Single `useDashboardData()` hook |
-| `QUOTES` and `QUICK_LOGS` constants in page file | Co-located with their rendering components |
-| `fadeUp` animation variant duplicated | Shared constant in a `dashboard/constants.ts` or co-located |
-| 387 lines in one file | ~50-line page + 7 focused components (~40-80 lines each) |
-
-### Technical Details
-
-- **No behavioral changes** -- purely structural refactor, identical UI output.
-- Animation indices (`custom` prop on `motion.div`) preserved exactly.
-- All existing imports (EditableText, OnboardingTooltips, etc.) move to their respective sub-components.
-- The `constants.ts` file exports the shared `fadeUp` variant used by multiple dashboard components.
-
-### File Summary
-
-| Action | File |
-|--------|------|
-| Create | `src/hooks/useDashboardData.ts` |
-| Create | `src/components/dashboard/constants.ts` |
-| Create | `src/components/dashboard/AnnouncementsBanner.tsx` |
-| Create | `src/components/dashboard/GreetingHeader.tsx` |
-| Create | `src/components/dashboard/LifeScoreCard.tsx` |
-| Create | `src/components/dashboard/QuickLogGrid.tsx` |
-| Create | `src/components/dashboard/DailyQuoteCard.tsx` |
-| Create | `src/components/dashboard/WidgetGrid.tsx` |
-| Create | `src/components/dashboard/FirstTimeDialog.tsx` |
-| Modify | `src/pages/Dashboard.tsx` (reduce to ~50 lines) |
+### Technical Notes
+- All colors use Tailwind's built-in palette (no CSS variable changes needed)
+- No new dependencies
+- Purely visual -- no behavioral changes
+- Maintains the "Refined Islamic Calm" aesthetic with just enough color variety to feel alive
 
