@@ -1,65 +1,48 @@
 
 
-## Polish Dashboard to Match Iman Page Style
+## Polish the "Log Past Data" Components
 
-### Key Iman Page Patterns to Adopt
-- Gradient icon backgrounds (`bg-gradient-to-br from-X-400/80 to-X-500/80` with white icons)
-- Stagger animations on grid items (`staggerContainer` + `staggerItem`)
-- Interactive quote banner with tap-to-rotate and dot indicators
-- Cards with `hover:shadow-md active:scale-[0.98]` micro-interactions
-- Section headers: `text-xs font-semibold text-muted-foreground uppercase tracking-wider`
-- Quote card: `border-0 shadow-sm` with subtle gradient
+### Current State
+Three components make up the backdate feature:
+1. **BackdatePrompt** -- amber banner that appears on module pages (auto-dismisses in 8s)
+2. **BackdateDatePicker** -- date picker with chevron arrows and calendar popover
+3. **LogPastDataRow** (in Settings) -- expandable row showing module grid buttons
 
----
+All three are functional but visually plain -- flat buttons, no icons on modules, no color coding, basic grid layout.
 
 ### Changes
 
-#### 1. QuickLogGrid -- Gradient Icons + Stagger Animation
-Replace flat pastel icon backgrounds with gradient pill icons matching Iman's spiritual tools style. Add stagger animation to each grid item.
+#### 1. BackdatePrompt -- Gradient Icon + Better Buttons
+- Replace plain `CalendarDays` icon with a gradient pill background (`bg-gradient-to-br from-amber-400/80 to-orange-500/80` with white icon), matching the Iman page style
+- Convert text-only "Log past data" / "Dismiss" links into small pill buttons with proper hover states
+- Add a subtle progress bar that shows the 8-second auto-dismiss countdown
+- Slightly rounder card with `rounded-xl`
 
-| Item | Gradient |
-|------|----------|
-| Prayer | `from-emerald-400/80 to-emerald-500/80` |
-| Quran | `from-amber-400/80 to-amber-500/80` |
-| Dhikr | `from-pink-400/80 to-rose-500/80` |
-| Fast | `from-orange-400/80 to-orange-500/80` |
-| Water | `from-blue-400/80 to-blue-500/80` |
-| Sleep | `from-indigo-400/80 to-indigo-500/80` |
-| Tasks | `from-rose-400/80 to-rose-500/80` |
-| Habits | `from-teal-400/80 to-teal-500/80` |
+#### 2. BackdateDatePicker -- Refined Styling
+- Add a subtle amber gradient background to the "Backdating" badge: `bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full`
+- Style the date button with a light amber tint when not on today: `bg-amber-50 border-amber-200`
+- Improve "Go to Today" button in popover with a small `Sunrise` icon
 
-Icon class changes to `text-white`. Cards get `hover:shadow-md active:scale-[0.98]`. Grid items wrapped in `motion.div` with stagger variants.
-
-#### 2. LifeScoreCard -- Border-0, Shadow
-Update card to use `border-0 shadow-md` (matching Iman hero card feel). Keep the existing gradient background. The pillar icon backgrounds already use gradient -- no change needed.
-
-#### 3. DailyQuoteCard -- Tap-to-Rotate with Dot Indicators
-Match Iman's quote banner exactly:
-- Add `useState` for quote index, click-to-rotate with `AnimatePresence`
-- Add dot indicators below quote
-- Change card to `border-0 shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20`
-- Expand QUOTES array to 7 items (matching Iman's richer set)
-
-#### 4. constants.ts -- Add Stagger Variants
-Add `staggerContainer` and `staggerItem` animation variants (matching Iman page) so QuickLogGrid and other components can use them.
-
-#### 5. WidgetGrid -- Micro-interactions
-No structural changes, but widgets already have their own styling. Ensure consistent `hover:shadow-md` on widget cards.
+#### 3. LogPastDataRow (Settings) -- Colorful Module Grid
+- Add unique icons and colors to each module button, matching the dashboard Quick Log style:
+  - Solat: emerald, Quran: amber, Dhikr: violet, Sunnah: pink, Water: blue, Sleep: indigo, Steps: teal, Weight: orange, Fasting: orange, Habits: teal
+- Each button gets a small colored dot or icon alongside the label
+- Add stagger animation to grid items using `motion.div`
+- Slightly larger buttons with `h-8` for better tap targets
 
 ---
 
-### Files Modified (4)
+### Files Modified (3)
 
 | File | Change |
 |------|--------|
-| `src/components/dashboard/constants.ts` | Add `staggerContainer` and `staggerItem` variants |
-| `src/components/dashboard/QuickLogGrid.tsx` | Gradient icons, white text, stagger animation, `hover:shadow-md active:scale-[0.98]` |
-| `src/components/dashboard/DailyQuoteCard.tsx` | Tap-to-rotate quotes, AnimatePresence, dot indicators, Iman-matching gradient |
-| `src/components/dashboard/LifeScoreCard.tsx` | `border-0 shadow-md` styling |
+| `src/components/BackdatePrompt.tsx` | Gradient icon pill, pill buttons, countdown bar, rounded-xl |
+| `src/components/BackdateDatePicker.tsx` | Amber tint when backdating, styled badge, icon on "Go to Today" |
+| `src/pages/Settings.tsx` | Colored icons per module, stagger animation, larger tap targets in LogPastDataRow |
 
 ### Technical Notes
-- All patterns directly copied from the proven Iman page implementation
-- No new dependencies (framer-motion already imported in all components)
-- Dark mode support added via `dark:from-emerald-950/20 dark:to-teal-950/20` on quote card
-- Purely visual -- no data/behavioral changes
+- No behavioral changes -- same 8s auto-dismiss, same 90-day limit, same localStorage persistence
+- All colors use Tailwind's built-in palette
+- Dark mode variants included for all new colors
+- Stagger animation reuses the same pattern from Iman/Dashboard pages
 
