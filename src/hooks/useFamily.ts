@@ -87,15 +87,6 @@ export function useFamily() {
   const createFamily = async (name: string, groupType: 'family' | 'class' = 'family'): Promise<Family | null> => {
     if (!user) return null;
 
-    const { count } = await supabase
-      .from('family_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if ((count ?? 0) >= 2) {
-      toast({ title: 'Limit reached', description: 'You can be in at most 2 family groups.', variant: 'destructive' });
-      return null;
-    }
 
     let invite_code = generateInviteCode();
     let attempts = 0;
@@ -136,15 +127,6 @@ export function useFamily() {
   const joinFamily = async (code: string): Promise<Family | null> => {
     if (!user) return null;
 
-    const { count: myCount } = await supabase
-      .from('family_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    if ((myCount ?? 0) >= 2) {
-      toast({ title: 'Limit reached', description: 'You can be in at most 2 family groups.', variant: 'destructive' });
-      return null;
-    }
 
     const { data: family, error: familyError } = await supabase
       .from('families')
