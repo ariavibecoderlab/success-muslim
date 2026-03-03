@@ -61,7 +61,7 @@ const FamilyDashboard = () => {
           <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={refresh}>
             <RefreshCw className="h-3.5 w-3.5" />
           </Button>
-          {isAdmin && (
+          {(isAdmin || (family?.member_count ?? 0) <= 1) && (
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={() => navigate(`/family/${id}/settings`)}>
               <Settings className="h-3.5 w-3.5" />
             </Button>
