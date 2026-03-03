@@ -252,6 +252,12 @@ export function useFamily() {
       await supabase.from('family_activity_feed').delete().eq('family_id', familyId);
       await supabase.from('family_announcements').delete().eq('family_id', familyId);
       await supabase.from('families').delete().eq('id', familyId);
+    } else if (count === 1) {
+      // Auto-promote the sole remaining member to admin
+      await supabase
+        .from('family_members')
+        .update({ role: 'admin' })
+        .eq('family_id', familyId);
     }
 
     invalidate();

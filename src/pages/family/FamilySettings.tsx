@@ -30,6 +30,7 @@ const FamilySettings = () => {
 
   const family = families.find(f => f.id === id);
   const isAdmin = family?.user_role === 'admin';
+  const effectiveAdmin = isAdmin || members.length <= 1;
   const terms = getGroupTerms(family?.group_type);
   const TypeIcon = terms.icon;
 
@@ -134,7 +135,7 @@ const FamilySettings = () => {
         </Card>
 
         {/* Rename */}
-        {isAdmin && (
+        {effectiveAdmin && (
           <Card className="rounded-2xl">
             <CardContent className="p-5 space-y-3">
               <h2 className="text-sm font-semibold">Group Name</h2>
@@ -181,7 +182,7 @@ const FamilySettings = () => {
                             </span>
                           )}
                         </div>
-                        {isAdmin && !isMe && (
+                        {effectiveAdmin && !isMe && (
                           <div className="flex gap-1">
                             {m.role !== 'admin' && (
                               <AlertDialog>
