@@ -1,37 +1,39 @@
 
 
-## Auto-Promote Last Member to Admin
+## Remove Group Limit
 
-### Problem
-When members leave and only 1 person remains, that person might be a regular "member" -- they can't see the Settings button on the dashboard, can't rename the group, and can't delete it.
+Two places in `src/hooks/useFamily.ts` enforce a 2-group limit. Both need to be removed.
 
-### Changes
+### Changes to `src/hooks/useFamily.ts`
 
-#### 1. `src/hooks/useFamily.ts` -- Auto-promote remaining member
-In `leaveFamily`, after removing the user, if exactly 1 member remains, update their role to `'admin'`.
-
+**1. `createFamily` function (lines 90-98)** -- Remove the count check and toast:
 ```typescript
-// After existing count check
-if (count === 1) {
-  // Promote the sole remaining member to admin
-  await supabase
-    .from('family_members')
-    .update({ role: 'admin' })
-    .eq('family_id', familyId);
+// DELETE these lines:
+const { count } = await supabase
+  .from('family_members')
+  .select('*', { count: 'exact', head: true })
+  .eq('user_id', user.id);
+
+if ((count ?? 0) >= 2) {
+  toast({ title: 'Limit reached', description: 'You can be in at most 2 family groups.', variant: 'destructive' });
+  return null;
 }
 ```
 
-#### 2. `src/pages/family/FamilyDashboard.tsx` -- Show Settings for sole member
-Change Settings button visibility from `isAdmin` to `isAdmin || family?.member_count <= 1` so even if the promotion hasn't refreshed yet, the sole member can access settings.
+**2. `joinFamily` function (lines 138-147)** -- Remove the same count check:
+```typescript
+// DELETE these lines:
+const { count: myCount } = await supabase
+  .from('family_members')
+  .select('*', { count: 'exact', head: true })
+  .eq('user_id', user.id);
 
-#### 3. `src/pages/family/FamilySettings.tsx` -- Treat sole member as admin
-Derive effective admin status: `const effectiveAdmin = isAdmin || members.length <= 1` and use it for showing rename and admin controls.
+if ((myCount ?? 0) >= 2) {
+  toast({ title: 'Limit reached', description: 'You can be in at most 2 family groups.', variant: 'destructive' });
+  return null;
+}
+```
 
-### Files Modified
+Also check `CreateFamily.tsx` for any UI text mentioning the limit -- the current file doesn't reference it, so no changes needed there.
 
-| File | Change |
-|------|--------|
-| `src/hooks/useFamily.ts` | Auto-promote last remaining member to admin in `leaveFamily` |
-| `src/pages/family/FamilyDashboard.tsx` | Show Settings button for sole member |
-| `src/pages/family/FamilySettings.tsx` | Treat sole member as effective admin |
-
+Single file modified: `src/hooks/useFamily.ts`
