@@ -22,7 +22,7 @@ const FamilySettings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { families, getFamilyMembers, renameFamily, removeMember, transferAdmin, leaveFamily } = useFamily();
+  const { families, getFamilyMembers, renameFamily, removeMember, transferAdmin, leaveFamily, deleteFamily } = useFamily();
   const [members, setMembers] = useState<FamilyMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [newName, setNewName] = useState('');
@@ -64,6 +64,12 @@ const FamilySettings = () => {
   const handleLeave = async () => {
     if (!id) return;
     const ok = await leaveFamily(id);
+    if (ok) navigate('/family');
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    const ok = await deleteFamily(id);
     if (ok) navigate('/family');
   };
 
@@ -231,27 +237,77 @@ const FamilySettings = () => {
         </Card>
 
         {/* Danger zone */}
-        <div className="pt-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" className="w-full rounded-xl">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Leave Group
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Leave {terms.groupLabel.toLowerCase()}?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  You will no longer see this {terms.groupLabel.toLowerCase()}'s progress. You can rejoin with the invite code later.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground">Leave</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        <div className="pt-2 space-y-2">
+          {members.length <= 1 ? (
+            /* Last member — delete group */
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full rounded-xl">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete & Leave Group
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete {terms.groupLabel.toLowerCase()}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are the last member. This will permanently delete the {terms.groupLabel.toLowerCase()} and all its data. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">Delete Group</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : isAdmin ? (
+            /* Admin with >1 members — must transfer first */
+            <>
+              <p className="text-xs text-muted-foreground text-center">Transfer {terms.adminLabel.toLowerCase()} role to another member before leaving.</p>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full rounded-xl">
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Leave Group
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Leave {terms.groupLabel.toLowerCase()}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You are the {terms.adminLabel.toLowerCase()}. Please transfer the {terms.adminLabel.toLowerCase()} role to another member first, or leave anyway (the oldest member will need to manage the group).
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground">Leave Anyway</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          ) : (
+            /* Normal member */
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full rounded-xl">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Leave Group
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Leave {terms.groupLabel.toLowerCase()}?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You will no longer see this {terms.groupLabel.toLowerCase()}'s progress. You can rejoin with the invite code later.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleLeave} className="bg-destructive text-destructive-foreground">Leave</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </motion.main>
     </div>

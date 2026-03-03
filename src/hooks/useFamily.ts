@@ -210,6 +210,24 @@ export function useFamily() {
     return { family, memberCount: count ?? 0 };
   };
 
+  const deleteFamily = async (familyId: string): Promise<boolean> => {
+    if (!user) return false;
+
+    await supabase.from('family_activity_feed').delete().eq('family_id', familyId);
+    await supabase.from('family_announcements').delete().eq('family_id', familyId);
+    await supabase.from('family_members').delete().eq('family_id', familyId);
+    const { error } = await supabase.from('families').delete().eq('id', familyId);
+
+    if (error) {
+      toast({ title: 'Error deleting group', description: error.message, variant: 'destructive' });
+      return false;
+    }
+
+    invalidate();
+    toast({ title: 'Group deleted' });
+    return true;
+  };
+
   const leaveFamily = async (familyId: string): Promise<boolean> => {
     if (!user) return false;
 
@@ -222,6 +240,18 @@ export function useFamily() {
     if (error) {
       toast({ title: 'Error leaving group', description: error.message, variant: 'destructive' });
       return false;
+    }
+
+    // Auto-delete family if no members remain
+    const { count } = await supabase
+      .from('family_members')
+      .select('*', { count: 'exact', head: true })
+      .eq('family_id', familyId);
+
+    if (count === 0) {
+      await supabase.from('family_activity_feed').delete().eq('family_id', familyId);
+      await supabase.from('family_announcements').delete().eq('family_id', familyId);
+      await supabase.from('families').delete().eq('id', familyId);
     }
 
     invalidate();
@@ -324,6 +354,7 @@ export function useFamily() {
     createFamily,
     joinFamily,
     previewFamily,
+    deleteFamily,
     leaveFamily,
     renameFamily,
     removeMember,
