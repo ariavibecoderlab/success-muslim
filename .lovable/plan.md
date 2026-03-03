@@ -1,43 +1,37 @@
 
 
-## WhatsApp-style Last Member: Leave & Delete Group
+## Auto-Promote Last Member to Admin
 
 ### Problem
-Currently, if only 1 member remains in a group, they can leave but the `families` row becomes orphaned (no members but group still exists). Also, admin can't leave if they're the only admin with other members -- need to transfer first.
+When members leave and only 1 person remains, that person might be a regular "member" -- they can't see the Settings button on the dashboard, can't rename the group, and can't delete it.
 
 ### Changes
 
-#### 1. `src/hooks/useFamily.ts` -- Add `deleteFamily` function
-Add a new function that deletes the family row (and cascading members via FK). Also update `leaveFamily` to auto-delete the family if the leaving user is the last member.
+#### 1. `src/hooks/useFamily.ts` -- Auto-promote remaining member
+In `leaveFamily`, after removing the user, if exactly 1 member remains, update their role to `'admin'`.
 
 ```typescript
-const deleteFamily = async (familyId: string): Promise<boolean> => {
-  // Delete all members first, then the family
-  await supabase.from('family_members').delete().eq('family_id', familyId);
-  const { error } = await supabase.from('families').delete().eq('id', familyId);
-  if (error) { toast({...}); return false; }
-  invalidate();
-  toast({ title: 'Group deleted' });
-  return true;
-};
+// After existing count check
+if (count === 1) {
+  // Promote the sole remaining member to admin
+  await supabase
+    .from('family_members')
+    .update({ role: 'admin' })
+    .eq('family_id', familyId);
+}
 ```
 
-Update `leaveFamily`: after removing the user, check if 0 members remain. If so, auto-delete the family row.
+#### 2. `src/pages/family/FamilyDashboard.tsx` -- Show Settings for sole member
+Change Settings button visibility from `isAdmin` to `isAdmin || family?.member_count <= 1` so even if the promotion hasn't refreshed yet, the sole member can access settings.
 
-#### 2. `src/pages/family/FamilySettings.tsx` -- Conditional UI
-- If `members.length === 1` (last member): Show "Delete Group" button instead of "Leave Group"
-- If admin with >1 members: Show "Leave Group" but warn they must transfer admin first
-- Otherwise: Show normal "Leave Group"
-
-The danger zone becomes:
-- **1 member**: Single red "Delete & Leave Group" button → calls `deleteFamily`
-- **Admin, >1 members**: "Leave Group" disabled with hint "Transfer admin role first", OR allow leave which auto-promotes oldest member
-- **Non-admin**: Normal "Leave Group"
+#### 3. `src/pages/family/FamilySettings.tsx` -- Treat sole member as admin
+Derive effective admin status: `const effectiveAdmin = isAdmin || members.length <= 1` and use it for showing rename and admin controls.
 
 ### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/hooks/useFamily.ts` | Add `deleteFamily`, update `leaveFamily` to cleanup empty groups |
-| `src/pages/family/FamilySettings.tsx` | Conditional danger zone: delete vs leave based on member count |
+| `src/hooks/useFamily.ts` | Auto-promote last remaining member to admin in `leaveFamily` |
+| `src/pages/family/FamilyDashboard.tsx` | Show Settings button for sole member |
+| `src/pages/family/FamilySettings.tsx` | Treat sole member as effective admin |
 
