@@ -86,6 +86,8 @@ function useLifeScore() {
   const { data: habitLogData = {} } = useHabitLog();
   const { data: quranDay } = useQuranDay(todayProd);
 
+  const dhikrCount = dailyDhikr?.totalCount ?? 0;
+
   const lifeScoreInput = useMemo((): LifeScoreInput => {
     const enabledSunnah = (sunnahItemsAll ?? []).filter((i: any) => i.enabled);
     const sunnahDone = (sunnahLog?.completed ?? []).filter((id: string) =>
@@ -102,7 +104,7 @@ function useLifeScore() {
       quranPagesRead: quranDay?.pagesRead ?? 0,
       sunnahEnabled: enabledSunnah.length,
       sunnahCompleted: sunnahDone,
-      dhikrCount: dailyDhikr?.totalCount ?? 0,
+      dhikrCount,
       isFastingToday: !!fastingLog[tk],
       hydrationCups: hydration?.cups ?? 0,
       hydrationGoal: hydration?.goal ?? 8,
@@ -118,7 +120,7 @@ function useLifeScore() {
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
   const weeklyScores = useMemo(() => getWeeklyScores(), [lifeScore]);
 
-  return { lifeScore, weeklyScores };
+  return { lifeScore, weeklyScores, dhikrCount };
 }
 
 export function useDashboardData() {
