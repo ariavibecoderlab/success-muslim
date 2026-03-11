@@ -5,6 +5,8 @@ import { ReactNode } from 'react';
 import smlogo from '@/assets/smlogo.webp';
 
 interface AppHeaderProps {
+  /** Page title shown next to the logo */
+  title?: string;
   /** Extra elements on the right side */
   rightContent?: ReactNode;
   /** Custom rotating content to replace brand name */
@@ -12,6 +14,7 @@ interface AppHeaderProps {
 }
 
 const AppHeader = ({
+  title = 'Success Muslim',
   rightContent,
   rotatingContent,
 }: AppHeaderProps) => {
