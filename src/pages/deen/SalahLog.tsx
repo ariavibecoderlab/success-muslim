@@ -68,7 +68,7 @@ const SalahLog = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Card className={current ? 'border-primary/20' : ''}>
+                <Card className={`rounded-xl border-0 shadow-sm transition-all duration-200 active:scale-[0.98] ${current ? 'bg-orange-50 dark:bg-orange-950/20' : ''}`}>
                   <CardContent className="p-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
