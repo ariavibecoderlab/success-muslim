@@ -472,11 +472,11 @@ const PrayerTimes = () => {
                 return (
                   <Card
                     key={prayer.key}
-                    className={`transition-all ${
+                    className={`rounded-xl border-0 shadow-sm transition-all duration-200 ${
                       isCurrent
-                        ? "bg-primary/10 border-primary/30 shadow-sm ring-1 ring-primary/20"
+                        ? "bg-primary/10 ring-1 ring-primary/20"
                         : isNext
-                          ? "border-primary/20"
+                          ? "bg-orange-50 dark:bg-orange-950/10"
                           : ""
                     }`}
                   >
