@@ -155,10 +155,10 @@ const SunnahTracker = () => {
             <div className="flex items-center gap-4">
               <div className="relative w-20 h-20 flex-shrink-0">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="8" />
                   <circle
                     cx="50" cy="50" r="42" fill="none"
-                    stroke="hsl(var(--primary))"
+                    stroke="white"
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeDasharray={`${progress * 2.64} ${264 - progress * 2.64}`}
