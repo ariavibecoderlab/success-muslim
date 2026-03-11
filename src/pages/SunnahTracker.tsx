@@ -172,10 +172,10 @@ const SunnahTracker = () => {
 
               <div className="flex-1">
                 <h2 className="text-sm font-semibold">{isToday ? "Today's Progress" : format(selectedDate, 'd MMM yyyy')}</h2>
-                <p className="text-2xl font-bold">{completedCount}<span className="text-sm text-muted-foreground font-normal">/{enabledItems.length}</span></p>
+                <p className="text-2xl font-bold">{completedCount}<span className="text-sm text-white/60 font-normal">/{enabledItems.length}</span></p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Flame className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-medium">{streak} day streak</span>
+                  <Flame className="h-3.5 w-3.5 text-white/80" />
+                  <span className="text-xs font-medium text-white/70">{streak} day streak</span>
                 </div>
               </div>
             </div>

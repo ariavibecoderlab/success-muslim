@@ -82,10 +82,10 @@ const DailyDakwah = () => {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-5 text-center">
-              <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
-              <p className="text-xs text-primary uppercase tracking-wider font-semibold">Daily Da'wah</p>
+              <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
+              <p className="text-xs text-white/70 uppercase tracking-wider font-semibold">Daily Da'wah</p>
               <p className="text-lg font-bold mt-1">"Deliver even from 1 ayat"</p>
-              <p className="text-xs text-muted-foreground mt-1">Share daily Islamic reminders with your community</p>
+              <p className="text-xs text-white/60 mt-1">Share daily Islamic reminders with your community</p>
             </CardContent>
           </Card>
         </motion.div>
