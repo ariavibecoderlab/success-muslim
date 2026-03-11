@@ -189,9 +189,9 @@ const ZakatCalculator = () => {
                   </div>
                 </div>
                 {result.meetsNisab && (
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-xs text-muted-foreground">Zakat Amount (2.5%)</p>
-                    <p className="text-2xl font-bold text-primary">{currency} {result.zakatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                   <div className="pt-3 border-t border-white/20">
+                    <p className="text-xs text-white/60">Zakat Amount (2.5%)</p>
+                    <p className="text-2xl font-bold">{currency} {result.zakatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                   </div>
                 )}
               </CardContent>
