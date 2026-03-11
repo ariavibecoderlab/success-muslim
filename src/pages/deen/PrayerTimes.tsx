@@ -171,7 +171,7 @@ const PrayerTimes = () => {
           </Card>
         )}
         {notifPermission === "denied" && (
-          <Card className="border-destructive/20 bg-destructive/5">
+          <Card className="border-0 rounded-xl shadow-sm bg-destructive/5">
             <CardContent className="p-3 flex items-center gap-2">
               <BellOff className="h-4 w-4 text-destructive shrink-0" />
               <p className="text-[11px] text-muted-foreground">
