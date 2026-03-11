@@ -132,6 +132,7 @@ const App = () => (
               <Route path="/iman/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
               <Route path="/iman/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
               <Route path="/iman/dakwah" element={<AuthGuard><DailyDakwah /></AuthGuard>} />
+              <Route path="/deen-journey" element={<AuthGuard><DeenJourney /></AuthGuard>} />
               <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
               <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
               <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
