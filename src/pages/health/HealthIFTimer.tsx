@@ -121,9 +121,12 @@ const HealthIFTimer = () => {
   // Hydrate fasting store on mount
   useEffect(() => { fastingStore.hydrate(); }, []);
 
+  // Single consolidated interval for all timer needs
   useEffect(() => {
-    if (!active) return;
-    const interval = setInterval(() => { setNow(Date.now()); fastingStore.tick(); }, 1000);
+    const interval = setInterval(() => {
+      setNow(Date.now());
+      if (active) fastingStore.tick();
+    }, 1000);
     return () => clearInterval(interval);
   }, [active]);
 
