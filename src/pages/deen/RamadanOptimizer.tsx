@@ -282,7 +282,7 @@ const RamadanOptimizer = () => {
 
         {/* Status Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className={`border-primary/20 ${isRamadan ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent' : 'bg-gradient-to-br from-muted/50 to-transparent'}`}>
+          <Card className={`border-0 rounded-xl shadow-md ${isRamadan ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white' : 'bg-gradient-to-br from-muted/50 to-transparent'}`}>
             <CardContent className="p-5 text-center">
               {isRamadan ? (
                 <>
