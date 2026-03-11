@@ -99,7 +99,7 @@ const Landing = () => {
           </motion.div>
 
           <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
-            className="text-lg text-muted-foreground max-w-lg mx-auto mb-10"
+            className="text-lg text-muted-foreground max-w-md mx-auto mb-10"
           >
             The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score and grow in dunya and akhirah.
           </motion.p>
