@@ -408,7 +408,7 @@ const PrayerTimes = () => {
         )}
 
         {/* Mosque Override Toggle */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
