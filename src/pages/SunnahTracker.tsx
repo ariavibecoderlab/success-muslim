@@ -133,7 +133,7 @@ const SunnahTracker = () => {
         </div>
 
         {/* Hero Summary with Ring */}
-        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden relative">
+        <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md overflow-hidden relative">
           <CardContent className="p-5">
             <AnimatePresence>
               {celebrateVisible && (
@@ -172,10 +172,10 @@ const SunnahTracker = () => {
 
               <div className="flex-1">
                 <h2 className="text-sm font-semibold">{isToday ? "Today's Progress" : format(selectedDate, 'd MMM yyyy')}</h2>
-                <p className="text-2xl font-bold">{completedCount}<span className="text-sm text-muted-foreground font-normal">/{enabledItems.length}</span></p>
+                <p className="text-2xl font-bold">{completedCount}<span className="text-sm text-white/60 font-normal">/{enabledItems.length}</span></p>
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Flame className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs font-medium">{streak} day streak</span>
+                  <Flame className="h-3.5 w-3.5 text-white/80" />
+                  <span className="text-xs font-medium text-white/70">{streak} day streak</span>
                 </div>
               </div>
             </div>
@@ -204,7 +204,7 @@ const SunnahTracker = () => {
         <AnimatePresence>
           {editing && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-              <Card>
+              <Card className="rounded-xl border-0 shadow-sm">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Configure Items</h3>

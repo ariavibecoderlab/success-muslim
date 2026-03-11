@@ -299,7 +299,7 @@ const DhikrCounter = () => {
         </div>
 
         {/* Today's Summary */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">{isToday ? "Today's Summary" : format(selectedDate, 'd MMM yyyy')}</h3>
@@ -337,7 +337,7 @@ const DhikrCounter = () => {
 
         {/* 7-Day History Mini Chart */}
         {history.some(h => h.total > 0) && (
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <h3 className="text-sm font-semibold mb-3">7-Day History</h3>
               <div className="flex items-end gap-1 h-16">

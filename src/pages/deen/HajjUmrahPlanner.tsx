@@ -164,13 +164,13 @@ const HajjUmrahPlanner = () => {
         {!progress ? (
           /* Start Journey CTA */
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+            <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
               <CardContent className="p-6 text-center">
-                <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
+                 <MapPin className="h-10 w-10 text-white/80 mx-auto mb-3" />
                 <h2 className="text-lg font-bold">
                   {tab === 'umrah' ? 'Umrah Guide' : 'Hajj Manasik Guide'}
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1 mb-4">
+                <p className="text-sm text-white/60 mt-1 mb-4">
                   {tab === 'umrah'
                     ? 'Step-by-step guide: Ihram → Tawaf → Sa\'i → Tahallul'
                     : 'Complete guide through all Hajj manasik with duas'}
@@ -185,7 +185,7 @@ const HajjUmrahPlanner = () => {
           <>
             {/* Progress Overview */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className="border-primary/20">
+              <Card className="border-0 rounded-xl shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-semibold">Manasik Progress</p>
@@ -210,7 +210,7 @@ const HajjUmrahPlanner = () => {
                   const isExpanded = expandedStep === step.id;
 
                   return (
-                    <Card key={step.id} className={isCompleted ? 'border-primary/30 bg-primary/5' : ''}>
+                    <Card key={step.id} className={`rounded-xl border-0 shadow-sm transition-all duration-200 ${isCompleted ? 'bg-primary/5' : ''}`}>
                       <CardContent className="p-0">
                         <Collapsible open={isExpanded} onOpenChange={() => setExpandedStep(isExpanded ? null : step.id)}>
                           <div className="flex items-center gap-3 p-4">
@@ -257,7 +257,7 @@ const HajjUmrahPlanner = () => {
 
             {/* Packing Checklist */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card>
+              <Card className="rounded-xl border-0 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-semibold flex items-center gap-1">

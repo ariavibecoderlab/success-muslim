@@ -133,7 +133,7 @@ const ZakatCalculator = () => {
         </div>
 
         {/* Nisab Info */}
-        <Card className="border-primary/10 bg-primary/5">
+        <Card className="border-0 rounded-xl shadow-sm bg-primary/5">
           <CardContent className="p-3">
             <p className="text-xs text-muted-foreground">
               <strong>Nisab threshold:</strong> You must pay zakat if your net wealth exceeds the nisab value (equivalent to 85g gold or 595g silver). The lower threshold applies.
@@ -142,7 +142,7 @@ const ZakatCalculator = () => {
         </Card>
 
         {/* Input Fields */}
-        <Card>
+        <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-5 space-y-4">
             {fields.map(f => (
               <div key={f.label} className="space-y-1.5">
@@ -165,33 +165,33 @@ const ZakatCalculator = () => {
         {/* Result */}
         {result && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className={result.meetsNisab ? 'border-primary/30 bg-primary/5' : 'border-border'}>
+            <Card className={`rounded-xl border-0 shadow-sm ${result.meetsNisab ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white' : ''}`}>
               <CardContent className="p-5 space-y-3">
                 <h3 className="font-semibold text-sm">
-                  {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'}
+                 {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'} 
                 </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Wealth</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Total Wealth</p>
                     <p className="font-semibold">{currency} {result.totalWealth.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Net Zakatable</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Net Zakatable</p>
                     <p className="font-semibold">{currency} {result.netZakatable.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Gold 85g)</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Nisab (Gold 85g)</p>
                     <p className="font-medium">{currency} {result.nisabGold.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Silver 595g)</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Nisab (Silver 595g)</p>
                     <p className="font-medium">{currency} {result.nisabSilver.toLocaleString()}</p>
                   </div>
                 </div>
                 {result.meetsNisab && (
-                  <div className="pt-3 border-t border-border">
-                    <p className="text-xs text-muted-foreground">Zakat Amount (2.5%)</p>
-                    <p className="text-2xl font-bold text-primary">{currency} {result.zakatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                   <div className="pt-3 border-t border-white/20">
+                    <p className="text-xs text-white/60">Zakat Amount (2.5%)</p>
+                    <p className="text-2xl font-bold">{currency} {result.zakatAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
                   </div>
                 )}
               </CardContent>
@@ -213,7 +213,7 @@ const ZakatCalculator = () => {
             {showHistory && (
               <div className="space-y-2">
                 {history.slice(0, 10).map(h => (
-                  <Card key={h.id}>
+                  <Card key={h.id} className="rounded-xl border-0 shadow-sm">
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between text-sm">
                         <div>

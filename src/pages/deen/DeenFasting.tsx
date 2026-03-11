@@ -131,16 +131,16 @@ const DeenFasting = () => {
 
         {/* Suhoor & Iftar Card */}
         {prayerData && fajrTime && maghribTime && (
-          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">
-                    <Moon className="h-5 w-5 text-primary" />
+                    <Moon className="h-5 w-5 text-white/80" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Today's Fasting</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                     <p className="text-[10px] text-white/70 uppercase tracking-wider">Today's Fasting</p>
+                    <p className="text-xs text-white/60 mt-0.5">
                       {isRecommended(new Date()) ? `Recommended: ${FASTING_TYPES[getFastingType(new Date())!].label}` : 'No sunnah fast today'}
                     </p>
                   </div>
@@ -157,15 +157,15 @@ const DeenFasting = () => {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="bg-background/60 rounded-lg p-3 text-center">
-                  <Sunrise className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-[10px] text-muted-foreground">Suhoor ends</p>
+               <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <Sunrise className="h-4 w-4 text-white/70 mx-auto mb-1" />
+                  <p className="text-[10px] text-white/60">Suhoor ends</p>
                   <p className="text-sm font-bold">{formatPrayerTime(getEffectiveTime(fajrTime))}</p>
                 </div>
-                <div className="bg-background/60 rounded-lg p-3 text-center">
-                  <Sunset className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-[10px] text-muted-foreground">Iftar</p>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <Sunset className="h-4 w-4 text-white/70 mx-auto mb-1" />
+                  <p className="text-[10px] text-white/60">Iftar</p>
                   <p className="text-sm font-bold">{formatPrayerTime(getEffectiveTime(maghribTime))}</p>
                 </div>
               </div>
@@ -175,21 +175,21 @@ const DeenFasting = () => {
 
         {/* Stats Strip */}
         <div className="grid grid-cols-3 gap-2">
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Flame className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{fastingStreak}</p>
               <p className="text-[9px] text-muted-foreground">Streak</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Calendar className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{totalFastedThisMonth}</p>
               <p className="text-[9px] text-muted-foreground">This Month</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Moon className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{totalFastedAllTime}</p>
@@ -199,7 +199,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Sunnah progress */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold">Sunnah Days This Month</h3>
@@ -226,7 +226,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Calendar */}
-        <Card>
+        <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-3">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {DAY_LABELS.map((d, i) => (
@@ -279,7 +279,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Hadith */}
-        <Card className="bg-secondary/30 border-none">
+        <Card className="bg-secondary/30 border-0 rounded-xl shadow-sm">
           <CardContent className="p-4 text-center">
             <Moon className="h-5 w-5 mx-auto text-primary mb-2" />
             <p className="text-xs text-muted-foreground italic">

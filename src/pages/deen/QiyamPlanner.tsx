@@ -231,12 +231,12 @@ const QiyamPlanner = () => {
 
         {/* Tahajjud Window Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-5 text-center">
-              <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Optimal Tahajjud Window</p>
-              <p className="text-3xl font-bold text-primary mt-1">{tahajjud.start} – {tahajjud.end}</p>
-              <p className="text-xs text-muted-foreground mt-1">
+               <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
+              <p className="text-xs text-white/70 uppercase tracking-wider">Optimal Tahajjud Window</p>
+              <p className="text-3xl font-bold mt-1">{tahajjud.start} – {tahajjud.end}</p>
+              <p className="text-xs text-white/60 mt-1">
                 Last third of the night · Fajr at {fajrTime}
               </p>
 
@@ -284,14 +284,14 @@ const QiyamPlanner = () => {
         {/* Streak & Stats */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <div className="grid grid-cols-2 gap-3">
-            <Card>
+             <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
                 <p className="text-2xl font-bold">{streak}</p>
                 <p className="text-[10px] text-muted-foreground">Night Streak</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Moon className="h-5 w-5 text-primary mx-auto mb-1" />
                 <p className="text-2xl font-bold">{last30}/30</p>
@@ -303,7 +303,7 @@ const QiyamPlanner = () => {
 
         {/* 7-Day Dots */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Last 7 Nights</p>
               <div className="flex items-center justify-between">
@@ -325,7 +325,7 @@ const QiyamPlanner = () => {
 
         {/* Schedule Info */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">Your Schedule</p>
@@ -392,7 +392,7 @@ const QiyamPlanner = () => {
 
         {/* Recent Logs */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Recent Nights</p>
               {logs.length === 0 ? (

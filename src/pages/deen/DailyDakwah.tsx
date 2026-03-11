@@ -80,12 +80,12 @@ const DailyDakwah = () => {
       <div className="space-y-5">
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/20">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-5 text-center">
-              <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
-              <p className="text-xs text-primary uppercase tracking-wider font-semibold">Daily Da'wah</p>
+              <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
+              <p className="text-xs text-white/70 uppercase tracking-wider font-semibold">Daily Da'wah</p>
               <p className="text-lg font-bold mt-1">"Deliver even from 1 ayat"</p>
-              <p className="text-xs text-muted-foreground mt-1">Share daily Islamic reminders with your community</p>
+              <p className="text-xs text-white/60 mt-1">Share daily Islamic reminders with your community</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -99,7 +99,7 @@ const DailyDakwah = () => {
           </Card>
         ) : todayPoster ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+             <Card className="rounded-xl border-0 shadow-md overflow-hidden">
               <CardContent className="p-0 overflow-hidden">
                 <img
                   src={todayPoster.image_url}
@@ -139,7 +139,7 @@ const DailyDakwah = () => {
             </p>
             <div className="grid grid-cols-2 gap-3">
               {posters.slice(1).map(poster => (
-                <Card key={poster.id} className="overflow-hidden">
+                <Card key={poster.id} className="overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200">
                   <CardContent className="p-0">
                     <img
                       src={poster.image_url}

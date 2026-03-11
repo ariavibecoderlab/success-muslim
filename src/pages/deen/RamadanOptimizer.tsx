@@ -282,17 +282,17 @@ const RamadanOptimizer = () => {
 
         {/* Status Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className={`border-primary/20 ${isRamadan ? 'bg-gradient-to-br from-primary/15 via-primary/5 to-transparent' : 'bg-gradient-to-br from-muted/50 to-transparent'}`}>
+          <Card className={`border-0 rounded-xl shadow-md ${isRamadan ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white' : 'bg-gradient-to-br from-muted/50 to-transparent'}`}>
             <CardContent className="p-5 text-center">
               {isRamadan ? (
                 <>
-                  <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-xs text-primary uppercase tracking-wider font-semibold">Ramadan Mubarak</p>
+                   <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
+                  <p className="text-xs text-white/70 uppercase tracking-wider font-semibold">Ramadan Mubarak</p>
                   <p className="text-3xl font-bold mt-1">Day {ramadanDay} of 30</p>
                   <Progress value={(ramadanDay / 30) * 100} className="h-1.5 mt-2" />
                   {isLastTenNights && (
-                    <div className="mt-3 bg-primary/10 rounded-lg p-2">
-                      <p className="text-xs font-bold text-primary">🌟 Last 10 Nights — Seek Laylatul Qadr!</p>
+                    <div className="mt-3 bg-white/10 rounded-lg p-2">
+                      <p className="text-xs font-bold">🌟 Last 10 Nights — Seek Laylatul Qadr!</p>
                     </div>
                   )}
                 </>
@@ -310,7 +310,7 @@ const RamadanOptimizer = () => {
         {/* Suhoor / Iftar Times */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
           <div className="grid grid-cols-2 gap-3">
-            <Card>
+             <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Moon className="h-5 w-5 text-indigo-400 mx-auto mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase">Suhoor</p>
@@ -318,7 +318,7 @@ const RamadanOptimizer = () => {
                 <p className="text-[9px] text-muted-foreground">Fajr: {fajrTime}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Sun className="h-5 w-5 text-orange-400 mx-auto mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase">Iftar</p>
@@ -331,7 +331,7 @@ const RamadanOptimizer = () => {
 
         {/* Selawat & Dzikir Counters */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-4">
               <p className="text-sm font-semibold">Selawat & Dzikir Counter</p>
 
@@ -378,7 +378,7 @@ const RamadanOptimizer = () => {
 
         {/* Daily Ibadah Log */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold">{isSelectedToday ? "Today's Ibadah" : format(selectedDate, 'd MMM yyyy')}</p>
 
@@ -440,7 +440,7 @@ const RamadanOptimizer = () => {
 
         {/* Solat Sunnah Checklist */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold">Solat Sunnah</p>
               <div className="space-y-2">
@@ -473,7 +473,7 @@ const RamadanOptimizer = () => {
 
         {/* Laylatul Qadr Tracker */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-sm font-semibold mb-3 flex items-center gap-1">
                 <Star className="h-4 w-4 text-yellow-500" /> Laylatul Qadr — Last 10 Nights
@@ -502,7 +502,7 @@ const RamadanOptimizer = () => {
 
         {/* Ramadan Summary */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-sm font-semibold mb-3 flex items-center gap-1">
                 <Trophy className="h-4 w-4 text-primary" /> Ramadan Summary

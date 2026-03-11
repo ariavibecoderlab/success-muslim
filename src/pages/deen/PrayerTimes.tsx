@@ -148,7 +148,7 @@ const PrayerTimes = () => {
 
         {/* Notification Permission Banner */}
         {notifPermission === "default" && (
-          <Card className="border-primary/20 bg-primary/5">
+          <Card className="border-0 rounded-xl shadow-sm bg-primary/5">
             <CardContent className="p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <Bell className="h-4 w-4 text-primary shrink-0" />
@@ -171,7 +171,7 @@ const PrayerTimes = () => {
           </Card>
         )}
         {notifPermission === "denied" && (
-          <Card className="border-destructive/20 bg-destructive/5">
+          <Card className="border-0 rounded-xl shadow-sm bg-destructive/5">
             <CardContent className="p-3 flex items-center gap-2">
               <BellOff className="h-4 w-4 text-destructive shrink-0" />
               <p className="text-[11px] text-muted-foreground">
@@ -375,17 +375,17 @@ const PrayerTimes = () => {
 
         {/* Next Prayer Hero Card */}
         {data && !loading && nextPrayer && (
-          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden relative">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md overflow-hidden relative">
             <CardContent className="p-6 text-center space-y-2 relative z-10">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium">Next Prayer</p>
+               <p className="text-[10px] text-white/70 uppercase tracking-[0.2em] font-medium">Next Prayer</p>
               <div className="flex items-center justify-center gap-2">
                 {PRAYER_ICONS[nextPrayer.key]}
-                <p className="text-2xl font-bold text-primary">{nextPrayer.name}</p>
+                <p className="text-2xl font-bold">{nextPrayer.name}</p>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/70">
                 {formatPrayerTime(getEffectiveTime(nextPrayer))}
                 {nextPrayer.mosqueTime && (
-                  <span className="ml-2 text-[10px] bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  <span className="ml-2 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
                     <Building2 className="h-2.5 w-2.5 inline mr-0.5" />
                     Mosque
                   </span>
@@ -398,7 +398,7 @@ const PrayerTimes = () => {
                   <div
                     key={i}
                     className={`h-1.5 w-6 rounded-full transition-all ${
-                      i <= currentIdx ? "bg-primary" : i === nextIdx ? "bg-primary/40" : "bg-muted"
+                      i <= currentIdx ? "bg-white" : i === nextIdx ? "bg-white/40" : "bg-white/15"
                     }`}
                   />
                 ))}
@@ -408,7 +408,7 @@ const PrayerTimes = () => {
         )}
 
         {/* Mosque Override Toggle */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" />
@@ -423,7 +423,7 @@ const PrayerTimes = () => {
 
         {/* Mosque Time Inputs */}
         {settings.mosque_enabled && (
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Mosque Prayer Times (24h format)</p>
               {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
@@ -472,11 +472,11 @@ const PrayerTimes = () => {
                 return (
                   <Card
                     key={prayer.key}
-                    className={`transition-all ${
+                    className={`rounded-xl border-0 shadow-sm transition-all duration-200 ${
                       isCurrent
-                        ? "bg-primary/10 border-primary/30 shadow-sm ring-1 ring-primary/20"
+                        ? "bg-primary/10 ring-1 ring-primary/20"
                         : isNext
-                          ? "border-primary/20"
+                          ? "bg-orange-50 dark:bg-orange-950/10"
                           : ""
                     }`}
                   >
@@ -523,7 +523,7 @@ const PrayerTimes = () => {
               })}
             </div>
           ) : (
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-6 text-center text-sm text-muted-foreground">
                 Unable to fetch prayer times. Check your location and try again.
               </CardContent>
