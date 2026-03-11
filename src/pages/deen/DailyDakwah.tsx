@@ -99,7 +99,7 @@ const DailyDakwah = () => {
           </Card>
         ) : todayPoster ? (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Card>
+             <Card className="rounded-xl border-0 shadow-md overflow-hidden">
               <CardContent className="p-0 overflow-hidden">
                 <img
                   src={todayPoster.image_url}
