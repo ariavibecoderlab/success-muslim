@@ -164,7 +164,7 @@ const HajjUmrahPlanner = () => {
         {!progress ? (
           /* Start Journey CTA */
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+            <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
               <CardContent className="p-6 text-center">
                 <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
                 <h2 className="text-lg font-bold">
