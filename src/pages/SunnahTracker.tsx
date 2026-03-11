@@ -141,12 +141,12 @@ const SunnahTracker = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.2 }}
-                  className="absolute inset-0 z-10 flex items-center justify-center bg-primary/10 backdrop-blur-sm rounded-xl"
-                >
-                  <div className="text-center">
-                    <Trophy className="h-10 w-10 text-primary mx-auto mb-1" />
-                    <p className="text-lg font-bold text-primary">All Done!</p>
-                    <p className="text-xs text-muted-foreground">Masha'Allah, keep it up!</p>
+                   className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-xl"
+                 >
+                   <div className="text-center">
+                     <Trophy className="h-10 w-10 text-white mx-auto mb-1" />
+                     <p className="text-lg font-bold text-white">All Done!</p>
+                     <p className="text-xs text-white/60">Masha'Allah, keep it up!</p>
                   </div>
                 </motion.div>
               )}
@@ -155,10 +155,10 @@ const SunnahTracker = () => {
             <div className="flex items-center gap-4">
               <div className="relative w-20 h-20 flex-shrink-0">
                 <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--secondary))" strokeWidth="8" />
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="8" />
                   <circle
                     cx="50" cy="50" r="42" fill="none"
-                    stroke="hsl(var(--primary))"
+                    stroke="white"
                     strokeWidth="8"
                     strokeLinecap="round"
                     strokeDasharray={`${progress * 2.64} ${264 - progress * 2.64}`}
@@ -185,14 +185,14 @@ const SunnahTracker = () => {
                 {weekData.map((d, i) => (
                   <div key={i} className="flex flex-col items-center gap-0.5">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-medium transition-all ${
-                      d.percentage >= 80 ? 'bg-primary text-primary-foreground' :
-                      d.percentage >= 50 ? 'bg-primary/30 text-primary' :
-                      d.percentage > 0 ? 'bg-primary/10 text-muted-foreground' :
-                      'bg-secondary text-muted-foreground/50'
+                      d.percentage >= 80 ? 'bg-white text-orange-700' :
+                      d.percentage >= 50 ? 'bg-white/30 text-white' :
+                      d.percentage > 0 ? 'bg-white/10 text-white/70' :
+                      'bg-white/15 text-white/50'
                     }`}>
                       {d.percentage >= 80 ? <Check className="h-3 w-3" /> : d.label.charAt(0)}
                     </div>
-                    <span className="text-[8px] text-muted-foreground">{d.label}</span>
+                    <span className="text-[8px] text-white/50">{d.label}</span>
                   </div>
                 ))}
               </div>
