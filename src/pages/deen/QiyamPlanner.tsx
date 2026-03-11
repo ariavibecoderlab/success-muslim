@@ -233,10 +233,10 @@ const QiyamPlanner = () => {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-5 text-center">
-              <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Optimal Tahajjud Window</p>
-              <p className="text-3xl font-bold text-primary mt-1">{tahajjud.start} – {tahajjud.end}</p>
-              <p className="text-xs text-muted-foreground mt-1">
+               <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
+              <p className="text-xs text-white/70 uppercase tracking-wider">Optimal Tahajjud Window</p>
+              <p className="text-3xl font-bold mt-1">{tahajjud.start} – {tahajjud.end}</p>
+              <p className="text-xs text-white/60 mt-1">
                 Last third of the night · Fajr at {fajrTime}
               </p>
 
