@@ -119,7 +119,7 @@ export default function HeroPrayerCard() {
               <Button
                 size="sm"
                 variant="secondary"
-                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0 text-xs h-9 rounded-lg font-semibold"
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0 text-xs h-8 rounded-lg font-semibold"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
