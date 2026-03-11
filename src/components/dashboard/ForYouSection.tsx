@@ -57,10 +57,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
             ? 'Perbanyak ibadah malam ganjil'
             : 'Jaga momentum ibadah',
         href: '/iman/ramadan',
-        gradientFrom: 'from-amber-50 dark:from-amber-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-amber-100 dark:bg-amber-900/40',
-        iconColor: 'text-amber-600 dark:text-amber-400',
+        iconBg: 'bg-amber-500/20 ring-amber-500/30',
+        iconColor: 'text-amber-400',
       });
     }
 
