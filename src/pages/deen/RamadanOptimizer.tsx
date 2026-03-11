@@ -289,7 +289,7 @@ const RamadanOptimizer = () => {
                    <Moon className="h-8 w-8 text-white/80 mx-auto mb-2" />
                   <p className="text-xs text-white/70 uppercase tracking-wider font-semibold">Ramadan Mubarak</p>
                   <p className="text-3xl font-bold mt-1">Day {ramadanDay} of 30</p>
-                  <Progress value={(ramadanDay / 30) * 100} className="h-1.5 mt-2" />
+                  <div className="h-1.5 mt-2 bg-white/20 rounded-full overflow-hidden"><div className="h-full bg-white rounded-full transition-all" style={{ width: `${(ramadanDay / 30) * 100}%` }} /></div>
                   {isLastTenNights && (
                     <div className="mt-3 bg-white/10 rounded-lg p-2">
                       <p className="text-xs font-bold">🌟 Last 10 Nights — Seek Laylatul Qadr!</p>

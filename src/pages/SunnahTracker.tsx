@@ -185,14 +185,14 @@ const SunnahTracker = () => {
                 {weekData.map((d, i) => (
                   <div key={i} className="flex flex-col items-center gap-0.5">
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-medium transition-all ${
-                      d.percentage >= 80 ? 'bg-primary text-primary-foreground' :
-                      d.percentage >= 50 ? 'bg-primary/30 text-primary' :
-                      d.percentage > 0 ? 'bg-primary/10 text-muted-foreground' :
-                      'bg-secondary text-muted-foreground/50'
+                      d.percentage >= 80 ? 'bg-white text-orange-700' :
+                      d.percentage >= 50 ? 'bg-white/30 text-white' :
+                      d.percentage > 0 ? 'bg-white/10 text-white/70' :
+                      'bg-white/15 text-white/50'
                     }`}>
                       {d.percentage >= 80 ? <Check className="h-3 w-3" /> : d.label.charAt(0)}
                     </div>
-                    <span className="text-[8px] text-muted-foreground">{d.label}</span>
+                    <span className="text-[8px] text-white/50">{d.label}</span>
                   </div>
                 ))}
               </div>
