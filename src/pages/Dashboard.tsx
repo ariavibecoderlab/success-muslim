@@ -4,7 +4,6 @@ import OnboardingTooltips from '@/components/OnboardingTooltips';
 import WidgetCustomizer from '@/components/widgets/WidgetCustomizer';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import AnnouncementsBanner from '@/components/dashboard/AnnouncementsBanner';
-import GreetingHeader from '@/components/dashboard/GreetingHeader';
 import LifeScoreCard from '@/components/dashboard/LifeScoreCard';
 import QuickLogGrid from '@/components/dashboard/QuickLogGrid';
 import DailyQuoteCard from '@/components/dashboard/DailyQuoteCard';
