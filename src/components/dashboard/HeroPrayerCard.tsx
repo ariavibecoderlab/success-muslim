@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Sunrise, Sun, CloudSun, Sunset, Moon, CheckCircle2, Star } from 'lucide-react';
+import { Sunrise, Sun, CloudSun, Sunset, Moon, CheckCircle2, Star, Clock, Bell } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -53,17 +53,18 @@ export default function HeroPrayerCard() {
 
   if (allDone) {
     return (
-      <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-        <CardContent className="p-4 text-center">
-          <Star className="h-8 w-8 mx-auto mb-2 text-yellow-200" />
-          <p className="text-sm font-bold">MasyaAllah!</p>
-          <p className="text-xs opacity-90">Semua solat hari ini selesai</p>
-          <div className="flex justify-center gap-1.5 mt-3">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl overflow-hidden">
+        <CardContent className="p-5 text-center relative">
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+          <Star className="h-10 w-10 mx-auto mb-3 text-yellow-200" />
+          <p className="text-xl font-bold">MasyaAllah!</p>
+          <p className="text-sm opacity-90 mt-1">Semua solat hari ini selesai</p>
+          <div className="flex justify-center gap-2 mt-4">
             {SALAH_NAMES.map((name, i) => {
               const Icon = PRAYER_ICONS[i];
               return (
-                <div key={name} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                  <Icon className="h-3.5 w-3.5" />
+                <div key={name} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
+                  <Icon className="h-4 w-4" />
                 </div>
               );
             })}
@@ -75,65 +76,60 @@ export default function HeroPrayerCard() {
 
   return (
     <Link to="/iman/prayer-times">
-      <Card className="border-0 shadow-sm bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden">
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <NextIcon className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-lg font-bold leading-tight">{nextPrayer?.name}</p>
-                <p className="text-sm opacity-80">{formatPrayerTime(nextPrayer?.time || '')}</p>
-              </div>
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl overflow-hidden">
+        <CardContent className="p-5 relative">
+          {/* Decorative moon */}
+          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+
+          {/* Label */}
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">Next Prayer</p>
+
+          {/* Prayer name + time */}
+          <div className="flex items-end justify-between mb-3">
+            <div>
+              <p className="text-3xl font-bold leading-tight">{nextPrayer?.name}</p>
             </div>
-            <div className="text-right">
-              <p className="text-xs opacity-70">dalam</p>
-              <p className="text-sm font-semibold">{countdown}</p>
-            </div>
+            <p className="text-3xl font-bold leading-tight">{formatPrayerTime(nextPrayer?.time || '')}</p>
           </div>
 
-          <div className="mb-3">
-            <div className="flex justify-between text-[10px] opacity-70 mb-1">
-              <span>Solat hari ini</span>
-              <span>{salahCount.logged}/5</span>
-            </div>
-            <Progress value={(salahCount.logged / 5) * 100} className="h-1.5 bg-white/20 [&>div]:bg-white" />
+          {/* Countdown */}
+          <div className="flex items-center gap-1.5 text-white/70 mb-4">
+            <Clock className="h-3.5 w-3.5" />
+            <span className="text-xs">in {countdown}</span>
           </div>
 
-          <div className="flex gap-1.5">
-            {SALAH_NAMES.map((name, i) => {
-              const status = salahLog?.prayers[name]?.status;
-              const Icon = PRAYER_ICONS[i];
-              return (
-                <div
-                  key={name}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-lg text-[9px] ${
-                    status ? 'bg-white/25' : 'bg-white/10'
-                  }`}
-                >
-                  <Icon className="h-3 w-3" />
-                  <span>{name.slice(0, 3)}</span>
-                  {status && <CheckCircle2 className="h-2.5 w-2.5" />}
-                </div>
-              );
-            })}
-          </div>
+          {/* Progress bar */}
+          <Progress value={(salahCount.logged / 5) * 100} className="h-1.5 bg-white/20 [&>div]:bg-white mb-2" />
+          <p className="text-[11px] text-white/60">{salahCount.logged} of 5 prayers done today</p>
 
+          {/* Buttons */}
           {!nextAlreadyLogged && (
-            <Button
-              size="sm"
-              variant="secondary"
-              className="w-full mt-3 bg-white/20 hover:bg-white/30 text-white border-0 text-xs h-8"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleLogPrayer(nextSalahName);
-              }}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              Log {nextPrayer?.name}
-            </Button>
+            <div className="flex gap-2 mt-4">
+              <Button
+                size="sm"
+                className="flex-1 bg-white text-emerald-700 hover:bg-white/90 border-0 text-xs h-9 rounded-lg font-semibold"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleLogPrayer(nextSalahName);
+                }}
+              >
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                Log {nextPrayer?.name}
+              </Button>
+              <Button
+                size="sm"
+                variant="secondary"
+                className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0 text-xs h-9 rounded-lg font-semibold"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <Bell className="h-3.5 w-3.5 mr-1.5" />
+                Remind me
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>

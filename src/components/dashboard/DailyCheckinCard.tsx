@@ -7,63 +7,54 @@ const POINTS = [10, 10, 15, 20, 25, 30, 150];
 
 export default function DailyCheckinCard() {
   const { claimedToday, streakDay, pointsToday, claim, claiming } = useDailyCheckin();
-  const displayDay = claimedToday ? streakDay : streakDay;
+  const displayDay = streakDay;
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardContent className="p-3">
-        <div className="flex items-center justify-between mb-2">
+    <Card className="border-0 shadow-sm rounded-2xl">
+      <CardContent className="p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">
-                {claimedToday ? 'Sudah check-in hari ini' : `Daily Check-in`}
-              </p>
-              <p className="text-[10px] text-muted-foreground">
-                {claimedToday
-                  ? `+${pointsToday} pts hari ini`
-                  : `Hari ${displayDay}/7 · +${pointsToday} pts`}
-              </p>
-            </div>
+            <Sparkles className="h-4 w-4 text-amber-500" />
+            <p className="text-base font-semibold">
+              {claimedToday ? 'Sudah check-in hari ini' : 'Daily Check-in'}
+            </p>
           </div>
-          {claimedToday ? (
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Check className="h-4 w-4 text-primary" />
-            </div>
-          ) : (
+          {!claimedToday && (
             <Button
               size="sm"
-              className="h-8 text-xs px-3"
+              className="bg-amber-500 hover:bg-amber-600 text-white border-0 text-xs h-8 px-4 rounded-full font-semibold"
               onClick={() => claim()}
               disabled={claiming}
             >
-              Claim
+              Claim +{pointsToday}
             </Button>
+          )}
+          {claimedToday && (
+            <span className="text-xs text-muted-foreground font-medium">+{pointsToday} pts</span>
           )}
         </div>
 
         {/* 7-day dots */}
-        <div className="flex items-center gap-1.5 justify-center">
+        <div className="flex items-center justify-center gap-2">
           {POINTS.map((pts, i) => {
             const dayNum = i + 1;
             const isDone = claimedToday ? dayNum <= streakDay : dayNum < streakDay;
             const isCurrent = dayNum === displayDay;
             return (
-              <div key={i} className="flex flex-col items-center gap-0.5">
+              <div key={i} className="flex flex-col items-center gap-1">
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold transition-all ${
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
                     isDone
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-emerald-800 text-white'
                       : isCurrent && !claimedToday
-                        ? 'ring-2 ring-primary bg-primary/10 text-primary'
+                        ? 'ring-2 ring-emerald-500 bg-emerald-50 text-emerald-700'
                         : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {isDone ? <Check className="h-2.5 w-2.5" /> : dayNum}
+                  {isDone ? <Check className="h-3.5 w-3.5" /> : dayNum}
                 </div>
-                <span className="text-[7px] text-muted-foreground">+{pts}</span>
+                <span className="text-[9px] text-muted-foreground">+{pts}</span>
               </div>
             );
           })}

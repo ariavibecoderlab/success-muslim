@@ -42,12 +42,18 @@ const Dashboard = () => {
         }
       />
 
-      <main className="max-w-md mx-auto px-5 py-4 space-y-4">
+      <main className="max-w-md mx-auto px-5 py-4 space-y-5">
         <AnnouncementsBanner announcements={announcements} />
         <HeroPrayerCard />
         {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
         <DailyCheckinCard />
-        <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
+
+        {/* Life Score section */}
+        <div>
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Life Score</p>
+          <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
+        </div>
+
         <QuickLogGrid />
         <ForYouSection
           isRamadan={isRamadan}
