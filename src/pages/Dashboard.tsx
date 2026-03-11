@@ -6,7 +6,6 @@ import { useDashboardData } from '@/hooks/useDashboardData';
 import { useContextualGreeting } from '@/hooks/useContextualGreeting';
 import RotatingHeader from '@/components/dashboard/RotatingHeader';
 import HeroPrayerCard from '@/components/dashboard/HeroPrayerCard';
-import RamadanBanner from '@/components/dashboard/RamadanBanner';
 import DailyCheckinCard from '@/components/dashboard/DailyCheckinCard';
 import AnnouncementsBanner from '@/components/dashboard/AnnouncementsBanner';
 import LifeScoreCard from '@/components/dashboard/LifeScoreCard';
