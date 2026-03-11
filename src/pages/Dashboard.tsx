@@ -4,7 +4,6 @@ import OnboardingTooltips from '@/components/OnboardingTooltips';
 import WidgetCustomizer from '@/components/widgets/WidgetCustomizer';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import AnnouncementsBanner from '@/components/dashboard/AnnouncementsBanner';
-import GreetingHeader from '@/components/dashboard/GreetingHeader';
 import LifeScoreCard from '@/components/dashboard/LifeScoreCard';
 import QuickLogGrid from '@/components/dashboard/QuickLogGrid';
 import DailyQuoteCard from '@/components/dashboard/DailyQuoteCard';
@@ -23,7 +22,6 @@ const Dashboard = () => {
 
       <main className="max-w-md mx-auto px-5 py-6 space-y-5">
         <AnnouncementsBanner announcements={announcements} />
-        <GreetingHeader displayName={displayName} onCustomize={() => setCustomizerOpen(true)} />
         <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
         <QuickLogGrid />
         <WidgetGrid preferences={preferences} isRamadan={isRamadan} activeIF={activeIF} loading={loading} />
