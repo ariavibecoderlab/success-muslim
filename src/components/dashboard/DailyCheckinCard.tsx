@@ -36,7 +36,7 @@ export default function DailyCheckinCard() {
             <Button
               size="sm"
               className="h-8 text-xs px-3"
-              onClick={claim}
+              onClick={() => claim()}
               disabled={claiming}
             >
               Claim
