@@ -29,7 +29,7 @@ const Productivity = () => {
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-3 space-y-4"
+        className="max-w-md mx-auto px-4 py-3 space-y-4"
         variants={container}
         initial="hidden"
         animate="visible"

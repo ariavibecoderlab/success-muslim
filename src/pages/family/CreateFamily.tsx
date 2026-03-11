@@ -181,7 +181,7 @@ const CreateFamily = () => {
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 space-y-4"
+        className="max-w-md mx-auto px-4 space-y-4"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
       >

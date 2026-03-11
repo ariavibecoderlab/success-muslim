@@ -79,7 +79,7 @@ const About = () => (
 
     {/* Core Values */}
     <section className="py-20 px-6 border-t border-border/40">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-md mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
           className="text-center mb-14"
         >

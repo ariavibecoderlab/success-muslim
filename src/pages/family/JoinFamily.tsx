@@ -54,7 +54,7 @@ const JoinFamily = () => {
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-8 space-y-6"
+        className="max-w-md mx-auto px-4 py-8 space-y-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >

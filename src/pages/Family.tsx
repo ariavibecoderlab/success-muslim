@@ -93,7 +93,7 @@ const Family = () => {
     <div className="min-h-screen bg-background">
       <AppHeader title="Family" />
       <motion.main
-        className="max-w-lg mx-auto px-4 py-16 flex flex-col items-center text-center"
+        className="max-w-md mx-auto px-4 py-16 flex flex-col items-center text-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}

@@ -138,7 +138,7 @@ const Settings = () => {
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-3 space-y-5 pb-24"
+        className="max-w-md mx-auto px-4 py-3 space-y-5 pb-24"
         variants={stagger}
         initial="hidden"
         animate="show"

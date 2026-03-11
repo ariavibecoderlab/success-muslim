@@ -69,7 +69,7 @@ const FamilyDashboard = () => {
         </div>
       </div>
 
-      <main className="max-w-lg mx-auto px-4 py-3 space-y-5 pb-28">
+      <main className="max-w-md mx-auto px-4 py-3 space-y-5 pb-28">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
