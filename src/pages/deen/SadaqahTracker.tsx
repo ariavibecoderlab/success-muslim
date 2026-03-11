@@ -157,18 +157,18 @@ const SadaqahTracker = () => {
 
         {/* Summary Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <Card>
+           <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-4 text-center">
-              <Calendar className="h-4 w-4 text-primary mx-auto mb-1" />
+              <Calendar className="h-4 w-4 text-white/70 mx-auto mb-1" />
               <p className="text-lg font-bold">{displayCurrency} {monthlyTotal.toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">This Month</p>
+              <p className="text-[10px] text-white/60">This Month</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-4 text-center">
-              <TrendingUp className="h-4 w-4 text-primary mx-auto mb-1" />
+              <TrendingUp className="h-4 w-4 text-white/70 mx-auto mb-1" />
               <p className="text-lg font-bold">{displayCurrency} {yearlyTotal.toLocaleString()}</p>
-              <p className="text-[10px] text-muted-foreground">This Year</p>
+              <p className="text-[10px] text-white/60">This Year</p>
             </CardContent>
           </Card>
         </div>
