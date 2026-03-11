@@ -148,7 +148,7 @@ const PrayerTimes = () => {
 
         {/* Notification Permission Banner */}
         {notifPermission === "default" && (
-          <Card className="border-primary/20 bg-primary/5">
+          <Card className="border-0 rounded-xl shadow-sm bg-primary/5">
             <CardContent className="p-3 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <Bell className="h-4 w-4 text-primary shrink-0" />
