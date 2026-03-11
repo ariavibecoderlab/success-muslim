@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Shield } from 'lucide-react';
+import { Shield, Bell } from 'lucide-react';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useHijriDate } from '@/hooks/useHijriDate';
 import { ReactNode } from 'react';
