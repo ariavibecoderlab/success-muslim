@@ -303,7 +303,7 @@ const QiyamPlanner = () => {
 
         {/* 7-Day Dots */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Last 7 Nights</p>
               <div className="flex items-center justify-between">
