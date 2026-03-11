@@ -23,13 +23,15 @@ const AppHeader = ({
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl">
       <div className="max-w-md mx-auto px-5 h-16 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2.5 group min-w-0">
+        <Link to="/" className="flex flex-1 min-w-0 items-center gap-2.5 group">
           <img src={smlogo} alt="Success Muslim" className="w-9 h-9 rounded-xl object-contain shrink-0" />
-          {rotatingContent || (
-            <span className="text-base font-bold tracking-tight text-foreground leading-tight">
-              {title}
-            </span>
-          )}
+          <div className="min-w-0 flex-1">
+            {rotatingContent || (
+              <span className="text-base font-bold tracking-tight text-foreground leading-tight">
+                {title}
+              </span>
+            )}
+          </div>
         </Link>
         <div className="flex items-center gap-2 shrink-0">
           {rightContent}
