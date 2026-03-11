@@ -178,7 +178,7 @@ const Iman = () => {
   const { data: dailyDhikr } = useDhikrDaily();
   const salahCount = useTodaySalahCount();
 
-  const { hijriDate } = useHijriDate();
+  const { hijriDate, isRamadan, ramadanDay } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const nextPrayer = prayerData?.timings[nextIdx];
 
