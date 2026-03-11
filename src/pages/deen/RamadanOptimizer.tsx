@@ -310,7 +310,7 @@ const RamadanOptimizer = () => {
         {/* Suhoor / Iftar Times */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}>
           <div className="grid grid-cols-2 gap-3">
-            <Card>
+             <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Moon className="h-5 w-5 text-indigo-400 mx-auto mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase">Suhoor</p>
@@ -318,7 +318,7 @@ const RamadanOptimizer = () => {
                 <p className="text-[9px] text-muted-foreground">Fajr: {fajrTime}</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Sun className="h-5 w-5 text-orange-400 mx-auto mb-1" />
                 <p className="text-[10px] text-muted-foreground uppercase">Iftar</p>
