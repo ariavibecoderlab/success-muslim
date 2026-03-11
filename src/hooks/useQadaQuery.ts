@@ -3,8 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup,
+  getRamadhanSetup, getRamadhanProgress,
 } from '@/lib/storage';
-import type { QadaSolatSetup, QadaSolatProgress, PrayerType } from '@/lib/types';
+import type { QadaSolatSetup, QadaSolatProgress, PrayerType, RamadhanQadaSetup, RamadhanQadaProgress } from '@/lib/types';
 
 export function useQadaSolat() {
   const { user } = useAuth();
