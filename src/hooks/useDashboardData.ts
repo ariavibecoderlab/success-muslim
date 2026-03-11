@@ -9,7 +9,7 @@ import { useTodaySalahCount, useSalahLog } from './useSalahQuery';
 import { useDailyTasks } from './useTasksQuery';
 import { useHabits, useHabitLog } from './useHabitsQuery';
 import { useQuranDay } from './useQuranStorageQuery';
-import { useWidgetPreferences } from './useWidgetPreferences';
+
 import { useHijriDate } from './useHijriDate';
 import { getSunnahItems } from '@/lib/sunnah-storage';
 import { getTodayKey as getProdTodayKey } from '@/lib/productivity-storage';
@@ -130,8 +130,6 @@ export function useDashboardData() {
   const { isRamadan, ramadanDay } = useHijriDate();
   const { isActiveFast, activeFast } = useFastingStore();
 
-  const widgetPrefs = useWidgetPreferences();
-
   return {
     displayName,
     announcements,
@@ -140,7 +138,6 @@ export function useDashboardData() {
     isRamadan,
     ramadanDay: ramadanDay || 0,
     activeIF: activeFast,
-    widgetPrefs,
     dailyDhikrCount: dhikrCount,
   };
 }
