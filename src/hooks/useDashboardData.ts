@@ -13,7 +13,8 @@ import { useWidgetPreferences } from './useWidgetPreferences';
 import { useHijriDate } from './useHijriDate';
 import { getSunnahItems } from '@/lib/sunnah-storage';
 import { getTodayKey as getProdTodayKey } from '@/lib/productivity-storage';
-import { getSleepLog, getFastingLog, todayKey, getActiveIF } from '@/lib/health-storage';
+import { getSleepLog, getFastingLog, todayKey } from '@/lib/health-storage';
+import { useFastingStore } from '@/stores/fastingStore';
 import { getTodayKey } from '@/lib/calculations';
 import {
   calculateLifeScore,
