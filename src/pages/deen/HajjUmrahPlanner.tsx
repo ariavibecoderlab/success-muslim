@@ -210,7 +210,7 @@ const HajjUmrahPlanner = () => {
                   const isExpanded = expandedStep === step.id;
 
                   return (
-                    <Card key={step.id} className={isCompleted ? 'border-primary/30 bg-primary/5' : ''}>
+                    <Card key={step.id} className={`rounded-xl border-0 shadow-sm transition-all duration-200 ${isCompleted ? 'bg-primary/5' : ''}`}>
                       <CardContent className="p-0">
                         <Collapsible open={isExpanded} onOpenChange={() => setExpandedStep(isExpanded ? null : step.id)}>
                           <div className="flex items-center gap-3 p-4">
