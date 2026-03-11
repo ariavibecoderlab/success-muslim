@@ -473,7 +473,7 @@ const RamadanOptimizer = () => {
 
         {/* Laylatul Qadr Tracker */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-sm font-semibold mb-3 flex items-center gap-1">
                 <Star className="h-4 w-4 text-yellow-500" /> Laylatul Qadr — Last 10 Nights
