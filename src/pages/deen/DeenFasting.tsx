@@ -139,8 +139,8 @@ const DeenFasting = () => {
                     <Moon className="h-5 w-5 text-white/80" />
                   </div>
                   <div>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Today's Fasting</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                     <p className="text-[10px] text-white/70 uppercase tracking-wider">Today's Fasting</p>
+                    <p className="text-xs text-white/60 mt-0.5">
                       {isRecommended(new Date()) ? `Recommended: ${FASTING_TYPES[getFastingType(new Date())!].label}` : 'No sunnah fast today'}
                     </p>
                   </div>
