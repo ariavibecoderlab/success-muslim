@@ -66,7 +66,7 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
 
   return (
     <div className="flex flex-col min-w-0">
-      <div className="h-5 relative overflow-hidden">
+      <div className="h-7 relative overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.span
             key={activeIndex}
