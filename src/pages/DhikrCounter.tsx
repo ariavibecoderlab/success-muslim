@@ -299,7 +299,7 @@ const DhikrCounter = () => {
         </div>
 
         {/* Today's Summary */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">{isToday ? "Today's Summary" : format(selectedDate, 'd MMM yyyy')}</h3>
