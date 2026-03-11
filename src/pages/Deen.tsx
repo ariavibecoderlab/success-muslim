@@ -236,6 +236,8 @@ const Iman = () => {
 
       <main className="max-w-md mx-auto w-full px-5 py-6 space-y-5 pb-28">
 
+        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
+
         {/* ── Prayer Times Hero Card ──────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
           <Link to="/iman/prayer-times">
