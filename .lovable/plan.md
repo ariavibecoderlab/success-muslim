@@ -1,27 +1,29 @@
 
 
-## Mobile App Conversion
+## Fix Green-on-Orange Readability Issues
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+After reviewing all modified files, I found **green text/elements rendering on orange backgrounds** in two files. The CSS variable `--primary` resolves to green (`120 61% 24%`), so any `text-primary`, `bg-primary`, or `hsl(var(--primary))` inside orange gradient cards will show unreadable green.
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+### Issues Found
 
-### Two Options
+**1. `src/pages/SunnahTracker.tsx`** — Hero card (lines 136–199) has 5 problems:
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+| Line | Current (Green) | Fix (White) |
+|------|----------------|-------------|
+| 144 | `bg-primary/10` (celebration overlay) | `bg-black/20` |
+| 147 | `text-primary` (Trophy icon) | `text-white` |
+| 148 | `text-primary` ("All Done!" text) | `text-white` |
+| 149 | `text-muted-foreground` (subtitle) | `text-white/60` |
+| 158 | SVG stroke `hsl(var(--secondary))` (ring bg) | `rgba(255,255,255,0.2)` |
+| 161 | SVG stroke `hsl(var(--primary))` (ring progress) | `white` |
+| 188–192 | Week dots: `bg-primary`, `bg-primary/30`, `text-primary`, `bg-primary/10`, `bg-secondary` | `bg-white`, `bg-white/30`, `text-white`, `bg-white/10`, `bg-white/15` |
+| 195 | Week labels: `text-muted-foreground` | `text-white/50` |
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+**2. `src/pages/deen/RamadanOptimizer.tsx`** — Line 292: `<Progress>` component inside orange hero card renders a green bar. Replace with a custom white progress bar: `<div className="h-1.5 mt-2 bg-white/20 rounded-full overflow-hidden"><div className="h-full bg-white rounded-full" style={{ width: `${(ramadanDay/30)*100}%` }} /></div>`.
 
-### What the Conversion Involves
+### Files Modified
+- `src/pages/SunnahTracker.tsx` — Replace all `primary`/`secondary`/`muted-foreground` references inside the orange hero card with white-based equivalents
+- `src/pages/deen/RamadanOptimizer.tsx` — Replace `<Progress>` with white custom bar inside orange card
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
-
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
-
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+All other orange cards (PrayerTimes, QiyamPlanner, HajjUmrah, DailyDakwah, SadaqahTracker, ZakatCalculator, DeenFasting) already use `text-white` and `text-white/70` correctly — no issues there.
 
