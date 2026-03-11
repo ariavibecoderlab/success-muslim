@@ -15,6 +15,7 @@ import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
 import { useDhikrDaily } from '@/hooks/useDhikrQuery';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
 import { useHijriDate } from '@/hooks/useHijriDate';
+import RamadanBanner from '@/components/dashboard/RamadanBanner';
 import { calcIman, type LifeScoreInput } from '@/lib/life-score';
 import { getQuranDay } from '@/lib/quran-storage';
 import { getFastingLog, todayKey } from '@/lib/health-storage';
@@ -177,7 +178,7 @@ const Iman = () => {
   const { data: dailyDhikr } = useDhikrDaily();
   const salahCount = useTodaySalahCount();
 
-  const { hijriDate } = useHijriDate();
+  const { hijriDate, isRamadan, ramadanDay } = useHijriDate();
   const gregorianDate = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
   const nextPrayer = prayerData?.timings[nextIdx];
 
@@ -234,6 +235,8 @@ const Iman = () => {
       <AppHeader title="Iman" />
 
       <main className="max-w-md mx-auto w-full px-5 py-6 space-y-5 pb-28">
+
+        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
 
         {/* ── Prayer Times Hero Card ──────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
