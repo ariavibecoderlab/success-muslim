@@ -17,7 +17,7 @@ import FirstTimeDialog from '@/components/dashboard/FirstTimeDialog';
 
 const Dashboard = () => {
   const [customizerOpen, setCustomizerOpen] = useState(false);
-  const { displayName, announcements, lifeScore, weeklyScores, isRamadan, ramadanDay, activeIF, widgetPrefs } = useDashboardData();
+  const { displayName, announcements, lifeScore, weeklyScores, isRamadan, ramadanDay, activeIF, widgetPrefs, dailyDhikrCount } = useDashboardData();
   const { preferences, loading, isFirstTime, toggleWidget, resizeWidget, reorderWidgets, initializeDefaults, setIsFirstTime } = widgetPrefs;
 
   const firstName = (displayName || '').split(' ')[0] || 'Muslim';
