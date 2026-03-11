@@ -202,7 +202,7 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
   return (
     <div className="space-y-2">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Untuk Kamu
+        For You
       </p>
       <motion.div
         className="space-y-2"
@@ -213,16 +213,18 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         {cards.map((card, i) => (
           <motion.div key={i} variants={staggerItem}>
             <Link to={card.href}>
-              <Card className={`border-0 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r ${card.gradientFrom} ${card.gradientTo}`}>
+              <Card className={`border-0 shadow-sm hover:shadow-md rounded-xl transition-all duration-200 active:scale-[0.98] backdrop-blur-sm bg-gradient-to-r ${card.gradientFrom} ${card.gradientTo}`}>
                 <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg ${card.iconBg} flex items-center justify-center shrink-0`}>
-                    <card.icon className={`h-4 w-4 ${card.iconColor}`} />
+                  <div className={`w-10 h-10 rounded-xl ${card.iconBg} ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center shrink-0`}>
+                    <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">{card.title}</p>
-                    <p className="text-[11px] text-muted-foreground">{card.subtitle}</p>
+                    <p className="text-[13px] font-semibold leading-snug line-clamp-2">{card.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{card.subtitle}</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                  <div className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+                  </div>
                 </CardContent>
               </Card>
             </Link>
