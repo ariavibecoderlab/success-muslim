@@ -80,7 +80,7 @@ const DailyDakwah = () => {
       <div className="space-y-5">
         {/* Hero */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border-primary/20">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-5 text-center">
               <Moon className="h-8 w-8 text-primary mx-auto mb-2" />
               <p className="text-xs text-primary uppercase tracking-wider font-semibold">Daily Da'wah</p>
