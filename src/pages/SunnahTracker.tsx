@@ -133,7 +133,7 @@ const SunnahTracker = () => {
         </div>
 
         {/* Hero Summary with Ring */}
-        <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 overflow-hidden relative">
+        <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md overflow-hidden relative">
           <CardContent className="p-5">
             <AnimatePresence>
               {celebrateVisible && (
