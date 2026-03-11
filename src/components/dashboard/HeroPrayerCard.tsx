@@ -76,37 +76,37 @@ export default function HeroPrayerCard() {
   return (
     <Link to="/iman/prayer-times">
       <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl overflow-hidden">
-        <CardContent className="p-5 relative">
+        <CardContent className="p-4 relative">
           {/* Decorative moon */}
-          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
 
           {/* Label */}
-          <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">Next Prayer</p>
+          <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-1.5">Next Prayer</p>
 
           {/* Prayer name + time */}
-          <div className="flex items-end justify-between mb-3">
+          <div className="flex items-end justify-between mb-2">
             <div>
-              <p className="text-3xl font-bold leading-tight">{nextPrayer?.name}</p>
+              <p className="text-2xl font-bold leading-tight">{nextPrayer?.name}</p>
             </div>
-            <p className="text-3xl font-bold leading-tight">{formatPrayerTime(nextPrayer?.time || '')}</p>
+            <p className="text-2xl font-bold leading-tight">{formatPrayerTime(nextPrayer?.time || '')}</p>
           </div>
 
           {/* Countdown */}
-          <div className="flex items-center gap-1.5 text-white/70 mb-4">
+          <div className="flex items-center gap-1.5 text-white/70 mb-2.5">
             <Clock className="h-3.5 w-3.5" />
             <span className="text-xs">in {countdown}</span>
           </div>
 
           {/* Progress bar */}
-          <Progress value={(salahCount.logged / 5) * 100} className="h-1.5 bg-white/20 [&>div]:bg-white mb-2" />
+          <Progress value={(salahCount.logged / 5) * 100} className="h-1.5 bg-white/20 [&>div]:bg-white mb-1.5" />
           <p className="text-[11px] text-white/60">{salahCount.logged} of 5 prayers done today</p>
 
           {/* Buttons */}
           {!nextAlreadyLogged && (
-            <div className="flex gap-2 mt-4">
+            <div className="flex gap-2 mt-3">
               <Button
                 size="sm"
-                className="flex-1 bg-white text-emerald-700 hover:bg-white/90 border-0 text-xs h-9 rounded-lg font-semibold"
+                className="flex-1 bg-white text-emerald-700 hover:bg-white/90 border-0 text-xs h-8 rounded-lg font-semibold"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
