@@ -70,11 +70,11 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
         <AnimatePresence mode="wait">
           <motion.span
             key={activeIndex}
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
+            exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 text-sm font-bold tracking-tight text-foreground truncate"
+            className="absolute inset-0 text-base font-bold tracking-tight text-foreground truncate"
           >
             {titles[activeIndex]}
           </motion.span>
