@@ -29,7 +29,7 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
   });
 
   const titles = [
-    `Salaam, ${firstName || 'Muslim'}`,
+    `salaam, ${firstName || 'Muslim'}`,
     hijriDate || '',
     gregorianDate,
   ].filter(Boolean);
