@@ -1,18 +1,27 @@
 
 
-## Make HeroPrayerCard More Compact
+## Mobile App Conversion
 
-The card currently has large `text-3xl` typography, generous padding (`p-5`), and spacious margins between elements. Here's the plan to tighten it:
+Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
 
-### Changes to `src/components/dashboard/HeroPrayerCard.tsx`:
+Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
 
-1. **Reduce padding**: `p-5` → `p-4`
-2. **Shrink prayer name/time**: `text-3xl` → `text-2xl`, reduce bottom margin `mb-3` → `mb-2`
-3. **Shrink label**: `mb-3` → `mb-1.5`
-4. **Tighten countdown**: `mb-4` → `mb-2.5`
-5. **Shrink buttons margin**: `mt-4` → `mt-3`, button height `h-9` → `h-8`
-6. **Shrink decorative moon**: `w-24 h-24` → `w-20 h-20`
-7. **Completion state**: Reduce star icon `h-10 w-10` → `h-8 w-8`, `mb-3` → `mb-2`, prayer circles `w-9 h-9` → `w-7 h-7`
+### Two Options
 
-All changes in one file — purely spacing/sizing tweaks, no structural changes.
+**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+
+**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+
+### What the Conversion Involves
+
+1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
+2. Initialize Capacitor with config pointing to your app
+3. Configure live-reload for development via your preview URL
+4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+
+### Known Blocker
+Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+
+### Next Steps
+If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
 
