@@ -111,7 +111,7 @@ function useLifeScore() {
 
   const lifeScore = useMemo(() => calculateLifeScore(lifeScoreInput), [lifeScoreInput]);
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
-  const weeklyScores = useMemo(() => getWeeklyScores(), []);
+  const weeklyScores = useMemo(() => getWeeklyScores(), [lifeScore]);
 
   return { lifeScore, weeklyScores };
 }
