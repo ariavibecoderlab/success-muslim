@@ -423,7 +423,7 @@ const PrayerTimes = () => {
 
         {/* Mosque Time Inputs */}
         {settings.mosque_enabled && (
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Mosque Prayer Times (24h format)</p>
               {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
