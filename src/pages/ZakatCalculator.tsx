@@ -165,7 +165,7 @@ const ZakatCalculator = () => {
         {/* Result */}
         {result && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className={result.meetsNisab ? 'border-primary/30 bg-primary/5' : 'border-border'}>
+            <Card className={`rounded-xl border-0 shadow-sm ${result.meetsNisab ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white' : ''}`}>
               <CardContent className="p-5 space-y-3">
                 <h3 className="font-semibold text-sm">
                   {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'}
