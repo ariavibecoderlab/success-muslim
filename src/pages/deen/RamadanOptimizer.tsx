@@ -331,7 +331,7 @@ const RamadanOptimizer = () => {
 
         {/* Selawat & Dzikir Counters */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-4">
               <p className="text-sm font-semibold">Selawat & Dzikir Counter</p>
 
