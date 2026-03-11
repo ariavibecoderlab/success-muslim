@@ -28,8 +28,9 @@ export default function QuickLogGrid() {
     <div>
       <div className="flex items-center justify-between mb-3">
         <EditableText elementKey="quicklog.title" defaultText="Quick Log" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" />
-        <button onClick={() => setEditOpen(true)} className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors">
-          <Pencil className="h-3.5 w-3.5" />
+        <button onClick={() => setEditOpen(true)} className="flex items-center gap-1 p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors">
+          <Pencil className="h-3 w-3" />
+          <span className="text-[10px] font-medium">Edit</span>
         </button>
       </div>
       <div className="flex items-start gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-0.5 pb-1">
@@ -44,15 +45,14 @@ export default function QuickLogGrid() {
               className="snap-center"
             >
               <Link to={q.to} className="flex flex-col items-center gap-1.5 min-w-[56px]">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br ${q.gradient} shadow-sm active:scale-95 transition-transform`}>
-                  <Icon className="h-[18px] w-[18px] text-white" />
+                <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${q.gradient} shadow-sm active:scale-95 transition-transform`}>
+                  <Icon className="h-5 w-5 text-white" />
                 </div>
-                <span className="text-[10px] font-medium text-muted-foreground">{q.label}</span>
+                <span className="text-[11px] font-medium text-muted-foreground">{q.label}</span>
               </Link>
             </motion.div>
           );
         })}
-
       </div>
 
       <Sheet open={editOpen} onOpenChange={setEditOpen}>
