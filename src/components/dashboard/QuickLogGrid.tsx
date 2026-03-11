@@ -26,7 +26,12 @@ export default function QuickLogGrid() {
 
   return (
     <div>
-      <EditableText elementKey="quicklog.title" defaultText="Quick Log" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3" />
+      <div className="flex items-center justify-between mb-3">
+        <EditableText elementKey="quicklog.title" defaultText="Quick Log" tag="h2" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider" />
+        <button onClick={() => setEditOpen(true)} className="p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors">
+          <Pencil className="h-3.5 w-3.5" />
+        </button>
+      </div>
       <div className="flex items-start gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-0.5 pb-1">
         {visibleItems.map((q, i) => {
           const Icon = q.icon;
