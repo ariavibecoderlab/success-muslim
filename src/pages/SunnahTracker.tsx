@@ -141,12 +141,12 @@ const SunnahTracker = () => {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 1.2 }}
-                  className="absolute inset-0 z-10 flex items-center justify-center bg-primary/10 backdrop-blur-sm rounded-xl"
-                >
-                  <div className="text-center">
-                    <Trophy className="h-10 w-10 text-primary mx-auto mb-1" />
-                    <p className="text-lg font-bold text-primary">All Done!</p>
-                    <p className="text-xs text-muted-foreground">Masha'Allah, keep it up!</p>
+                   className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-sm rounded-xl"
+                 >
+                   <div className="text-center">
+                     <Trophy className="h-10 w-10 text-white mx-auto mb-1" />
+                     <p className="text-lg font-bold text-white">All Done!</p>
+                     <p className="text-xs text-white/60">Masha'Allah, keep it up!</p>
                   </div>
                 </motion.div>
               )}
