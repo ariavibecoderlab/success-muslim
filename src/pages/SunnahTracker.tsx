@@ -204,7 +204,7 @@ const SunnahTracker = () => {
         <AnimatePresence>
           {editing && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-              <Card>
+              <Card className="rounded-xl border-0 shadow-sm">
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">Configure Items</h3>

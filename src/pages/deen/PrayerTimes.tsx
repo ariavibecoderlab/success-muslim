@@ -523,7 +523,7 @@ const PrayerTimes = () => {
               })}
             </div>
           ) : (
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-6 text-center text-sm text-muted-foreground">
                 Unable to fetch prayer times. Check your location and try again.
               </CardContent>

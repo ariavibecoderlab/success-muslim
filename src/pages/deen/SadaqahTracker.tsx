@@ -278,7 +278,7 @@ const SadaqahTracker = () => {
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Recent Donations</h3>
             {donations.slice(0, 10).map(d => (
               <motion.div key={d.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card>
+                <Card className="rounded-xl border-0 shadow-sm">
                   <CardContent className="p-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">

@@ -279,7 +279,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Hadith */}
-        <Card className="bg-secondary/30 border-none">
+        <Card className="bg-secondary/30 border-0 rounded-xl shadow-sm">
           <CardContent className="p-4 text-center">
             <Moon className="h-5 w-5 mx-auto text-primary mb-2" />
             <p className="text-xs text-muted-foreground italic">

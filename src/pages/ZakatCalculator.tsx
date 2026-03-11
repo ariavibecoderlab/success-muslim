@@ -213,7 +213,7 @@ const ZakatCalculator = () => {
             {showHistory && (
               <div className="space-y-2">
                 {history.slice(0, 10).map(h => (
-                  <Card key={h.id}>
+                  <Card key={h.id} className="rounded-xl border-0 shadow-sm">
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between text-sm">
                         <div>

@@ -392,7 +392,7 @@ const QiyamPlanner = () => {
 
         {/* Recent Logs */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4">
               <p className="text-xs font-semibold text-muted-foreground mb-3">Recent Nights</p>
               {logs.length === 0 ? (

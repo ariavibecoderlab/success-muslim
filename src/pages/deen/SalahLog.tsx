@@ -88,7 +88,7 @@ const SalahLog = () => {
                             key={status}
                             size="sm"
                             variant={current === status ? 'default' : 'outline'}
-                            className="h-7 text-[10px] px-2"
+                            className="h-7 text-[10px] px-2 rounded-lg"
                             onClick={() => handleStatus(prayer, status)}
                           >
                             {label}

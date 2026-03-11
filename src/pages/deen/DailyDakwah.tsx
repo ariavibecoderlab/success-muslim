@@ -139,7 +139,7 @@ const DailyDakwah = () => {
             </p>
             <div className="grid grid-cols-2 gap-3">
               {posters.slice(1).map(poster => (
-                <Card key={poster.id} className="overflow-hidden">
+                <Card key={poster.id} className="overflow-hidden rounded-xl border-0 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200">
                   <CardContent className="p-0">
                     <img
                       src={poster.image_url}

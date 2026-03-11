@@ -257,7 +257,7 @@ const HajjUmrahPlanner = () => {
 
             {/* Packing Checklist */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <Card>
+              <Card className="rounded-xl border-0 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-semibold flex items-center gap-1">
