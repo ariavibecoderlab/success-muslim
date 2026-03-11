@@ -54,18 +54,17 @@ export default function HeroPrayerCard() {
   if (allDone) {
     return (
       <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl overflow-hidden">
-        <CardContent className="p-5 text-center relative">
-          <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
-          <Star className="h-10 w-10 mx-auto mb-3 text-yellow-200" />
+        <CardContent className="p-4 text-center relative">
+          <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
+          <Star className="h-8 w-8 mx-auto mb-2 text-yellow-200" />
           <p className="text-xl font-bold">MasyaAllah!</p>
           <p className="text-sm opacity-90 mt-1">Semua solat hari ini selesai</p>
-          <div className="flex justify-center gap-2 mt-4">
+          <div className="flex justify-center gap-2 mt-3">
             {SALAH_NAMES.map((name, i) => {
               const Icon = PRAYER_ICONS[i];
               return (
-                <div key={name} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
-                  <Icon className="h-4 w-4" />
-                </div>
+                <div key={name} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                  <Icon className="h-3.5 w-3.5" />
               );
             })}
           </div>
