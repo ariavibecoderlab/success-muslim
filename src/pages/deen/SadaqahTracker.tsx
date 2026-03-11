@@ -174,7 +174,7 @@ const SadaqahTracker = () => {
         </div>
 
         {/* Monthly Goal Progress */}
-        <Card className={goal ? 'border-primary/20 bg-primary/5' : ''}>
+        <Card className={`rounded-xl border-0 shadow-sm ${goal ? 'bg-primary/5' : ''}`}>
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
