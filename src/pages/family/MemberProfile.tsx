@@ -75,7 +75,7 @@ const MemberProfile = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="max-w-lg mx-auto px-4 pt-3 pb-4">
+      <div className="max-w-md mx-auto px-4 pt-3 pb-4">
         <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/family/${familyId}/dashboard`)}>
             <ArrowLeft className="h-4 w-4" />
