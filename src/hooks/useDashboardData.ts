@@ -141,6 +141,6 @@ export function useDashboardData() {
     ramadanDay: ramadanDay || 0,
     activeIF: activeFast,
     widgetPrefs,
-    dailyDhikrCount: lifeScoreInput?.dhikrCount ?? 0,
+    dailyDhikrCount: dhikrCount,
   };
 }
