@@ -175,21 +175,21 @@ const DeenFasting = () => {
 
         {/* Stats Strip */}
         <div className="grid grid-cols-3 gap-2">
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Flame className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{fastingStreak}</p>
               <p className="text-[9px] text-muted-foreground">Streak</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Calendar className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{totalFastedThisMonth}</p>
               <p className="text-[9px] text-muted-foreground">This Month</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-3 text-center">
               <Moon className="h-4 w-4 text-primary mx-auto mb-1" />
               <p className="text-lg font-bold">{totalFastedAllTime}</p>
