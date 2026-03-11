@@ -130,8 +130,6 @@ export function useDashboardData() {
   const { isRamadan, ramadanDay } = useHijriDate();
   const { isActiveFast, activeFast } = useFastingStore();
 
-  const widgetPrefs = useWidgetPreferences();
-
   return {
     displayName,
     announcements,
@@ -140,7 +138,6 @@ export function useDashboardData() {
     isRamadan,
     ramadanDay: ramadanDay || 0,
     activeIF: activeFast,
-    widgetPrefs,
     dailyDhikrCount: dhikrCount,
   };
 }
