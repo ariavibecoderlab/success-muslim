@@ -27,7 +27,7 @@ const AppHeader = ({
           <img src={smlogo} alt="Success Muslim" className="w-9 h-9 rounded-xl object-contain shrink-0" />
           {rotatingContent || (
             <span className="text-base font-bold tracking-tight text-foreground leading-tight">
-              Success Muslim
+              {title}
             </span>
           )}
         </Link>
