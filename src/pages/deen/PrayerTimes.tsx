@@ -377,15 +377,15 @@ const PrayerTimes = () => {
         {data && !loading && nextPrayer && (
           <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md overflow-hidden relative">
             <CardContent className="p-6 text-center space-y-2 relative z-10">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] font-medium">Next Prayer</p>
+               <p className="text-[10px] text-white/70 uppercase tracking-[0.2em] font-medium">Next Prayer</p>
               <div className="flex items-center justify-center gap-2">
                 {PRAYER_ICONS[nextPrayer.key]}
-                <p className="text-2xl font-bold text-primary">{nextPrayer.name}</p>
+                <p className="text-2xl font-bold">{nextPrayer.name}</p>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/70">
                 {formatPrayerTime(getEffectiveTime(nextPrayer))}
                 {nextPrayer.mosqueTime && (
-                  <span className="ml-2 text-[10px] bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  <span className="ml-2 text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full">
                     <Building2 className="h-2.5 w-2.5 inline mr-0.5" />
                     Mosque
                   </span>
