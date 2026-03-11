@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Star, BookOpen, Droplets, Moon, BedDouble, Dumbbell, ListChecks, HandHeart, Settings2 } from 'lucide-react';
+import { Star, BookOpen, Droplets, Moon, BedDouble, Dumbbell, ListChecks, HandHeart, Pencil } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Switch } from '@/components/ui/switch';
