@@ -120,7 +120,7 @@ export function useDashboardData() {
   const { data: displayName = '' } = useDisplayName();
   const { data: announcements = [] } = useAnnouncements();
   const { lifeScore, weeklyScores } = useLifeScore();
-  const { isRamadan } = useHijriDate();
+  const { isRamadan, ramadanDay } = useHijriDate();
   const { isActiveFast, activeFast } = useFastingStore();
 
   const widgetPrefs = useWidgetPreferences();
@@ -131,6 +131,7 @@ export function useDashboardData() {
     lifeScore,
     weeklyScores,
     isRamadan,
+    ramadanDay: ramadanDay || 0,
     activeIF: activeFast,
     widgetPrefs,
   };
