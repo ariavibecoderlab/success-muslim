@@ -1,27 +1,25 @@
 
 
-## Mobile App Conversion
+## Make App Mobile-First on All Screen Sizes
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+The goal is to constrain the entire app to a phone-like max-width even on desktop/tablet, centering it on screen. This gives a consistent mobile app feel regardless of viewport.
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+### Approach
 
-### Two Options
+**1. Global wrapper in `AppLayout.tsx`** — Add a `max-w-md mx-auto` (448px) container that wraps the entire app content + bottom nav, with a subtle border on large screens to frame it like a phone.
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+**2. Update `AppHeader.tsx`** — Change `max-w-4xl` to `max-w-md` so the header stays within the phone frame.
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+**3. Update `Dashboard.tsx`** — Change `max-w-4xl` to `max-w-md` on the main content area.
 
-### What the Conversion Involves
+**4. Update `SubPageLayout.tsx`** — Change `max-w-4xl` to `max-w-md` on the nav bar.
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+**5. Update `BottomNav.tsx`** — Change `max-w-lg` to `max-w-md` so the nav aligns with the content frame.
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+**6. Bulk update remaining pages** — Several pages (Wealth, Deen, Health, About, etc.) use `max-w-4xl` or `max-w-lg`. All inner content containers get changed to `max-w-md`.
 
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+**7. Root-level constraint** — In `index.css` or `AppLayout`, add a root wrapper div with `max-w-md mx-auto min-h-screen` and optionally `shadow-lg` on `sm:` breakpoint to create a phone-frame effect on desktop.
+
+### Result
+On large screens the app appears as a centered ~448px-wide column (like viewing a phone app), with optional subtle shadow borders. On mobile it fills the screen as normal.
 
