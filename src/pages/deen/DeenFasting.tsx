@@ -199,7 +199,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Sunnah progress */}
-        <Card>
+         <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold">Sunnah Days This Month</h3>
