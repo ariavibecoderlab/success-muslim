@@ -68,10 +68,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: `Puasa IF — ${elapsed} berlalu`,
         subtitle: `${activeIF.mode} · teruskan momentum!`,
         href: '/health/if-timer',
-        gradientFrom: 'from-emerald-50 dark:from-emerald-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
-        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        iconBg: 'bg-emerald-500/20 ring-emerald-500/30',
+        iconColor: 'text-emerald-400',
       });
     }
 
@@ -89,10 +87,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: salahMsg,
         subtitle: '0/5 solat · tap untuk log',
         href: '/iman/prayer-times',
-        gradientFrom: 'from-rose-50 dark:from-rose-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-rose-100 dark:bg-rose-900/40',
-        iconColor: 'text-rose-600 dark:text-rose-400',
+        iconBg: 'bg-rose-500/20 ring-rose-500/30',
+        iconColor: 'text-rose-400',
       });
     } else if (salahCount.logged >= 1 && salahCount.logged < 5) {
       result.push({
@@ -102,10 +98,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
           ? `${salahCount.onTime} on-time · keep going`
           : 'Setiap solat dikira',
         href: '/iman/salah-log',
-        gradientFrom: 'from-orange-50 dark:from-orange-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-orange-100 dark:bg-orange-900/40',
-        iconColor: 'text-orange-600 dark:text-orange-400',
+        iconBg: 'bg-orange-500/20 ring-orange-500/30',
+        iconColor: 'text-orange-400',
       });
     } else if (salahCount.logged >= 5) {
       result.push({
@@ -113,10 +107,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: '5/5 solat — MasyaAllah, konsisten!',
         subtitle: 'Jangan sampai putus streak',
         href: '/iman/salah-log',
-        gradientFrom: 'from-emerald-50 dark:from-emerald-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
-        iconColor: 'text-emerald-600 dark:text-emerald-400',
+        iconBg: 'bg-emerald-500/20 ring-emerald-500/30',
+        iconColor: 'text-emerald-400',
       });
     }
 
@@ -127,10 +119,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: 'Belum baca Quran hari ini',
         subtitle: '1 muka surat sebelum tidur?',
         href: '/iman/quran',
-        gradientFrom: 'from-blue-50 dark:from-blue-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-blue-100 dark:bg-blue-900/40',
-        iconColor: 'text-blue-600 dark:text-blue-400',
+        iconBg: 'bg-blue-500/20 ring-blue-500/30',
+        iconColor: 'text-blue-400',
       });
     }
 
@@ -141,10 +131,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: 'Belum dzikir hari ini',
         subtitle: 'SubhanAllah 33x — hanya 2 minit',
         href: '/iman/dhikr',
-        gradientFrom: 'from-purple-50 dark:from-purple-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-        iconColor: 'text-purple-600 dark:text-purple-400',
+        iconBg: 'bg-purple-500/20 ring-purple-500/30',
+        iconColor: 'text-purple-400',
       });
     }
 
@@ -156,10 +144,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         title: `Hari ${dayName} — puasa sunat?`,
         subtitle: 'Sunnah Nabi ﷺ setiap Isnin & Khamis',
         href: '/iman/fasting',
-        gradientFrom: 'from-teal-50 dark:from-teal-950/30',
-        gradientTo: 'to-transparent',
-        iconBg: 'bg-teal-100 dark:bg-teal-900/40',
-        iconColor: 'text-teal-600 dark:text-teal-400',
+        iconBg: 'bg-teal-500/20 ring-teal-500/30',
+        iconColor: 'text-teal-400',
       });
     }
 
@@ -171,10 +157,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
           title: `Hari ke-${ramadanDay} — bulan rahmat`,
           subtitle: 'Perbanyak istighfar & sedekah',
           href: '/iman/ramadan',
-          gradientFrom: 'from-purple-50 dark:from-purple-950/30',
-          gradientTo: 'to-transparent',
-          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-          iconColor: 'text-purple-600 dark:text-purple-400',
+          iconBg: 'bg-purple-500/20 ring-purple-500/30',
+          iconColor: 'text-purple-400',
         });
       } else if (ramadanDay <= 20) {
         result.push({
@@ -182,10 +166,8 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
           title: `Hari ke-${ramadanDay} — bulan keampunan`,
           subtitle: 'Jaga konsistensi, perbanyak doa',
           href: '/iman/ramadan',
-          gradientFrom: 'from-purple-50 dark:from-purple-950/30',
-          gradientTo: 'to-transparent',
-          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
-          iconColor: 'text-purple-600 dark:text-purple-400',
+          iconBg: 'bg-purple-500/20 ring-purple-500/30',
+          iconColor: 'text-purple-400',
         });
       }
     }
@@ -209,17 +191,17 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         {cards.map((card, i) => (
           <motion.div key={i} variants={staggerItem}>
             <Link to={card.href}>
-              <Card className={`border-0 shadow-sm hover:shadow-md rounded-xl transition-all duration-200 active:scale-[0.98] backdrop-blur-sm bg-gradient-to-r ${card.gradientFrom} ${card.gradientTo}`}>
+              <Card className="border border-white/5 shadow-sm hover:shadow-md rounded-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-br from-slate-800 to-slate-900 text-white">
                 <CardContent className="p-3 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl ${card.iconBg} ring-1 ring-black/5 dark:ring-white/10 flex items-center justify-center shrink-0`}>
+                  <div className={`w-10 h-10 rounded-xl ${card.iconBg} ring-1 flex items-center justify-center shrink-0`}>
                     <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold leading-snug line-clamp-2">{card.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{card.subtitle}</p>
+                    <p className="text-[13px] font-semibold leading-snug line-clamp-2 text-white">{card.title}</p>
+                    <p className="text-xs text-white/60 mt-0.5">{card.subtitle}</p>
                   </div>
-                  <div className="w-6 h-6 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/70" />
+                  <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                    <ChevronRight className="h-3.5 w-3.5 text-white/50" />
                   </div>
                 </CardContent>
               </Card>
