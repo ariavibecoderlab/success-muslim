@@ -284,14 +284,14 @@ const QiyamPlanner = () => {
         {/* Streak & Stats */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <div className="grid grid-cols-2 gap-3">
-            <Card>
+             <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
                 <p className="text-2xl font-bold">{streak}</p>
                 <p className="text-[10px] text-muted-foreground">Night Streak</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-xl border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <Moon className="h-5 w-5 text-primary mx-auto mb-1" />
                 <p className="text-2xl font-bold">{last30}/30</p>
