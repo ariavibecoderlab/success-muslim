@@ -131,7 +131,7 @@ const DeenFasting = () => {
 
         {/* Suhoor & Iftar Card */}
         {prayerData && fajrTime && maghribTime && (
-          <Card className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20">
+          <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
