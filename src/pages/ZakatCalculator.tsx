@@ -142,7 +142,7 @@ const ZakatCalculator = () => {
         </Card>
 
         {/* Input Fields */}
-        <Card>
+        <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-5 space-y-4">
             {fields.map(f => (
               <div key={f.label} className="space-y-1.5">
