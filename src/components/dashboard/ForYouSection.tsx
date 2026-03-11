@@ -191,7 +191,7 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
         {cards.map((card, i) => (
           <motion.div key={i} variants={staggerItem}>
             <Link to={card.href}>
-              <Card className="border border-white/5 shadow-sm hover:shadow-md rounded-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-br from-slate-800 to-slate-900 text-white">
+              <Card className="border border-orange-600/20 shadow-sm hover:shadow-md rounded-xl transition-all duration-200 active:scale-[0.98] bg-gradient-to-br from-orange-800 to-orange-900 text-white">
                 <CardContent className="p-3 flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-xl ${card.iconBg} ring-1 flex items-center justify-center shrink-0`}>
                     <card.icon className={`h-[18px] w-[18px] ${card.iconColor}`} />
