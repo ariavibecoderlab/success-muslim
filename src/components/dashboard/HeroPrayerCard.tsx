@@ -65,7 +65,7 @@ export default function HeroPrayerCard() {
               return (
                 <div key={name} className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
                   <Icon className="h-3.5 w-3.5" />
-              );
+                </div>
             })}
           </div>
         </CardContent>
