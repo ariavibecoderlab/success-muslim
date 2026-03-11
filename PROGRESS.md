@@ -1,7 +1,25 @@
 # Success Muslim — MVP v3 Implementation Progress
 
-> **Last Updated:** 2026-02-28
+> **Last Updated:** 2026-03-11
 > **Strategy:** Build in priority order (P0 → P1 → P2). Update this file after each session.
+
+---
+
+## 🐛 Bug Sweep — 9 Fixes Applied (2026-03-11)
+
+| Fix | Bug | Status | Notes |
+|-----|-----|--------|-------|
+| FIX 3 | `handleClearCache` wipes auth tokens | ✅ | Selective clear preserving `sb-*`, onboarding, fasting state |
+| FIX 4 | `weeklyScores` not reactive | ✅ | Added `lifeScore` as `useMemo` dependency |
+| FIX 5 | `activeIF` not reactive in Dashboard | ✅ | Replaced `getActiveIF()` with `useFastingStore()` |
+| FIX 6 | Productivity uses raw localStorage | ✅ | Switched to `useDailyTasks`, `useHabits`, `useHabitLog` hooks |
+| FIX 7 | Ramadhan Qada localStorage only | ✅ | Created `useRamadhanQada` React Query hook in `useQadaQuery.ts` |
+| FIX 8 | Fidyah localStorage only | ✅ | Created `useFidyahHistory` hook + updated Fidyah page |
+| FIX 9 | IF Timer dual competing intervals | ✅ | Consolidated into single `setInterval` |
+| FIX 11 | Deen.tsx direct localStorage reads | ✅ | Replaced with `useQadaSolat`, `useRamadhanQada`, `useFidyahHistory` |
+| FIX 13 | Hardcoded HSL colors | ✅ | Replaced with `hsl(var(--primary))` / `hsl(var(--accent))` tokens |
+
+**Skipped (non-issues after investigation):** FIX 1 (forwardRef), FIX 2 (avatars bucket), FIX 10 (unique constraint), FIX 12 (BottomNav), FIX 14 (Wealth header)
 
 ---
 
