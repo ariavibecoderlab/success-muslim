@@ -121,7 +121,7 @@ export function useDashboardData() {
   const { data: announcements = [] } = useAnnouncements();
   const { lifeScore, weeklyScores } = useLifeScore();
   const { isRamadan } = useHijriDate();
-  const activeIF = getActiveIF();
+  const { isActiveFast, activeFast } = useFastingStore();
 
   const widgetPrefs = useWidgetPreferences();
 
@@ -131,7 +131,7 @@ export function useDashboardData() {
     lifeScore,
     weeklyScores,
     isRamadan,
-    activeIF,
+    activeIF: activeFast,
     widgetPrefs,
   };
 }

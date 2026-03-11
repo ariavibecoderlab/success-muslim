@@ -178,12 +178,7 @@ const HealthIFTimer = () => {
     return Math.max(0, now - lastEnd);
   }, [sessions, now]);
 
-  // Tick for inactive/scheduled view too
-  useEffect(() => {
-    if (active && !scheduledStart) return;
-    const interval = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(interval);
-  }, [active, scheduledStart]);
+  // (removed — consolidated into single interval above)
 
   // Auto-start scheduled fast when time arrives
   useEffect(() => {

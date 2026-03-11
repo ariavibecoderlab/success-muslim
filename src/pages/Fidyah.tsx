@@ -3,11 +3,14 @@ import { Calculator, Info, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { saveFidyahEntry, getFidyahHistory } from '@/lib/storage';
+import { saveFidyahEntry } from '@/lib/storage';
+import { useFidyahHistory } from '@/hooks/useFidyahQuery';
 import { FidyahEntry } from '@/lib/types';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
 import { fadeUp } from '@/components/dashboard/constants';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
 
 const CURRENCIES = ['MYR', 'USD', 'GBP', 'EUR', 'SAR', 'IDR', 'SGD'];
 
@@ -18,11 +21,13 @@ const IMAN_TRACKERS = [
 ];
 
 const FidyahPage = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { data: history = [] } = useFidyahHistory();
   const [days, setDays] = useState<number>(1);
   const [costPerMeal, setCostPerMeal] = useState<number>(7);
   const [currency, setCurrency] = useState('MYR');
   const [result, setResult] = useState<number | null>(null);
-  const [history, setHistory] = useState(getFidyahHistory());
 
   const calculate = () => {
     const total = days * costPerMeal;
@@ -33,7 +38,7 @@ const FidyahPage = () => {
       date: new Date().toISOString(),
     };
     saveFidyahEntry(entry);
-    setHistory(getFidyahHistory());
+    queryClient.invalidateQueries({ queryKey: ['fidyah', user?.id ?? 'anon'] });
   };
 
   return (

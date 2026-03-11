@@ -94,7 +94,7 @@ const HealthSteps = () => {
 
   const chartData = history.map(h => ({
     ...h,
-    fill: h.steps >= prefs.dailyTarget ? 'hsl(142, 71%, 45%)' : 'hsl(var(--muted-foreground) / 0.3)',
+    fill: h.steps >= prefs.dailyTarget ? 'hsl(var(--primary))' : 'hsl(var(--muted-foreground) / 0.3)',
   }));
 
   const earnedMilestones = MILESTONES.filter(m =>

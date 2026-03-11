@@ -14,7 +14,7 @@ interface Props {
 }
 
 function getLevelColor(level: number): string {
-  if (level <= 3) return 'hsl(142, 70%, 45%)';
+  if (level <= 3) return 'hsl(var(--primary))';
   if (level <= 6) return 'hsl(172, 66%, 45%)';
   if (level <= 8) return 'hsl(210, 70%, 50%)';
   return 'hsl(260, 60%, 55%)';
