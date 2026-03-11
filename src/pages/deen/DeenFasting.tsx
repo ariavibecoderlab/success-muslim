@@ -226,7 +226,7 @@ const DeenFasting = () => {
         </div>
 
         {/* Calendar */}
-        <Card>
+        <Card className="rounded-xl border-0 shadow-sm">
           <CardContent className="p-3">
             <div className="grid grid-cols-7 gap-1 mb-1">
               {DAY_LABELS.map((d, i) => (
