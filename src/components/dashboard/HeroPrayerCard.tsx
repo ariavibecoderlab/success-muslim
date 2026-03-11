@@ -76,7 +76,7 @@ export default function HeroPrayerCard() {
 
   return (
     <Link to="/iman/prayer-times">
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white rounded-2xl overflow-hidden">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
         <CardContent className="p-4 relative">
           {/* Decorative moon */}
           <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
