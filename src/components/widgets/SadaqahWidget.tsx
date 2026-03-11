@@ -45,7 +45,7 @@ export default function SadaqahWidget({ size }: { size: WidgetSize }) {
   if (size === 'small') {
     return (
       <Link to="/iman/sadaqah">
-        <Card className="hover:shadow-sm transition-shadow">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-3 text-center">
             <Heart className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className="text-sm font-bold">{currency} {monthTotal}</p>
@@ -58,14 +58,14 @@ export default function SadaqahWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/iman/sadaqah">
-      <Card className="hover:shadow-sm transition-shadow">
-        <CardContent className="p-4">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Heart className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold">💰 Sadaqah This Month</p>
+              <p className="text-sm font-semibold">Sadaqah This Month</p>
               <p className="text-xs text-muted-foreground">{currency} {monthTotal} / {currency} {goal} goal</p>
             </div>
           </div>

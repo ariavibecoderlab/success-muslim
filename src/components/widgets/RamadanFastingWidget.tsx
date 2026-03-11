@@ -18,7 +18,6 @@ export default function RamadanFastingWidget({ size }: { size: WidgetSize }) {
 
   useEffect(() => {
     if (!prayerData) return;
-    // Maghrib = index 3
     const tick = () => setIftarCountdown(getCountdownToNextPrayer(prayerData.timings, 3));
     tick();
     const interval = setInterval(tick, 1000);
@@ -30,7 +29,7 @@ export default function RamadanFastingWidget({ size }: { size: WidgetSize }) {
   if (size === 'small') {
     return (
       <Link to="/iman/ramadan">
-        <Card className="hover:shadow-sm transition-shadow bg-primary/5">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow bg-primary/5">
           <CardContent className="p-3 text-center">
             <Moon className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className="text-sm font-bold">Day {ramadanDay}</p>
@@ -43,14 +42,14 @@ export default function RamadanFastingWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/iman/ramadan">
-      <Card className="hover:shadow-sm transition-shadow bg-primary/5 border-primary/10">
-        <CardContent className="p-4">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow bg-primary/5">
+        <CardContent className="p-3">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Moon className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-sm font-semibold">🌙 Ramadan Fasting</p>
+              <p className="text-sm font-semibold">Ramadan Fasting</p>
               <p className="text-xs text-muted-foreground">Iftar in {iftarCountdown}</p>
             </div>
           </div>
