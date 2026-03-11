@@ -1,27 +1,23 @@
 
 
-## Mobile App Conversion
+## Polish "For You" Section — Visual Upgrade
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+### Changes to `src/components/dashboard/ForYouSection.tsx`
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+**1. Section header**: Change "Untuk Kamu" → "For You"
 
-### Two Options
+**2. Card visual redesign** — make each card feel premium and tappable:
+- Increase icon container to `w-10 h-10` with `rounded-xl` and add a subtle inner shadow/ring
+- Add a faint colored ring/border to the icon container (e.g. `ring-1 ring-emerald-200/50`) for depth
+- Bump title to `text-[13px]` and subtitle to `text-xs` for slightly better readability
+- Add `active:scale-[0.98]` and `transition-all duration-200` for a tactile press effect
+- Use `shadow-sm hover:shadow-md` with `rounded-xl` on cards for softer corners
+- Add a subtle right-side accent: style the ChevronRight with a small pill background (`w-6 h-6 rounded-full bg-black/5`) to make the action hint more visible
+- Remove `truncate` on title — allow 2 lines with `line-clamp-2` so contextual messages aren't cut off
+- Add `backdrop-blur-sm` for a frosted glass feel on the gradient cards
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+**3. Keep all existing logic untouched** — only the render/styling changes.
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
-
-### What the Conversion Involves
-
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
-
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
-
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+### Files modified
+- `src/components/dashboard/ForYouSection.tsx` — header text + card styling only
 
