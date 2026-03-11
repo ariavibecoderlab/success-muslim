@@ -1,22 +1,27 @@
 
 
-## Polish Fidyah Page to Align with Iman Design
+## Mobile App Conversion
 
-The current Fidyah page has basic card layouts but lacks the refined visual density and polish of the Iman (Deen) page. Here's what needs to change:
+Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
 
-### Changes to `src/pages/Fidyah.tsx`
+Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
 
-**1. Richer Hero Card** — Replace the simple icon+text hero with a gradient card similar to the Iman prayer hero: emerald-to-teal gradient background, white text, `border-0 shadow-md`, with a pulsing icon container (`bg-white/15 backdrop-blur-sm`).
+### Two Options
 
-**2. Calculator Card Polish** — Tighten spacing, add section header (`text-xs font-semibold uppercase tracking-wider`), use `border-0 shadow-sm` card style. Currency pills get active state with `bg-primary text-primary-foreground` instead of just border highlight.
+**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
 
-**3. Result Card Enhancement** — Add a scale-in animation, use the same `border-0 shadow-md` gradient style. Add a breakdown row showing days × cost formula in muted text.
+**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
 
-**4. Educational Card** — Match the Iman quote banner style: `border-0 shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20`.
+### What the Conversion Involves
 
-**5. History Section** — Add section header matching Iman's "Today's Progress" style. History items get tighter layout with `text-[11px]` dates, proper dividers, and gradient icon containers.
+1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
+2. Initialize Capacitor with config pointing to your app
+3. Configure live-reload for development via your preview URL
+4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
 
-**6. Animation Alignment** — Use `fadeUp` with custom delay indices (matching Iman's `custom={1}`, `custom={2}` pattern) instead of just `staggerItem` for top-level sections. Keep `staggerContainer` for list items.
+### Known Blocker
+Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
 
-**7. Overall Styling** — Remove `hover:shadow-md` (Iman doesn't use it), use `border-0 shadow-sm` for regular cards and `border-0 shadow-md` for hero/accent cards. Match the `space-y-5` rhythm and `px-5 py-6` container padding from Iman.
+### Next Steps
+If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
 
