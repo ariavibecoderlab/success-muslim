@@ -185,7 +185,7 @@ const HajjUmrahPlanner = () => {
           <>
             {/* Progress Overview */}
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-              <Card className="border-primary/20">
+              <Card className="border-0 rounded-xl shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-sm font-semibold">Manasik Progress</p>
