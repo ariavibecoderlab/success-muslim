@@ -1,14 +1,17 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Timer, Flame, Heart, BookOpen, Moon as MoonIcon } from 'lucide-react';
+import { Timer, Flame, Heart, BookOpen, Moon as MoonIcon, ChevronRight, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
+import { motion } from 'framer-motion';
+import { staggerContainer, staggerItem } from './constants';
 
 interface ForYouProps {
   isRamadan: boolean;
   ramadanDay: number;
   activeIF: any;
   quranReadToday?: boolean;
+  dhikrCount?: number;
 }
 
 interface ForYouCard {
@@ -16,63 +19,108 @@ interface ForYouCard {
   title: string;
   subtitle: string;
   href: string;
-  borderColor: string;
+  gradientFrom: string;
+  gradientTo: string;
+  iconBg: string;
   iconColor: string;
 }
 
-export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranReadToday }: ForYouProps) {
+function formatElapsed(startTime: string): string {
+  const elapsed = Math.floor((Date.now() - new Date(startTime).getTime()) / 1000);
+  const h = Math.floor(elapsed / 3600);
+  const m = Math.floor((elapsed % 3600) / 60);
+  if (h > 0) return `${h}j ${m}m`;
+  return `${m} minit`;
+}
+
+export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranReadToday, dhikrCount = 0 }: ForYouProps) {
   const salahCount = useTodaySalahCount();
   const hour = new Date().getHours();
+  const dayOfWeek = new Date().getDay(); // 0=Sun, 1=Mon, 4=Thu
 
   const cards = useMemo((): ForYouCard[] => {
     const result: ForYouCard[] = [];
 
     // Ramadan last 10
     if (isRamadan && ramadanDay > 20) {
+      const isOddNight = ramadanDay % 2 === 1;
       result.push({
         icon: MoonIcon,
         title: ramadanDay === 27
           ? 'Malam Laylatul Qadr'
-          : '10 Malam Terakhir Ramadan',
+          : isOddNight
+            ? `Malam ke-${ramadanDay} — malam ganjil!`
+            : `10 Malam Terakhir — hari ke-${ramadanDay}`,
         subtitle: ramadanDay === 27
-          ? 'Lebih baik dari 1000 bulan'
-          : 'Perbanyak ibadah, cari Laylatul Qadr',
+          ? 'Lebih baik dari 1000 bulan — perbanyak doa'
+          : isOddNight
+            ? 'Perbanyak ibadah malam ganjil'
+            : 'Jaga momentum ibadah',
         href: '/iman/ramadan',
-        borderColor: 'border-l-amber-500',
-        iconColor: 'text-amber-500',
+        gradientFrom: 'from-amber-50 dark:from-amber-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-amber-100 dark:bg-amber-900/40',
+        iconColor: 'text-amber-600 dark:text-amber-400',
       });
     }
 
-    // Active IF fast
+    // Active IF fast with elapsed time
     if (activeIF) {
+      const elapsed = formatElapsed(activeIF.startTime);
       result.push({
         icon: Timer,
-        title: 'Puasa IF sedang berjalan',
-        subtitle: 'Tetap semangat! Lihat progress kamu',
+        title: `Puasa IF — ${elapsed} berlalu`,
+        subtitle: `${activeIF.mode} · teruskan momentum!`,
         href: '/health/if-timer',
-        borderColor: 'border-l-emerald-500',
-        iconColor: 'text-emerald-500',
+        gradientFrom: 'from-emerald-50 dark:from-emerald-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+        iconColor: 'text-emerald-600 dark:text-emerald-400',
       });
     }
 
-    // Salah encouragement
-    if (salahCount.logged === 0 && hour >= 8) {
+    // Salah — time-aware copy
+    if (salahCount.logged === 0 && hour >= 5) {
+      const salahMsg = hour < 7
+        ? 'Subuh sudah lepas — log sekarang?'
+        : hour < 13
+          ? 'Belum log solat hari ini'
+          : hour < 16
+            ? 'Zuhur & Asar belum dilog'
+            : 'Maghrib hampir tiba — log solat?';
       result.push({
         icon: Heart,
-        title: 'Yuk mulai solat hari ini',
-        subtitle: 'Allah Maha Pengampun. Semangat!',
+        title: salahMsg,
+        subtitle: '0/5 solat · tap untuk log',
         href: '/iman/prayer-times',
-        borderColor: 'border-l-emerald-500',
-        iconColor: 'text-emerald-500',
+        gradientFrom: 'from-rose-50 dark:from-rose-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-rose-100 dark:bg-rose-900/40',
+        iconColor: 'text-rose-600 dark:text-rose-400',
+      });
+    } else if (salahCount.logged >= 1 && salahCount.logged < 5) {
+      result.push({
+        icon: Flame,
+        title: `${salahCount.logged}/5 solat hari ini — teruskan!`,
+        subtitle: salahCount.onTime > 0
+          ? `${salahCount.onTime} on-time · keep going`
+          : 'Setiap solat dikira',
+        href: '/iman/salah-log',
+        gradientFrom: 'from-orange-50 dark:from-orange-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-orange-100 dark:bg-orange-900/40',
+        iconColor: 'text-orange-600 dark:text-orange-400',
       });
     } else if (salahCount.logged >= 5) {
       result.push({
-        icon: Flame,
-        title: 'MasyaAllah! Solat lengkap hari ini',
-        subtitle: 'Jangan sampai putus ya!',
+        icon: Sparkles,
+        title: '5/5 solat — MasyaAllah, konsisten!',
+        subtitle: 'Jangan sampai putus streak',
         href: '/iman/salah-log',
-        borderColor: 'border-l-orange-500',
-        iconColor: 'text-orange-500',
+        gradientFrom: 'from-emerald-50 dark:from-emerald-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-emerald-100 dark:bg-emerald-900/40',
+        iconColor: 'text-emerald-600 dark:text-emerald-400',
       });
     }
 
@@ -81,10 +129,41 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
       result.push({
         icon: BookOpen,
         title: 'Belum baca Quran hari ini',
-        subtitle: 'Walau 5 menit — barakah tetap ada',
+        subtitle: '1 muka surat sebelum tidur?',
         href: '/iman/quran',
-        borderColor: 'border-l-blue-500',
-        iconColor: 'text-blue-500',
+        gradientFrom: 'from-blue-50 dark:from-blue-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-blue-100 dark:bg-blue-900/40',
+        iconColor: 'text-blue-600 dark:text-blue-400',
+      });
+    }
+
+    // Dhikr nudge (afternoon, no dhikr yet)
+    if (dhikrCount === 0 && hour >= 14 && hour < 20 && result.length < 3) {
+      result.push({
+        icon: Heart,
+        title: 'Belum dzikir hari ini',
+        subtitle: 'SubhanAllah 33x — hanya 2 minit',
+        href: '/iman/dhikr',
+        gradientFrom: 'from-purple-50 dark:from-purple-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+        iconColor: 'text-purple-600 dark:text-purple-400',
+      });
+    }
+
+    // Monday/Thursday sunnah fasting nudge
+    if ((dayOfWeek === 1 || dayOfWeek === 4) && !isRamadan && !activeIF && result.length < 3) {
+      const dayName = dayOfWeek === 1 ? 'Isnin' : 'Khamis';
+      result.push({
+        icon: MoonIcon,
+        title: `Hari ${dayName} — puasa sunat?`,
+        subtitle: 'Sunnah Nabi ﷺ setiap Isnin & Khamis',
+        href: '/iman/fasting',
+        gradientFrom: 'from-teal-50 dark:from-teal-950/30',
+        gradientTo: 'to-transparent',
+        iconBg: 'bg-teal-100 dark:bg-teal-900/40',
+        iconColor: 'text-teal-600 dark:text-teal-400',
       });
     }
 
@@ -93,26 +172,30 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
       if (ramadanDay <= 10) {
         result.push({
           icon: MoonIcon,
-          title: 'Semangat di awal Ramadan!',
-          subtitle: '10 hari pertama — bulan rahmat',
+          title: `Hari ke-${ramadanDay} — bulan rahmat`,
+          subtitle: 'Perbanyak istighfar & sedekah',
           href: '/iman/ramadan',
-          borderColor: 'border-l-purple-500',
-          iconColor: 'text-purple-500',
+          gradientFrom: 'from-purple-50 dark:from-purple-950/30',
+          gradientTo: 'to-transparent',
+          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+          iconColor: 'text-purple-600 dark:text-purple-400',
         });
       } else if (ramadanDay <= 20) {
         result.push({
           icon: MoonIcon,
-          title: 'Pertengahan Ramadan',
-          subtitle: 'Jaga konsistensi ibadah',
+          title: `Hari ke-${ramadanDay} — bulan keampunan`,
+          subtitle: 'Jaga konsistensi, perbanyak doa',
           href: '/iman/ramadan',
-          borderColor: 'border-l-purple-500',
-          iconColor: 'text-purple-500',
+          gradientFrom: 'from-purple-50 dark:from-purple-950/30',
+          gradientTo: 'to-transparent',
+          iconBg: 'bg-purple-100 dark:bg-purple-900/40',
+          iconColor: 'text-purple-600 dark:text-purple-400',
         });
       }
     }
 
     return result.slice(0, 3);
-  }, [isRamadan, ramadanDay, activeIF, salahCount, quranReadToday, hour]);
+  }, [isRamadan, ramadanDay, activeIF, salahCount, quranReadToday, hour, dhikrCount, dayOfWeek]);
 
   if (cards.length === 0) return null;
 
@@ -121,21 +204,31 @@ export default function ForYouSection({ isRamadan, ramadanDay, activeIF, quranRe
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         Untuk Kamu
       </p>
-      {cards.map((card, i) => (
-        <Link key={i} to={card.href}>
-          <Card className={`border-0 border-l-4 ${card.borderColor} shadow-sm hover:shadow-md transition-shadow`}>
-            <CardContent className="p-3 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                <card.icon className={`h-4 w-4 ${card.iconColor}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-semibold truncate">{card.title}</p>
-                <p className="text-[11px] text-muted-foreground">{card.subtitle}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
-      ))}
+      <motion.div
+        className="space-y-2"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
+        {cards.map((card, i) => (
+          <motion.div key={i} variants={staggerItem}>
+            <Link to={card.href}>
+              <Card className={`border-0 shadow-sm hover:shadow-md transition-shadow bg-gradient-to-r ${card.gradientFrom} ${card.gradientTo}`}>
+                <CardContent className="p-3 flex items-center gap-3">
+                  <div className={`w-8 h-8 rounded-lg ${card.iconBg} flex items-center justify-center shrink-0`}>
+                    <card.icon className={`h-4 w-4 ${card.iconColor}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">{card.title}</p>
+                    <p className="text-[11px] text-muted-foreground">{card.subtitle}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+        ))}
+      </motion.div>
     </div>
   );
 }
