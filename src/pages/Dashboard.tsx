@@ -51,7 +51,7 @@ const Dashboard = () => {
         {/* Life Score section */}
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Life Score</p>
-          <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
+          <LifeScoreCard lifeScore={lifeScore} />
         </div>
 
         <QuickLogGrid />

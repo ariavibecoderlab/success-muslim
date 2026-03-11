@@ -13,10 +13,10 @@ export default function DailyCheckinCard() {
     <Card className="border-0 shadow-sm rounded-2xl">
       <CardContent className="p-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-amber-500" />
-            <p className="text-base font-semibold">
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <p className="text-sm font-semibold">
               {claimedToday ? 'Sudah check-in hari ini' : 'Daily Check-in'}
             </p>
           </div>
@@ -27,7 +27,7 @@ export default function DailyCheckinCard() {
               onClick={() => claim()}
               disabled={claiming}
             >
-              Claim +{pointsToday}
+              {claiming ? 'Claiming…' : `Claim +${pointsToday}`}
             </Button>
           )}
           {claimedToday && (
@@ -36,7 +36,7 @@ export default function DailyCheckinCard() {
         </div>
 
         {/* 7-day dots */}
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1.5">
           {POINTS.map((pts, i) => {
             const dayNum = i + 1;
             const isDone = claimedToday ? dayNum <= streakDay : dayNum < streakDay;
@@ -44,7 +44,7 @@ export default function DailyCheckinCard() {
             return (
               <div key={i} className="flex flex-col items-center gap-1">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all ${
                     isDone
                       ? 'bg-emerald-800 text-white'
                       : isCurrent && !claimedToday
@@ -52,7 +52,7 @@ export default function DailyCheckinCard() {
                         : 'bg-muted text-muted-foreground'
                   }`}
                 >
-                  {isDone ? <Check className="h-3.5 w-3.5" /> : dayNum}
+                  {isDone ? <Check className="h-3 w-3" /> : dayNum}
                 </div>
                 <span className="text-[9px] text-muted-foreground">+{pts}</span>
               </div>

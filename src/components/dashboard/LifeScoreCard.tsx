@@ -5,27 +5,26 @@ import { fadeUp } from './constants';
 
 interface Props {
   lifeScore: LifeScore;
-  weeklyScores: { date: string; score: number }[];
 }
 
-export default function LifeScoreCard({ lifeScore, weeklyScores }: Props) {
+export default function LifeScoreCard({ lifeScore }: Props) {
   return (
     <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0.5}>
-      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden rounded-2xl">
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-3">
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white overflow-hidden rounded-2xl">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60">Overall Score</p>
               <p className="text-xs text-white/80 mt-0.5">{getScoreLabel(lifeScore.total)}</p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold leading-tight">
+              <p className="text-2xl font-bold leading-tight">
                 {lifeScore.total}
-                <span className="text-base font-normal text-white/50">/100</span>
+                <span className="text-sm font-normal text-white/50">/100</span>
               </p>
             </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {lifeScore.pillars.map(p => (
               <div key={p.label} className="flex items-center gap-2">
                 <span className="text-[10px] text-white/70 w-20">{p.label} ({Math.round(p.weight * 100)}%)</span>
