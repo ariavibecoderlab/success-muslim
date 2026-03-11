@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Sunrise, Sun, CloudSun, Sunset, Moon, CheckCircle2, Star, Clock, Bell } from 'lucide-react';
+import { toast } from 'sonner';
+import { requestNotificationPermission, getNotificationPermission } from '@/hooks/usePrayerNotifications';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
