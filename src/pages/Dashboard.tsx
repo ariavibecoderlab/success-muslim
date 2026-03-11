@@ -56,6 +56,7 @@ const Dashboard = () => {
           isRamadan={isRamadan}
           ramadanDay={ramadanDay}
           activeIF={activeIF}
+          dhikrCount={dailyDhikrCount}
         />
         <WidgetGrid preferences={preferences} isRamadan={isRamadan} activeIF={activeIF} loading={loading} />
         <DailyQuoteCard />
