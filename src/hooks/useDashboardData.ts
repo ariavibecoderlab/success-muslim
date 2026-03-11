@@ -126,7 +126,7 @@ function useLifeScore() {
 export function useDashboardData() {
   const { data: displayName = '' } = useDisplayName();
   const { data: announcements = [] } = useAnnouncements();
-  const { lifeScore, weeklyScores } = useLifeScore();
+  const { lifeScore, weeklyScores, dhikrCount } = useLifeScore();
   const { isRamadan, ramadanDay } = useHijriDate();
   const { isActiveFast, activeFast } = useFastingStore();
 
