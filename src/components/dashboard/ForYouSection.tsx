@@ -19,8 +19,6 @@ interface ForYouCard {
   title: string;
   subtitle: string;
   href: string;
-  gradientFrom: string;
-  gradientTo: string;
   iconBg: string;
   iconColor: string;
 }
