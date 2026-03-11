@@ -170,21 +170,21 @@ const ZakatCalculator = () => {
                 <h3 className="font-semibold text-sm">
                  {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'} 
                 </h3>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <p className="text-xs text-muted-foreground">Total Wealth</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Total Wealth</p>
                     <p className="font-semibold">{currency} {result.totalWealth.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Net Zakatable</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Net Zakatable</p>
                     <p className="font-semibold">{currency} {result.netZakatable.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Gold 85g)</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Nisab (Gold 85g)</p>
                     <p className="font-medium">{currency} {result.nisabGold.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Nisab (Silver 595g)</p>
+                    <p className={`text-xs ${result.meetsNisab ? 'text-white/60' : 'text-muted-foreground'}`}>Nisab (Silver 595g)</p>
                     <p className="font-medium">{currency} {result.nisabSilver.toLocaleString()}</p>
                   </div>
                 </div>
