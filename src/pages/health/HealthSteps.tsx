@@ -67,7 +67,7 @@ const HealthSteps = () => {
 
   const circumference = 2 * Math.PI * 70;
   const dashOffset = circumference - (progress / 100) * circumference;
-  const ringColor = targetHit ? 'hsl(142, 71%, 45%)' : 'hsl(38, 92%, 50%)';
+  const ringColor = targetHit ? 'hsl(var(--primary))' : 'hsl(var(--accent))';
 
   const handleLog = () => {
     const steps = parseInt(stepsInput);
