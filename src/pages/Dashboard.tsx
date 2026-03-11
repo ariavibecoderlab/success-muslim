@@ -3,27 +3,57 @@ import AppHeader from '@/components/AppHeader';
 import OnboardingTooltips from '@/components/OnboardingTooltips';
 import WidgetCustomizer from '@/components/widgets/WidgetCustomizer';
 import { useDashboardData } from '@/hooks/useDashboardData';
+import { useContextualGreeting } from '@/hooks/useContextualGreeting';
+import RotatingHeader from '@/components/dashboard/RotatingHeader';
+import HeroPrayerCard from '@/components/dashboard/HeroPrayerCard';
+import RamadanBanner from '@/components/dashboard/RamadanBanner';
+import DailyCheckinCard from '@/components/dashboard/DailyCheckinCard';
 import AnnouncementsBanner from '@/components/dashboard/AnnouncementsBanner';
 import LifeScoreCard from '@/components/dashboard/LifeScoreCard';
 import QuickLogGrid from '@/components/dashboard/QuickLogGrid';
+import ForYouSection from '@/components/dashboard/ForYouSection';
 import DailyQuoteCard from '@/components/dashboard/DailyQuoteCard';
 import WidgetGrid from '@/components/dashboard/WidgetGrid';
 import FirstTimeDialog from '@/components/dashboard/FirstTimeDialog';
 
 const Dashboard = () => {
   const [customizerOpen, setCustomizerOpen] = useState(false);
-  const { displayName, announcements, lifeScore, weeklyScores, isRamadan, activeIF, widgetPrefs } = useDashboardData();
+  const { displayName, announcements, lifeScore, weeklyScores, isRamadan, ramadanDay, activeIF, widgetPrefs } = useDashboardData();
   const { preferences, loading, isFirstTime, toggleWidget, resizeWidget, reorderWidgets, initializeDefaults, setIsFirstTime } = widgetPrefs;
+
+  const firstName = (displayName || '').split(' ')[0] || 'Muslim';
+  const greeting = useContextualGreeting({
+    firstName,
+    isRamadan,
+    ramadanDay,
+  });
 
   return (
     <div className="min-h-screen bg-background">
       <OnboardingTooltips />
-      <AppHeader showHijriDate showGregorianDate />
+      <AppHeader
+        rotatingContent={
+          <RotatingHeader
+            firstName={firstName}
+            isRamadan={isRamadan}
+            ramadanDay={ramadanDay}
+            greeting={greeting}
+          />
+        }
+      />
 
       <main className="max-w-md mx-auto px-5 py-4 space-y-4">
         <AnnouncementsBanner announcements={announcements} />
+        <HeroPrayerCard />
+        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
+        <DailyCheckinCard />
         <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
         <QuickLogGrid />
+        <ForYouSection
+          isRamadan={isRamadan}
+          ramadanDay={ramadanDay}
+          activeIF={activeIF}
+        />
         <WidgetGrid preferences={preferences} isRamadan={isRamadan} activeIF={activeIF} loading={loading} />
         <DailyQuoteCard />
         <div className="h-4" />
