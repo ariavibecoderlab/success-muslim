@@ -1,27 +1,49 @@
 
 
-## Mobile App Conversion
+## Polish "Untuk Kamu" / For You Section
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+### Problems
+1. **Copy is generic/vibecoded** — messages like "Tetap semangat! Lihat progress kamu" and "Allah Maha Pengampun. Semangat!" feel like placeholder motivational text, not personal or specific.
+2. **Visual design is flat** — plain left-border cards with muted icon boxes look template-y.
+3. **Missing time-awareness in copy** — greetings don't reflect the actual time of day or prayer context.
+4. **Limited triggers** — only 5-6 card types; misses common states like partial salah progress (1-4), dhikr nudge, sunnah fasting days (Mon/Thu).
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+### Changes — `src/components/dashboard/ForYouSection.tsx`
 
-### Two Options
+**1. Richer, more specific copy**
+Replace generic motivational text with contextual, time-aware messages:
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+| State | Current | New |
+|-------|---------|-----|
+| Salah = 0, morning | "Yuk mulai solat hari ini" | "Subuh sudah lepas — log sekarang?" |
+| Salah = 0, afternoon | same | "Zuhur & Asar belum dilog" |
+| Salah 1-4 | (missing) | "{logged}/5 solat hari ini — teruskan!" |
+| Salah = 5 | "MasyaAllah! Solat lengkap" | "5/5 solat — MasyaAllah, konsisten!" |
+| Quran evening | "Walau 5 menit — barakah tetap ada" | "Belum baca Quran — 1 muka surat sebelum tidur?" |
+| Active IF | "Tetap semangat! Lihat progress kamu" | Show actual elapsed time from `activeIF` |
+| Ramadan last 10 | Generic | Include specific odd-night callout |
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+**2. Add new card triggers**
+- **Partial salah (1-4 logged)**: progress encouragement with count
+- **Monday/Thursday sunnah fasting**: suggest logging sunnah fast
+- **Dhikr nudge (afternoon)**: if no dhikr logged today
 
-### What the Conversion Involves
+**3. Visual polish**
+- Replace `border-l-4` cards with subtle gradient background tint matching the icon color (e.g. `bg-gradient-to-r from-emerald-50 to-transparent`)
+- Icon container: use matching soft color bg instead of generic `bg-muted` (e.g. `bg-emerald-100`)
+- Add a small chevron-right on the trailing edge to signal tappability
+- Animate card entry with staggered fade-up (consistent with app's framer-motion patterns)
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+**4. Section header**
+- Keep "Untuk Kamu" label as-is (matches app style)
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+### Props change
+- Accept `activeIF` object to extract elapsed time for display
+- Accept `dhikrCount` (optional) for dhikr nudge — passed from `useDashboardData`
 
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+### Dashboard.tsx
+- Pass `dhikrCount` from `useDashboardData` (already available via `useDhikrDaily` in the hook)
+
+### useDashboardData.ts
+- Expose `dailyDhikrCount` from existing `useDhikrDaily` hook (already imported, just not returned)
 
