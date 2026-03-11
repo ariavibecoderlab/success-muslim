@@ -31,7 +31,7 @@ const AppHeader = ({
   });
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/50 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl">
       <div className="max-w-md mx-auto px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
           <img src={smlogo} alt="Success Muslim" className="w-9 h-9 rounded-xl object-contain" />
