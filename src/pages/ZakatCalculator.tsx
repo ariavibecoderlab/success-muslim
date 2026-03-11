@@ -168,7 +168,7 @@ const ZakatCalculator = () => {
             <Card className={`rounded-xl border-0 shadow-sm ${result.meetsNisab ? 'bg-gradient-to-br from-orange-600 to-orange-700 text-white' : ''}`}>
               <CardContent className="p-5 space-y-3">
                 <h3 className="font-semibold text-sm">
-                  {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'}
+                 {result.meetsNisab ? '✓ Zakat is Due' : 'Below Nisab Threshold'} 
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
