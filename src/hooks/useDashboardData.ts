@@ -40,7 +40,12 @@ function useDisplayName() {
         .select('display_name')
         .eq('id', user!.id)
         .single();
-      return data?.display_name ?? '';
+      const profileName = data?.display_name ?? '';
+      // If profile name looks like an email handle (no spaces), prefer auth metadata
+      const metaName = user!.user_metadata?.full_name || user!.user_metadata?.name || '';
+      if (profileName && profileName.includes(' ')) return profileName;
+      if (metaName) return metaName;
+      return profileName;
     },
     enabled: !!user,
     initialData: '',
