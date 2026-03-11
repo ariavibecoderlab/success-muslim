@@ -99,7 +99,7 @@ const Landing = () => {
           </motion.div>
 
           <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
-            className="text-lg text-muted-foreground max-w-lg mx-auto mb-10"
+            className="text-lg text-muted-foreground max-w-md mx-auto mb-10"
           >
             The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score and grow in dunya and akhirah.
           </motion.p>
@@ -182,7 +182,7 @@ const Landing = () => {
 
       {/* ── Pillars (Bento) ── */}
       <section className="py-24 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-md mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-12"
           >
@@ -262,7 +262,7 @@ const Landing = () => {
 
       {/* ── Who It's For ── */}
       <section className="py-24 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-md mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-12"
           >

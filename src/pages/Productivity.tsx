@@ -24,12 +24,12 @@ const Productivity = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+      <div className="max-w-md mx-auto px-4 pt-4 pb-2">
         <h1 className="text-base font-semibold">Productivity</h1>
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-3 space-y-4"
+        className="max-w-md mx-auto px-4 py-3 space-y-4"
         variants={container}
         initial="hidden"
         animate="visible"

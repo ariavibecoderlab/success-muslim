@@ -24,7 +24,7 @@ const Family = () => {
   if (families.length >= 1) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-lg mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
+        <div className="max-w-md mx-auto px-4 pt-4 pb-2 flex items-center justify-between">
           <h1 className="text-base font-semibold">My Groups</h1>
           <Button
             variant="ghost"
@@ -38,7 +38,7 @@ const Family = () => {
         </div>
 
         <motion.main
-          className="max-w-lg mx-auto px-4"
+          className="max-w-md mx-auto px-4"
           variants={container}
           initial="hidden"
           animate="visible"
@@ -93,7 +93,7 @@ const Family = () => {
     <div className="min-h-screen bg-background">
       <AppHeader title="Family" />
       <motion.main
-        className="max-w-lg mx-auto px-4 py-16 flex flex-col items-center text-center"
+        className="max-w-md mx-auto px-4 py-16 flex flex-col items-center text-center"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}

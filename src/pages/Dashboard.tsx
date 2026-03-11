@@ -21,7 +21,7 @@ const Dashboard = () => {
       <OnboardingTooltips />
       <AppHeader showHijriDate showGregorianDate />
 
-      <main className="max-w-4xl mx-auto px-5 py-6 space-y-5">
+      <main className="max-w-md mx-auto px-5 py-6 space-y-5">
         <AnnouncementsBanner announcements={announcements} />
         <GreetingHeader displayName={displayName} onCustomize={() => setCustomizerOpen(true)} />
         <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />

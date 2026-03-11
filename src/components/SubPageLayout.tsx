@@ -29,7 +29,7 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
   return (
     <div className="min-h-screen bg-background flex flex-col animate-fade-in">
       <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+        <div className="max-w-md mx-auto px-6 h-14 flex items-center justify-between">
           <span className="text-lg font-bold">{title}</span>
           {headerRight}
         </div>

@@ -133,12 +133,12 @@ const Settings = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-lg mx-auto px-4 pt-4 pb-2">
+      <div className="max-w-md mx-auto px-4 pt-4 pb-2">
         <h1 className="text-base font-semibold">Profile</h1>
       </div>
 
       <motion.main
-        className="max-w-lg mx-auto px-4 py-3 space-y-5 pb-24"
+        className="max-w-md mx-auto px-4 py-3 space-y-5 pb-24"
         variants={stagger}
         initial="hidden"
         animate="show"

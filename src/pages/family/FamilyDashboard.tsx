@@ -38,7 +38,7 @@ const FamilyDashboard = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="max-w-lg mx-auto px-4 pt-3 pb-2">
+      <div className="max-w-md mx-auto px-4 pt-3 pb-2">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate('/family')}>
             <ArrowLeft className="h-4 w-4" />
@@ -69,7 +69,7 @@ const FamilyDashboard = () => {
         </div>
       </div>
 
-      <main className="max-w-lg mx-auto px-4 py-3 space-y-5 pb-28">
+      <main className="max-w-md mx-auto px-4 py-3 space-y-5 pb-28">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />

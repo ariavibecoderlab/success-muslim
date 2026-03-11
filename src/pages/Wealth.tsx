@@ -47,7 +47,7 @@ const Wealth = () => {
     <div className="min-h-screen bg-background">
       <AppHeader title="Wealth & Finance" />
 
-      <main className="max-w-4xl mx-auto px-4 py-4">
+      <main className="max-w-md mx-auto px-4 py-4">
         {/* Quick stats */}
         {(stats.income > 0 || stats.goalsCount > 0) && (
           <div className="flex gap-2 mb-4">
