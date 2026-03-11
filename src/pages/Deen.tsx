@@ -15,6 +15,7 @@ import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
 import { useDhikrDaily } from '@/hooks/useDhikrQuery';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
 import { useHijriDate } from '@/hooks/useHijriDate';
+import RamadanBanner from '@/components/dashboard/RamadanBanner';
 import { calcIman, type LifeScoreInput } from '@/lib/life-score';
 import { getQuranDay } from '@/lib/quran-storage';
 import { getFastingLog, todayKey } from '@/lib/health-storage';
