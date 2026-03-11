@@ -23,7 +23,7 @@ export default function DakwahWidget({ size }: { size: WidgetSize }) {
   if (size === 'small') {
     return (
       <Link to="/iman/dakwah">
-        <Card className="hover:shadow-sm transition-shadow">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-3 text-center">
             <Megaphone className="h-4 w-4 mx-auto text-accent-foreground mb-1" />
             <p className="text-[10px] font-medium">{hasNew ? 'New!' : "Da'wah"}</p>
@@ -35,18 +35,18 @@ export default function DakwahWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/iman/dakwah">
-      <Card className="hover:shadow-sm transition-shadow">
-        <CardContent className="p-4 flex items-center gap-3">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3 flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
             <Megaphone className="h-4 w-4 text-accent-foreground" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold">📢 Da'wah Today</p>
+            <p className="text-sm font-semibold">Da'wah Today</p>
             <p className="text-xs text-muted-foreground">
               {hasNew ? 'New poster available' : 'Check for new content'}
             </p>
           </div>
-          <span className="text-[10px] text-primary font-medium">View & Share →</span>
+          <span className="text-[10px] text-primary font-medium">View →</span>
         </CardContent>
       </Card>
     </Link>

@@ -11,7 +11,7 @@ export default function QuranTodayWidget({ size }: { size: WidgetSize }) {
   if (size === 'small') {
     return (
       <Link to="/iman/quran">
-        <Card className="hover:shadow-sm transition-shadow">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-3 text-center">
             <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className="text-sm font-bold">{today.pagesRead}</p>
@@ -24,8 +24,8 @@ export default function QuranTodayWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/iman/quran">
-      <Card className="hover:shadow-sm transition-shadow">
-        <CardContent className="p-4">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <BookOpen className="h-4 w-4 text-primary" />

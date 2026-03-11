@@ -20,7 +20,7 @@ const Dashboard = () => {
       <OnboardingTooltips />
       <AppHeader showHijriDate showGregorianDate />
 
-      <main className="max-w-md mx-auto px-5 py-6 space-y-5">
+      <main className="max-w-md mx-auto px-5 py-4 space-y-4">
         <AnnouncementsBanner announcements={announcements} />
         <LifeScoreCard lifeScore={lifeScore} weeklyScores={weeklyScores} />
         <QuickLogGrid />

@@ -28,19 +28,24 @@ export default function WidgetGrid({ preferences, isRamadan, activeIF, loading }
     .filter(p => p.enabled && smartVisibilityCheck(p.widget_id, isRamadan, activeIF))
     .sort((a, b) => a.position - b.position);
 
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {visibleWidgets.map((pref, idx) => {
-        const def = WIDGET_REGISTRY.find(w => w.id === pref.widget_id);
-        if (!def) return null;
-        const WidgetComponent = def.component;
+  if (visibleWidgets.length === 0) return null;
 
-        return (
-          <WidgetShell key={pref.widget_id} size={pref.size as WidgetSize} index={idx}>
-            <WidgetComponent size={pref.size as WidgetSize} />
-          </WidgetShell>
-        );
-      })}
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Widgets</p>
+      <div className="grid grid-cols-2 gap-3">
+        {visibleWidgets.map((pref, idx) => {
+          const def = WIDGET_REGISTRY.find(w => w.id === pref.widget_id);
+          if (!def) return null;
+          const WidgetComponent = def.component;
+
+          return (
+            <WidgetShell key={pref.widget_id} size={pref.size as WidgetSize} index={idx}>
+              <WidgetComponent size={pref.size as WidgetSize} />
+            </WidgetShell>
+          );
+        })}
+      </div>
     </div>
   );
 }

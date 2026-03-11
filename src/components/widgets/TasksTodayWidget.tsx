@@ -16,7 +16,7 @@ export default function TasksTodayWidget({ size }: { size: WidgetSize }) {
   if (size === 'small') {
     return (
       <Link to="/productivity/tasks">
-        <Card className="hover:shadow-sm transition-shadow">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-3 text-center">
             <ListChecks className="h-4 w-4 mx-auto text-accent-foreground mb-1" />
             <p className="text-sm font-bold">{done}/{total}</p>
@@ -29,15 +29,15 @@ export default function TasksTodayWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/productivity/tasks">
-      <Card className="hover:shadow-sm transition-shadow">
-        <CardContent className="p-4">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center">
                 <ListChecks className="h-4 w-4 text-accent-foreground" />
               </div>
               <div>
-                <p className="text-sm font-semibold">✅ Tasks Today</p>
+                <p className="text-sm font-semibold">Tasks Today</p>
                 <p className="text-xs text-muted-foreground">{done} / {total} done</p>
               </div>
             </div>

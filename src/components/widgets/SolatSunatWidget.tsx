@@ -19,7 +19,7 @@ export default function SolatSunatWidget({ size }: { size: WidgetSize }) {
     const done = prayerItems.filter(p => log.completed.includes(p.id)).length;
     return (
       <Link to="/iman/sunnah">
-        <Card className="hover:shadow-sm transition-shadow">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-3 text-center">
             <Star className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className="text-sm font-bold">{done}/{prayerItems.length}</p>
@@ -32,8 +32,8 @@ export default function SolatSunatWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/iman/sunnah">
-      <Card className="hover:shadow-sm transition-shadow">
-        <CardContent className="p-4">
+      <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+        <CardContent className="p-3">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Star className="h-4 w-4 text-primary" />

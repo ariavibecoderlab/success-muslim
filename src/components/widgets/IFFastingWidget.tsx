@@ -48,8 +48,8 @@ export default function IFFastingWidget({ size }: { size: WidgetSize }) {
 
     return (
       <Link to="/health/if-timer">
-        <Card className="hover:shadow-sm transition-shadow">
-          <CardContent className="p-4 space-y-2.5">
+        <Card className="border-0 shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-3 space-y-2.5">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
                 <Timer className="h-4 w-4 text-secondary-foreground" />
@@ -109,8 +109,8 @@ export default function IFFastingWidget({ size }: { size: WidgetSize }) {
 
   return (
     <Link to="/health/if-timer">
-      <Card>
-        <CardContent className="p-4 space-y-2.5">
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-3 space-y-2.5">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Timer className="h-4 w-4 text-primary" />
