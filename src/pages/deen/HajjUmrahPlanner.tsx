@@ -166,11 +166,11 @@ const HajjUmrahPlanner = () => {
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <Card className="bg-gradient-to-br from-orange-600 to-orange-700 text-white border-0 rounded-xl shadow-md">
               <CardContent className="p-6 text-center">
-                <MapPin className="h-10 w-10 text-primary mx-auto mb-3" />
+                 <MapPin className="h-10 w-10 text-white/80 mx-auto mb-3" />
                 <h2 className="text-lg font-bold">
                   {tab === 'umrah' ? 'Umrah Guide' : 'Hajj Manasik Guide'}
                 </h2>
-                <p className="text-sm text-muted-foreground mt-1 mb-4">
+                <p className="text-sm text-white/60 mt-1 mb-4">
                   {tab === 'umrah'
                     ? 'Step-by-step guide: Ihram → Tawaf → Sa\'i → Tahallul'
                     : 'Complete guide through all Hajj manasik with duas'}
