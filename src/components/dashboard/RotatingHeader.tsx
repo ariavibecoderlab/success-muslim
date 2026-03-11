@@ -80,9 +80,6 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
           </motion.span>
         </AnimatePresence>
       </div>
-      <span className="text-[10px] text-muted-foreground leading-tight truncate">
-        {subtitle}
-      </span>
     </div>
   );
 }
