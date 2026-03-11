@@ -53,6 +53,9 @@ const AppHeader = ({
             </span>
           )}
           {rightContent}
+          <button className="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-muted transition-colors">
+            <Bell className="h-4 w-4 text-muted-foreground" />
+          </button>
           {isAdmin && (
             <Link
               to="/admin"
