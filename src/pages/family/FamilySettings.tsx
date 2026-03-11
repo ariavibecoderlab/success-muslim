@@ -91,7 +91,7 @@ const FamilySettings = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className={`bg-gradient-to-br ${terms.gradient} text-white`}>
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-5">
+        <div className="max-w-md mx-auto px-4 pt-3 pb-5">
           <div className="flex items-center gap-2 mb-3">
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => navigate(`/family/${id}/dashboard`)}>
               <ArrowLeft className="h-5 w-5" />
