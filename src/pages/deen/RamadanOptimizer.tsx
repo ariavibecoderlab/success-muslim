@@ -440,7 +440,7 @@ const RamadanOptimizer = () => {
 
         {/* Solat Sunnah Checklist */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold">Solat Sunnah</p>
               <div className="space-y-2">
