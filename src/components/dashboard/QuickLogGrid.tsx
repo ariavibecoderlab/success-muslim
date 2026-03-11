@@ -53,19 +53,6 @@ export default function QuickLogGrid() {
           );
         })}
 
-        {/* Edit button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.25 }}
-          onClick={() => setEditOpen(true)}
-          className="flex flex-col items-center gap-1.5 min-w-[56px] snap-center"
-        >
-          <div className="w-10 h-10 rounded-full flex items-center justify-center bg-muted active:scale-95 transition-transform">
-            <Settings2 className="h-[18px] w-[18px] text-muted-foreground" />
-          </div>
-          <span className="text-[10px] font-medium text-muted-foreground">Edit</span>
-        </motion.button>
       </div>
 
       <Sheet open={editOpen} onOpenChange={setEditOpen}>
