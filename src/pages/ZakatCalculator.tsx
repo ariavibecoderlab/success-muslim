@@ -133,7 +133,7 @@ const ZakatCalculator = () => {
         </div>
 
         {/* Nisab Info */}
-        <Card className="border-primary/10 bg-primary/5">
+        <Card className="border-0 rounded-xl shadow-sm bg-primary/5">
           <CardContent className="p-3">
             <p className="text-xs text-muted-foreground">
               <strong>Nisab threshold:</strong> You must pay zakat if your net wealth exceeds the nisab value (equivalent to 85g gold or 595g silver). The lower threshold applies.
