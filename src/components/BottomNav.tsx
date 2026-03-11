@@ -16,8 +16,8 @@ const BottomNav = () => {
   const { pathname } = useLocation();
 
   return (
-    <nav className="absolute bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border">
-      <div className="max-w-md mx-auto flex items-center justify-around h-16 pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 bg-background/95 backdrop-blur-md border-t border-border">
+      <div className="flex items-center justify-around h-16 pb-[env(safe-area-inset-bottom)]">
         {tabs.map(tab => {
           const active = pathname === tab.path || pathname.startsWith(tab.path + '/');
           return (
