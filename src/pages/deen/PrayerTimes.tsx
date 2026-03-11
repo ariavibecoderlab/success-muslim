@@ -398,7 +398,7 @@ const PrayerTimes = () => {
                   <div
                     key={i}
                     className={`h-1.5 w-6 rounded-full transition-all ${
-                      i <= currentIdx ? "bg-primary" : i === nextIdx ? "bg-primary/40" : "bg-muted"
+                      i <= currentIdx ? "bg-white" : i === nextIdx ? "bg-white/40" : "bg-white/15"
                     }`}
                   />
                 ))}
