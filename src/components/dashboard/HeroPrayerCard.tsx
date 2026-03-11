@@ -123,9 +123,22 @@ export default function HeroPrayerCard() {
                 size="sm"
                 variant="secondary"
                 className="flex-1 bg-white/20 hover:bg-white/30 text-white border-0 text-xs h-8 rounded-lg font-semibold"
-                onClick={(e) => {
+                onClick={async (e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  const perm = getNotificationPermission();
+                  if (perm === 'granted') {
+                    toast.success(`Reminder set for ${nextPrayer?.name} at ${formatPrayerTime(nextPrayer?.time || '')}`);
+                  } else if (perm === 'denied') {
+                    toast.error('Notifications blocked. Please enable them in your browser settings.');
+                  } else {
+                    const result = await requestNotificationPermission();
+                    if (result === 'granted') {
+                      toast.success(`Reminder set for ${nextPrayer?.name} at ${formatPrayerTime(nextPrayer?.time || '')}`);
+                    } else {
+                      toast.error('Notification permission is required for reminders.');
+                    }
+                  }
                 }}
               >
                 <Bell className="h-3.5 w-3.5 mr-1.5" />
