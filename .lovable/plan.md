@@ -1,27 +1,38 @@
 
 
-## Mobile App Conversion
+## Redesign Quick Log → Horizontal Scrollable Feature Bar
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+### What changes
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+**1. `src/components/dashboard/QuickLogGrid.tsx` → full rewrite**
 
-### Two Options
+Remove the 4×2 card grid. Replace with a single horizontal scrollable row of compact icon pills (no card wrappers). Each item is just a gradient circle + label, no `Card`/`CardContent`. Add an "Edit" button at the end of the row that opens a sheet to show/hide items.
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+Layout: `flex overflow-x-auto gap-3 scrollbar-hide` with `snap-x` for smooth scroll. Each item is ~56px wide (circle + label stacked). Items come from a new `useQuickLogPreferences` hook that tracks which shortcuts are visible.
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+**2. New hook: `src/hooks/useQuickLogPreferences.ts`**
 
-### What the Conversion Involves
+Stores which quick log items are enabled and their order. Uses localStorage with the key `quick_log_prefs`. Falls back to showing all 8 by default.
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+Interface:
+```ts
+{ enabledIds: string[], toggleItem: (id: string) => void, reorder: (ids: string[]) => void }
+```
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+**3. Quick Log Edit Sheet**
 
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+A small drawer/sheet triggered by a pencil/edit icon at the end of the scroll row or via the section header. Lists all available quick log items with toggle switches — same pattern as the existing `WidgetCustomizer` but simpler (no resize/reorder, just on/off toggles).
+
+### Visual spec
+
+- No card wrapper per icon — just bare gradient circle (w-10 h-10) + label below (text-[10px])
+- Single row, horizontally scrollable, no wrapping
+- `scrollbar-hide` utility (already in Tailwind config or add via CSS)
+- Slight horizontal fade on edges (optional, via gradient mask)
+- Edit button: small `Settings2` icon pill at the row end
+
+### Files to create/modify
+1. **`src/hooks/useQuickLogPreferences.ts`** — new, localStorage-backed preference hook
+2. **`src/components/dashboard/QuickLogGrid.tsx`** — rewrite to horizontal scroll + edit sheet
+3. **`src/index.css`** — add `.scrollbar-hide` utility if not present
 
