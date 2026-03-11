@@ -69,6 +69,7 @@ import Onboarding from "./pages/Onboarding";
 import Install from "./pages/Install";
 import Features from "./pages/Features";
 import About from "./pages/About";
+import DeenJourney from "./pages/DeenJourney";
 
 const queryClient = new QueryClient({
   defaultOptions: {
