@@ -7,7 +7,7 @@ import { saveFidyahEntry, getFidyahHistory } from '@/lib/storage';
 import { FidyahEntry } from '@/lib/types';
 import { motion } from 'framer-motion';
 import SubPageLayout from '@/components/SubPageLayout';
-import { staggerContainer, staggerItem } from '@/components/dashboard/constants';
+import { fadeUp } from '@/components/dashboard/constants';
 
 const CURRENCIES = ['MYR', 'USD', 'GBP', 'EUR', 'SAR', 'IDR', 'SGD'];
 
@@ -38,18 +38,18 @@ const FidyahPage = () => {
 
   return (
     <SubPageLayout title="Fidyah Calculator" backTo="/iman" siblingRoutes={IMAN_TRACKERS} currentPath="/fidyah">
-      <motion.div className="space-y-5" variants={staggerContainer} initial="hidden" animate="visible">
+      <div className="space-y-5">
         {/* Hero card */}
-        <motion.div variants={staggerItem}>
-          <Card className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-200/30 hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center">
-                  <Calculator className="h-4 w-4 text-white" />
+        <motion.div variants={fadeUp} custom={0} initial="hidden" animate="visible">
+          <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-600 to-teal-600 text-white relative overflow-hidden">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                  <Calculator className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold">Calculate Fidyah</p>
-                  <p className="text-[10px] text-muted-foreground">For those unable to fast due to chronic illness or old age.</p>
+                  <p className="text-sm font-semibold">Fidyah Calculator</p>
+                  <p className="text-[11px] text-white/70 leading-relaxed">For those unable to fast due to chronic illness or old age.</p>
                 </div>
               </div>
             </CardContent>
@@ -57,20 +57,21 @@ const FidyahPage = () => {
         </motion.div>
 
         {/* Calculator */}
-        <motion.div variants={staggerItem}>
-          <Card className="hover:shadow-md transition-shadow">
+        <motion.div variants={fadeUp} custom={1} initial="hidden" animate="visible">
+          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 px-1">Calculate</h3>
+          <Card className="border-0 shadow-sm">
             <CardContent className="p-4 space-y-3.5">
               <div>
-                <label className="text-xs font-medium mb-1.5 block">Days Unable to Fast</label>
+                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Days Unable to Fast</label>
                 <Input type="number" value={days} onChange={e => setDays(Number(e.target.value))} min={1} max={365} className="h-9 text-sm" />
               </div>
 
               <div>
-                <label className="text-xs font-medium mb-1.5 block">Currency</label>
+                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Currency</label>
                 <div className="flex flex-wrap gap-1.5">
                   {CURRENCIES.map(c => (
                     <button key={c} onClick={() => setCurrency(c)}
-                      className={`px-2.5 py-1 rounded-md border text-[10px] font-medium transition-all ${currency === c ? 'border-primary bg-primary/5 text-primary' : 'border-border hover:border-primary/30'}`}>
+                      className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-all ${currency === c ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}>
                       {c}
                     </button>
                   ))}
@@ -78,7 +79,7 @@ const FidyahPage = () => {
               </div>
 
               <div>
-                <label className="text-xs font-medium mb-1.5 block">Cost Per Meal ({currency})</label>
+                <label className="text-xs font-medium mb-1.5 block text-muted-foreground">Cost Per Meal ({currency})</label>
                 <Input type="number" value={costPerMeal} onChange={e => setCostPerMeal(Number(e.target.value))} min={0.01} step={0.01} className="h-9 text-sm" />
               </div>
 
@@ -94,24 +95,24 @@ const FidyahPage = () => {
 
         {/* Result */}
         {result !== null && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
-            <Card className="bg-gradient-to-br from-emerald-500/10 via-teal-500/5 to-transparent border-emerald-200/30 hover:shadow-md transition-shadow">
-              <CardContent className="p-4 text-center">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-0.5">Total Fidyah</p>
-                <p className="text-2xl font-bold text-emerald-600">{currency} {result.toFixed(2)}</p>
-                <p className="text-[10px] text-muted-foreground mt-1">{days} days × {currency} {costPerMeal.toFixed(2)}/meal</p>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }}>
+            <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-600 to-teal-600 text-white">
+              <CardContent className="p-5 text-center">
+                <p className="text-[10px] text-white/60 uppercase tracking-wider font-medium mb-0.5">Total Fidyah</p>
+                <p className="text-2xl font-bold">{currency} {result.toFixed(2)}</p>
+                <p className="text-[11px] text-white/60 mt-1">{days} day{days !== 1 ? 's' : ''} × {currency} {costPerMeal.toFixed(2)}/meal</p>
               </CardContent>
             </Card>
           </motion.div>
         )}
 
         {/* Educational */}
-        <motion.div variants={staggerItem}>
-          <Card className="hover:shadow-md transition-shadow">
+        <motion.div variants={fadeUp} custom={2} initial="hidden" animate="visible">
+          <Card className="border-0 shadow-sm bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20">
             <CardContent className="p-4">
               <div className="flex gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500/10 to-indigo-500/10 flex items-center justify-center flex-shrink-0">
-                  <Info className="h-3.5 w-3.5 text-primary" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/15 to-teal-500/15 flex items-center justify-center flex-shrink-0">
+                  <Info className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
                   <h4 className="font-medium text-[13px] mb-0.5">What is Fidyah?</h4>
@@ -124,18 +125,18 @@ const FidyahPage = () => {
 
         {/* History */}
         {history.length > 0 && (
-          <motion.div variants={staggerItem}>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">History</h3>
-            <Card className="hover:shadow-md transition-shadow">
+          <motion.div variants={fadeUp} custom={3} initial="hidden" animate="visible">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2.5 px-1">History</h3>
+            <Card className="border-0 shadow-sm">
               <CardContent className="p-1.5">
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/50">
                   {history.slice(0, 5).map(entry => (
                     <div key={entry.id} className="flex items-center justify-between p-2.5">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-500/10 to-teal-500/10 flex items-center justify-center">
-                          <Receipt className="h-3.5 w-3.5 text-emerald-600" />
+                          <Receipt className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                         </div>
-                        <span className="text-[13px] text-muted-foreground">{new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span className="text-[11px] text-muted-foreground">{new Date(entry.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                       </div>
                       <span className="text-[13px] font-medium">{entry.currency} {entry.total.toFixed(2)}</span>
                     </div>
@@ -145,7 +146,7 @@ const FidyahPage = () => {
             </Card>
           </motion.div>
         )}
-      </motion.div>
+      </div>
     </SubPageLayout>
   );
 };
