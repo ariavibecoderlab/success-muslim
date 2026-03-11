@@ -157,15 +157,15 @@ const DeenFasting = () => {
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <div className="bg-background/60 rounded-lg p-3 text-center">
-                  <Sunrise className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-[10px] text-muted-foreground">Suhoor ends</p>
+               <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <Sunrise className="h-4 w-4 text-white/70 mx-auto mb-1" />
+                  <p className="text-[10px] text-white/60">Suhoor ends</p>
                   <p className="text-sm font-bold">{formatPrayerTime(getEffectiveTime(fajrTime))}</p>
                 </div>
-                <div className="bg-background/60 rounded-lg p-3 text-center">
-                  <Sunset className="h-4 w-4 text-primary mx-auto mb-1" />
-                  <p className="text-[10px] text-muted-foreground">Iftar</p>
+                <div className="bg-white/10 rounded-xl p-3 text-center">
+                  <Sunset className="h-4 w-4 text-white/70 mx-auto mb-1" />
+                  <p className="text-[10px] text-white/60">Iftar</p>
                   <p className="text-sm font-bold">{formatPrayerTime(getEffectiveTime(maghribTime))}</p>
                 </div>
               </div>
