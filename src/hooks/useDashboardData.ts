@@ -13,7 +13,8 @@ import { useWidgetPreferences } from './useWidgetPreferences';
 import { useHijriDate } from './useHijriDate';
 import { getSunnahItems } from '@/lib/sunnah-storage';
 import { getTodayKey as getProdTodayKey } from '@/lib/productivity-storage';
-import { getSleepLog, getFastingLog, todayKey, getActiveIF } from '@/lib/health-storage';
+import { getSleepLog, getFastingLog, todayKey } from '@/lib/health-storage';
+import { useFastingStore } from '@/stores/fastingStore';
 import { getTodayKey } from '@/lib/calculations';
 import {
   calculateLifeScore,
@@ -110,7 +111,7 @@ function useLifeScore() {
 
   const lifeScore = useMemo(() => calculateLifeScore(lifeScoreInput), [lifeScoreInput]);
   useEffect(() => { saveCurrentDayScore(lifeScore); }, [lifeScore]);
-  const weeklyScores = useMemo(() => getWeeklyScores(), []);
+  const weeklyScores = useMemo(() => getWeeklyScores(), [lifeScore]);
 
   return { lifeScore, weeklyScores };
 }
@@ -120,7 +121,7 @@ export function useDashboardData() {
   const { data: announcements = [] } = useAnnouncements();
   const { lifeScore, weeklyScores } = useLifeScore();
   const { isRamadan } = useHijriDate();
-  const activeIF = getActiveIF();
+  const { isActiveFast, activeFast } = useFastingStore();
 
   const widgetPrefs = useWidgetPreferences();
 
@@ -130,7 +131,7 @@ export function useDashboardData() {
     lifeScore,
     weeklyScores,
     isRamadan,
-    activeIF,
+    activeIF: activeFast,
     widgetPrefs,
   };
 }

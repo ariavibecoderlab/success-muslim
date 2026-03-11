@@ -1,22 +1,24 @@
 import { useNavigate } from 'react-router-dom';
 import { ListChecks, Target, Flame, Star, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getDailyTasks, getTaskStreak, getHabits, getHabitLog, getTodayKey, getLatestLifeAreaEntry } from '@/lib/productivity-storage';
+import { useDailyTasks, useTaskStreak } from '@/hooks/useTasksQuery';
+import { useHabits, useHabitLog } from '@/hooks/useHabitsQuery';
+import { getTodayKey, getLatestLifeAreaEntry } from '@/lib/productivity-storage';
 
 const container = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
 const item = { hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3 } } };
 
 const Productivity = () => {
   const navigate = useNavigate();
-  const daily = getDailyTasks();
-  const habits = getHabits();
-  const log = getHabitLog();
   const today = getTodayKey();
-  const streak = getTaskStreak();
+  const { data: daily } = useDailyTasks(today);
+  const { data: habits = [] } = useHabits();
+  const { data: log = {} } = useHabitLog();
+  const { data: streak = 0 } = useTaskStreak();
   const latestLA = getLatestLifeAreaEntry();
 
-  const mitsCompleted = daily.tasks.filter(t => t.isMIT && t.completed).length;
-  const mitCount = daily.tasks.filter(t => t.isMIT).length;
+  const mitsCompleted = (daily?.tasks ?? []).filter(t => t.isMIT && t.completed).length;
+  const mitCount = (daily?.tasks ?? []).filter(t => t.isMIT).length;
   const habitsToday = log[today]?.length || 0;
   const avgScore = latestLA
     ? (latestLA.scores.reduce((a, s) => a + s.score, 0) / latestLA.scores.length).toFixed(1)

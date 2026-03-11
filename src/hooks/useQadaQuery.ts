@@ -3,8 +3,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup,
+  getRamadhanSetup, getRamadhanProgress,
 } from '@/lib/storage';
-import type { QadaSolatSetup, QadaSolatProgress, PrayerType } from '@/lib/types';
+import type { QadaSolatSetup, QadaSolatProgress, PrayerType, RamadhanQadaSetup, RamadhanQadaProgress } from '@/lib/types';
 
 export function useQadaSolat() {
   const { user } = useAuth();
@@ -60,4 +61,26 @@ export function useQadaMutation() {
   });
 
   return { logPrayer, undoPrayer, updateSetup };
+}
+
+export function useRamadhanQada() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['ramadhan-qada', user?.id ?? 'anon'],
+    queryFn: async (): Promise<{ setup: RamadhanQadaSetup | null; progress: RamadhanQadaProgress }> => {
+      if (!user) return { setup: getRamadhanSetup(), progress: getRamadhanProgress() };
+      const { data } = await supabase
+        .from('ramadhan_qada')
+        .select('setup, progress')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!data) return { setup: getRamadhanSetup(), progress: getRamadhanProgress() };
+      return {
+        setup: data.setup as unknown as RamadhanQadaSetup,
+        progress: data.progress as unknown as RamadhanQadaProgress,
+      };
+    },
+    initialData: () => ({ setup: getRamadhanSetup(), progress: getRamadhanProgress() }),
+    staleTime: 60_000,
+  });
 }

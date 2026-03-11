@@ -8,7 +8,8 @@ import AppHeader from '@/components/AppHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { getQadaSetup, getQadaProgress, getRamadhanSetup, getRamadhanProgress, getFidyahHistory } from '@/lib/storage';
+import { useQadaSolat, useRamadhanQada } from '@/hooks/useQadaQuery';
+import { useFidyahHistory } from '@/hooks/useFidyahQuery';
 import { estimateCompletionDays, formatYearsMonths, getTodayKey } from '@/lib/calculations';
 import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
 import { useDhikrDaily } from '@/hooks/useDhikrQuery';
@@ -150,12 +151,14 @@ const Iman = () => {
     setQuoteIndex(dayOfYear % IMAN_QUOTES.length);
   }, []);
 
-  // Local data
-  const qadaSetup = getQadaSetup();
-  const qadaProgress = getQadaProgress();
-  const ramadhanSetup = getRamadhanSetup();
-  const ramadhanProgress = getRamadhanProgress();
-  const fidyahHistory = getFidyahHistory();
+  // Data from React Query hooks
+  const { data: qadaData } = useQadaSolat();
+  const { data: ramadhanData } = useRamadhanQada();
+  const { data: fidyahHistory = [] } = useFidyahHistory();
+  const qadaSetup = qadaData?.setup ?? null;
+  const qadaProgress = qadaData?.progress ?? { completedByPrayer: { fajr: 0, dhuhr: 0, asr: 0, maghrib: 0, isha: 0 }, totalCompleted: 0, currentStreak: 0, longestStreak: 0, lastCompletedDate: null, dailyLogs: {} };
+  const ramadhanSetup = ramadhanData?.setup ?? null;
+  const ramadhanProgress = ramadhanData?.progress ?? { completedDates: [], currentStreak: 0, longestStreak: 0 };
   const hasQada = !!qadaSetup;
   const hasRamadhan = !!ramadhanSetup;
   const hasFidyah = fidyahHistory.length > 0;

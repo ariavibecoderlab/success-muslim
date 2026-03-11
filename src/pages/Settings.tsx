@@ -116,7 +116,14 @@ const Settings = () => {
   };
 
   const handleClearCache = () => {
-    localStorage.clear();
+    const preservePrefixes = ['sb-', 'supabase.auth'];
+    const preserveKeys = ['onboarding_completed', 'if_active', 'fasting-state'];
+    const allKeys = Object.keys(localStorage);
+    for (const key of allKeys) {
+      if (preservePrefixes.some(p => key.startsWith(p))) continue;
+      if (preserveKeys.some(k => key === k)) continue;
+      localStorage.removeItem(key);
+    }
     toast({ title: 'Cache cleared', description: 'Refresh for changes.' });
   };
 

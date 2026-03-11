@@ -1,54 +1,27 @@
 
 
-## Fix All Bugs from Bug Sweep
+## Mobile App Conversion
 
-After thorough investigation, several reported bugs are actually non-issues:
-- **FIX 1 (forwardRef)**: No actual console errors found. `FamilyPrivacySettings` and `LogPastDataRow` are not receiving refs — they're rendered as children of `motion.div`, not passed via ref. **Skipping.**
-- **FIX 2 (avatars bucket)**: Bucket already exists and is public. Upload already has error toast handling (line 78-81 of Settings.tsx). **Skipping.**
-- **FIX 10 (unique constraint)**: Already has `family_privacy_settings_user_id_key` unique constraint. **Skipping.**
-- **FIX 12 (BottomNav)**: All tab paths (`/dashboard`, `/iman`, `/health`, `/wealth`, `/productivity`, `/family`, `/settings`) are unique enough — no false matches possible. **Skipping.**
-- **FIX 14 (Wealth AppHeader)**: All pillar pages (Iman, Health, Family, Wealth) consistently use `AppHeader title="..."`. **Skipping.**
+Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
 
-### Actual fixes needed (9 bugs):
+Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
 
-**FIX 3 — `handleClearCache` in Settings.tsx**
-Replace `localStorage.clear()` with selective clearing of known app cache keys only. Preserve auth tokens (`sb-*`), onboarding flags, and IF timer state.
+### Two Options
 
-**FIX 4 — `weeklyScores` not reactive in Dashboard**
-In `useDashboardData.ts`, `useMemo(() => getWeeklyScores(), [])` has empty deps. Add `lifeScore` as dependency so it recomputes when today's score changes.
+**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
 
-**FIX 5 — `activeIF` not reactive in Dashboard**
-Replace `const activeIF = getActiveIF()` with `useFastingStore()` in `useDashboardData.ts`. The store already tracks active fast state reactively.
+**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
 
-**FIX 6 — Productivity hub page uses raw localStorage**
-`Productivity.tsx` calls `getDailyTasks()`, `getHabits()`, `getHabitLog()` directly. Replace with React Query hooks (`useDailyTasks`, `useHabits`, `useHabitLog`) that already exist.
+### What the Conversion Involves
 
-**FIX 7 — RamadhanQadaTrack localStorage only**
-The `storage.ts` functions already call `syncRamadhanQada()` which syncs to the `qada_solat` table's `setup`/`progress` jsonb columns. However, `Deen.tsx` reads directly via `getRamadhanSetup()`. Create a `useRamadhanQada` React Query hook that fetches from DB with localStorage as `initialData`.
+1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
+2. Initialize Capacitor with config pointing to your app
+3. Configure live-reload for development via your preview URL
+4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
 
-**FIX 8 — Fidyah localStorage only**
-`saveFidyahEntry()` already calls `syncFidyahEntry()` to write to `fidyah_history` table. But `Fidyah.tsx` reads only from localStorage. Create a `useFidyahHistory` React Query hook that reads from DB.
+### Known Blocker
+Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
 
-**FIX 9 — IF Timer dual intervals**
-Lines 124-128 run an interval when `active` is truthy. Lines 179-183 run another interval when `active && !scheduledStart` is false. When there's an active fast and no scheduled start, both intervals fire. Consolidate into a single interval that always ticks.
-
-**FIX 11 — Deen.tsx direct localStorage reads**
-Replace `getQadaSetup()`, `getRamadhanSetup()`, `getFidyahHistory()` calls in Deen.tsx with the React Query hooks created in FIX 7 and FIX 8, plus a `useQadaSolat` hook.
-
-**FIX 13 — Hardcoded HSL colors**
-Replace `hsl(142, 71%, 45%)` etc. in `HealthSteps.tsx` and `FastingTimerRing.tsx` with CSS variable references (`hsl(var(--primary))`, `hsl(var(--chart-1))`) that respect dark mode.
-
-### Files to modify:
-1. `src/pages/Settings.tsx` — selective cache clear (FIX 3)
-2. `src/hooks/useDashboardData.ts` — reactive weeklyScores + activeIF (FIX 4, 5)
-3. `src/pages/Productivity.tsx` — use React Query hooks (FIX 6)
-4. `src/hooks/useQadaQuery.ts` — add `useRamadhanQada` hook (FIX 7)
-5. `src/pages/RamadhanQadaTrack.tsx` — use new hook (FIX 7)
-6. `src/hooks/useFidyahQuery.ts` — new file, `useFidyahHistory` hook (FIX 8)
-7. `src/pages/Fidyah.tsx` — use new hook (FIX 8)
-8. `src/pages/health/HealthIFTimer.tsx` — consolidate intervals (FIX 9)
-9. `src/pages/Deen.tsx` — use React Query hooks (FIX 11)
-10. `src/pages/health/HealthSteps.tsx` — CSS variable colors (FIX 13)
-11. `src/components/health/FastingTimerRing.tsx` — CSS variable colors (FIX 13)
-12. `PROGRESS.md` — update with fix results
+### Next Steps
+If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
 
