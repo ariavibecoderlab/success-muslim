@@ -325,7 +325,7 @@ const QiyamPlanner = () => {
 
         {/* Schedule Info */}
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <Card>
+           <Card className="rounded-xl border-0 shadow-sm">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold">Your Schedule</p>
