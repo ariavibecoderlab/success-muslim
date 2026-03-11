@@ -45,7 +45,7 @@ const JoinFamily = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border">
-        <div className="max-w-lg mx-auto px-4 h-14 flex items-center gap-3">
+        <div className="max-w-md mx-auto px-4 h-14 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate('/family')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
