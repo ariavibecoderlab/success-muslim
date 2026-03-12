@@ -190,8 +190,8 @@ const Iman = () => {
         return dailyDhikr.totalCount > 0 ? `${dailyDhikr.totalCount} today` : 'No dhikr yet today';
       case '/iman/sunnah':
         return sunnahItems.length > 0 ? `${sunnahDone}/${sunnahItems.length} done` : 'Set up checklist';
-      case '/iman/prayer-times':
-        return nextPrayer ? `${nextPrayer.name} in ${countdown.split(' ').slice(0, 2).join(' ')}` : 'View times';
+      case '/iman/salah-log':
+        return `${salahCount.logged}/5 logged today`;
       case '/iman/zakat': return 'Calculate your zakat';
       case '/iman/sadaqah': return 'Track your giving';
       case '/iman/qiyam': return 'Tahajjud scheduler';
