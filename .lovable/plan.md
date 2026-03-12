@@ -1,27 +1,26 @@
 
 
-## Mobile App Conversion
+## Auto-detect Calculation Method by Country
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+Add a country-to-method mapping so Indonesian users get KEMENAG (method 20), Malaysian users get JAKIM, and everyone else gets Umm al-Qura (method 4).
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+### Changes
 
-### Two Options
+**`src/lib/prayer-times.ts`**
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+1. Add a country-method mapping constant:
+```typescript
+const COUNTRY_METHOD_MAP: Record<string, number> = {
+  'indonesia': 20,  // KEMENAG
+  'malaysia': 17,   // JAKIM (handled separately but for reference)
+};
+const DEFAULT_INTL_METHOD = 4; // Umm al-Qura
+```
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+2. In `fetchFromAladhan()`, replace hardcoded `method=4` with a lookup: resolve `settings.calculation_method` if explicitly set by user, otherwise use the country map or fall back to Umm al-Qura.
 
-### What the Conversion Involves
+3. Update `DEFAULT_SETTINGS.calculation_method` logic — keep 3 (MWL) as stored default, but the runtime fetch will auto-select based on country when no explicit override exists.
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
-
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
-
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+### Files Modified
+- `src/lib/prayer-times.ts`
 
