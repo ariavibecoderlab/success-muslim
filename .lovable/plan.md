@@ -1,27 +1,40 @@
 
 
-## Mobile App Conversion
+## Add Aladhan API for Non-Malaysian Users
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+Currently `fetchPrayerTimes()` returns `null` for non-Malaysian countries. We need to add the Aladhan API (free, no key required) as the international source, using Umm al-Qura (method 4) as default for non-MY users.
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+### Architecture
 
-### Two Options
+```text
+fetchPrayerTimes(settings)
+  ├─ Malaysia → JAKIM edge function (existing)
+  └─ Other    → Aladhan API (new, direct call — no proxy needed)
+```
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+### Plan
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+#### 1. `src/lib/prayer-times.ts` — Add Aladhan fetch
 
-### What the Conversion Involves
+- Add `fetchFromAladhan()` function that calls `https://api.aladhan.com/v1/timingsByCity/{date}?city={city}&country={country}&method={method}&school={school}`
+  - Map `madhab: 'shafi'` → `school=0`, `'hanafi'` → `school=1`
+  - Default method for non-MY: `4` (Umm al-Qura) instead of current default `3`
+  - Parse response: `data.timings.Fajr`, `.Dhuhr`, `.Asr`, `.Maghrib`, `.Isha` (format "HH:mm")
+  - Extract hijri date from `data.date.hijri`
+  - Return `PrayerTimesData` with `source: 'aladhan'`
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+- Update `fetchPrayerTimes()`: replace `return null` at line 175 with a call to `fetchFromAladhan()`
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+- Also support lat/lng: if `settings.latitude` and `settings.longitude` are set, use `/v1/timings/{timestamp}?latitude=&longitude=&method=&school=` instead of `timingsByCity`
 
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+#### 2. `src/lib/prayer-times.ts` — Update types
+
+- Add `'aladhan'` to the `source` type: `source?: 'jakim' | 'aladhan'`
+
+#### 3. No edge function needed
+
+Aladhan API is publicly accessible with CORS support — direct browser fetch works fine. No proxy required.
+
+### Files Modified
+- `src/lib/prayer-times.ts` — Add `fetchFromAladhan()`, update `fetchPrayerTimes()` fallback, update source type
 
