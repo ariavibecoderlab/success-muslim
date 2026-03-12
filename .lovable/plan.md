@@ -1,27 +1,63 @@
 
 
-## Mobile App Conversion
+## Audit: `/iman` (Deen.tsx) Layout & PrayerTimes.tsx
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+### Deen.tsx — Layout Audit
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+The /iman page currently has **7 vertical sections** which creates excessive scroll depth. Here's the audit:
 
-### Two Options
+| Section | Verdict | Rationale |
+|---------|---------|-----------|
+| Prayer Hero Card | **Keep** — but duplicates PrayerTimes subpage hero. Simplify to a compact strip, not a full card |
+| Date + Location | **Keep** — contextual, lightweight |
+| Iman Quote Banner | **Remove** — low utility, takes prime real estate. Quotes belong in Dashboard's DailyQuoteCard |
+| Stats Rings (4x) | **Keep** — core value, shows daily spiritual progress at a glance |
+| Spiritual Tools Grid (11 cards) | **Keep but compact** — remove Card wrapper, make it a dense list/grid |
+| Active Trackers (Qada/Ramadhan/Fidyah) | **Move to subpages** — these are niche long-term trackers, not daily glance items. They clutter the hub for most users. Keep only a single "Active Trackers" link row if any are active |
+| Setup Actions (3-col grid) | **Merge** — fold into Spiritual Tools as regular items with setup badge |
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+### PrayerTimes.tsx — Audit
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+| Section | Verdict | Rationale |
+|---------|---------|-----------|
+| Notification banner | **Keep** — important one-time prompt |
+| Location + Settings row | **Keep** — essential controls |
+| Hero card (orange) | **Keep** — good, matches design system |
+| Mosque toggle + inputs | **Keep** — but should be inside the Settings dialog, not on the main page. Clutters the prayer list view |
+| Prayer list (5 cards) | **Keep** — core content |
+| Source note | **Keep** — trust signal |
 
-### What the Conversion Involves
+---
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+### Plan
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+#### `src/pages/Deen.tsx` — Declutter & Compact
 
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+1. **Remove Quote Banner** (lines 319-346) — not essential for spiritual command center hub
+
+2. **Compact Spiritual Tools** — replace `<Card>` wrapper with a flat row layout:
+   ```text
+   [icon] Title          subtitle →
+   ```
+   No card border/shadow. Just a simple `flex items-center gap-3 py-2.5` row with a subtle `border-b border-border/30` separator. This halves the visual weight.
+
+3. **Merge Setup Actions into Spiritual Tools** — add Qada Solat, Ramadhan Qada, Fidyah as regular tool rows (with a small badge like "3 remaining" or "Setup" if not configured). Remove the separate "Get Started" / "More Trackers" section entirely.
+
+4. **Collapse Active Trackers** — remove the expanded tracker cards (lines 443-527). The progress info is now shown as subtitle text in the merged tool rows (e.g., "Qada Solat — 245 remaining · 12% done").
+
+5. **Remove Iman Score card from grid** — move it into the Stats Rings row as a 5th element or a small bar below the rings. It's metadata about the rings, not a "tool."
+
+6. **Prayer Hero Card** — keep but update gradient from emerald to orange (`from-orange-600 to-orange-700`) per approved plan. Also replace `text-primary` with `text-orange-600` for date section and quote dots (already planned).
+
+7. **Color fixes** — apply the previously approved orange color updates (stats rings, labels, progress bars).
+
+#### `src/pages/deen/PrayerTimes.tsx` — Move Mosque Settings
+
+1. **Move Mosque Toggle + Time Inputs** (lines 410-445) into the existing Settings Dialog under a new "Mosque" tab (making it 4 tabs: Location, Method, Adhan, Mosque). This declutters the main prayer list view.
+
+2. **Add Salah Log link** — add a subtle "Log Salah" button/link below the prayer list to connect to `/iman/salah-log`, since users viewing prayer times likely want to log.
+
+### Files Modified
+- `src/pages/Deen.tsx` — Remove quote banner, compact spiritual tools (no cards), merge trackers into tools list, move Iman Score to stats area, apply orange colors
+- `src/pages/deen/PrayerTimes.tsx` — Move mosque toggle/inputs into Settings dialog as 4th tab, add Salah Log link
 
