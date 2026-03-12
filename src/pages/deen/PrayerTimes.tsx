@@ -3,23 +3,21 @@ import {
   Clock,
   MapPin,
   RefreshCw,
-  ChevronDown,
   Settings2,
   Building2,
   Bell,
   BellOff,
   Vibrate,
   Navigation,
-  Globe,
   Moon,
   Sun,
   Sunrise,
   Sunset,
   Volume2,
   ChevronRight,
-  Check,
-  Search,
+  BookOpen,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,10 +80,8 @@ const PrayerTimes = () => {
   const [settingsTab, setSettingsTab] = useState("location");
   const [notifPermission, setNotifPermission] = useState<string>(getNotificationPermission);
 
-  // Schedule prayer notifications
   usePrayerNotifications(data?.timings ?? null, settings);
 
-  // Load prayer times whenever settings change
   const load = useCallback(async () => {
     setLoading(true);
     const result = await fetchPrayerTimes(settings);
@@ -97,7 +93,6 @@ const PrayerTimes = () => {
     if (!settingsLoading) load();
   }, [settingsLoading, load]);
 
-  // Countdown
   const currentIdx = data ? getCurrentPrayerIndex(data.timings) : -1;
   const nextIdx = data ? getNextPrayerIndex(data.timings) : 0;
 
@@ -109,7 +104,6 @@ const PrayerTimes = () => {
     return () => clearInterval(id);
   }, [data, nextIdx]);
 
-  // GPS detection
   const handleDetectGps = async () => {
     setDetectingGps(true);
     const loc = await detectLocation();
@@ -137,15 +131,6 @@ const PrayerTimes = () => {
   return (
     <SubPageLayout title="Prayer Times" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/prayer-times">
       <div className="space-y-4">
-        {/* Hijri Date Banner */}
-        {/* <div className="text-center py-2">
-          <p className="text-xs text-muted-foreground uppercase tracking-widest">Today</p>
-          <p className="text-sm font-semibold text-primary">{hijriDate}</p>
-          {data?.hijriDate && data.hijriDate !== hijriDate && (
-            <p className="text-[10px] text-muted-foreground mt-0.5">{data.hijriDate}</p>
-          )}
-        </div> */}
-
         {/* Notification Permission Banner */}
         {notifPermission === "default" && (
           <Card className="border-0 rounded-xl shadow-sm bg-primary/5">
@@ -205,10 +190,11 @@ const PrayerTimes = () => {
                   <DialogTitle>Prayer Settings</DialogTitle>
                 </DialogHeader>
                 <Tabs value={settingsTab} onValueChange={setSettingsTab}>
-                  <TabsList className="grid grid-cols-3 w-full">
+                  <TabsList className="grid grid-cols-4 w-full">
                     <TabsTrigger value="location">Location</TabsTrigger>
                     <TabsTrigger value="method">Method</TabsTrigger>
                     <TabsTrigger value="adhan">Adhan</TabsTrigger>
+                    <TabsTrigger value="mosque">Mosque</TabsTrigger>
                   </TabsList>
 
                   {/* LOCATION TAB */}
@@ -367,6 +353,40 @@ const PrayerTimes = () => {
                       );
                     })}
                   </TabsContent>
+
+                  {/* MOSQUE TAB */}
+                  <TabsContent value="mosque" className="space-y-4 mt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-primary" />
+                        <div>
+                          <p className="text-sm font-medium">Mosque Times</p>
+                          <p className="text-[10px] text-muted-foreground">Override with local mosque schedule</p>
+                        </div>
+                      </div>
+                      <Switch checked={settings.mosque_enabled} onCheckedChange={(v) => saveSettings({ mosque_enabled: v })} />
+                    </div>
+
+                    {settings.mosque_enabled && (
+                      <div className="space-y-2">
+                        <p className="text-xs font-medium text-muted-foreground">Mosque Prayer Times (24h format)</p>
+                        {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
+                          const field = `mosque_${key}` as keyof typeof settings;
+                          return (
+                            <div key={key} className="flex items-center gap-3">
+                              <span className="text-xs w-16 capitalize">{key}</span>
+                              <Input
+                                type="time"
+                                className="h-8 text-xs flex-1"
+                                value={(settings[field] as string) || ""}
+                                onChange={(e) => saveSettings({ [field]: e.target.value || null })}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </TabsContent>
                 </Tabs>
               </DialogContent>
             </Dialog>
@@ -403,43 +423,6 @@ const PrayerTimes = () => {
                   />
                 ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Mosque Override Toggle */}
-         <Card className="rounded-xl border-0 shadow-sm">
-          <CardContent className="p-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              <div>
-                <p className="text-sm font-medium">Mosque Times</p>
-                <p className="text-[10px] text-muted-foreground">Override with local mosque schedule</p>
-              </div>
-            </div>
-            <Switch checked={settings.mosque_enabled} onCheckedChange={(v) => saveSettings({ mosque_enabled: v })} />
-          </CardContent>
-        </Card>
-
-        {/* Mosque Time Inputs */}
-        {settings.mosque_enabled && (
-           <Card className="rounded-xl border-0 shadow-sm">
-            <CardContent className="p-3 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Mosque Prayer Times (24h format)</p>
-              {(["fajr", "dhuhr", "asr", "maghrib", "isha"] as const).map((key) => {
-                const field = `mosque_${key}` as keyof typeof settings;
-                return (
-                  <div key={key} className="flex items-center gap-3">
-                    <span className="text-xs w-16 capitalize">{key}</span>
-                    <Input
-                      type="time"
-                      className="h-8 text-xs flex-1"
-                      value={(settings[field] as string) || ""}
-                      onChange={(e) => saveSettings({ [field]: e.target.value || null })}
-                    />
-                  </div>
-                );
-              })}
             </CardContent>
           </Card>
         )}
@@ -530,6 +513,13 @@ const PrayerTimes = () => {
             </Card>
           )}
         </div>
+
+        {/* Salah Log Link */}
+        <Link to="/iman/salah-log" className="flex items-center justify-center gap-2 py-2.5 text-primary hover:underline transition-colors">
+          <BookOpen className="h-3.5 w-3.5" />
+          <span className="text-xs font-medium">Log today's salah</span>
+          <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
 
         {/* Method note */}
         <p className="text-[10px] text-muted-foreground text-center">
