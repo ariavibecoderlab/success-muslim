@@ -6,6 +6,7 @@ import { requestNotificationPermission, getNotificationPermission } from '@/hook
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   fetchPrayerTimes,
   formatPrayerTime,
