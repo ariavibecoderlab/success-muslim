@@ -23,6 +23,7 @@ const BackdateDatePicker = ({
   className,
   compact = false,
   highlight = false,
+  darkMode = false,
 }: BackdateDatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
