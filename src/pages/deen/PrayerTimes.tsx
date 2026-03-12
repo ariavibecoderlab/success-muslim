@@ -18,6 +18,7 @@ import {
   BookOpen,
   CheckCircle2,
   Circle,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
