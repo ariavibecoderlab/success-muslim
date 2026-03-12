@@ -13,7 +13,7 @@ import { useSunnahStats, useSunnahLog } from '@/hooks/useSunnahQuery';
 import { useDhikrDaily } from '@/hooks/useDhikrQuery';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
 import { useHijriDate } from '@/hooks/useHijriDate';
-import RamadanBanner from '@/components/dashboard/RamadanBanner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { calcIman, type LifeScoreInput } from '@/lib/life-score';
 import { getQuranDay } from '@/lib/quran-storage';
 import { getFastingLog, todayKey } from '@/lib/health-storage';
@@ -92,10 +92,10 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 // ── Spiritual tools config ────────────────────────
 
 const spiritualTools = [
+  { icon: Target, title: 'Salah Log', path: '/iman/salah-log' },
   { icon: BookOpen, title: 'Quran', path: '/iman/quran' },
   { icon: HandHeart, title: 'Dhikr Counter', path: '/iman/dhikr' },
   { icon: ListChecks, title: 'Sunnah Tracker', path: '/iman/sunnah' },
-  { icon: Star, title: 'Prayer Times', path: '/iman/prayer-times' },
   { icon: Calculator, title: 'Zakat', path: '/iman/zakat' },
   { icon: Heart, title: 'Sadaqah', path: '/iman/sadaqah' },
   { icon: Moon, title: 'Qiyam Planner', path: '/iman/qiyam' },
@@ -190,8 +190,8 @@ const Iman = () => {
         return dailyDhikr.totalCount > 0 ? `${dailyDhikr.totalCount} today` : 'No dhikr yet today';
       case '/iman/sunnah':
         return sunnahItems.length > 0 ? `${sunnahDone}/${sunnahItems.length} done` : 'Set up checklist';
-      case '/iman/prayer-times':
-        return nextPrayer ? `${nextPrayer.name} in ${countdown.split(' ').slice(0, 2).join(' ')}` : 'View times';
+      case '/iman/salah-log':
+        return `${salahCount.logged}/5 logged today`;
       case '/iman/zakat': return 'Calculate your zakat';
       case '/iman/sadaqah': return 'Track your giving';
       case '/iman/qiyam': return 'Tahajjud scheduler';
@@ -231,82 +231,75 @@ const Iman = () => {
 
       <main className="max-w-md mx-auto w-full px-5 py-6 space-y-5 pb-28">
 
-        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
-
         {/* ── Prayer Times Hero Card ──────────── */}
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
           <Link to="/iman/prayer-times">
-            <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-orange-600 to-orange-700 text-white">
-              <CardContent className="p-5">
-                {prayerData && nextPrayer ? (
-                  <>
+            {prayerData && nextPrayer ? (
+              <Card className="overflow-hidden border-0 shadow-md bg-gradient-to-br from-orange-600 to-orange-700 text-white">
+                <CardContent className="p-5">
+                  {isRamadan && (
                     <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <motion.div
-                          className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-sm"
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                        >
-                          <Star className="h-6 w-6" />
-                        </motion.div>
-                        <div>
-                          <p className="text-[10px] font-semibold text-white/70 uppercase tracking-wider">Next Prayer</p>
-                          <p className="text-lg font-black tracking-tight leading-tight">{nextPrayer.name}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-black tabular-nums tracking-tight">{countdown}</p>
-                        <p className="text-[10px] text-white/70">
-                          {formatPrayerTime(getEffectiveTime(nextPrayer))}
-                        </p>
+                      <span className="text-[10px] font-bold bg-white/15 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                        Ramadan Day {ramadanDay}/30
+                      </span>
+                      <div className="flex-1 mx-3 h-1 bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-white/50 rounded-full" style={{ width: `${(ramadanDay / 30) * 100}%` }} />
                       </div>
                     </div>
+                  )}
 
-                    <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-2">
-                      {prayerData.timings.map((p, i) => (
-                        <div
-                          key={p.key}
-                          className={`flex flex-col items-center gap-0.5 flex-1 ${
-                            i === nextIdx ? 'text-white font-bold' :
-                            i <= currentIdx ? 'text-white/40' : 'text-white/70'
-                          }`}
-                        >
-                          <span className="text-[9px]">{p.name}</span>
-                          <span className={`text-[11px] tabular-nums ${i === nextIdx ? 'font-bold' : ''}`}>
-                            {formatPrayerTime(getEffectiveTime(p)).replace(/ (AM|PM)/, '')}
-                          </span>
-                          {i <= currentIdx && (
-                            <div className="w-1 h-1 rounded-full bg-white/40" />
-                          )}
-                        </div>
-                      ))}
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center backdrop-blur-sm"
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      >
+                        <Star className="h-6 w-6" />
+                      </motion.div>
+                      <div>
+                        <p className="text-[10px] font-semibold text-white/70 uppercase tracking-wider">Next Prayer</p>
+                        <p className="text-lg font-black tracking-tight leading-tight">{nextPrayer.name}</p>
+                      </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm text-white/70">Loading prayer times...</p>
-                    <Settings2 className="h-4 w-4 text-white/50" />
+                    <div className="text-right">
+                      <p className="text-2xl font-black tabular-nums tracking-tight">{countdown}</p>
+                      <p className="text-[10px] text-white/70">
+                        {formatPrayerTime(getEffectiveTime(nextPrayer))}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
-        </motion.div>
 
-        {/* ── Date + Location ────────────────── */}
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={1} className="text-center">
-          <p className="text-sm font-semibold text-orange-600">{hijriDate}</p>
-          <div className="flex items-center justify-center gap-2 mt-0.5">
-            <p className="text-[11px] text-muted-foreground">{gregorianDate}</p>
-            {settings.city && (
-              <>
-                <span className="text-[11px] text-muted-foreground">·</span>
-                <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                  <MapPin className="h-2.5 w-2.5" />{settings.city}
-                </span>
-              </>
+                  <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-lg p-2">
+                    {prayerData.timings.map((p, i) => (
+                      <div
+                        key={p.key}
+                        className={`flex flex-col items-center gap-0.5 flex-1 ${
+                          i === nextIdx ? 'text-white font-bold' :
+                          i <= currentIdx ? 'text-white/40' : 'text-white/70'
+                        }`}
+                      >
+                        <span className="text-[9px]">{p.name}</span>
+                        <span className={`text-[11px] tabular-nums ${i === nextIdx ? 'font-bold' : ''}`}>
+                          {formatPrayerTime(getEffectiveTime(p)).replace(/ (AM|PM)/, '')}
+                        </span>
+                        {i <= currentIdx && (
+                          <div className="w-1 h-1 rounded-full bg-white/40" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 text-[10px] text-white/60">
+                    <span>{hijriDate}{settings.city ? ` · ${settings.city}` : ''}</span>
+                    <span>{gregorianDate}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Skeleton className="h-16 rounded-xl" />
             )}
-          </div>
+          </Link>
         </motion.div>
 
         {/* ── Iman Stats Rings + Score ────────── */}
