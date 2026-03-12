@@ -89,6 +89,20 @@ export const ADHAN_OPTIONS = [
   { id: 'simple', name: 'Simple Tone' },
 ];
 
+const COUNTRY_METHOD_MAP: Record<string, number> = {
+  'indonesia': 20,  // KEMENAG
+  'malaysia': 17,   // JAKIM
+  'singapore': 11,  // MUIS
+  'turkey': 13,     // Diyanet
+  'qatar': 10,
+  'kuwait': 9,
+};
+const DEFAULT_INTL_METHOD = 4; // Umm al-Qura
+
+export function getMethodForCountry(country: string): number {
+  return COUNTRY_METHOD_MAP[country.toLowerCase()] || DEFAULT_INTL_METHOD;
+}
+
 const PRAYER_KEYS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'] as const;
 const PRAYER_DISPLAY: Record<string, string> = {
   Fajr: 'Subuh',
@@ -253,7 +267,7 @@ function formatJakimHijri(hijri: string): string {
 async function fetchFromAladhan(settings: Partial<PrayerSettings>): Promise<PrayerTimesData | null> {
   const city = settings.city || 'Makkah';
   const country = settings.country || 'Saudi Arabia';
-  const method = settings.calculation_method ?? 4; // Umm al-Qura default for international
+  const method = settings.calculation_method ?? getMethodForCountry(country);
   const school = settings.madhab === 'hanafi' ? 1 : 0;
 
   try {
