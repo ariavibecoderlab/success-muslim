@@ -102,7 +102,7 @@ const PrayerTimes = () => {
   const [detectingGps, setDetectingGps] = useState(false);
   const [settingsTab, setSettingsTab] = useState("location");
   const [notifPermission, setNotifPermission] = useState<string>(getNotificationPermission);
-
+  const [drawerPrayer, setDrawerPrayer] = useState<string | null>(null);
   const todayKey = getTodayKey();
   const { data: salahLog } = useSalahLog(todayKey);
   const salahMutation = useSalahMutation();
