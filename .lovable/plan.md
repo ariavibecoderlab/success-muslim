@@ -1,33 +1,27 @@
 
 
-## Custom Filled SVG Icons for Bottom Navigation
+## Mobile App Conversion
 
-Replace the current Lucide stroke-based icons with hand-crafted filled SVG icon components that feel more premium and app-native. Each icon will have an `active` prop to switch between filled (active) and outlined (inactive) variants, using `currentColor` so they inherit the existing `text-primary` / `text-muted-foreground` classes.
+Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
 
-### New File: `src/components/icons/NavIcons.tsx`
+Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
 
-Create 7 React SVG icon components (20x20 viewBox), each accepting `className` and `active` props:
+### Two Options
 
-| Tab | Icon | Description |
-|---|---|---|
-| **Home** | Mosque silhouette with dome + minaret | Filled dome shape — distinctly Islamic |
-| **Iman** | Crescent + star | Classic Islamic symbol, avoids dark-mode confusion |
-| **Health** | Heart with pulse line | Filled heart with an ECG wave cutout |
-| **Wealth** | Coin stack | Filled stacked coins — clearer than wallet |
-| **Tasks** | Clipboard with checkmark | Filled clipboard shape |
-| **Family** | Two people silhouette | Filled person group |
-| **Profile** | Gear/cog | Filled settings gear |
+**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
 
-Active state: fully filled shape. Inactive state: outlined version (stroke only, no fill).
+**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
 
-### Modified File: `src/components/BottomNav.tsx`
+### What the Conversion Involves
 
-- Import the new icon components instead of Lucide icons
-- Update tabs array to reference new components
-- Pass `active` boolean prop to each icon instead of using `stroke-[2.5]`
-- Icons use `currentColor` so the existing `text-primary` / `text-muted-foreground` color logic works unchanged
+1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
+2. Initialize Capacitor with config pointing to your app
+3. Configure live-reload for development via your preview URL
+4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
 
-### Files
-- **Create**: `src/components/icons/NavIcons.tsx`
-- **Modify**: `src/components/BottomNav.tsx`
+### Known Blocker
+Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
+
+### Next Steps
+If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
 

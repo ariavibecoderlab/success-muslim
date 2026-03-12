@@ -1,15 +1,15 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Moon, Heart, Wallet, ListChecks, UserCircle, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { IconHome, IconIman, IconHealth, IconWealth, IconTasks, IconFamily, IconProfile } from './icons/NavIcons';
 
 const tabs = [
-  { icon: Home, label: 'Home', path: '/dashboard' },
-  { icon: Moon, label: 'Iman', path: '/iman' },
-  { icon: Heart, label: 'Health', path: '/health' },
-  { icon: Wallet, label: 'Wealth', path: '/wealth' },
-  { icon: ListChecks, label: 'Tasks', path: '/productivity' },
-  { icon: Users, label: 'Family', path: '/family' },
-  { icon: UserCircle, label: 'Profile', path: '/settings' },
+  { icon: IconHome, label: 'Home', path: '/dashboard' },
+  { icon: IconIman, label: 'Iman', path: '/iman' },
+  { icon: IconHealth, label: 'Health', path: '/health' },
+  { icon: IconWealth, label: 'Wealth', path: '/wealth' },
+  { icon: IconTasks, label: 'Tasks', path: '/productivity' },
+  { icon: IconFamily, label: 'Family', path: '/family' },
+  { icon: IconProfile, label: 'Profile', path: '/settings' },
 ];
 
 const BottomNav = () => {
@@ -35,7 +35,7 @@ const BottomNav = () => {
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
-              <tab.icon className={`h-5 w-5 ${active ? 'stroke-[2.5]' : ''}`} />
+              <tab.icon className="h-5 w-5" active={active} />
               <span className="text-[11px] font-medium leading-none">{tab.label}</span>
             </Link>
           );
