@@ -171,8 +171,8 @@ export async function fetchPrayerTimes(settings: Partial<PrayerSettings> = {}): 
     }
   }
 
-  // JAKIM only covers Malaysia — return null for other countries
-  return null;
+  // Non-Malaysian users → Aladhan API (Umm al-Qura)
+  return fetchFromAladhan(settings);
 }
 
 async function fetchFromJakim(city: string, settings: Partial<PrayerSettings>): Promise<PrayerTimesData | null> {
