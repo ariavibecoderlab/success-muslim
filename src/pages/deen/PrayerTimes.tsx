@@ -18,6 +18,7 @@ import {
   BookOpen,
   CheckCircle2,
   Circle,
+  X,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import SubPageLayout from "@/components/SubPageLayout";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { usePrayerSettings } from "@/hooks/usePrayerSettings";
 import {
   usePrayerNotifications,
@@ -100,7 +102,7 @@ const PrayerTimes = () => {
   const [detectingGps, setDetectingGps] = useState(false);
   const [settingsTab, setSettingsTab] = useState("location");
   const [notifPermission, setNotifPermission] = useState<string>(getNotificationPermission);
-
+  const [drawerPrayer, setDrawerPrayer] = useState<string | null>(null);
   const todayKey = getTodayKey();
   const { data: salahLog } = useSalahLog(todayKey);
   const salahMutation = useSalahMutation();
@@ -328,12 +330,12 @@ const PrayerTimes = () => {
                     {/* ADHAN TAB */}
                     <TabsContent value="adhan" className="space-y-4 mt-4">
                       {["fajr", "dhuhr", "asr", "maghrib", "isha"].map((key) => {
-                        const config = settings.adhan_settings[key] || { mode: "full", audio: "makkah", preReminder: 0 };
+                        const config: AdhanConfig = { mode: "full", audio: "makkah", preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6], ...settings.adhan_settings[key] };
                         const updateAdhan = (patch: Partial<AdhanConfig>) => {
                           saveSettings({
                             adhan_settings: {
                               ...settings.adhan_settings,
-                              [key]: { ...config, ...patch },
+                              [key]: { ...config, ...patch } as AdhanConfig,
                             },
                           });
                         };
@@ -592,9 +594,14 @@ const PrayerTimes = () => {
                             </p>
                           )}
                         </div>
-                        {adhanMode === "full" && <Bell className="h-3 w-3 text-muted-foreground/40" />}
-                        {adhanMode === "vibrate" && <Vibrate className="h-3 w-3 text-muted-foreground/40" />}
-                        {adhanMode === "silent" && <BellOff className="h-3 w-3 text-muted-foreground/40" />}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDrawerPrayer(prayer.key.toLowerCase()); }}
+                          className="p-1 -mr-1 rounded-md hover:bg-muted transition-colors"
+                        >
+                          {adhanMode === "full" && <Bell className="h-3.5 w-3.5 text-muted-foreground" />}
+                          {adhanMode === "vibrate" && <Vibrate className="h-3.5 w-3.5 text-muted-foreground" />}
+                          {adhanMode === "silent" && <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
@@ -621,6 +628,140 @@ const PrayerTimes = () => {
         <p className="text-[10px] text-muted-foreground text-center">
           Source: {data?.source === "jakim" ? "JAKIM e-Solat" : "Aladhan API"} · Times may vary ±1-2 min
         </p>
+
+        {/* Notification Drawer */}
+        {(() => {
+          const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
+          const DISPLAY_NAMES: Record<string, string> = { fajr: "Subuh", dhuhr: "Zohor", asr: "Asar", maghrib: "Maghrib", isha: "Isyak" };
+          const drawerConfig: AdhanConfig = drawerPrayer
+            ? { mode: "full", audio: "makkah", preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6], ...settings.adhan_settings[drawerPrayer] }
+            : { mode: "full", audio: "makkah", preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] };
+
+          const updateDrawerConfig = (patch: Partial<AdhanConfig>) => {
+            if (!drawerPrayer) return;
+            const updated = { ...drawerConfig, ...patch } as AdhanConfig;
+            saveSettings({
+              adhan_settings: {
+                ...settings.adhan_settings,
+                [drawerPrayer]: updated,
+              },
+            });
+          };
+
+          return (
+            <Drawer open={!!drawerPrayer} onOpenChange={(open) => !open && setDrawerPrayer(null)}>
+              <DrawerContent className="bg-emerald-900 border-emerald-800 text-white rounded-t-2xl">
+                <div className="p-5 space-y-5 max-h-[80vh] overflow-y-auto">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold">{drawerPrayer ? DISPLAY_NAMES[drawerPrayer] || drawerPrayer : ""} Notification</h3>
+                    <button onClick={() => setDrawerPrayer(null)} className="p-1 rounded-full hover:bg-white/10">
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+
+                  {/* Notify Toggle */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Notify</span>
+                    <Switch
+                      checked={drawerConfig.enabled}
+                      onCheckedChange={(v) => updateDrawerConfig({ enabled: v })}
+                      className="data-[state=checked]:bg-emerald-500 data-[state=unchecked]:bg-white/20"
+                    />
+                  </div>
+
+                  {drawerConfig.enabled && (
+                    <>
+                      {/* Repeats — Day selectors */}
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">Repeats</span>
+                          <span className="text-xs text-white/60">
+                            {drawerConfig.days.length === 7 ? "Everyday" : `${drawerConfig.days.length} days`}
+                          </span>
+                        </div>
+                        <div className="flex justify-between gap-1.5">
+                          {DAY_LABELS.map((label, idx) => {
+                            const isActive = drawerConfig.days.includes(idx);
+                            return (
+                              <button
+                                key={idx}
+                                onClick={() => {
+                                  const newDays = isActive
+                                    ? drawerConfig.days.filter((d) => d !== idx)
+                                    : [...drawerConfig.days, idx].sort();
+                                  if (newDays.length > 0) updateDrawerConfig({ days: newDays });
+                                }}
+                                className={`w-9 h-9 rounded-full text-xs font-semibold transition-all ${
+                                  isActive
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-white/10 text-white/50"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Sound */}
+                      <div className="space-y-2.5">
+                        <span className="text-sm font-medium">Notification Sound</span>
+                        <div className="flex gap-2">
+                          {([{ key: "full", label: "Full", icon: <Volume2 className="h-4 w-4" /> },
+                            { key: "vibrate", label: "Vibrate", icon: <Vibrate className="h-4 w-4" /> },
+                            { key: "silent", label: "Silent", icon: <BellOff className="h-4 w-4" /> }] as const).map((opt) => (
+                            <button
+                              key={opt.key}
+                              onClick={() => updateDrawerConfig({ mode: opt.key })}
+                              className={`flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl text-xs font-medium transition-all ${
+                                drawerConfig.mode === opt.key
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-white/10 text-white/60 hover:bg-white/15"
+                              }`}
+                            >
+                              {opt.icon}
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Pre-Adhan Reminder */}
+                      <div className="space-y-2.5">
+                        <span className="text-sm font-medium">Pre-Adhan Reminder</span>
+                        <div className="flex gap-2 flex-wrap">
+                          {PRE_REMINDER_OPTIONS.map((m) => (
+                            <button
+                              key={m}
+                              onClick={() => updateDrawerConfig({ preReminder: m })}
+                              className={`px-3.5 py-2 rounded-xl text-xs font-medium transition-all ${
+                                drawerConfig.preReminder === m
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-white/10 text-white/60 hover:bg-white/15"
+                              }`}
+                            >
+                              {m === 0 ? "Off" : `${m} min`}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Done button */}
+                  <Button
+                    onClick={() => setDrawerPrayer(null)}
+                    className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl h-11"
+                  >
+                    Done
+                  </Button>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          );
+        })()}
       </div>
     </SubPageLayout>
   );
