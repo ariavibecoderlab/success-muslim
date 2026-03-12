@@ -28,10 +28,13 @@ export default function HeroPrayerCard() {
   const { data: salahLog } = useSalahLog(today);
   const salahMutation = useSalahMutation();
   const salahCount = useTodaySalahCount();
+  const { settings, loading: settingsLoading } = usePrayerSettings();
 
   useEffect(() => {
-    fetchPrayerTimes().then(d => d && setPrayerData(d));
-  }, []);
+    if (!settingsLoading) {
+      fetchPrayerTimes(settings).then(d => d && setPrayerData(d));
+    }
+  }, [settings, settingsLoading]);
 
   useEffect(() => {
     if (!prayerData) return;

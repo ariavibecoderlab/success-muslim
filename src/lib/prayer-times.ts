@@ -50,11 +50,11 @@ export const DEFAULT_SETTINGS: PrayerSettings = {
   madhab: 'shafi',
   mosque_enabled: false,
   adhan_settings: {
-    fajr: { mode: 'full', audio: 'makkah', preReminder: 0 },
-    dhuhr: { mode: 'full', audio: 'makkah', preReminder: 0 },
-    asr: { mode: 'full', audio: 'makkah', preReminder: 0 },
-    maghrib: { mode: 'full', audio: 'makkah', preReminder: 0 },
-    isha: { mode: 'full', audio: 'makkah', preReminder: 0 },
+    fajr: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
+    dhuhr: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
+    asr: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
+    maghrib: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
+    isha: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
   },
 };
 
