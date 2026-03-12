@@ -79,6 +79,8 @@ export function usePrayerNotifications(
       const key = prayer.key.toLowerCase();
       const config = settings.adhan_settings[key];
       if (!config || config.mode === 'silent') return;
+      if (config.enabled === false) return;
+      if (config.days && !config.days.includes(now.getDay())) return;
 
       const effectiveTime = getEffectiveTime(prayer);
       const [h, m] = effectiveTime.split(':').map(Number);
