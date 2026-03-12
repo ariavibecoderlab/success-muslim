@@ -38,6 +38,8 @@ export interface AdhanConfig {
   mode: 'full' | 'vibrate' | 'silent';
   audio: string;
   preReminder: number; // minutes before prayer
+  enabled: boolean;
+  days: number[]; // 0-6, Sun-Sat
 }
 
 export const DEFAULT_SETTINGS: PrayerSettings = {
