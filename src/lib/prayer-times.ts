@@ -267,7 +267,7 @@ function formatJakimHijri(hijri: string): string {
 async function fetchFromAladhan(settings: Partial<PrayerSettings>): Promise<PrayerTimesData | null> {
   const city = settings.city || 'Makkah';
   const country = settings.country || 'Saudi Arabia';
-  const method = settings.calculation_method ?? 4; // Umm al-Qura default for international
+  const method = settings.calculation_method ?? getMethodForCountry(country);
   const school = settings.madhab === 'hanafi' ? 1 : 0;
 
   try {
