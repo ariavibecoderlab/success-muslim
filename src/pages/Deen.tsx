@@ -92,10 +92,10 @@ const PRAYER_ICONS: Record<string, React.ReactNode> = {
 // ── Spiritual tools config ────────────────────────
 
 const spiritualTools = [
+  { icon: Target, title: 'Salah Log', path: '/iman/salah-log' },
   { icon: BookOpen, title: 'Quran', path: '/iman/quran' },
   { icon: HandHeart, title: 'Dhikr Counter', path: '/iman/dhikr' },
   { icon: ListChecks, title: 'Sunnah Tracker', path: '/iman/sunnah' },
-  { icon: Star, title: 'Prayer Times', path: '/iman/prayer-times' },
   { icon: Calculator, title: 'Zakat', path: '/iman/zakat' },
   { icon: Heart, title: 'Sadaqah', path: '/iman/sadaqah' },
   { icon: Moon, title: 'Qiyam Planner', path: '/iman/qiyam' },
