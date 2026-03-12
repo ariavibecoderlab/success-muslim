@@ -45,7 +45,18 @@ export default function HeroPrayerCard() {
     salahMutation.mutate({ prayer, status: 'ontime', date: today });
   }, [today, salahMutation]);
 
-  if (!prayerData) return null;
+  if (!prayerData) {
+    return (
+      <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
+        <CardContent className="p-4 space-y-3">
+          <Skeleton className="h-3 w-24 bg-white/20" />
+          <Skeleton className="h-7 w-40 bg-white/20" />
+          <Skeleton className="h-4 w-32 bg-white/20" />
+          <Skeleton className="h-1.5 w-full bg-white/20" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   const allDone = salahCount.logged >= 5;
   const nextIdx = getNextPrayerIndex(prayerData.timings);

@@ -37,6 +37,7 @@ const Dashboard = () => {
 
       <main className="max-w-md mx-auto px-5 py-4 space-y-5">
         <AnnouncementsBanner announcements={announcements} />
+        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
         <HeroPrayerCard />
         <QuickLogGrid />
         <DailyCheckinCard />
