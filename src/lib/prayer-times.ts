@@ -14,7 +14,7 @@ export interface PrayerTimesData {
   city: string;
   country: string;
   hijriDate?: string;
-  source?: 'jakim';
+  source?: 'jakim' | 'aladhan';
 }
 
 export interface PrayerSettings {
