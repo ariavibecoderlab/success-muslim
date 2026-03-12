@@ -1,38 +1,27 @@
 
 
-## Polish Prayer Times Page to Match Reference Design
+## Mobile App Conversion
 
-Redesign the PrayerTimes page to match the dark-green, split-hero, checklist-style layout from the reference image.
+Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
 
-### Key Visual Changes
+Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
 
-**1. Hero Section — Split into two panels**
-- **Left panel**: Shows current/next prayer name, time (large), and countdown ("Asr in 9m 55s")
-- **Right panel**: Circular progress ring showing "X/5 prayed" with the salah count from `useTodaySalahCount()`
-- Both panels sit side-by-side on a dark emerald gradient (`from-emerald-800 to-teal-900`)
+### Two Options
 
-**2. Date & Location Header (above hero)**
-- "Today, 12 March" bold with Hijri date below ("22 Ramadan 1447")
-- Location badge pill + calculation method badge pill below the date
+**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
 
-**3. Imsak / Sunrise Info Bar**
-- Small centered pill between hero and prayer list: "Imsak HH:MM | Sunrise HH:MM" (data from Aladhan Imsak/Sunrise if available, or hide if JAKIM source)
+**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
 
-**4. Prayer List Rows — Checklist Style**
-- Each row has: a **check circle** on the left (green filled if logged on-time/late, empty circle if pending/missed), prayer name with weather emoji icon, **"Now"** or **"in Xm"** badge, time on the right, and adhan bell icon
-- Current prayer row gets a subtle green-tinted highlight background
-- Integrate `useTodaySalahCount` / `useSalahLog` to show logged status per prayer
-- Tapping the check circle toggles salah status (using `useSalahMutation`)
+### What the Conversion Involves
 
-**5. Color & Theme Shift**
-- Hero gradient: change from orange to dark emerald/teal (`from-emerald-700 to-teal-800`) per the app's spiritual card identity
-- Prayer rows: use subtle rounded cards with border, green highlight for current
+1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
+2. Initialize Capacitor with config pointing to your app
+3. Configure live-reload for development via your preview URL
+4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
 
-### Files Modified
-- `src/pages/deen/PrayerTimes.tsx` — major layout restructure for hero split, checklist rows, date header, Imsak bar
+### Known Blocker
+Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
 
-### Data Dependencies
-- Import `useSalahLog` and `useSalahMutation` from `@/hooks/useSalahQuery` for check circle state
-- Import `getTodayKey` from `@/lib/calculations` for today's date key
-- Countdown per-prayer ("in Xm Ys") calculated inline for the next prayer row
+### Next Steps
+If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
 
