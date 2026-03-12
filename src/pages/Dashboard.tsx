@@ -45,7 +45,7 @@ const Dashboard = () => {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Life Score</p>
           <LifeScoreCard lifeScore={lifeScore} />
         </div>
-        {isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
+        {isRamadan && <div className="mt-2"><RamadanBanner ramadanDay={ramadanDay} /></div>}
         <ForYouSection
           isRamadan={isRamadan}
           ramadanDay={ramadanDay}
