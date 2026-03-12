@@ -13,6 +13,7 @@ interface BackdateDatePickerProps {
   className?: string;
   compact?: boolean;
   highlight?: boolean;
+  darkMode?: boolean;
 }
 
 const BackdateDatePicker = ({
