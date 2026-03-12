@@ -191,7 +191,7 @@ const DhikrCounter = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} />
+              <BackdateDatePicker selectedDate={selectedDate} onDateChange={handleDateChange} compact highlight={highlightPicker} darkMode />
               <Button variant="ghost" size="icon" className="h-7 w-7 text-white/70 hover:text-white hover:bg-white/10" onClick={() => setShowHistoryDialog(true)}>
                 <History className="h-4 w-4" />
               </Button>

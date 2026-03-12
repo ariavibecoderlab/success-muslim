@@ -13,6 +13,7 @@ interface BackdateDatePickerProps {
   className?: string;
   compact?: boolean;
   highlight?: boolean;
+  darkMode?: boolean;
 }
 
 const BackdateDatePicker = ({
@@ -22,6 +23,7 @@ const BackdateDatePicker = ({
   className,
   compact = false,
   highlight = false,
+  darkMode = false,
 }: BackdateDatePickerProps) => {
   const [open, setOpen] = useState(false);
   const [pulse, setPulse] = useState(false);
@@ -50,19 +52,24 @@ const BackdateDatePicker = ({
 
   return (
     <div className={cn('flex items-center gap-1.5', className)}>
-      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goBack}
+      <Button variant="ghost" size="icon"
+        className={cn('h-7 w-7', darkMode && 'text-white/70 hover:text-white hover:bg-white/10')}
+        onClick={goBack}
         disabled={isBefore(subDays(selectedDate, 1), minDate)}>
         <ChevronLeft className="h-3.5 w-3.5" />
       </Button>
 
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm"
+          <Button variant={darkMode ? "ghost" : "outline"} size="sm"
             className={cn(
               'gap-1.5 text-xs h-7 font-medium',
               compact && 'px-2',
-              !isToday && 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/40',
-              pulse && 'ring-2 ring-amber-400 ring-offset-2 animate-pulse'
+              darkMode
+                ? 'bg-white/15 border-0 text-white hover:bg-white/25'
+                : !isToday && 'bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/40',
+              pulse && !darkMode && 'ring-2 ring-amber-400 ring-offset-2 animate-pulse',
+              pulse && darkMode && 'ring-2 ring-white/50 ring-offset-0 animate-pulse'
             )}>
             <CalendarDays className="h-3 w-3" />
             {isToday ? 'Today' : format(selectedDate, compact ? 'd MMM' : 'EEE, d MMM yyyy')}
@@ -89,13 +96,20 @@ const BackdateDatePicker = ({
         </PopoverContent>
       </Popover>
 
-      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={goForward}
+      <Button variant="ghost" size="icon"
+        className={cn('h-7 w-7', darkMode && 'text-white/70 hover:text-white hover:bg-white/10')}
+        onClick={goForward}
         disabled={isAfter(startOfDay(new Date(selectedDate.getTime() + 86400000)), today)}>
         <ChevronRight className="h-3.5 w-3.5" />
       </Button>
 
       {!isToday && (
-        <span className="text-[10px] font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded-full ml-1">
+        <span className={cn(
+          'text-[10px] font-medium px-1.5 py-0.5 rounded-full ml-1',
+          darkMode
+            ? 'bg-white/20 text-white'
+            : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+        )}>
           Backdating
         </span>
       )}
