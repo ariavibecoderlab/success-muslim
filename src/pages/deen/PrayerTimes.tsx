@@ -594,9 +594,14 @@ const PrayerTimes = () => {
                             </p>
                           )}
                         </div>
-                        {adhanMode === "full" && <Bell className="h-3 w-3 text-muted-foreground/40" />}
-                        {adhanMode === "vibrate" && <Vibrate className="h-3 w-3 text-muted-foreground/40" />}
-                        {adhanMode === "silent" && <BellOff className="h-3 w-3 text-muted-foreground/40" />}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setDrawerPrayer(prayer.key.toLowerCase()); }}
+                          className="p-1 -mr-1 rounded-md hover:bg-muted transition-colors"
+                        >
+                          {adhanMode === "full" && <Bell className="h-3.5 w-3.5 text-muted-foreground" />}
+                          {adhanMode === "vibrate" && <Vibrate className="h-3.5 w-3.5 text-muted-foreground" />}
+                          {adhanMode === "silent" && <BellOff className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                        </button>
                       </div>
                     </CardContent>
                   </Card>
