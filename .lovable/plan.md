@@ -1,27 +1,29 @@
 
 
-## Mobile App Conversion
+## Fix: Ramadan Banner Missing & Prayer Card Not Visible on Dashboard
 
-Based on the project's technology stack (React + Vite + TypeScript), **Capacitor** is the right choice here. React Native would require a complete rewrite since it uses different components (`<View>`, `<Text>` instead of HTML). Capacitor wraps your existing web app as-is into a native shell.
+### Root Causes
 
-Your app already scores **8/10 for mobile readiness** with safe area support, 44px touch targets, and WebView-compatible navigation in place. It's also already a PWA.
+**1. Ramadan Banner** — The `RamadanBanner` component exists (`src/components/dashboard/RamadanBanner.tsx`) but is **not imported or used anywhere**. It was previously on the Iman page and got removed when we merged Ramadan info into the Iman hero card. It was never added to Dashboard.
 
-### Two Options
+**2. Prayer Card (HeroPrayerCard)** — Line 47: `if (!prayerData) return null;` causes the entire card to vanish if `fetchPrayerTimes()` returns null (network failure, no cache). No loading state, no fallback — just invisible. The network logs show zero requests to JAKIM or Aladhan APIs, meaning the fetch is either cached or silently failing.
 
-**Option 1: Keep as Installable Web App (PWA)** — Already done. Users install from browser to home screen. Works on all phones, no app store needed. Some native features (push notifications, camera) are limited.
+### Plan
 
-**Option 2: True Native App via Capacitor** — Wraps your existing app in a native container. Publishable to App Store and Google Play. Full access to native APIs (camera, push notifications, sensors). Requires Xcode (iOS) and/or Android Studio (Android) on your local machine.
+#### `src/pages/Dashboard.tsx`
+- Import and render `RamadanBanner` above `HeroPrayerCard` when `isRamadan` is true
+- Pass `ramadanDay` from the existing `useDashboardData()` hook (already available)
 
-### What the Conversion Involves
+```tsx
+{isRamadan && <RamadanBanner ramadanDay={ramadanDay} />}
+<HeroPrayerCard />
+```
 
-1. Install Capacitor dependencies (`@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android`)
-2. Initialize Capacitor with config pointing to your app
-3. Configure live-reload for development via your preview URL
-4. You then pull the code to your machine, run `npx cap add ios` / `npx cap add android`, and open in Xcode/Android Studio
+#### `src/components/dashboard/HeroPrayerCard.tsx`
+- Replace `if (!prayerData) return null;` with a skeleton loading card so the prayer section always occupies space and shows a loading state while data loads
+- Add error handling: if fetch fails after 5 seconds, show a compact fallback card with "Tap to load prayer times" instead of nothing
 
-### Known Blocker
-Google Sign-in currently uses a web redirect flow and will need a native Capacitor plugin during conversion.
-
-### Next Steps
-If you want to proceed with Capacitor, I'll set up the configuration files and dependencies. You'll need a Mac with Xcode for iOS, or Android Studio for Android, to build and test locally.
+### Files Modified
+- `src/pages/Dashboard.tsx` — Add RamadanBanner during Ramadan
+- `src/components/dashboard/HeroPrayerCard.tsx` — Show skeleton/fallback instead of returning null
 
