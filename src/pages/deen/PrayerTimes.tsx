@@ -328,12 +328,12 @@ const PrayerTimes = () => {
                     {/* ADHAN TAB */}
                     <TabsContent value="adhan" className="space-y-4 mt-4">
                       {["fajr", "dhuhr", "asr", "maghrib", "isha"].map((key) => {
-                        const config = settings.adhan_settings[key] || { mode: "full", audio: "makkah", preReminder: 0 };
+                        const config: AdhanConfig = { mode: "full", audio: "makkah", preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6], ...settings.adhan_settings[key] };
                         const updateAdhan = (patch: Partial<AdhanConfig>) => {
                           saveSettings({
                             adhan_settings: {
                               ...settings.adhan_settings,
-                              [key]: { ...config, ...patch },
+                              [key]: { ...config, ...patch } as AdhanConfig,
                             },
                           });
                         };
