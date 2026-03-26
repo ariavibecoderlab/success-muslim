@@ -63,13 +63,14 @@ export function useAddHabit() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { name: string; icon?: string; color?: string }) => {
+    mutationFn: async (args: { name: string; icon?: string; color?: string; frequency?: 'daily' | 'weekdays' | number[] }) => {
       const id = crypto.randomUUID();
       const habit: Habit = {
         id,
         name: args.name,
         icon: args.icon || 'Check',
         color: args.color || 'primary',
+        frequency: args.frequency,
         createdAt: new Date().toISOString(),
       };
       const habits = getHabits();
