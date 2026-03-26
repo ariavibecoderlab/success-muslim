@@ -1,53 +1,36 @@
 
 
-## Polish Landing Page — Image-Heavy, Interactive, No Icons
+## Polish BackdateDatePicker — Smarter, Modern Web Pattern
 
-Rewrite `src/pages/Landing.tsx` to remove all Lucide icons and replace them with existing app screenshot images, animated interactions, and richer visual storytelling.
+### Current Issues
+- Looks like a basic utility bar with raw buttons and a small badge
+- "Backdating" badge feels like a debug label, not a polished UI element
+- No relative date context (e.g., "Yesterday", "2 days ago")
+- Chevron buttons are plain and disconnected from the trigger
+- No smooth transitions
 
-### Changes to `src/pages/Landing.tsx`
+### Design Direction
+A unified **segmented date strip** — chevrons + date trigger feel like one cohesive control (like iOS date navigation), with smart contextual labels and smooth micro-animations.
 
-**1. Hero — Keep text-focused but add floating phone mockup**
-- Remove ArrowRight icon from CTA buttons (text-only buttons)
-- Add a subtle CSS phone frame with `imgLifescore` screenshot floating/parallax on scroll using framer-motion `useScroll` + `useTransform`
-- Keep the gradient glow background but make it emerald-toned
+### Changes to `src/components/BackdateDatePicker.tsx`
 
-**2. Stats Bar — Replace icon boxes with pure text**
-- Remove the `highlights` icon array entirely
-- Show "5 Pillars · 90+ Features · Free Forever" as a single animated text line, no icon containers
+**1. Smart date labels** — Replace raw date strings with contextual text:
+- Today → "Today"
+- Yesterday → "Yesterday"  
+- 2-6 days ago → "3 days ago"
+- Older → "Mon, 14 Jan"
+- Shows relative + absolute on non-compact mode (e.g., "Yesterday · Tue, 25 Mar")
 
-**3. Life Score Section — Make interactive**
-- Keep the AnimatedRing but add **interactive sliders** — user can drag Iman/Wellness/Productivity sub-scores and watch the ring animate in real-time
-- Use `useState` for the 3 sub-scores, compute overall as weighted average, animate the ring accordingly
-- This is the key "interactive" element — visitors can play with it before signing up
+**2. Unified control shape** — Wrap chevrons + trigger in a single rounded-full container with shared background, so it reads as one control instead of 3 separate buttons. Subtle inner dividers.
 
-**4. Pillars Section — Replace icons with app screenshots**
-- Remove all Lucide icon imports (`BookOpen`, `Heart`, `Wallet`, `ListChecks`, etc.)
-- Use existing images: `imgIman` for Iman, `imgHealth` for Wellness, `imgIfasting` for Wealth (closest available), `imgLifescore` for Productivity
-- Show each pillar as a card with the screenshot as background/hero image, title + description overlaid at bottom with a dark gradient overlay
-- Cards have hover scale + parallax tilt effect via framer-motion
+**3. Smooth transitions** — Use framer-motion `AnimatePresence` + `layoutId` on the date text so it slides/fades when changing dates. Backdating badge slides in from right with spring animation.
 
-**5. How It Works — Animated counter steps**
-- Remove the numbered circle icons
-- Replace with 3 large animated counters that count up when in view (e.g., "5→" prayers, "72→" life score, "30→" day streak)
-- Each step card has a mini screenshot thumbnail from the app
+**4. Better backdating indicator** — Replace plain "Backdating" text badge with a subtle amber dot + relative "2d ago" inline in the button text itself. In dark mode, use a soft glow effect.
 
-**6. Who It's For (Personas) — Horizontal scroll carousel with images**
-- Remove icon boxes
-- Each persona card gets a full-bleed screenshot image at top (reuse `imgIman`, `imgHealth`, `imgLifescore`)
-- Horizontal snap-scroll on mobile for swipeable interaction
+**5. Keyboard shortcut hints** — Show tiny "←→" hint on hover (desktop only) for power users. Add actual keyboard listener for left/right arrow keys.
 
-**7. Bottom CTA — Clean up**
-- Remove ArrowRight icon from button
-- Add a subtle emerald gradient glow animation behind the quote
-
-### Imports to Remove
-- All Lucide icons: `ArrowRight`, `Heart`, `Wallet`, `ListChecks`, `BookOpen`, `Star`, `Zap`, `Users`
-
-### Imports to Add
-- App screenshots: `imgLifescore`, `imgIman`, `imgHealth`, `imgIfasting`, `imgIfTimerRunning` from `@/assets/features/`
-- `useState` for interactive Life Score
-- `useScroll`, `useTransform` from framer-motion for parallax
+**6. Calendar popover polish** — Add a "Yesterday" quick-pick button alongside "Go to Today". Add subtle header showing the date range limit.
 
 ### File
-- **Modify**: `src/pages/Landing.tsx`
+- **Modify**: `src/components/BackdateDatePicker.tsx` (single file change)
 
