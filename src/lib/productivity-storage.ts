@@ -1,4 +1,4 @@
-import { format, subDays, getDay } from 'date-fns';
+import { format, subDays } from 'date-fns';
 
 // ─── Types ───────────────────────────────────────────────────
 
@@ -7,7 +7,6 @@ export interface Task {
   text: string;
   completed: boolean;
   isMIT: boolean;
-  notes?: string;
   createdAt: string;
 }
 
@@ -21,7 +20,6 @@ export interface Habit {
   name: string;
   icon: string;
   color: string;
-  frequency?: 'daily' | 'weekdays' | number[];
   createdAt: string;
 }
 
@@ -103,15 +101,9 @@ export function addTask(text: string, isMIT: boolean, date?: string): DailyTasks
 export function toggleTask(taskId: string, date?: string): DailyTasks {
   const d = getDailyTasks(date);
   const task = d.tasks.find(t => t.id === taskId);
-  if (task) task.completed = !task.completed;
-  saveDailyTasks(d);
-  return d;
-}
-
-export function updateTaskNotes(taskId: string, notes: string, date?: string): DailyTasks {
-  const d = getDailyTasks(date);
-  const task = d.tasks.find(t => t.id === taskId);
-  if (task) task.notes = notes;
+  if (task) {
+    task.completed = !task.completed;
+  }
   saveDailyTasks(d);
   return d;
 }
@@ -149,10 +141,10 @@ export function saveHabits(habits: Habit[]) {
   localStorage.setItem(HABITS_KEY, JSON.stringify(habits));
 }
 
-export function addHabit(name: string, icon: string = 'Check', color: string = 'primary', frequency?: 'daily' | 'weekdays' | number[]): Habit[] {
+export function addHabit(name: string, icon: string = 'Check', color: string = 'primary'): Habit[] {
   const habits = getHabits();
   const id = crypto.randomUUID();
-  habits.push({ id, name, icon, color, frequency: frequency || 'daily', createdAt: new Date().toISOString() });
+  habits.push({ id, name, icon, color, createdAt: new Date().toISOString() });
   saveHabits(habits);
   return habits;
 }
@@ -178,73 +170,23 @@ export function toggleHabitForDate(habitId: string, date?: string): HabitLog {
   const key = date || getTodayKey();
   if (!log[key]) log[key] = [];
   const idx = log[key].indexOf(habitId);
+  const isCompleted = idx < 0;
   if (idx >= 0) log[key].splice(idx, 1);
   else log[key].push(habitId);
   saveHabitLog(log);
   return log;
 }
 
-export function isHabitScheduledForDate(habit: Habit, date: Date): boolean {
-  const freq = habit.frequency || 'daily';
-  if (freq === 'daily') return true;
-  const dow = getDay(date); // 0=Sun
-  if (freq === 'weekdays') return dow >= 1 && dow <= 5;
-  if (Array.isArray(freq)) return freq.includes(dow);
-  return true;
-}
-
 export function getHabitStreak(habitId: string): number {
   const log = getHabitLog();
-  const habits = getHabits();
-  const habit = habits.find(h => h.id === habitId);
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 365; i++) {
-    const d = subDays(today, i);
-    const key = format(d, 'yyyy-MM-dd');
-    if (habit && !isHabitScheduledForDate(habit, d)) continue;
+    const key = format(subDays(today, i), 'yyyy-MM-dd');
     if (log[key]?.includes(habitId)) streak++;
     else { if (i === 0) continue; break; }
   }
   return streak;
-}
-
-export function getLongestStreak(habitId: string): number {
-  const log = getHabitLog();
-  const habits = getHabits();
-  const habit = habits.find(h => h.id === habitId);
-  let longest = 0;
-  let current = 0;
-  const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const d = subDays(today, i);
-    const key = format(d, 'yyyy-MM-dd');
-    if (habit && !isHabitScheduledForDate(habit, d)) continue;
-    if (log[key]?.includes(habitId)) {
-      current++;
-      longest = Math.max(longest, current);
-    } else {
-      current = 0;
-    }
-  }
-  return longest;
-}
-
-export function getHabitCompletionRate(habitId: string, days: number = 30): number {
-  const log = getHabitLog();
-  const habits = getHabits();
-  const habit = habits.find(h => h.id === habitId);
-  let scheduled = 0;
-  let completed = 0;
-  const today = new Date();
-  for (let i = 0; i < days; i++) {
-    const d = subDays(today, i);
-    const key = format(d, 'yyyy-MM-dd');
-    if (habit && !isHabitScheduledForDate(habit, d)) continue;
-    scheduled++;
-    if (log[key]?.includes(habitId)) completed++;
-  }
-  return scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
 }
 
 export function getHeatmapData(days: number = 120): { date: string; count: number }[] {
@@ -254,53 +196,6 @@ export function getHeatmapData(days: number = 120): { date: string; count: numbe
   for (let i = days - 1; i >= 0; i--) {
     const key = format(subDays(today, i), 'yyyy-MM-dd');
     result.push({ date: key, count: log[key]?.length || 0 });
-  }
-  return result;
-}
-
-export function getHabitHeatmapData(habitId: string, days: number = 90): { date: string; done: boolean }[] {
-  const log = getHabitLog();
-  const result: { date: string; done: boolean }[] = [];
-  const today = new Date();
-  for (let i = days - 1; i >= 0; i--) {
-    const key = format(subDays(today, i), 'yyyy-MM-dd');
-    result.push({ date: key, done: log[key]?.includes(habitId) || false });
-  }
-  return result;
-}
-
-// ─── Weekly Completion Data ──────────────────────────────────
-
-export function getWeeklyCompletionData(): { date: string; pct: number }[] {
-  const result: { date: string; pct: number }[] = [];
-  const today = new Date();
-  const habits = getHabits();
-  const log = getHabitLog();
-
-  for (let i = 6; i >= 0; i--) {
-    const d = subDays(today, i);
-    const key = format(d, 'yyyy-MM-dd');
-    const daily = getDailyTasks(key);
-
-    // Task completion
-    const totalTasks = daily.tasks.length;
-    const completedTasks = daily.tasks.filter(t => t.completed).length;
-    const taskPct = totalTasks > 0 ? completedTasks / totalTasks : 0;
-
-    // Habit completion
-    const scheduledHabits = habits.filter(h => isHabitScheduledForDate(h, d));
-    const completedHabits = scheduledHabits.filter(h => log[key]?.includes(h.id)).length;
-    const habitPct = scheduledHabits.length > 0 ? completedHabits / scheduledHabits.length : 0;
-
-    // Combined
-    const hasTasks = totalTasks > 0;
-    const hasHabits = scheduledHabits.length > 0;
-    let pct = 0;
-    if (hasTasks && hasHabits) pct = (taskPct + habitPct) / 2;
-    else if (hasTasks) pct = taskPct;
-    else if (hasHabits) pct = habitPct;
-
-    result.push({ date: key, pct: Math.round(pct * 100) });
   }
   return result;
 }

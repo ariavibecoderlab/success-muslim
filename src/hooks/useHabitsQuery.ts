@@ -3,10 +3,10 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
   getHabits, saveHabits, getHabitLog, saveHabitLog,
-  getHabitStreak, getHeatmapData, getLongestStreak,
-  getHabitCompletionRate, getHabitHeatmapData,
+  getHabitStreak, getHeatmapData,
   type Habit, type HabitLog,
 } from '@/lib/productivity-storage';
+import { format, subDays } from 'date-fns';
 
 export function useHabits() {
   const { user } = useAuth();
@@ -63,14 +63,13 @@ export function useAddHabit() {
   const { user } = useAuth();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (args: { name: string; icon?: string; color?: string; frequency?: 'daily' | 'weekdays' | number[] }) => {
+    mutationFn: async (args: { name: string; icon?: string; color?: string }) => {
       const id = crypto.randomUUID();
       const habit: Habit = {
         id,
         name: args.name,
         icon: args.icon || 'Check',
         color: args.color || 'primary',
-        frequency: args.frequency || 'daily',
         createdAt: new Date().toISOString(),
       };
       const habits = getHabits();
@@ -140,4 +139,5 @@ export function useToggleHabit() {
   });
 }
 
-export { getHabitStreak, getHeatmapData, getLongestStreak, getHabitCompletionRate, getHabitHeatmapData };
+// Re-export localStorage helpers for computed data
+export { getHabitStreak, getHeatmapData };
