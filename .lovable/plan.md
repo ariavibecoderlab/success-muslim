@@ -1,36 +1,32 @@
 
 
-## Polish BackdateDatePicker — Smarter, Modern Web Pattern
+## Polish SubPageLayout Bottom Bar
 
 ### Current Issues
-- Looks like a basic utility bar with raw buttons and a small badge
-- "Backdating" badge feels like a debug label, not a polished UI element
-- No relative date context (e.g., "Yesterday", "2 days ago")
-- Chevron buttons are plain and disconnected from the trigger
-- No smooth transitions
+- Plain buttons with no visual cohesion — prev/next feel disconnected from the Back button
+- Hidden prev/next use `text-transparent` hack (still takes space, feels janky)
+- No press feedback or animations
+- Back button is a generic pill — doesn't feel premium
+- No visual hierarchy between navigation actions
 
-### Design Direction
-A unified **segmented date strip** — chevrons + date trigger feel like one cohesive control (like iOS date navigation), with smart contextual labels and smooth micro-animations.
+### Design
 
-### Changes to `src/components/BackdateDatePicker.tsx`
+**Unified segmented bar** — a single rounded container holding all three actions with subtle dividers, similar to the polished BackdateDatePicker pattern.
 
-**1. Smart date labels** — Replace raw date strings with contextual text:
-- Today → "Today"
-- Yesterday → "Yesterday"  
-- 2-6 days ago → "3 days ago"
-- Older → "Mon, 14 Jan"
-- Shows relative + absolute on non-compact mode (e.g., "Yesterday · Tue, 25 Mar")
+**Changes to `src/components/SubPageLayout.tsx`**:
 
-**2. Unified control shape** — Wrap chevrons + trigger in a single rounded-full container with shared background, so it reads as one control instead of 3 separate buttons. Subtle inner dividers.
+1. **Segmented control** — Wrap prev + back + next in a single `rounded-full bg-secondary/50` container with inner dividers, centered in the bar. When no siblings exist, just show the Back button alone.
 
-**3. Smooth transitions** — Use framer-motion `AnimatePresence` + `layoutId` on the date text so it slides/fades when changing dates. Backdating badge slides in from right with spring animation.
+2. **Active press effects** — Add `active:scale-[0.97]` on buttons for tactile feedback per the app's design system.
 
-**4. Better backdating indicator** — Replace plain "Backdating" text badge with a subtle amber dot + relative "2d ago" inline in the button text itself. In dark mode, use a soft glow effect.
+3. **Framer-motion transitions** — Import `motion` for subtle hover/tap animations on the navigation buttons. Add `whileTap={{ scale: 0.95 }}` for springy feel.
 
-**5. Keyboard shortcut hints** — Show tiny "←→" hint on hover (desktop only) for power users. Add actual keyboard listener for left/right arrow keys.
+4. **Smart labels on prev/next** — Show sibling count context (e.g., "2 of 7") as a tiny centered indicator between back and the label.
 
-**6. Calendar popover polish** — Add a "Yesterday" quick-pick button alongside "Go to Today". Add subtle header showing the date range limit.
+5. **Better disabled state** — Instead of `text-transparent`, use `opacity-0 pointer-events-none` so the layout doesn't shift but the hack is cleaner.
 
-### File
-- **Modify**: `src/components/BackdateDatePicker.tsx` (single file change)
+6. **Back button refinement** — Use the app's primary subtle style: slightly bolder with a soft shadow, matching the premium card aesthetic.
+
+### Single file change
+- `src/components/SubPageLayout.tsx`
 
