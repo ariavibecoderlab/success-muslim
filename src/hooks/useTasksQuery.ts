@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  getDailyTasks, saveDailyTasks, getTaskStreak,
+  getDailyTasks, saveDailyTasks, getTaskStreak, updateTaskNotes,
   type DailyTasks, type Task,
 } from '@/lib/productivity-storage';
 import { format, subDays } from 'date-fns';
@@ -34,7 +34,6 @@ export function useDailyTasks(date: string) {
         .order('created_at');
       if (!data?.length) return getDailyTasks(date);
       const result = transformDbRows(date, data);
-      // Update localStorage as side-effect
       saveDailyTasks(result);
       return result;
     },
@@ -56,18 +55,13 @@ export function useAddTask() {
         isMIT: args.isMIT,
         createdAt: new Date().toISOString(),
       };
-      // localStorage
       const daily = getDailyTasks(args.date);
       daily.tasks.push(task);
       saveDailyTasks(daily);
-      // DB
       if (user) {
         await supabase.from('daily_tasks').insert({
-          id,
-          user_id: user.id,
-          date: args.date,
-          text: args.text,
-          is_mit: args.isMIT,
+          id, user_id: user.id, date: args.date,
+          text: args.text, is_mit: args.isMIT,
         });
       }
       return daily;
@@ -84,13 +78,11 @@ export function useToggleTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (args: { taskId: string; date: string }) => {
-      // localStorage
       const daily = getDailyTasks(args.date);
       const task = daily.tasks.find(t => t.id === args.taskId);
       if (task) {
         task.completed = !task.completed;
         saveDailyTasks(daily);
-        // DB
         if (user) {
           await supabase.from('daily_tasks')
             .update({ completed: task.completed })
@@ -112,16 +104,12 @@ export function useDeleteTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (args: { taskId: string; date: string }) => {
-      // localStorage
       const daily = getDailyTasks(args.date);
       daily.tasks = daily.tasks.filter(t => t.id !== args.taskId);
       saveDailyTasks(daily);
-      // DB
       if (user) {
         await supabase.from('daily_tasks')
-          .delete()
-          .eq('id', args.taskId)
-          .eq('user_id', user.id);
+          .delete().eq('id', args.taskId).eq('user_id', user.id);
       }
       return daily;
     },
@@ -132,13 +120,25 @@ export function useDeleteTask() {
   });
 }
 
+export function useUpdateTaskNotes() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (args: { taskId: string; notes: string; date: string }) => {
+      return updateTaskNotes(args.taskId, args.notes, args.date);
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['tasks', user?.id ?? 'anon', vars.date] });
+    },
+  });
+}
+
 export function useTaskStreak() {
   const { user } = useAuth();
   return useQuery({
     queryKey: ['task-streak', user?.id ?? 'anon'],
     queryFn: async () => {
       if (!user) return getTaskStreak();
-      // Fetch last 365 days of tasks from DB
       const startDate = format(subDays(new Date(), 365), 'yyyy-MM-dd');
       const { data } = await supabase
         .from('daily_tasks')
@@ -147,13 +147,11 @@ export function useTaskStreak() {
         .gte('date', startDate)
         .order('date', { ascending: false });
       if (!data?.length) return getTaskStreak();
-      // Group by date
       const byDate: Record<string, { isMIT: boolean; completed: boolean }[]> = {};
       for (const r of data) {
         if (!byDate[r.date]) byDate[r.date] = [];
         byDate[r.date].push({ isMIT: r.is_mit, completed: r.completed });
       }
-      // Calculate streak
       let streak = 0;
       const today = new Date();
       for (let i = 0; i < 365; i++) {
