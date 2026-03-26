@@ -7,6 +7,7 @@ export interface Task {
   text: string;
   completed: boolean;
   isMIT: boolean;
+  notes?: string;
   createdAt: string;
 }
 
@@ -20,6 +21,7 @@ export interface Habit {
   name: string;
   icon: string;
   color: string;
+  frequency?: 'daily' | 'weekdays' | number[];
   createdAt: string;
 }
 
@@ -170,23 +172,69 @@ export function toggleHabitForDate(habitId: string, date?: string): HabitLog {
   const key = date || getTodayKey();
   if (!log[key]) log[key] = [];
   const idx = log[key].indexOf(habitId);
-  const isCompleted = idx < 0;
   if (idx >= 0) log[key].splice(idx, 1);
   else log[key].push(habitId);
   saveHabitLog(log);
   return log;
 }
 
+export function isHabitScheduledForDate(habit: Habit, dateStr: string): boolean {
+  if (!habit.frequency || habit.frequency === 'daily') return true;
+  const dayOfWeek = new Date(dateStr).getDay(); // 0=Sun
+  if (habit.frequency === 'weekdays') return dayOfWeek >= 1 && dayOfWeek <= 5;
+  if (Array.isArray(habit.frequency)) return habit.frequency.includes(dayOfWeek);
+  return true;
+}
+
 export function getHabitStreak(habitId: string): number {
   const log = getHabitLog();
+  const habits = getHabits();
+  const habit = habits.find(h => h.id === habitId);
   let streak = 0;
   const today = new Date();
   for (let i = 0; i < 365; i++) {
     const key = format(subDays(today, i), 'yyyy-MM-dd');
+    if (habit && !isHabitScheduledForDate(habit, key)) continue;
     if (log[key]?.includes(habitId)) streak++;
     else { if (i === 0) continue; break; }
   }
   return streak;
+}
+
+export function getLongestStreak(habitId: string): number {
+  const log = getHabitLog();
+  const habits = getHabits();
+  const habit = habits.find(h => h.id === habitId);
+  let longest = 0;
+  let current = 0;
+  const today = new Date();
+  for (let i = 364; i >= 0; i--) {
+    const key = format(subDays(today, i), 'yyyy-MM-dd');
+    if (habit && !isHabitScheduledForDate(habit, key)) continue;
+    if (log[key]?.includes(habitId)) {
+      current++;
+      if (current > longest) longest = current;
+    } else {
+      current = 0;
+    }
+  }
+  return longest;
+}
+
+export function getHabitCompletionRate(habitId: string, days: number = 30): number {
+  const log = getHabitLog();
+  const habits = getHabits();
+  const habit = habits.find(h => h.id === habitId);
+  let scheduled = 0;
+  let completed = 0;
+  const today = new Date();
+  for (let i = 0; i < days; i++) {
+    const key = format(subDays(today, i), 'yyyy-MM-dd');
+    if (habit && !isHabitScheduledForDate(habit, key)) continue;
+    scheduled++;
+    if (log[key]?.includes(habitId)) completed++;
+  }
+  return scheduled > 0 ? Math.round((completed / scheduled) * 100) : 0;
 }
 
 export function getHeatmapData(days: number = 120): { date: string; count: number }[] {
@@ -196,6 +244,28 @@ export function getHeatmapData(days: number = 120): { date: string; count: numbe
   for (let i = days - 1; i >= 0; i--) {
     const key = format(subDays(today, i), 'yyyy-MM-dd');
     result.push({ date: key, count: log[key]?.length || 0 });
+  }
+  return result;
+}
+
+export function getWeeklyCompletionData(): { date: string; taskPct: number; habitPct: number }[] {
+  const habits = getHabits();
+  const log = getHabitLog();
+  const today = new Date();
+  const result: { date: string; taskPct: number; habitPct: number }[] = [];
+
+  for (let i = 6; i >= 0; i--) {
+    const key = format(subDays(today, i), 'yyyy-MM-dd');
+    const daily = getDailyTasks(key);
+    const totalTasks = daily.tasks.length;
+    const completedTasks = daily.tasks.filter(t => t.completed).length;
+    const taskPct = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    const scheduledHabits = habits.filter(h => isHabitScheduledForDate(h, key));
+    const completedHabits = scheduledHabits.filter(h => log[key]?.includes(h.id)).length;
+    const habitPct = scheduledHabits.length > 0 ? Math.round((completedHabits / scheduledHabits.length) * 100) : 0;
+
+    result.push({ date: key, taskPct, habitPct });
   }
   return result;
 }
