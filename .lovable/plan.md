@@ -1,32 +1,60 @@
 
 
-## Polish SubPageLayout Bottom Bar
+## Switch Bottom Nav Icons to Hugeicons
 
-### Current Issues
-- Plain buttons with no visual cohesion — prev/next feel disconnected from the Back button
-- Hidden prev/next use `text-transparent` hack (still takes space, feels janky)
-- No press feedback or animations
-- Back button is a generic pill — doesn't feel premium
-- No visual hierarchy between navigation actions
+### Overview
+Replace the custom SVG icons in `NavIcons.tsx` with Hugeicons, using the free `@hugeicons/core-free-icons` package. Since the free pack only includes **Stroke Rounded** style (no solid/filled variants), the active state will use bolder stroke weight + primary color rather than filled icons.
 
-### Design
+### Icon Mapping (aligned with "Success Muslim" identity)
 
-**Unified segmented bar** — a single rounded container holding all three actions with subtle dividers, similar to the polished BackdateDatePicker pattern.
+| Tab | Current | Hugeicon (free) | Rationale |
+|---|---|---|---|
+| Home | Mosque SVG | `Mosque02Icon` | Islamic identity |
+| Iman | Crescent+Star SVG | `Moon02Icon` | Crescent moon — Islamic symbol |
+| Health | Heart+Pulse SVG | `HeartCheckIcon` | Health tracking |
+| Wealth | Stacked Coins SVG | `Coins01Icon` | Financial tracking |
+| Tasks | Clipboard SVG | `TaskDaily01Icon` | Productivity |
+| Family | Two People SVG | `UserGroupIcon` | Family/community |
+| Profile | Settings Gear SVG | `Settings02Icon` | Settings/profile |
 
-**Changes to `src/components/SubPageLayout.tsx`**:
+### Changes
 
-1. **Segmented control** — Wrap prev + back + next in a single `rounded-full bg-secondary/50` container with inner dividers, centered in the bar. When no siblings exist, just show the Back button alone.
+**1. Install packages**
+- `@hugeicons/react` — the renderer component
+- `@hugeicons/core-free-icons` — 4,500+ free stroke rounded icons
 
-2. **Active press effects** — Add `active:scale-[0.97]` on buttons for tactile feedback per the app's design system.
+**2. Rewrite `src/components/BottomNav.tsx`**
+- Import `HugeiconsIcon` from `@hugeicons/react`
+- Import each icon from `@hugeicons/core-free-icons`
+- Use `HugeiconsIcon` component with `size={20}`, `color="currentColor"`
+- Active state: increase `strokeWidth` to `2` (vs default `1.5`) for visual weight difference
+- Remove the `active` prop pattern since Hugeicons handles styling via props
 
-3. **Framer-motion transitions** — Import `motion` for subtle hover/tap animations on the navigation buttons. Add `whileTap={{ scale: 0.95 }}` for springy feel.
+**3. Delete `src/components/icons/NavIcons.tsx`**
+- No longer needed — all icons come from the Hugeicons package
 
-4. **Smart labels on prev/next** — Show sibling count context (e.g., "2 of 7") as a tiny centered indicator between back and the label.
+### Technical Detail
+```tsx
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Mosque02Icon, Moon02Icon, HeartCheckIcon, Coins01Icon, TaskDaily01Icon, UserGroupIcon, Settings02Icon } from '@hugeicons/core-free-icons';
 
-5. **Better disabled state** — Instead of `text-transparent`, use `opacity-0 pointer-events-none` so the layout doesn't shift but the hack is cleaner.
+const tabs = [
+  { icon: Mosque02Icon, label: 'Home', path: '/dashboard' },
+  { icon: Moon02Icon, label: 'Iman', path: '/iman' },
+  // ...
+];
 
-6. **Back button refinement** — Use the app's primary subtle style: slightly bolder with a soft shadow, matching the premium card aesthetic.
+// In render:
+<HugeiconsIcon 
+  icon={tab.icon} 
+  size={20} 
+  color="currentColor" 
+  strokeWidth={active ? 2 : 1.5} 
+/>
+```
 
-### Single file change
-- `src/components/SubPageLayout.tsx`
+### Files
+- `package.json` — add 2 dependencies
+- `src/components/BottomNav.tsx` — rewrite icon imports and rendering
+- `src/components/icons/NavIcons.tsx` — delete
 
