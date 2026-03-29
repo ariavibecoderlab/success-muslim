@@ -1,15 +1,24 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { IconHome, IconIman, IconHealth, IconWealth, IconTasks, IconFamily, IconProfile } from './icons/NavIcons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Mosque02Icon,
+  Moon02Icon,
+  HeartCheckIcon,
+  Coins01Icon,
+  TaskDaily01Icon,
+  UserGroupIcon,
+  Settings02Icon,
+} from '@hugeicons/core-free-icons';
 
 const tabs = [
-  { icon: IconHome, label: 'Home', path: '/dashboard' },
-  { icon: IconIman, label: 'Iman', path: '/iman' },
-  { icon: IconHealth, label: 'Health', path: '/health' },
-  { icon: IconWealth, label: 'Wealth', path: '/wealth' },
-  { icon: IconTasks, label: 'Tasks', path: '/productivity' },
-  { icon: IconFamily, label: 'Family', path: '/family' },
-  { icon: IconProfile, label: 'Profile', path: '/settings' },
+  { icon: Mosque02Icon, label: 'Home', path: '/dashboard' },
+  { icon: Moon02Icon, label: 'Iman', path: '/iman' },
+  { icon: HeartCheckIcon, label: 'Health', path: '/health' },
+  { icon: Coins01Icon, label: 'Wealth', path: '/wealth' },
+  { icon: TaskDaily01Icon, label: 'Tasks', path: '/productivity' },
+  { icon: UserGroupIcon, label: 'Family', path: '/family' },
+  { icon: Settings02Icon, label: 'Profile', path: '/settings' },
 ];
 
 const BottomNav = () => {
@@ -35,7 +44,12 @@ const BottomNav = () => {
                   transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
               )}
-              <tab.icon className="h-5 w-5" active={active} />
+              <HugeiconsIcon
+                icon={tab.icon}
+                size={20}
+                color="currentColor"
+                strokeWidth={active ? 2 : 1.5}
+              />
               <span className="text-[11px] font-medium leading-none">{tab.label}</span>
             </Link>
           );
