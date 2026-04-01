@@ -221,9 +221,14 @@ const App = () => {
                 <Route element={<MobileAdminBlock><AdminGuard><AdminLayout /></AdminGuard></MobileAdminBlock>}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/engagement" element={<AdminEngagement />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/iman" element={<AdminImanAnalytics />} />
+                  <Route path="/admin/health" element={<AdminHealthAnalytics />} />
+                  <Route path="/admin/families" element={<AdminFamilies />} />
                   <Route path="/admin/dawah" element={<AdminDawah />} />
                   <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/audit" element={<AdminAuditLog />} />
                   <Route path="/admin/system" element={<AdminSystem />} />
                 </Route>
 

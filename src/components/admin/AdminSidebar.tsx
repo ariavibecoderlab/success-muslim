@@ -25,14 +25,24 @@ import {
   Activity,
   LogOut,
   ArrowLeft,
+  TrendingUp,
+  Moon,
+  Heart,
+  UsersRound,
+  ScrollText,
 } from 'lucide-react';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
+  { icon: TrendingUp, label: 'Engagement', path: '/admin/engagement' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+  { icon: Moon, label: 'Iman', path: '/admin/iman' },
+  { icon: Heart, label: 'Health', path: '/admin/health' },
+  { icon: UsersRound, label: 'Families', path: '/admin/families' },
   { icon: Image, label: "Da'wah", path: '/admin/dawah' },
   { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
+  { icon: ScrollText, label: 'Audit Log', path: '/admin/audit' },
   { icon: Activity, label: 'System', path: '/admin/system' },
 ];
 

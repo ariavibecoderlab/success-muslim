@@ -32,7 +32,7 @@ const AdminAuditLog = () => {
       if (!data) return;
 
       // Fetch admin names
-      const adminIds = [...new Set(data.map((e: any) => e.admin_id))];
+      const adminIds = [...new Set(data.map((e: any) => e.admin_id))] as string[];
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, display_name')
