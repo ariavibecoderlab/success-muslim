@@ -31,18 +31,9 @@ const Auth = () => {
 
   if (user) return <Navigate to="/dashboard" replace />;
 
-  const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
-    try {
-      const { error } = await lovable.auth.signInWithOAuth('google', {
-        redirect_uri: window.location.origin,
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
-      setGoogleLoading(false);
-    }
-  };
+  // Google OAuth commented out for now — to be re-enabled later
+  // const handleGoogleSignIn = async () => { ... };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
