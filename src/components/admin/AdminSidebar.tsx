@@ -45,6 +45,7 @@ const navItems = [
   { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
   { icon: ScrollText, label: 'Audit Log', path: '/admin/audit' },
   { icon: Activity, label: 'System', path: '/admin/system' },
+  { icon: FileText, label: 'Blog', path: '/admin/blog' },
 ];
 
 export function AdminSidebar() {
