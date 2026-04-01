@@ -1,72 +1,68 @@
-# Polish Onboarding Flow — Modern & Elegant and change icons to hudegicons
 
-## Current State
 
-The onboarding is a functional 7-step flow (Welcome → Name → Focus Areas → Consistency → Location → Notifications → Celebration) using basic cards, flat icons, and simple slide animations. It works but feels utilitarian.
+# Polish Landing Page — Bento Grid + Mobile App Version
 
-## Design Direction
+## Overview
+Redesign the web landing page (`/`) with a modern bento grid layout using white, emerald green, and orange as the color palette. Create a separate condensed mobile-app landing page that shows bento highlights + CTA without heavy marketing sections.
 
-Align with the app's "Refined Islamic Calm" aesthetic — premium gradients, subtle glassmorphism, smooth micro-interactions, and a more immersive feel.
+## 1. Web Landing Page Redesign (`src/pages/Landing.tsx`)
 
-## Changes (all in `src/pages/Onboarding.tsx`)
+### Hero Section
+- Clean white background with a subtle emerald gradient glow
+- Bento-style hero: large left card (gradient emerald-to-teal with headline + CTA) + right side stacked cards (phone mockup + stats)
+- Typography: bold heading with gradient text (emerald → orange accent)
 
-### 1. Background & Layout
+### Bento Feature Grid
+Replace the linear "Four Pillars" + "How It Works" + "Who It's For" sections with a **single bento grid**:
 
-- Replace plain `bg-background` with a subtle gradient background (`bg-gradient-to-b from-emerald-50/50 via-background to-background`)
-- Add a decorative geometric Islamic pattern overlay (CSS-only, low opacity) at the top of the screen for visual richness
+```text
+┌──────────────┬───────────┐
+│  Life Score   │   Iman    │
+│  (large, 2x1) │  (1x1)   │
+├───────┬──────┼───────────┤
+│Wellness│Wealth│Productivity│
+│ (1x1)  │(1x1) │  (1x1)    │
+└───────┴──────┴───────────┘
+```
 
-### 2. Progress Indicator
+- Each bento card: `rounded-2xl` with subtle border, hover scale effect
+- Color coding: Iman = emerald, Wellness = teal, Wealth = orange, Productivity = amber
+- Cards contain: icon/emoji, title, short description, and a screenshot or illustration
+- Glassmorphic overlay on image cards (`backdrop-blur bg-white/70`)
 
-- Replace the thin 1px bar + dots with a single elegant segmented progress bar with rounded ends and a glow effect on the active segment
-- Add step label text below (e.g. "Step 2 of 6")
+### Interactive Life Score
+- Keep the interactive slider demo but style it inside a bento card with white bg + emerald ring
+- Cleaner, more compact layout
 
-### 3. Step 1 — Welcome
+### Bottom CTA
+- Emerald-to-teal gradient background (matching brand)
+- Hadith quote + "Begin Your Journey" button in white
 
-- Replace the small icon box with a larger animated logo using the brand asset (`smlogo.webp`)
-- Add a subtle floating/breathing animation on the logo
-- Use a gradient headline and a more compelling subtitle
-- Add a decorative bismillah calligraphy text (Unicode) above the heading
+### Color Palette
+- Background: `white` / `bg-gray-50`
+- Primary cards: `from-emerald-600 to-teal-700` (green)
+- Accent cards: `from-orange-500 to-orange-600` (orange)
+- Text: `text-gray-900`, `text-gray-500`
+- Card borders: `border-gray-100`
 
-### 4. Step 2 — Name Input
+## 2. Mobile App Landing Page (`src/pages/MobileLanding.tsx`)
 
-- Style the input with a larger, pill-shaped design with a subtle inner shadow
-- Add a personalized greeting preview that updates live as the user types (e.g., "Assalamualaikum, Ahmad!")
+A condensed version for Capacitor/native app users:
+- **Hero**: Brand logo + "Success Muslim" + tagline (2 lines max)
+- **Mini bento grid**: 4 cards (Iman, Wellness, Wealth, Productivity) in a 2x2 grid with colored icons and one-line descriptions
+- **Life Score preview**: Small ring + "Track your holistic Life Score"
+- **CTA**: "Get Started" button (full-width, emerald gradient) + "Sign In" link
+- No navbar, no footer, no heavy marketing copy
+- Total height fits within ~2 screen scrolls max
 
-### 5. Step 3 — Focus Areas
+## 3. Routing Logic (`src/App.tsx`)
 
-- Replace flat bordered cards with glassmorphic cards (`backdrop-blur-sm bg-white/60 dark:bg-white/5`)
-- Add a subtle scale-up + checkmark animation on selection
-- Use colored icon backgrounds per category instead of uniform `primary/10`
-
-### 6. Step 4 — Consistency Level
-
-- Same glassmorphic card treatment
-- Add an animated emoji/illustration that changes based on selection (e.g., seedling → tree → rocket)
-
-### 7. Step 5 — Location
-
-- Add a decorative compass/mosque illustration
-- Smoother loading state with a pulsing ring animation instead of plain spinner
-
-### 8. Step 6 — Notifications
-
-- Add a mock notification preview card showing what a prayer reminder looks like
-- Makes the value proposition tangible before asking for permission
-
-### 9. Step 7 — Celebration
-
-- Upgrade confetti to larger, more varied particles (stars, crescents)
-- Add a radial gradient glow behind the greeting
-- Stagger animations more dramatically for a cinematic reveal
-- Style the prayer card with the signature dark green gradient (`from-emerald-700 to-teal-800`) with white text
-- Add a subtle pulse animation on the "Enter My Dashboard" button
-
-### 10. Global Polish
-
-- All transition durations bumped slightly (0.3s → 0.4s) for smoother feel
-- Add `active:scale-[0.98]` press effect on all interactive cards
-- Button transitions use spring physics for a bouncy, premium feel
+- Detect `Capacitor.isNativePlatform()` in the `/` route
+- If native → render `MobileLanding`
+- If web → render `Landing`
 
 ## Files Modified
+- `src/pages/Landing.tsx` — full bento grid redesign
+- `src/pages/MobileLanding.tsx` — new condensed mobile landing
+- `src/App.tsx` — conditional routing for native vs web
 
-- `src/pages/Onboarding.tsx` — all visual and animation changes
