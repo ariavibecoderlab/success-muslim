@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import MarketingLayout from '@/components/MarketingLayout';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  Analytics02Icon, ShieldCheckIcon, View01Icon, UserMultipleIcon, ArrowRight01Icon,
+  Analytics02Icon, ShieldCheck, ViewIcon, UserMultipleIcon, ArrowRight01Icon,
 } from '@hugeicons/core-free-icons';
 import smlogo from '@/assets/smlogo.webp';
 

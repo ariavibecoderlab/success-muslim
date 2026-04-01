@@ -7,9 +7,9 @@ import {
   Mosque02Icon, HealthIcon, MoneyBag02Icon, Target02Icon,
   UserMultipleIcon, Clock01Icon, BookOpen01Icon, Notification03Icon,
   Calculator01Icon, Moon02Icon, HandPrayerIcon, BodyWeightIcon,
-  DropletsIcon, SleepingIcon, RunningShoes01Icon, Timer02Icon,
-  Activity01Icon, PiggyBankIcon, Fire03Icon, BarChart01Icon,
-  Trophy01Icon, ArrowRight01Icon,
+  DropletIcon, SleepingIcon, RunningShoesIcon, Timer02Icon,
+  Activity01Icon, PiggyBankIcon, Fire03Icon, BarChartIcon,
+  TrophyIcon, ArrowRight01Icon,
 } from '@hugeicons/core-free-icons';
 
 import imgLifescore from '@/assets/features/lifescore.webp';
