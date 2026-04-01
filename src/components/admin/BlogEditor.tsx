@@ -5,12 +5,36 @@ import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
   Bold, Italic, Heading1, Heading2, Heading3,
   List, ListOrdered, Quote, Code, ImageIcon, LinkIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface ToolBtnProps {
+  onAction: () => void;
+  active?: boolean;
+  children: React.ReactNode;
+}
+
+function ToolBtn({ onAction, active, children }: ToolBtnProps) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        'inline-flex items-center justify-center h-8 w-8 rounded-md text-sm transition-colors',
+        active
+          ? 'bg-secondary text-secondary-foreground'
+          : 'hover:bg-accent hover:text-accent-foreground'
+      )}
+      onMouseDown={(e) => e.preventDefault()}
+      onClick={onAction}
+    >
+      {children}
+    </button>
+  );
+}
 
 interface BlogEditorProps {
   content: any;
@@ -62,65 +86,53 @@ export default function BlogEditor({ content, onChange }: BlogEditorProps) {
 
   if (!editor) return null;
 
-  const ToolBtn = ({ onClick, active, children }: { onClick: () => void; active?: boolean; children: React.ReactNode }) => (
-    <Button
-      type="button"
-      variant={active ? 'secondary' : 'ghost'}
-      size="icon"
-      className="h-8 w-8"
-      onClick={onClick}
-    >
-      {children}
-    </Button>
-  );
-
   return (
     <div className="border rounded-lg overflow-hidden bg-background">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-2 border-b bg-muted/30">
-        <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')}>
           <Bold className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')}>
           <Italic className="h-4 w-4" />
         </ToolBtn>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        <ToolBtn onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })}>
           <Heading1 className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })}>
           <Heading2 className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })}>
           <Heading3 className="h-4 w-4" />
         </ToolBtn>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        <ToolBtn onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}>
           <List className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}>
           <ListOrdered className="h-4 w-4" />
         </ToolBtn>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        <ToolBtn onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')}>
           <Quote className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')}>
+        <ToolBtn onAction={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')}>
           <Code className="h-4 w-4" />
         </ToolBtn>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        <ToolBtn onClick={() => fileInputRef.current?.click()}>
+        <ToolBtn onAction={() => fileInputRef.current?.click()}>
           <ImageIcon className="h-4 w-4" />
         </ToolBtn>
-        <ToolBtn onClick={setLink} active={editor.isActive('link')}>
+        <ToolBtn onAction={setLink} active={editor.isActive('link')}>
           <LinkIcon className="h-4 w-4" />
         </ToolBtn>
 
