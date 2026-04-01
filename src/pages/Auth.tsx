@@ -16,7 +16,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading } = useAuth();
