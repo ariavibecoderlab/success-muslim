@@ -69,6 +69,8 @@ const AdminUsers = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const { toast } = useToast();
   const { logAction } = useAdminAudit();
 
