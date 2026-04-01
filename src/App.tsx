@@ -15,6 +15,7 @@ import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
@@ -140,6 +141,7 @@ const App = () => {
                 {/* Public routes */}
                 <Route path="/" element={<Landing />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/install" element={<Install />} />

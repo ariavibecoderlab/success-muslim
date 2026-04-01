@@ -42,7 +42,7 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    const SKIP_PATHS = ['/', '/auth', '/onboarding', '/install', '/reset-password'];
+    const SKIP_PATHS = ['/', '/auth', '/auth/callback', '/onboarding', '/install', '/reset-password'];
     const path = window.location.pathname + window.location.search;
     if (!SKIP_PATHS.some(p => path === p || path.startsWith(p + '/'))) {
       localStorage.setItem('post_auth_redirect', path);
