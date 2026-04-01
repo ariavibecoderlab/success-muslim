@@ -1887,9 +1887,21 @@ export type Database = {
         Returns: undefined
       }
       admin_engagement_stats: { Args: { _days?: number }; Returns: Json }
+      admin_family_members: {
+        Args: { _family_id: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          joined_at: string
+          role: string
+          user_id: string
+        }[]
+      }
       admin_family_overview: { Args: never; Returns: Json }
       admin_health_stats: { Args: never; Returns: Json }
+      admin_health_trends: { Args: { _days?: number }; Returns: Json }
       admin_iman_stats: { Args: never; Returns: Json }
+      admin_iman_trends: { Args: { _days?: number }; Returns: Json }
       admin_live_feed: {
         Args: { _limit?: number }
         Returns: {
@@ -1921,6 +1933,14 @@ export type Database = {
           d3: number
           d30: number
           d7: number
+        }[]
+      }
+      admin_sadaqah_by_category: {
+        Args: never
+        Returns: {
+          category: string
+          donor_count: number
+          total_amount: number
         }[]
       }
       admin_signup_chart: {
