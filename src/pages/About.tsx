@@ -5,6 +5,7 @@ import MarketingLayout from '@/components/MarketingLayout';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Analytics02Icon, ShieldCheck, ViewIcon, UserMultipleIcon, ArrowRight01Icon,
+  Target02Icon, Rocket01Icon,
 } from '@hugeicons/core-free-icons';
 import smlogo from '@/assets/smlogo.webp';
 
@@ -20,25 +21,25 @@ const values = [
   {
     icon: Analytics02Icon,
     title: 'Consistency Over Perfection',
-    desc: "Small, consistent actions compound into transformative results. We help you build daily habits, not chase impossible standards.",
+    desc: "Small, consistent actions compound into transformative results.",
     iconBg: 'bg-emerald-100 text-emerald-700',
   },
   {
     icon: ShieldCheck,
     title: 'Privacy First',
-    desc: "Your data belongs to you. We don't sell your information, show ads, or track you across the web. Period.",
+    desc: "Your data belongs to you. No ads, no tracking. Period.",
     iconBg: 'bg-teal-100 text-teal-700',
   },
   {
     icon: ViewIcon,
     title: 'Holistic Growth',
-    desc: 'True success means thriving spiritually, physically, financially, and socially. We track all dimensions of a fulfilling Muslim life.',
+    desc: 'Thriving spiritually, physically, financially, and socially.',
     iconBg: 'bg-orange-100 text-orange-700',
   },
   {
     icon: UserMultipleIcon,
     title: 'Community & Family',
-    desc: 'Growth is better together. Share your journey with family, encourage each other, and celebrate milestones as a unit.',
+    desc: 'Share your journey with family and celebrate milestones together.',
     iconBg: 'bg-amber-100 text-amber-700',
   },
 ];
@@ -47,7 +48,7 @@ const About = () => (
   <MarketingLayout>
     {/* Hero */}
     <section className="pt-20 pb-16 px-6 text-center bg-gradient-to-b from-emerald-50/50 via-background to-background">
-      <motion.div initial="hidden" animate="visible" variants={fade} custom={0}>
+      <motion.div initial="hidden" animate="visible" variants={fade} custom={0} className="max-w-5xl mx-auto">
         <motion.img
           src={smlogo}
           alt="Success Muslim"
@@ -55,6 +56,9 @@ const About = () => (
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
         />
+        <span className="inline-block px-4 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium tracking-wide uppercase mb-5">
+          Our Story
+        </span>
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 tracking-tight mb-4">
           Your Islamic<br />
           <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
@@ -67,40 +71,56 @@ const About = () => (
       </motion.div>
     </section>
 
-    {/* Mission & Vision */}
-    <section className="py-20 px-6 border-t border-gray-100">
-      <div className="max-w-lg mx-auto grid gap-8">
+    {/* Mission & Vision — Bento Gradient Cards */}
+    <section className="py-20 px-6">
+      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-6">
+        {/* Mission */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
-          className="rounded-2xl bg-white/70 backdrop-blur-sm border border-gray-100 p-8 border-l-4 border-l-emerald-500"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-teal-700 p-8 md:p-10 text-white"
         >
-          <p className="text-sm font-medium text-emerald-600 uppercase tracking-wider mb-2">Our Mission</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            Empower Every Muslim to Thrive
-          </h2>
-          <p className="text-gray-500 leading-relaxed">
-            We believe every Muslim deserves tools that respect their values and support their unique journey. Success Muslim was built to replace scattered apps and notebooks with one unified, beautiful platform that tracks what truly matters — your prayers, your health, your wealth, and your personal growth.
-          </p>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="relative z-10">
+            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center mb-5">
+              <HugeiconsIcon icon={Target02Icon} size={22} className="text-white" />
+            </div>
+            <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2">Our Mission</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+              Empower Every Muslim to Thrive
+            </h2>
+            <p className="text-white/80 leading-relaxed text-sm">
+              We believe every Muslim deserves tools that respect their values and support their unique journey. Success Muslim replaces scattered apps with one unified, beautiful platform that tracks what truly matters.
+            </p>
+          </div>
         </motion.div>
 
+        {/* Vision */}
         <motion.div
           initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={1}
-          className="rounded-2xl bg-white/70 backdrop-blur-sm border border-gray-100 p-8 border-l-4 border-l-teal-500"
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-orange-500 to-amber-600 p-8 md:p-10 text-white"
         >
-          <p className="text-sm font-medium text-teal-600 uppercase tracking-wider mb-2">Our Vision</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            The Most Comprehensive Muslim Lifestyle Platform
-          </h2>
-          <p className="text-gray-500 leading-relaxed">
-            We envision a world where every Muslim has access to beautifully designed, privacy-first tools that make it easy to be consistent in worship, mindful about health, wise with wealth, and productive in daily life — all without compromise.
-          </p>
+          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-6 -left-6 w-24 h-24 bg-white/5 rounded-full" />
+          <div className="relative z-10">
+            <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center mb-5">
+              <HugeiconsIcon icon={Rocket01Icon} size={22} className="text-white" />
+            </div>
+            <p className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2">Our Vision</p>
+            <h2 className="text-2xl sm:text-3xl font-bold mb-3">
+              The Most Comprehensive Muslim Lifestyle Platform
+            </h2>
+            <p className="text-white/80 leading-relaxed text-sm">
+              A world where every Muslim has access to beautifully designed, privacy-first tools that make it easy to be consistent in worship, mindful about health, wise with wealth, and productive in daily life.
+            </p>
+          </div>
         </motion.div>
       </div>
     </section>
 
-    {/* Core Values */}
+    {/* Core Values — Mini-Cards Grid */}
     <section className="py-20 px-6 border-t border-gray-100">
-      <div className="max-w-lg mx-auto">
+      <div className="max-w-5xl mx-auto">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
           className="text-center mb-14"
         >
@@ -112,7 +132,7 @@ const About = () => (
           </p>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {values.map((v, i) => (
             <motion.div
               key={v.title}
@@ -121,13 +141,13 @@ const About = () => (
               viewport={{ once: true }}
               variants={fade}
               custom={i + 1}
-              className="rounded-2xl border border-gray-100 bg-white/70 backdrop-blur-sm p-7 hover:shadow-lg hover:shadow-emerald-500/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="rounded-xl border border-gray-100 bg-white/70 backdrop-blur-sm p-5 hover:shadow-lg hover:shadow-emerald-500/5 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
-              <div className={`w-11 h-11 rounded-xl ${v.iconBg} flex items-center justify-center mb-4`}>
-                <HugeiconsIcon icon={v.icon} size={22} />
+              <div className={`w-9 h-9 rounded-lg ${v.iconBg} flex items-center justify-center mb-3`}>
+                <HugeiconsIcon icon={v.icon} size={18} />
               </div>
-              <h3 className="font-semibold text-gray-900 text-lg mb-2">{v.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed">{v.desc}</p>
+              <h3 className="font-semibold text-gray-900 text-sm mb-1">{v.title}</h3>
+              <p className="text-xs text-gray-500 leading-relaxed">{v.desc}</p>
             </motion.div>
           ))}
         </div>
