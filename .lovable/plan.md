@@ -1,36 +1,32 @@
-## Hide sementara Google OAuth untuk dipakai kemudian hari lagi & Keep Email-Only Auth
 
-### Overview
 
-Remove the Google OAuth button and divider from the Auth page, keeping only email/password sign-in and sign-up. Email verification is already handled by default (no auto-confirm) — users get a verification email and must confirm before signing in.
+## Fix Email Verification Flow
 
 ### Changes
 
-`**src/pages/Auth.tsx**`:
+**1. Configure Cloud auth settings**
+- Use `cloud--configure_auth` to ensure email confirmations are enabled
+- Add redirect URLs: `https://id-preview--b9a116fe-f80b-4255-b061-8b5d84d41884.lovable.app/auth/callback` and `https://success-muslim.lovable.app/auth/callback`
 
-1. Remove the `lovable` import (line 4)
-2. Remove `googleLoading` state (line 20)
-3. Remove `handleGoogleSignIn` function (lines 35-46)
-4. Remove the Google Sign-In button JSX (lines 103-121)
-5. Remove the "or" divider (lines 123-128)
+**2. Create `src/pages/AuthCallback.tsx`**
+- New page that handles the verification token exchange
+- Calls `supabase.auth.getSession()` (Supabase JS auto-detects hash params)
+- On success: check `localStorage` for `post_auth_redirect`, then redirect to that or `/dashboard`
+- On failure: redirect to `/auth` with error toast
 
-### Also fix pre-existing build errors
+**3. Update `src/pages/Auth.tsx`**
+- Change `emailRedirectTo` from `window.location.origin` to `` `${window.location.origin}/auth/callback` ``
+- Improve signup toast: mention checking spam/junk folder
 
-`**supabase/functions/jakim-proxy/index.ts**` (line 76):
+**4. Update `src/App.tsx`**
+- Add route: `<Route path="/auth/callback" element={<AuthCallback />} />`
 
-- Cast `error` to `Error` type: `(error as Error).message`
+**5. Update `src/components/AuthGuard.tsx`**
+- Add `/auth/callback` to `SKIP_PATHS`
 
-`**src/utils/native/device.ts**`:
+### Files
+- `src/pages/AuthCallback.tsx` — new
+- `src/pages/Auth.tsx` — update redirect URL + toast message
+- `src/App.tsx` — add callback route
+- `src/components/AuthGuard.tsx` — add skip path
 
-- Add missing `operatingSystem` and `webViewVersion` to the fallback object
-- Fix `appVersion`/`appBuild` references on `DeviceInfo`
-
-`**src/utils/native/notifications.ts**`:
-
-- Remove `priority` from notification schemas
-- Fix `getDelivered`/`removeDelivered` → correct Capacitor API names
-- Fix argument count and missing `notificationId` property
-
-### No database or auth config changes needed
-
-Email verification is already the default behavior — users must verify their email before signing in. The signup flow already shows "Please check your email to verify your account before signing in."
