@@ -9,7 +9,7 @@ import {
   Calculator01Icon, Moon02Icon, HandPrayerIcon, BodyWeightIcon,
   DropletIcon, SleepingIcon, RunningShoesIcon, Timer02Icon,
   Activity01Icon, PiggyBankIcon, Fire03Icon, BarChartIcon,
-  TrophyIcon, ArrowRight01Icon,
+  Award01Icon, ArrowRight01Icon,
 } from '@hugeicons/core-free-icons';
 
 import imgLifescore from '@/assets/features/lifescore.webp';
