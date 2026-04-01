@@ -1,33 +1,38 @@
 
 
-# Align About Page with Features Page Design
+# Polish Marketing Navbar (`MarketingLayout.tsx`)
 
-## Problem
-The About page uses a simpler, narrower layout (`max-w-lg`) with basic glassmorphic cards, while Features uses a wider (`max-w-5xl`), richer bento layout with gradient header cards, icon backgrounds, phone mockups, and more visual depth.
+Align the navbar with the bento/glassmorphic design language used across Landing, Features, About, and Auth pages.
 
-## Changes (`src/pages/About.tsx`)
+## Changes
 
-### 1. Hero Section
-- Match Features hero style: wider layout, same gradient text pattern, add a subtitle badge/pill (e.g., "Our Story")
+### Header Bar
+- Replace `bg-background/80` with glassmorphic styling: `bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm`
+- Logo image: add `shadow-sm` and subtle hover group effect
+- Brand text: emerald gradient text (`bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent`)
 
-### 2. Mission & Vision → Bento Gradient Header Cards
-- Replace the plain `border-l-4` cards with full gradient header cards matching the Features pillar style:
-  - Mission: `from-emerald-600 to-teal-700` gradient card with white icon, title, description
-  - Vision: `from-orange-500 to-amber-600` gradient card with white icon, title, description
-- Add decorative circle overlay (`bg-white/5 rounded-full`) like Features pillar headers
-- Use `max-w-5xl` container width to match Features
+### Desktop Nav Links
+- Add pill-shaped hover background: `px-3 py-1.5 rounded-lg hover:bg-emerald-50` transition
+- Active state: `bg-emerald-50 text-emerald-700` pill instead of just color change
 
-### 3. Core Values → Feature Mini-Cards Grid
-- Use the same mini-card pattern from Features: `rounded-xl border border-gray-100 bg-white/70 backdrop-blur-sm` with `hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]`
-- Expand to `max-w-5xl` with `grid-cols-2 md:grid-cols-4` layout (one row on desktop)
-- Match icon badge size (`w-9 h-9 rounded-lg`) and text sizing (`text-sm` title, `text-xs` desc) from Features
+### Desktop CTA Buttons
+- "Sign In": keep ghost but add `rounded-xl`
+- "Get Started": emerald gradient button (`bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl shadow-sm hover:shadow-md`) with `active:scale-[0.98]` press effect
+- Replace Lucide `ArrowRight` with HugeIcons `ArrowRight02Icon`
 
-### 4. Bottom CTA
-- Already matches Features — no changes needed
+### Mobile Hamburger
+- Replace Lucide `Menu`/`X` with HugeIcons equivalents
+- Animated transition (framer-motion `AnimatePresence` for dropdown)
 
-### 5. Width & Spacing
-- Replace all `max-w-lg` with `max-w-5xl` to match Features page proportions
+### Mobile Dropdown
+- Glassmorphic panel: `bg-white/90 backdrop-blur-xl border-t border-white/20`
+- Nav links as pill-shaped rows with active emerald highlight
+- CTA buttons: match desktop gradient styling, `rounded-xl`
 
-## Files Modified
-- `src/pages/About.tsx`
+### Footer
+- Match glassmorphic border style (`border-white/20`)
+- Brand text: same emerald gradient as header
+
+## File Modified
+- `src/components/MarketingLayout.tsx`
 
