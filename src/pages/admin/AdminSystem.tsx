@@ -18,6 +18,7 @@ const AdminSystem = () => {
     { name: 'Storage', icon: HardDrive, status: 'loading', detail: 'Checking...' },
   ]);
   const [recentErrors, setRecentErrors] = useState<{ action: string; module: string; created_at: string }[]>([]);
+  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const checkHealth = async () => {
