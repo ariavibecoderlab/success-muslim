@@ -1,32 +1,26 @@
 
 
-## Fix Email Verification Flow
+## Fix Verification Redirect, Duplicate Email Alert & Remove Lovable Branding
+
+### Problem
+1. Verification email redirects to `lovable.dev` instead of `successmuslim.app` — because `emailRedirectTo` uses `window.location.origin` (which is the preview URL during development)
+2. No alert when signing up with an already-registered email
+3. Lovable badge visible on published site
 
 ### Changes
 
-**1. Configure Cloud auth settings**
-- Use `cloud--configure_auth` to ensure email confirmations are enabled
-- Add redirect URLs: `https://id-preview--b9a116fe-f80b-4255-b061-8b5d84d41884.lovable.app/auth/callback` and `https://success-muslim.lovable.app/auth/callback`
+**1. Hardcode production redirect URL in `src/pages/Auth.tsx`**
+- Change `emailRedirectTo` from `${window.location.origin}/auth/callback` to `https://successmuslim.app/auth/callback`
+- This ensures verification emails always redirect to the production domain regardless of where signup happens
 
-**2. Create `src/pages/AuthCallback.tsx`**
-- New page that handles the verification token exchange
-- Calls `supabase.auth.getSession()` (Supabase JS auto-detects hash params)
-- On success: check `localStorage` for `post_auth_redirect`, then redirect to that or `/dashboard`
-- On failure: redirect to `/auth` with error toast
+**2. Detect duplicate email signup in `src/pages/Auth.tsx`**
+- After `signUp()`, check `data.user?.identities?.length === 0` — this is how Supabase signals an existing account
+- Show a clear toast: "This email is already registered. Please sign in instead."
+- Auto-switch to login mode
 
-**3. Update `src/pages/Auth.tsx`**
-- Change `emailRedirectTo` from `window.location.origin` to `` `${window.location.origin}/auth/callback` ``
-- Improve signup toast: mention checking spam/junk folder
+**3. Hide Lovable badge**
+- Use `publish_settings--set_badge_visibility` to hide the "Edit with Lovable" badge on published site
 
-**4. Update `src/App.tsx`**
-- Add route: `<Route path="/auth/callback" element={<AuthCallback />} />`
-
-**5. Update `src/components/AuthGuard.tsx`**
-- Add `/auth/callback` to `SKIP_PATHS`
-
-### Files
-- `src/pages/AuthCallback.tsx` — new
-- `src/pages/Auth.tsx` — update redirect URL + toast message
-- `src/App.tsx` — add callback route
-- `src/components/AuthGuard.tsx` — add skip path
+### Files modified
+- `src/pages/Auth.tsx` — hardcode redirect URL + duplicate email detection
 
