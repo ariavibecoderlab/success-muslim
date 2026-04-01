@@ -50,7 +50,7 @@ const Auth = () => {
           password,
           options: {
             data: { display_name: email.split('@')[0] },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
           },
         });
         if (error) throw error;
