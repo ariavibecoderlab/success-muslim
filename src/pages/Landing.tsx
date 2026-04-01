@@ -96,7 +96,7 @@ const bentoFeatures = [
     key: 'wellness',
     title: 'Wellness',
     desc: 'BMI, sleep, hydration & IF fasting tracker.',
-    icon: Heartbeat02Icon,
+    icon: HealthIcon,
     gradient: 'from-teal-500 to-teal-600',
     lightBg: 'bg-teal-50',
     iconColor: '#0d9488',

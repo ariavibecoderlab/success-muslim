@@ -33,7 +33,7 @@ const features = [
   {
     title: 'Wellness',
     desc: 'Health & Fasting',
-    icon: Heartbeat02Icon,
+    icon: HealthIcon,
     bg: 'bg-teal-50',
     iconColor: '#0d9488',
     borderColor: 'border-teal-100',
