@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X, Trash2 } from 'lucide-react';
+import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X, Trash2, BookOpen, Flame, Moon, Heart, ListChecks } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAudit } from '@/hooks/useAdminAudit';
@@ -69,6 +69,8 @@ const AdminUsers = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [userStats, setUserStats] = useState<any>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
   const { toast } = useToast();
   const { logAction } = useAdminAudit();
 
@@ -216,9 +218,18 @@ const AdminUsers = () => {
     else { setSortBy(col); setSortAsc(false); }
   };
 
+  const loadUserStats = async (userId: string) => {
+    setLoadingStats(true);
+    const { data } = await supabase.rpc('admin_user_detail_stats', { _user_id: userId });
+    if (data) setUserStats(data);
+    setLoadingStats(false);
+  };
+
   const openUserDetail = (profile: Profile) => {
     setSelectedUser(profile);
+    setUserStats(null);
     loadUserActivity(profile.id);
+    loadUserStats(profile.id);
   };
 
   const copyId = (id: string) => {
@@ -572,6 +583,73 @@ const AdminUsers = () => {
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* User Stats */}
+              {loadingStats ? (
+                <div className="text-sm text-muted-foreground">Loading stats...</div>
+              ) : userStats && (
+                <>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Activity className="h-3 w-3" /> Weekly Stats</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary">
+                          {userStats.prayers_7d_total > 0 ? Math.round((userStats.prayers_7d_on_time / userStats.prayers_7d_total) * 100) : 0}%
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Prayer On-Time (7d)</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                          <BookOpen className="h-4 w-4" /> {Number(userStats.quran_pages_week)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Quran Pages (Week)</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                          <Flame className="h-4 w-4" /> {userStats.checkin_streak}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Checkin Streak</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                          <Moon className="h-4 w-4" /> {userStats.fasting_days_month}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Fasting (Month)</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                          <Heart className="h-4 w-4" /> {Number(userStats.dhikr_today)}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Dhikr Today</p>
+                      </div>
+                      <div className="rounded-lg bg-muted/50 p-2.5 text-center">
+                        <p className="text-lg font-bold text-primary flex items-center justify-center gap-1">
+                          <ListChecks className="h-4 w-4" /> {userStats.tasks_completed_week}/{userStats.tasks_total_week}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Tasks (Week)</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Family Memberships */}
+                  {userStats.families && userStats.families.length > 0 && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Users className="h-3 w-3" /> Family & Class Memberships</p>
+                      <div className="space-y-1.5">
+                        {userStats.families.map((f: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2 text-xs">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{f.name}</span>
+                              <Badge variant="secondary" className="text-[10px] capitalize">{f.group_type}</Badge>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] capitalize">{f.role}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Role Management */}
