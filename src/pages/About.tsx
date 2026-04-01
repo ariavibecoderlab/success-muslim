@@ -30,7 +30,7 @@ const values = [
     iconBg: 'bg-teal-100 text-teal-700',
   },
   {
-    icon: View01Icon,
+    icon: ViewIcon,
     title: 'Holistic Growth',
     desc: 'True success means thriving spiritually, physically, financially, and socially. We track all dimensions of a fulfilling Muslim life.',
     iconBg: 'bg-orange-100 text-orange-700',

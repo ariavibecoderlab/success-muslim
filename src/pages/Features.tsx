@@ -116,7 +116,7 @@ const pillars: PillarSection[] = [
     iconBg: 'bg-purple-100 text-purple-700',
     features: [
       { icon: UserMultipleIcon, title: 'Family Dashboard', desc: 'See how your family is doing at a glance.' },
-      { icon: Trophy01Icon, title: 'Leaderboard', desc: 'Friendly competition to encourage consistent ibadah.' },
+      { icon: Award01Icon, title: 'Leaderboard', desc: 'Friendly competition to encourage consistent ibadah.' },
       { icon: Activity01Icon, title: 'Activity Feed', desc: "Stay connected with your family's daily achievements." },
     ],
   },
