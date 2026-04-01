@@ -60,6 +60,10 @@ const AdminSystem = () => {
         .order('created_at', { ascending: false })
         .limit(20);
       if (errors) setRecentErrors(errors);
+
+      // Table sizes
+      const { data: sizes } = await supabase.rpc('admin_table_sizes');
+      if (sizes) setTableSizes(sizes as unknown as Record<string, number>);
     };
 
     checkHealth();
