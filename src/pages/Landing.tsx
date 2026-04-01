@@ -1,10 +1,20 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import MarketingLayout from '@/components/MarketingLayout';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  Mosque02Icon,
+  Heartbeat02Icon,
+  MoneyBag02Icon,
+  Target02Icon,
+  StarIcon,
+  ArrowRight02Icon,
+  CheckmarkCircle02Icon,
+} from '@hugeicons/core-free-icons';
 
 import imgHero from '@/assets/landing/hero-dashboard.jpg';
 import imgQuran from '@/assets/landing/quran-tracker.jpg';
@@ -14,28 +24,36 @@ import imgIman from '@/assets/features/iman.webp';
 import imgLifescore from '@/assets/features/lifescore.webp';
 import imgIfasting from '@/assets/features/ifasting.webp';
 import imgStartFasting from '@/assets/features/start-fasting.webp';
+import smlogo from '@/assets/smlogo.webp';
 
 const fade = {
-  hidden: { opacity: 0, y: 24 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1, y: 0,
-    transition: { delay: i * 0.12, duration: 0.7, ease: [0.25, 0.1, 0.25, 1] as const },
+    transition: { delay: i * 0.1, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] },
   }),
 };
 
 /* ── Animated Ring ── */
-const AnimatedRing = ({ progress }: { progress: number }) => {
-  const circumference = 2 * Math.PI * 54;
+const AnimatedRing = ({ progress, size = 160 }: { progress: number; size?: number }) => {
+  const r = (size / 2) - 6;
+  const circumference = 2 * Math.PI * r;
   const target = (progress / 100) * circumference;
   return (
-    <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-      <circle cx="60" cy="60" r="54" fill="none" stroke="hsl(var(--border))" strokeWidth="7" />
+    <svg className="-rotate-90" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#e5e7eb" strokeWidth="8" />
       <motion.circle
-        cx="60" cy="60" r="54" fill="none"
-        stroke="hsl(var(--primary))" strokeWidth="7" strokeLinecap="round"
+        cx={size/2} cy={size/2} r={r} fill="none"
+        stroke="url(#ringGrad)" strokeWidth="8" strokeLinecap="round"
         animate={{ strokeDasharray: `${target} ${circumference}` }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       />
+      <defs>
+        <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#059669" />
+          <stop offset="100%" stopColor="#0d9488" />
+        </linearGradient>
+      </defs>
     </svg>
   );
 };
@@ -62,36 +80,62 @@ const AnimatedCounter = ({ target, suffix = '' }: { target: number; suffix?: str
   return <span ref={ref}>{count}{suffix}</span>;
 };
 
-/* ── Phone Frame ── */
-const PhoneFrame = ({ src, alt, className = '' }: { src: string; alt: string; className?: string }) => (
-  <div className={`relative mx-auto ${className}`}>
-    <div className="rounded-[2rem] border-[6px] border-foreground/10 bg-foreground/5 p-1.5 shadow-2xl shadow-primary/10">
-      <div className="rounded-[1.5rem] overflow-hidden bg-card">
-        <img src={src} alt={alt} className="w-full h-auto" loading="lazy" />
-      </div>
-    </div>
-  </div>
-);
-
-const pillars = [
-  { title: 'Iman', desc: 'Prayer, Quran, Dhikr & Zakat tracking', img: imgIman },
-  { title: 'Wellness', desc: 'BMI, sleep, hydration & fasting', img: imgHealth },
-  { title: 'Wealth', desc: 'Halal budgeting & savings goals', img: imgIfasting },
-  { title: 'Productivity', desc: 'Daily MITs, habits & streaks', img: imgLifescore },
+const bentoFeatures = [
+  {
+    key: 'iman',
+    title: 'Iman & Worship',
+    desc: 'Prayer tracking, Quran reading, dhikr counter, zakat calculator — everything for your spiritual growth.',
+    icon: Mosque02Icon,
+    gradient: 'from-emerald-600 to-teal-700',
+    lightBg: 'bg-emerald-50',
+    iconColor: '#059669',
+    img: imgIman,
+    span: 'md:col-span-2 md:row-span-2',
+  },
+  {
+    key: 'wellness',
+    title: 'Wellness',
+    desc: 'BMI, sleep, hydration & IF fasting tracker.',
+    icon: Heartbeat02Icon,
+    gradient: 'from-teal-500 to-teal-600',
+    lightBg: 'bg-teal-50',
+    iconColor: '#0d9488',
+    img: imgHealth,
+    span: '',
+  },
+  {
+    key: 'wealth',
+    title: 'Wealth',
+    desc: 'Halal budgeting & savings goals.',
+    icon: MoneyBag02Icon,
+    gradient: 'from-orange-500 to-orange-600',
+    lightBg: 'bg-orange-50',
+    iconColor: '#ea580c',
+    img: imgIfasting,
+    span: '',
+  },
+  {
+    key: 'productivity',
+    title: 'Productivity',
+    desc: 'Daily MITs, habits & streaks.',
+    icon: Target02Icon,
+    gradient: 'from-amber-500 to-amber-600',
+    lightBg: 'bg-amber-50',
+    iconColor: '#d97706',
+    img: imgStartFasting,
+    span: '',
+  },
 ];
 
-const personas = [
-  { title: 'The Practicing Muslim', desc: 'Track salah, Quran, dhikr, and fasting with beautiful streaks.', img: imgIman },
-  { title: 'The Health-Conscious', desc: 'Monitor BMI, hydration, sleep, and intermittent fasting.', img: imgHealth },
-  { title: 'The Ambitious Achiever', desc: 'Set MITs, build habits, manage budgets — all in one place.', img: imgStartFasting },
+const stats = [
+  { value: 5, suffix: '', label: 'Pillars of Growth' },
+  { value: 90, suffix: '+', label: 'Features' },
+  { value: 100, suffix: '%', label: 'Free Forever' },
 ];
 
 const Landing = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const heroRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
 
   const [scores, setScores] = useState({ iman: 85, wellness: 64, productivity: 67 });
   const totalScore = Math.round((scores.iman + scores.wellness + scores.productivity) / 3);
@@ -102,149 +146,136 @@ const Landing = () => {
 
   return (
     <MarketingLayout>
-      {/* ── Hero ── */}
-      <section ref={heroRef} className="relative pt-16 pb-24 px-6 overflow-hidden">
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px] pointer-events-none" />
+      {/* ── Hero Section ── */}
+      <section className="relative pt-20 pb-24 px-6 overflow-hidden bg-white">
+        {/* Decorative glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-gradient-to-br from-emerald-200/40 to-teal-100/30 rounded-full blur-[140px] pointer-events-none" />
+        <div className="absolute top-40 right-0 w-[300px] h-[300px] bg-orange-200/20 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="relative max-w-5xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-          {/* Text */}
-          <div className="text-center md:text-left">
-            <motion.h1 initial="hidden" animate="visible" variants={fade} custom={0}
-              className="text-4xl sm:text-5xl md:text-6xl font-bold text-foreground leading-[1.08] tracking-tight mb-6"
+        <div className="relative max-w-6xl mx-auto">
+          {/* Bento Hero Grid */}
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Main Hero Card */}
+            <motion.div
+              initial="hidden" animate="visible" variants={fade} custom={0}
+              className="md:col-span-2 bg-gradient-to-br from-emerald-600 to-teal-700 rounded-3xl p-8 md:p-12 flex flex-col justify-between min-h-[340px] relative overflow-hidden"
             >
-              Optimize Your Life
-              <br />
-              <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                For Both Worlds
-              </span>
-            </motion.h1>
+              {/* Decorative pattern */}
+              <div className="absolute top-0 right-0 w-64 h-64 opacity-10">
+                <svg viewBox="0 0 200 200" fill="none">
+                  <circle cx="100" cy="100" r="80" stroke="white" strokeWidth="0.5"/>
+                  <circle cx="100" cy="100" r="60" stroke="white" strokeWidth="0.5"/>
+                  <circle cx="100" cy="100" r="40" stroke="white" strokeWidth="0.5"/>
+                  {[0,45,90,135,180,225,270,315].map(angle => (
+                    <line key={angle} x1="100" y1="100" x2={100 + 80*Math.cos(angle*Math.PI/180)} y2={100 + 80*Math.sin(angle*Math.PI/180)} stroke="white" strokeWidth="0.5"/>
+                  ))}
+                </svg>
+              </div>
 
-            <motion.p initial="hidden" animate="visible" variants={fade} custom={1}
-              className="text-lg text-muted-foreground max-w-md mx-auto md:mx-0 mb-8"
-            >
-              The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity. Get your daily Life Score.
-            </motion.p>
+              <div className="relative z-10">
+                <div className="flex items-center gap-2 mb-6">
+                  <img src={smlogo} alt="Success Muslim" className="w-10 h-10 rounded-xl" />
+                  <span className="text-white/70 text-sm font-medium">Success Muslim</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-[1.1] tracking-tight mb-4">
+                  Optimize Your Life
+                  <br />
+                  <span className="text-orange-300">For Both Worlds</span>
+                </h1>
+                <p className="text-white/70 text-base md:text-lg max-w-md mb-8">
+                  The all-in-one Muslim lifestyle app — track prayers, Quran, health, wealth, and productivity.
+                </p>
+              </div>
 
-            <motion.div initial="hidden" animate="visible" variants={fade} custom={2}
-              className="flex flex-col sm:flex-row items-center md:items-start gap-3"
-            >
-              <Button asChild size="lg" className="text-base px-8 py-6 rounded-xl shadow-lg shadow-primary/20">
-                <Link to="/auth">Start Your Journey</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-base">
-                <Link to="/features">Explore Features</Link>
-              </Button>
+              <div className="relative z-10 flex flex-wrap gap-3">
+                <Button asChild size="lg" className="bg-white text-emerald-700 hover:bg-white/90 rounded-xl px-8 py-6 text-base font-semibold shadow-lg">
+                  <Link to="/auth">
+                    Start Your Journey
+                    <HugeiconsIcon icon={ArrowRight02Icon} size={18} className="ml-2" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" size="lg" className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl">
+                  <Link to="/features">Explore Features</Link>
+                </Button>
+              </div>
             </motion.div>
 
-            <motion.p initial="hidden" animate="visible" variants={fade} custom={3}
-              className="text-sm text-muted-foreground mt-5"
-            >
-              Free forever · No credit card required
-            </motion.p>
+            {/* Right side stacked cards */}
+            <div className="flex flex-col gap-4">
+              {/* Phone mockup card */}
+              <motion.div
+                initial="hidden" animate="visible" variants={fade} custom={1}
+                className="bg-gray-50 rounded-3xl p-6 flex items-center justify-center flex-1 overflow-hidden"
+              >
+                <div className="rounded-[1.5rem] border-[4px] border-gray-200 bg-white p-1 shadow-xl max-w-[160px]">
+                  <div className="rounded-[1.2rem] overflow-hidden">
+                    <img src={imgHero} alt="Success Muslim Dashboard" className="w-full h-auto" loading="lazy" />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Stats card */}
+              <motion.div
+                initial="hidden" animate="visible" variants={fade} custom={2}
+                className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-6"
+              >
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  {stats.map(s => (
+                    <div key={s.label}>
+                      <p className="text-2xl font-bold text-white">
+                        <AnimatedCounter target={s.value} suffix={s.suffix} />
+                      </p>
+                      <p className="text-[10px] text-white/70 leading-tight mt-1">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
 
-          {/* Floating phone */}
-          <motion.div style={{ y: heroY }} className="hidden md:block">
-            <PhoneFrame src={imgHero} alt="Success Muslim Dashboard" className="max-w-[280px]" />
-          </motion.div>
+          {/* Trust line */}
+          <motion.p initial="hidden" animate="visible" variants={fade} custom={3}
+            className="text-center text-gray-400 text-sm mt-8 tracking-wide"
+          >
+            Free forever · No credit card · Built for the Ummah 🌙
+          </motion.p>
         </div>
       </section>
 
-      {/* ── Stats Bar ── */}
-      <section className="py-8 px-6 border-y border-border/40">
-        <motion.p initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
-          className="text-center text-muted-foreground text-sm tracking-widest uppercase"
-        >
-          5 Pillars &nbsp;·&nbsp; 90+ Features &nbsp;·&nbsp; Free Forever
-        </motion.p>
-      </section>
-
-      {/* ── Interactive Life Score ── */}
-      <section className="py-24 px-6">
-        <div className="max-w-4xl mx-auto">
+      {/* ── Bento Feature Grid ── */}
+      <section className="py-20 px-6 bg-gray-50/50">
+        <div className="max-w-6xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
-            className="text-center mb-12"
+            className="text-center mb-14"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">One score. Whole life.</h2>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              Drag the sliders to see how your Life Score changes across spiritual, physical, and productive dimensions.
-            </p>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+              Everything You Need,{' '}
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Nothing You Don't</span>
+            </h2>
+            <p className="text-gray-500 max-w-lg mx-auto">Four pillars of growth, unified in one beautiful dashboard.</p>
           </motion.div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={1}
-            className="grid md:grid-cols-2 gap-10 items-center"
-          >
-            {/* Ring */}
-            <div className="bg-card rounded-2xl border border-border p-8 shadow-xl shadow-primary/5 mx-auto max-w-xs w-full">
-              <div className="relative w-40 h-40 mx-auto mb-6">
-                <AnimatedRing progress={totalScore} />
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-bold text-primary">{totalScore}</span>
-                  <span className="text-xs text-muted-foreground">/ 100</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                {[
-                  { label: 'Iman', score: scores.iman },
-                  { label: 'Wellness', score: scores.wellness },
-                  { label: 'Productivity', score: scores.productivity },
-                ].map(s => (
-                  <div key={s.label}>
-                    <p className="text-lg font-bold text-foreground">{s.score}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.label}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Sliders */}
-            <div className="space-y-8">
-              {([
-                { key: 'iman' as const, label: 'Iman' },
-                { key: 'wellness' as const, label: 'Wellness' },
-                { key: 'productivity' as const, label: 'Productivity' },
-              ]).map(({ key, label }) => (
-                <div key={key}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-foreground">{label}</span>
-                    <span className="text-sm font-bold text-primary">{scores[key]}</span>
-                  </div>
-                  <Slider
-                    value={[scores[key]]}
-                    onValueChange={([v]) => setScores(prev => ({ ...prev, [key]: v }))}
-                    min={0} max={100} step={1}
-                  />
-                </div>
-              ))}
-              <p className="text-xs text-muted-foreground">
-                Try it — drag the sliders and watch your Life Score update in real-time.
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ── Pillars (Image cards) ── */}
-      <section className="py-24 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Four Pillars of Growth</h2>
-            <p className="text-muted-foreground">Everything you need, nothing you don't.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {pillars.map((p, i) => (
-              <motion.div key={p.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
-                className="group relative rounded-2xl overflow-hidden aspect-[3/4] cursor-pointer"
+          <div className="grid md:grid-cols-4 gap-4 auto-rows-[200px]">
+            {bentoFeatures.map((f, i) => (
+              <motion.div
+                key={f.key}
+                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
+                className={`group relative rounded-2xl overflow-hidden border border-gray-100 bg-white cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${f.span}`}
               >
-                <img src={p.img} alt={p.title} loading="lazy"
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                <div className="absolute inset-0 bg-gradient-to-t from-foreground/80 via-foreground/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="font-bold text-primary-foreground text-lg">{p.title}</h3>
-                  <p className="text-primary-foreground/70 text-xs leading-relaxed">{p.desc}</p>
+                {/* Background image */}
+                <img src={f.img} alt={f.title} loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+
+                {/* Glassmorphic overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-t ${f.key === 'iman' ? 'from-emerald-900/90 via-emerald-800/60 to-emerald-700/30' : 'from-gray-900/80 via-gray-800/40 to-transparent'}`} />
+
+                {/* Content */}
+                <div className="relative z-10 h-full flex flex-col justify-end p-6">
+                  <div className={`w-10 h-10 rounded-xl ${f.key === 'iman' ? 'bg-white/20' : 'bg-white/20'} backdrop-blur-sm flex items-center justify-center mb-3`}>
+                    <HugeiconsIcon icon={f.icon} size={22} color="white" />
+                  </div>
+                  <h3 className="font-bold text-white text-lg mb-1">{f.title}</h3>
+                  <p className="text-white/70 text-sm leading-relaxed">{f.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -252,59 +283,105 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* ── How It Works (Counters + images) ── */}
-      <section className="py-24 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto">
+      {/* ── Interactive Life Score ── */}
+      <section className="py-24 px-6 bg-white">
+        <div className="max-w-5xl mx-auto">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
             className="text-center mb-14"
           >
-            <h2 className="text-3xl sm:text-4xl font-bold">How It Works</h2>
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 text-sm font-medium px-4 py-1.5 rounded-full mb-4">
+              <HugeiconsIcon icon={StarIcon} size={16} />
+              Interactive Demo
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">One Score. Whole Life.</h2>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Drag the sliders and watch your Life Score update across spiritual, physical, and productive dimensions.
+            </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={1}>
+            <div className="bg-gray-50 rounded-3xl border border-gray-100 p-8 md:p-12">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                {/* Ring */}
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-6">
+                    <AnimatedRing progress={totalScore} size={180} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-5xl font-bold text-emerald-700">{totalScore}</span>
+                      <span className="text-xs text-gray-400">/ 100</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-6 text-center w-full max-w-xs">
+                    {[
+                      { label: 'Iman', score: scores.iman, color: 'text-emerald-600' },
+                      { label: 'Wellness', score: scores.wellness, color: 'text-teal-600' },
+                      { label: 'Productivity', score: scores.productivity, color: 'text-orange-600' },
+                    ].map(s => (
+                      <div key={s.label}>
+                        <p className={`text-xl font-bold ${s.color}`}>{s.score}</p>
+                        <p className="text-[11px] text-gray-400">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sliders */}
+                <div className="space-y-8">
+                  {([
+                    { key: 'iman' as const, label: 'Iman', emoji: '🕌' },
+                    { key: 'wellness' as const, label: 'Wellness', emoji: '💚' },
+                    { key: 'productivity' as const, label: 'Productivity', emoji: '🎯' },
+                  ]).map(({ key, label, emoji }) => (
+                    <div key={key}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-700">{emoji} {label}</span>
+                        <span className="text-sm font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full">{scores[key]}</span>
+                      </div>
+                      <Slider
+                        value={[scores[key]]}
+                        onValueChange={([v]) => setScores(prev => ({ ...prev, [key]: v }))}
+                        min={0} max={100} step={1}
+                      />
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
+                    Try it — drag the sliders above
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section className="py-20 px-6 bg-gray-50/50">
+        <div className="max-w-5xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
+            className="text-center mb-14"
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">How It Works</h2>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               { target: 5, suffix: '', label: 'Daily Prayers', desc: 'Log every salah with one tap.', img: imgIman },
               { target: 72, suffix: '', label: 'Life Score', desc: 'Get your holistic daily score.', img: imgLifescore },
               { target: 30, suffix: '+', label: 'Day Streaks', desc: 'Build consistency, see growth.', img: imgQuran },
             ].map((s, i) => (
               <motion.div key={s.label} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
-                className="text-center"
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow duration-300"
               >
-                <div className="rounded-2xl overflow-hidden border border-border mb-5 aspect-video bg-card">
+                <div className="aspect-video overflow-hidden">
                   <img src={s.img} alt={s.label} loading="lazy" className="w-full h-full object-cover object-top" />
                 </div>
-                <p className="text-4xl font-bold text-primary mb-1">
-                  <AnimatedCounter target={s.target} suffix={s.suffix} />
-                </p>
-                <h3 className="font-semibold text-foreground mb-1">{s.label}</h3>
-                <p className="text-sm text-muted-foreground">{s.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Who It's For (Horizontal scroll) ── */}
-      <section className="py-24 px-6 border-t border-border/40">
-        <div className="max-w-4xl mx-auto">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3">Built For You</h2>
-            <p className="text-muted-foreground">No matter where you are in your journey.</p>
-          </motion.div>
-
-          <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory pb-4 -mx-6 px-6 scrollbar-hide">
-            {personas.map((p, i) => (
-              <motion.div key={p.title} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={i}
-                className="min-w-[280px] sm:min-w-[320px] snap-center rounded-2xl border border-border bg-card overflow-hidden flex-shrink-0"
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img src={p.img} alt={p.title} loading="lazy" className="w-full h-full object-cover" />
-                </div>
-                <div className="p-5">
-                  <h3 className="font-semibold text-foreground mb-2">{p.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                <div className="p-6 text-center">
+                  <p className="text-4xl font-bold text-emerald-600 mb-1">
+                    <AnimatedCounter target={s.target} suffix={s.suffix} />
+                  </p>
+                  <h3 className="font-semibold text-gray-900 mb-1">{s.label}</h3>
+                  <p className="text-sm text-gray-500">{s.desc}</p>
                 </div>
               </motion.div>
             ))}
@@ -315,15 +392,20 @@ const Landing = () => {
       {/* ── Bottom CTA ── */}
       <section className="relative py-28 px-6 overflow-hidden">
         <img src={imgPattern} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-        <div className="absolute inset-0 bg-primary/90" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-700/95 to-teal-800/95" />
         <div className="relative max-w-2xl mx-auto text-center">
-          <p className="text-xl sm:text-2xl font-medium italic leading-relaxed mb-3 text-primary-foreground/90">
-            &quot;The most beloved deeds to Allah are those done consistently, even if they are small.&quot;
-          </p>
-          <p className="text-primary-foreground/50 text-sm mb-10">— Sahih al-Bukhari & Muslim</p>
-          <Button asChild size="lg" variant="secondary" className="text-base px-8 py-6 rounded-xl">
-            <Link to="/auth">Begin Your Journey</Link>
-          </Button>
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fade} custom={0}>
+            <p className="text-xl sm:text-2xl font-medium italic leading-relaxed mb-3 text-white/90">
+              &quot;The most beloved deeds to Allah are those done consistently, even if they are small.&quot;
+            </p>
+            <p className="text-white/40 text-sm mb-10">— Sahih al-Bukhari & Muslim</p>
+            <Button asChild size="lg" className="bg-white text-emerald-700 hover:bg-white/90 text-base px-8 py-6 rounded-xl shadow-lg">
+              <Link to="/auth">
+                Begin Your Journey
+                <HugeiconsIcon icon={ArrowRight02Icon} size={18} className="ml-2" />
+              </Link>
+            </Button>
+          </motion.div>
         </div>
       </section>
     </MarketingLayout>
