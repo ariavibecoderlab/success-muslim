@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Mosque02Icon,
-  Heartbeat02Icon,
+  HealthIcon,
   MoneyBag02Icon,
   Target02Icon,
   ArrowRight02Icon,
