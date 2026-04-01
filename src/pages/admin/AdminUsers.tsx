@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X, Trash2 } from 'lucide-react';
+import { Search, ShieldOff, Download, ChevronLeft, ChevronRight, Users, UserCheck, UserX, Activity, Copy, Shield, CheckSquare, X, Trash2, BookOpen, Flame, Moon, Heart, ListChecks } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAdminAudit } from '@/hooks/useAdminAudit';
