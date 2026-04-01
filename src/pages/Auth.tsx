@@ -56,7 +56,7 @@ const Auth = () => {
         if (error) throw error;
         toast({
           title: 'Account created!',
-          description: 'Please check your email to verify your account before signing in.',
+          description: 'Please check your email (including spam/junk) to verify your account. It may take a minute.',
         });
         setIsLogin(true);
       }
