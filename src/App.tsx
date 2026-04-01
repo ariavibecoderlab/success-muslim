@@ -15,6 +15,7 @@ import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
+import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
