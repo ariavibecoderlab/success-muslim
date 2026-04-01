@@ -74,6 +74,9 @@ import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminDawah from "./pages/admin/AdminDawah";
 import AdminSystem from "./pages/admin/AdminSystem";
+import AdminBlog from "./pages/admin/AdminBlog";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
 import MobileAdminBlock from "./components/MobileAdminBlock";
@@ -153,6 +156,8 @@ const App = () => {
                 <Route path="/install" element={<Install />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
 
                 {/* Protected pillar pages with bottom nav */}
                 <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
@@ -230,6 +235,7 @@ const App = () => {
                   <Route path="/admin/announcements" element={<AdminAnnouncements />} />
                   <Route path="/admin/audit" element={<AdminAuditLog />} />
                   <Route path="/admin/system" element={<AdminSystem />} />
+                  <Route path="/admin/blog" element={<AdminBlog />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
