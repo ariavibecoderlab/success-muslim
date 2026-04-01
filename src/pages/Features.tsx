@@ -74,7 +74,7 @@ const pillars: PillarSection[] = [
     extraImages: [imgIfasting, imgIfTimerRunning, imgStartFasting],
     features: [
       { icon: BodyWeightIcon, title: 'BMI & Weight Tracking', desc: 'Monitor your BMI, TDEE, and weight trends over time.' },
-      { icon: DropletsIcon, title: 'Hydration Tracker', desc: 'Hit your daily water intake goals with visual progress.' },
+      { icon: DropletIcon, title: 'Hydration Tracker', desc: 'Hit your daily water intake goals with visual progress.' },
       { icon: SleepingIcon, title: 'Sleep Monitor', desc: 'Log bedtime, wake time, and track sleep duration trends.' },
       { icon: RunningShoes01Icon, title: 'Steps Counter', desc: 'Track daily steps, distance, and calories burned.' },
       { icon: Timer02Icon, title: 'IF Timer', desc: 'Intermittent fasting timer with multiple protocols (16:8, 18:6, 20:4).' },
