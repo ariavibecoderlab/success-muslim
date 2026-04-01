@@ -66,6 +66,11 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminEngagement from "./pages/admin/AdminEngagement";
+import AdminImanAnalytics from "./pages/admin/AdminImanAnalytics";
+import AdminHealthAnalytics from "./pages/admin/AdminHealthAnalytics";
+import AdminFamilies from "./pages/admin/AdminFamilies";
+import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminAnnouncements from "./pages/admin/AdminAnnouncements";
 import AdminDawah from "./pages/admin/AdminDawah";
 import AdminSystem from "./pages/admin/AdminSystem";
@@ -216,9 +221,14 @@ const App = () => {
                 <Route element={<MobileAdminBlock><AdminGuard><AdminLayout /></AdminGuard></MobileAdminBlock>}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/engagement" element={<AdminEngagement />} />
                   <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/iman" element={<AdminImanAnalytics />} />
+                  <Route path="/admin/health" element={<AdminHealthAnalytics />} />
+                  <Route path="/admin/families" element={<AdminFamilies />} />
                   <Route path="/admin/dawah" element={<AdminDawah />} />
                   <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/audit" element={<AdminAuditLog />} />
                   <Route path="/admin/system" element={<AdminSystem />} />
                 </Route>
 

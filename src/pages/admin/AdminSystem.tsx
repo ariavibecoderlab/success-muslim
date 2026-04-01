@@ -18,6 +18,7 @@ const AdminSystem = () => {
     { name: 'Storage', icon: HardDrive, status: 'loading', detail: 'Checking...' },
   ]);
   const [recentErrors, setRecentErrors] = useState<{ action: string; module: string; created_at: string }[]>([]);
+  const [tableSizes, setTableSizes] = useState<Record<string, number> | null>(null);
 
   useEffect(() => {
     const checkHealth = async () => {
@@ -59,6 +60,10 @@ const AdminSystem = () => {
         .order('created_at', { ascending: false })
         .limit(20);
       if (errors) setRecentErrors(errors);
+
+      // Table sizes
+      const { data: sizes } = await supabase.rpc('admin_table_sizes');
+      if (sizes) setTableSizes(sizes as unknown as Record<string, number>);
     };
 
     checkHealth();
@@ -107,6 +112,27 @@ const AdminSystem = () => {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">No errors reported. ✅</p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Table Row Counts */}
+      <Card>
+        <CardContent className="p-5">
+          <h2 className="font-semibold mb-3">Table Row Counts</h2>
+          {tableSizes ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {Object.entries(tableSizes)
+                .sort(([, a], [, b]) => b - a)
+                .map(([table, count]) => (
+                  <div key={table} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-xs font-medium truncate mr-2">{table}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{Number(count).toLocaleString()}</span>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading...</p>
           )}
         </CardContent>
       </Card>

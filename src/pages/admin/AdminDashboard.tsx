@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, UserPlus, Activity, CalendarCheck, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Line } from 'recharts';
+import { LiveActivityFeed } from '@/components/admin/LiveActivityFeed';
 
 type Stats = {
   total_users: number;
@@ -106,24 +107,28 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/70 backdrop-blur-sm border-border/50 rounded-xl shadow-sm">
-        <CardContent className="p-5">
-          <h2 className="font-semibold mb-4">Module Usage</h2>
-          {moduleData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={Math.max(200, moduleData.length * 40)}>
-              <BarChart data={moduleData} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                <XAxis type="number" tick={{ fontSize: 10 }} />
-                <YAxis type="category" dataKey="module" tick={{ fontSize: 11 }} width={100} />
-                <Tooltip />
-                <Bar dataKey="unique_users" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-sm text-muted-foreground">No activity data yet.</p>
-          )}
-        </CardContent>
-      </Card>
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card className="bg-card/70 backdrop-blur-sm border-border/50 rounded-xl shadow-sm">
+          <CardContent className="p-5">
+            <h2 className="font-semibold mb-4">Module Usage</h2>
+            {moduleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={Math.max(200, moduleData.length * 40)}>
+                <BarChart data={moduleData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                  <XAxis type="number" tick={{ fontSize: 10 }} />
+                  <YAxis type="category" dataKey="module" tick={{ fontSize: 11 }} width={100} />
+                  <Tooltip />
+                  <Bar dataKey="unique_users" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground">No activity data yet.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        <LiveActivityFeed />
+      </div>
     </div>
   );
 };

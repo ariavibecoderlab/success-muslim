@@ -1881,9 +1881,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_checkin_stats: { Args: never; Returns: Json }
       admin_delete_user: {
         Args: { target_user_id: string }
         Returns: undefined
+      }
+      admin_engagement_stats: { Args: { _days?: number }; Returns: Json }
+      admin_family_overview: { Args: never; Returns: Json }
+      admin_health_stats: { Args: never; Returns: Json }
+      admin_iman_stats: { Args: never; Returns: Json }
+      admin_live_feed: {
+        Args: { _limit?: number }
+        Returns: {
+          action: string
+          created_at: string
+          display_name: string
+          id: string
+          metadata: Json
+          module: string
+          user_id: string
+        }[]
       }
       admin_module_usage: {
         Args: never
@@ -1913,12 +1930,21 @@ export type Database = {
           signup_date: string
         }[]
       }
+      admin_table_sizes: { Args: never; Returns: Json }
       admin_user_breakdown: { Args: never; Returns: Json }
       admin_user_last_active: {
         Args: never
         Returns: {
           last_active: string
           user_id: string
+        }[]
+      }
+      admin_widget_popularity: {
+        Args: never
+        Returns: {
+          enabled_count: number
+          total_users: number
+          widget_id: string
         }[]
       }
       get_family_leaderboard: {
