@@ -1952,6 +1952,7 @@ export type Database = {
       }
       admin_table_sizes: { Args: never; Returns: Json }
       admin_user_breakdown: { Args: never; Returns: Json }
+      admin_user_detail_stats: { Args: { _user_id: string }; Returns: Json }
       admin_user_last_active: {
         Args: never
         Returns: {
