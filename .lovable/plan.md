@@ -1,60 +1,36 @@
-
-
-## Switch Bottom Nav Icons to Hugeicons
+## Hide sementara Google OAuth untuk dipakai kemudian hari lagi & Keep Email-Only Auth
 
 ### Overview
-Replace the custom SVG icons in `NavIcons.tsx` with Hugeicons, using the free `@hugeicons/core-free-icons` package. Since the free pack only includes **Stroke Rounded** style (no solid/filled variants), the active state will use bolder stroke weight + primary color rather than filled icons.
 
-### Icon Mapping (aligned with "Success Muslim" identity)
-
-| Tab | Current | Hugeicon (free) | Rationale |
-|---|---|---|---|
-| Home | Mosque SVG | `Mosque02Icon` | Islamic identity |
-| Iman | Crescent+Star SVG | `Moon02Icon` | Crescent moon — Islamic symbol |
-| Health | Heart+Pulse SVG | `HeartCheckIcon` | Health tracking |
-| Wealth | Stacked Coins SVG | `Coins01Icon` | Financial tracking |
-| Tasks | Clipboard SVG | `TaskDaily01Icon` | Productivity |
-| Family | Two People SVG | `UserGroupIcon` | Family/community |
-| Profile | Settings Gear SVG | `Settings02Icon` | Settings/profile |
+Remove the Google OAuth button and divider from the Auth page, keeping only email/password sign-in and sign-up. Email verification is already handled by default (no auto-confirm) — users get a verification email and must confirm before signing in.
 
 ### Changes
 
-**1. Install packages**
-- `@hugeicons/react` — the renderer component
-- `@hugeicons/core-free-icons` — 4,500+ free stroke rounded icons
+`**src/pages/Auth.tsx**`:
 
-**2. Rewrite `src/components/BottomNav.tsx`**
-- Import `HugeiconsIcon` from `@hugeicons/react`
-- Import each icon from `@hugeicons/core-free-icons`
-- Use `HugeiconsIcon` component with `size={20}`, `color="currentColor"`
-- Active state: increase `strokeWidth` to `2` (vs default `1.5`) for visual weight difference
-- Remove the `active` prop pattern since Hugeicons handles styling via props
+1. Remove the `lovable` import (line 4)
+2. Remove `googleLoading` state (line 20)
+3. Remove `handleGoogleSignIn` function (lines 35-46)
+4. Remove the Google Sign-In button JSX (lines 103-121)
+5. Remove the "or" divider (lines 123-128)
 
-**3. Delete `src/components/icons/NavIcons.tsx`**
-- No longer needed — all icons come from the Hugeicons package
+### Also fix pre-existing build errors
 
-### Technical Detail
-```tsx
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Mosque02Icon, Moon02Icon, HeartCheckIcon, Coins01Icon, TaskDaily01Icon, UserGroupIcon, Settings02Icon } from '@hugeicons/core-free-icons';
+`**supabase/functions/jakim-proxy/index.ts**` (line 76):
 
-const tabs = [
-  { icon: Mosque02Icon, label: 'Home', path: '/dashboard' },
-  { icon: Moon02Icon, label: 'Iman', path: '/iman' },
-  // ...
-];
+- Cast `error` to `Error` type: `(error as Error).message`
 
-// In render:
-<HugeiconsIcon 
-  icon={tab.icon} 
-  size={20} 
-  color="currentColor" 
-  strokeWidth={active ? 2 : 1.5} 
-/>
-```
+`**src/utils/native/device.ts**`:
 
-### Files
-- `package.json` — add 2 dependencies
-- `src/components/BottomNav.tsx` — rewrite icon imports and rendering
-- `src/components/icons/NavIcons.tsx` — delete
+- Add missing `operatingSystem` and `webViewVersion` to the fallback object
+- Fix `appVersion`/`appBuild` references on `DeviceInfo`
 
+`**src/utils/native/notifications.ts**`:
+
+- Remove `priority` from notification schemas
+- Fix `getDelivered`/`removeDelivered` → correct Capacitor API names
+- Fix argument count and missing `notificationId` property
+
+### No database or auth config changes needed
+
+Email verification is already the default behavior — users must verify their email before signing in. The signup flow already shows "Please check your email to verify your account before signing in."
