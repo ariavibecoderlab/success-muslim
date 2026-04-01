@@ -104,7 +104,7 @@ const pillars: PillarSection[] = [
     features: [
       { icon: Target02Icon, title: 'Daily MITs', desc: 'Focus on 3 Most Important Tasks each day for maximum impact.' },
       { icon: Fire03Icon, title: 'Habit Streaks', desc: 'Build consistent habits with visual streak tracking.' },
-      { icon: BarChart01Icon, title: 'Life Areas', desc: 'Score and improve across all dimensions of your life.' },
+      { icon: BarChartIcon, title: 'Life Areas', desc: 'Score and improve across all dimensions of your life.' },
     ],
   },
   {
