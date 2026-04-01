@@ -156,6 +156,8 @@ const App = () => {
                 <Route path="/install" element={<Install />} />
                 <Route path="/features" element={<Features />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
 
                 {/* Protected pillar pages with bottom nav */}
                 <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
