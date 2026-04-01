@@ -33,8 +33,8 @@ export default function BlogPost() {
     enabled: !!slug,
   });
 
-  const html = post?.content && typeof post.content === 'object' && post.content.type
-    ? generateHTML(post.content, extensions)
+  const html = post?.content && typeof post.content === 'object' && !Array.isArray(post.content) && (post.content as any).type
+    ? generateHTML(post.content as any, extensions)
     : '';
 
   return (

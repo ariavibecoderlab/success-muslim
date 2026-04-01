@@ -30,6 +30,7 @@ import {
   Heart,
   UsersRound,
   ScrollText,
+  FileText,
 } from 'lucide-react';
 
 const navItems = [
