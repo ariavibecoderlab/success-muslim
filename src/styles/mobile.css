@@ -1,0 +1,123 @@
+/**
+ * Mobile Optimization Styles
+ * For Capacitor iOS & Android apps
+ */
+
+/* iOS Safe Area support for notches and home indicators */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-all {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Prevent pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Minimum tap target sizes (iOS: 44px, Android: 48dp) */
+.mobile-touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Remove hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect:hover {
+    /* No hover effects on touch devices */
+  }
+}
+
+/* Active state for touch feedback */
+.mobile-button:active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+/* Prevent text scaling on iOS */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Hardware accelerated scrolling */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  will-change: scroll-position;
+}
+
+/* Prevent momentum scrolling from bouncing */
+.prevent-bounce {
+  overscroll-behavior: none;
+}
+
+/* Better font rendering on mobile */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent long press text selection on buttons */
+button,
+.button-like {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent highlight on tap */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fix for 100vh on mobile browsers */
+.mobile-100vh {
+  height: 100vh;
+  height: 100dvh; /* Dynamic viewport height */
+}
+
+/* Better input handling on mobile */
+input,
+textarea,
+select {
+  font-size: 16px; /* Prevents zoom on focus on iOS */
+}
+
+/* Smooth transitions for mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .mobile-transition {
+    transition: all 0.2s ease-in-out;
+  }
+}
+
+/* Bottom navigation safe area */
+.bottom-nav-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+/* Full screen modal safe area */
+.modal-safe {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}

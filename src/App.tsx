@@ -3,7 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { initStatusBar, hideSplashWhenReady } from "./utils/native";
 import { AuthProvider } from "./contexts/AuthContext";
 import { EditModeProvider } from "./contexts/EditModeContext";
 import EditModeToggle from "./components/cms/EditModeToggle";
@@ -66,6 +69,7 @@ import AdminDawah from "./pages/admin/AdminDawah";
 import AdminSystem from "./pages/admin/AdminSystem";
 import NotFound from "./pages/NotFound";
 import Onboarding from "./pages/Onboarding";
+import MobileAdminBlock from "./components/MobileAdminBlock";
 import Install from "./pages/Install";
 import Features from "./pages/Features";
 import About from "./pages/About";
@@ -81,98 +85,149 @@ const queryClient = new QueryClient({
   },
 });
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-    <TooltipProvider>
-      <ErrorBoundary>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <EditModeProvider>
-            <EditModeToggle />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/install" element={<Install />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/about" element={<About />} />
+const App = () => {
+  useEffect(() => {
+    const initNative = async () => {
+      if (Capacitor.isNativePlatform()) {
+        console.log('🚀 Initializing native platform...');
 
-              {/* Protected pillar pages with bottom nav */}
-              <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/iman" element={<Iman />} />
-                <Route path="/health" element={<Health />} />
-                <Route path="/wealth" element={<Wealth />} />
-                <Route path="/productivity" element={<Productivity />} />
-                <Route path="/family" element={<Family />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
+        try {
+          // Initialize status bar
+          await initStatusBar();
 
-              {/* Protected feature sub-pages (no bottom nav) */}
-              <Route path="/qada-solat/setup" element={<AuthGuard><QadaSolatSetup /></AuthGuard>} />
-              <Route path="/qada-solat/track" element={<AuthGuard><QadaSolatTrack /></AuthGuard>} />
-              <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
-              <Route path="/ramadhan-qada/track" element={<AuthGuard><RamadhanQadaTrack /></AuthGuard>} />
-              <Route path="/fidyah" element={<AuthGuard><Fidyah /></AuthGuard>} />
-              <Route path="/iman/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
-              <Route path="/iman/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
-              <Route path="/iman/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
-              <Route path="/iman/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
-              <Route path="/iman/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
-              <Route path="/iman/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
-              <Route path="/iman/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
-              <Route path="/iman/salah-log" element={<AuthGuard><SalahLog /></AuthGuard>} />
-              <Route path="/iman/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
-              <Route path="/iman/sadaqah" element={<AuthGuard><SadaqahTracker /></AuthGuard>} />
-              <Route path="/iman/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />
-              <Route path="/iman/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
-              <Route path="/iman/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
-              <Route path="/iman/dakwah" element={<AuthGuard><DailyDakwah /></AuthGuard>} />
-              <Route path="/deen-journey" element={<AuthGuard><DeenJourney /></AuthGuard>} />
-              <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
-              <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
-              <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
-              <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
-              <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
-              <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
-              <Route path="/health/if-onboarding" element={<AuthGuard><IFOnboarding /></AuthGuard>} />
-              <Route path="/health/steps" element={<AuthGuard><HealthSteps /></AuthGuard>} />
-              <Route path="/productivity/tasks" element={<AuthGuard><DailyTasks /></AuthGuard>} />
-              <Route path="/productivity/habits" element={<AuthGuard><HabitStreaks /></AuthGuard>} />
-              <Route path="/productivity/life-areas" element={<AuthGuard><LifeAreas /></AuthGuard>} />
-              <Route path="/wealth/budget" element={<AuthGuard><BudgetTracker /></AuthGuard>} />
-              <Route path="/wealth/savings" element={<AuthGuard><SavingsGoals /></AuthGuard>} />
+          // Log device info for debugging
+          const { logDeviceInfo } = await import('./utils/native');
+          await logDeviceInfo();
 
-              {/* Family sub-pages (no AppLayout) */}
-              <Route path="/family/create" element={<AuthGuard><CreateFamily /></AuthGuard>} />
-              <Route path="/family/join" element={<AuthGuard><JoinFamily /></AuthGuard>} />
-              <Route path="/family/join/:code" element={<AuthGuard><JoinFamily /></AuthGuard>} />
-              <Route path="/family/:id/dashboard" element={<AuthGuard><FamilyDashboard /></AuthGuard>} />
-              <Route path="/family/:id/member/:uid" element={<AuthGuard><MemberProfile /></AuthGuard>} />
-              <Route path="/family/:id/settings" element={<AuthGuard><FamilySettings /></AuthGuard>} />
+          console.log('✅ Native platform initialized');
 
-              {/* Admin routes */}
-              <Route element={<AdminGuard><AdminLayout /></AdminGuard>}>
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/analytics" element={<AdminAnalytics />} />
-                <Route path="/admin/dawah" element={<AdminDawah />} />
-                <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-                <Route path="/admin/system" element={<AdminSystem />} />
-              </Route>
+          // Hide splash screen after app is ready (delay for smooth transition)
+          setTimeout(async () => {
+            await hideSplashWhenReady(500);
+          }, 2000);
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </EditModeProvider>
-        </BrowserRouter>
-      </ErrorBoundary>
-    </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+        } catch (error) {
+          console.error('❌ Native initialization failed:', error);
+          // Still hide splash screen even if there's an error
+          setTimeout(async () => {
+            await hideSplashWhenReady(500);
+          }, 2000);
+        }
+      } else {
+        console.log('🌐 Running on web platform');
+      }
+    };
+
+    initNative();
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+      <TooltipProvider>
+        <ErrorBoundary>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <EditModeProvider>
+              <EditModeToggle />
+              <Routes>
+                {/* ==================== */}
+                {/* MOBILE APP ROUTES    */}
+                {/* Available in web & mobile apps */}
+                {/* ==================== */}
+
+                {/* Public routes */}
+                <Route path="/" element={<Landing />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/install" element={<Install />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/about" element={<About />} />
+
+                {/* Protected pillar pages with bottom nav */}
+                <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/iman" element={<Iman />} />
+                  <Route path="/health" element={<Health />} />
+                  <Route path="/wealth" element={<Wealth />} />
+                  <Route path="/productivity" element={<Productivity />} />
+                  <Route path="/family" element={<Family />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
+
+                {/* Deen/Iman routes */}
+                <Route path="/qada-solat/setup" element={<AuthGuard><QadaSolatSetup /></AuthGuard>} />
+                <Route path="/qada-solat/track" element={<AuthGuard><QadaSolatTrack /></AuthGuard>} />
+                <Route path="/ramadhan-qada/setup" element={<AuthGuard><RamadhanQadaSetup /></AuthGuard>} />
+                <Route path="/ramadhan-qada/track" element={<AuthGuard><RamadhanQadaTrack /></AuthGuard>} />
+                <Route path="/fidyah" element={<AuthGuard><Fidyah /></AuthGuard>} />
+                <Route path="/iman/dhikr" element={<AuthGuard><DhikrCounter /></AuthGuard>} />
+                <Route path="/iman/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
+                <Route path="/iman/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
+                <Route path="/iman/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
+                <Route path="/iman/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
+                <Route path="/iman/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
+                <Route path="/iman/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
+                <Route path="/iman/salah-log" element={<AuthGuard><SalahLog /></AuthGuard>} />
+                <Route path="/iman/fasting" element={<AuthGuard><DeenFasting /></AuthGuard>} />
+                <Route path="/iman/sadaqah" element={<AuthGuard><SadaqahTracker /></AuthGuard>} />
+                <Route path="/iman/qiyam" element={<AuthGuard><QiyamPlanner /></AuthGuard>} />
+                <Route path="/iman/ramadan" element={<AuthGuard><RamadanOptimizer /></AuthGuard>} />
+                <Route path="/iman/hajj" element={<AuthGuard><HajjUmrahPlanner /></AuthGuard>} />
+                <Route path="/iman/dakwah" element={<AuthGuard><DailyDakwah /></AuthGuard>} />
+                <Route path="/deen-journey" element={<AuthGuard><DeenJourney /></AuthGuard>} />
+
+                {/* Health routes */}
+                <Route path="/health/bmi" element={<AuthGuard><HealthBMI /></AuthGuard>} />
+                <Route path="/health/weight" element={<AuthGuard><HealthWeight /></AuthGuard>} />
+                <Route path="/health/hydration" element={<AuthGuard><HealthHydration /></AuthGuard>} />
+                <Route path="/health/sleep" element={<AuthGuard><HealthSleep /></AuthGuard>} />
+                <Route path="/health/fasting" element={<AuthGuard><HealthFasting /></AuthGuard>} />
+                <Route path="/health/if-timer" element={<AuthGuard><HealthIFTimer /></AuthGuard>} />
+                <Route path="/health/if-onboarding" element={<AuthGuard><IFOnboarding /></AuthGuard>} />
+                <Route path="/health/steps" element={<AuthGuard><HealthSteps /></AuthGuard>} />
+
+                {/* Productivity routes */}
+                <Route path="/productivity/tasks" element={<AuthGuard><DailyTasks /></AuthGuard>} />
+                <Route path="/productivity/habits" element={<AuthGuard><HabitStreaks /></AuthGuard>} />
+                <Route path="/productivity/life-areas" element={<AuthGuard><LifeAreas /></AuthGuard>} />
+
+                {/* Wealth routes */}
+                <Route path="/wealth/budget" element={<AuthGuard><BudgetTracker /></AuthGuard>} />
+                <Route path="/wealth/savings" element={<AuthGuard><SavingsGoals /></AuthGuard>} />
+
+                {/* Family routes */}
+                <Route path="/family/create" element={<AuthGuard><CreateFamily /></AuthGuard>} />
+                <Route path="/family/join" element={<AuthGuard><JoinFamily /></AuthGuard>} />
+                <Route path="/family/join/:code" element={<AuthGuard><JoinFamily /></AuthGuard>} />
+                <Route path="/family/:id/dashboard" element={<AuthGuard><FamilyDashboard /></AuthGuard>} />
+                <Route path="/family/:id/member/:uid" element={<AuthGuard><MemberProfile /></AuthGuard>} />
+                <Route path="/family/:id/settings" element={<AuthGuard><FamilySettings /></AuthGuard>} />
+
+                {/* ==================== */}
+                {/* WEB-ONLY ADMIN ROUTES */}
+                {/* NOT available in mobile apps */}
+                {/* ==================== */}
+                <Route element={<MobileAdminBlock><AdminGuard><AdminLayout /></AdminGuard></MobileAdminBlock>}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/analytics" element={<AdminAnalytics />} />
+                  <Route path="/admin/dawah" element={<AdminDawah />} />
+                  <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                  <Route path="/admin/system" element={<AdminSystem />} />
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </EditModeProvider>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
