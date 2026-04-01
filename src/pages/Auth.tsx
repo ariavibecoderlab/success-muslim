@@ -45,15 +45,24 @@ const Auth = () => {
         if (error) throw error;
         navigate('/dashboard');
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: { display_name: email.split('@')[0] },
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            emailRedirectTo: 'https://successmuslim.app/auth/callback',
           },
         });
         if (error) throw error;
+        if (data.user?.identities?.length === 0) {
+          toast({
+            title: 'Email already registered',
+            description: 'This email is already registered. Please sign in instead.',
+            variant: 'destructive',
+          });
+          setIsLogin(true);
+          return;
+        }
         toast({
           title: 'Account created!',
           description: 'Please check your email (including spam/junk) to verify your account. It may take a minute.',
