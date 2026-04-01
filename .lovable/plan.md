@@ -1,68 +1,52 @@
 
 
-# Polish Landing Page — Bento Grid + Mobile App Version
+# Polish /features, /about, and /auth Pages
 
-## Overview
-Redesign the web landing page (`/`) with a modern bento grid layout using white, emerald green, and orange as the color palette. Create a separate condensed mobile-app landing page that shows bento highlights + CTA without heavy marketing sections.
+Apply the same modern bento grid design language (white, emerald green, orange palette, glassmorphism, HugeIcons) used on the redesigned Landing page to these three pages.
 
-## 1. Web Landing Page Redesign (`src/pages/Landing.tsx`)
+## 1. Features Page (`src/pages/Features.tsx`)
 
-### Hero Section
-- Clean white background with a subtle emerald gradient glow
-- Bento-style hero: large left card (gradient emerald-to-teal with headline + CTA) + right side stacked cards (phone mockup + stats)
-- Typography: bold heading with gradient text (emerald → orange accent)
+**Current**: Lucide icons, linear pillar-by-pillar layout, plain cards, flat `bg-primary` CTA section.
 
-### Bento Feature Grid
-Replace the linear "Four Pillars" + "How It Works" + "Who It's For" sections with a **single bento grid**:
+**Changes**:
+- Replace all Lucide icons with HugeIcons equivalents (Mosque02Icon, HealthIcon, MoneyBag02Icon, Target02Icon, UserMultipleIcon, etc.)
+- Hero: white background with emerald gradient text, subtitle, and a bento-style phone mockup layout (similar to landing)
+- Pillar sections → **Bento grid per pillar**: instead of alternating text+phone layout, each pillar becomes a bento section with:
+  - Large gradient header card (emerald for Iman, teal for Health, orange for Wealth, amber for Productivity, purple for Family)
+  - Feature items as glassmorphic mini-cards (`backdrop-blur-sm bg-white/60 border-white/20`) in a responsive grid
+  - Phone mockups floating over gradient backgrounds with subtle rotation and shadow
+- PhoneMockup component: add glassmorphic frame styling with shadow-xl
+- Bottom CTA: emerald-to-teal gradient (matching Landing) with white text, hadith quote
 
-```text
-┌──────────────┬───────────┐
-│  Life Score   │   Iman    │
-│  (large, 2x1) │  (1x1)   │
-├───────┬──────┼───────────┤
-│Wellness│Wealth│Productivity│
-│ (1x1)  │(1x1) │  (1x1)    │
-└───────┴──────┴───────────┘
-```
+## 2. About Page (`src/pages/About.tsx`)
 
-- Each bento card: `rounded-2xl` with subtle border, hover scale effect
-- Color coding: Iman = emerald, Wellness = teal, Wealth = orange, Productivity = amber
-- Cards contain: icon/emoji, title, short description, and a screenshot or illustration
-- Glassmorphic overlay on image cards (`backdrop-blur bg-white/70`)
+**Current**: Lucide icons, plain bordered cards, flat `bg-primary` quote section.
 
-### Interactive Life Score
-- Keep the interactive slider demo but style it inside a bento card with white bg + emerald ring
-- Cleaner, more compact layout
+**Changes**:
+- Replace Lucide icons with HugeIcons (TrendingUp → Analytics02Icon, Shield → ShieldCheckIcon, Eye → View01Icon, Users → UserMultipleIcon)
+- Hero: add brand logo with breathing animation above headline, emerald gradient text
+- Mission & Vision: glassmorphic cards with subtle emerald/teal left border accent instead of plain text blocks
+- Core Values: glassmorphic cards with colored icon backgrounds (emerald, teal, orange, amber) matching the Landing bento color scheme, hover scale effect (`active:scale-[0.98]`)
+- Hadith quote section: emerald-to-teal gradient background (same as Landing CTA) instead of flat `bg-primary`
 
-### Bottom CTA
-- Emerald-to-teal gradient background (matching brand)
-- Hadith quote + "Begin Your Journey" button in white
+## 3. Auth Page (`src/pages/Auth.tsx`)
 
-### Color Palette
-- Background: `white` / `bg-gray-50`
-- Primary cards: `from-emerald-600 to-teal-700` (green)
-- Accent cards: `from-orange-500 to-orange-600` (orange)
-- Text: `text-gray-900`, `text-gray-500`
-- Card borders: `border-gray-100`
+**Current**: Plain white background, Lucide Moon icon, basic Card, simple nav bar with ArrowLeft.
 
-## 2. Mobile App Landing Page (`src/pages/MobileLanding.tsx`)
-
-A condensed version for Capacitor/native app users:
-- **Hero**: Brand logo + "Success Muslim" + tagline (2 lines max)
-- **Mini bento grid**: 4 cards (Iman, Wellness, Wealth, Productivity) in a 2x2 grid with colored icons and one-line descriptions
-- **Life Score preview**: Small ring + "Track your holistic Life Score"
-- **CTA**: "Get Started" button (full-width, emerald gradient) + "Sign In" link
-- No navbar, no footer, no heavy marketing copy
-- Total height fits within ~2 screen scrolls max
-
-## 3. Routing Logic (`src/App.tsx`)
-
-- Detect `Capacitor.isNativePlatform()` in the `/` route
-- If native → render `MobileLanding`
-- If web → render `Landing`
+**Changes**:
+- Background: subtle gradient (`bg-gradient-to-b from-emerald-50/40 via-background to-background`) with decorative geometric pattern overlay (CSS, low opacity) — same treatment as Onboarding
+- Replace Moon lucide icon with brand logo (`smlogo.webp`) with breathing animation
+- Nav bar: glassmorphic header (`bg-white/80 backdrop-blur-lg`)
+- Form card: glassmorphic styling (`backdrop-blur-sm bg-white/70 border-white/30 shadow-xl rounded-2xl`)
+- Input fields: pill-shaped (`rounded-xl`) with subtle inner shadow, slightly taller
+- Submit button: emerald gradient (`bg-gradient-to-r from-emerald-600 to-teal-600`) with white text, `active:scale-[0.98]` press effect
+- Sign up mode: add animated transition between login/signup with framer-motion `AnimatePresence`
+- Toggle link: styled as a pill button instead of plain text link
+- Replace Lucide Eye/EyeOff with HugeIcons equivalents
+- Replace ArrowLeft with HugeIcons equivalent
 
 ## Files Modified
-- `src/pages/Landing.tsx` — full bento grid redesign
-- `src/pages/MobileLanding.tsx` — new condensed mobile landing
-- `src/App.tsx` — conditional routing for native vs web
+- `src/pages/Features.tsx` — bento grid layout, HugeIcons, glassmorphism, color palette
+- `src/pages/About.tsx` — HugeIcons, glassmorphic cards, gradient CTA, logo
+- `src/pages/Auth.tsx` — gradient background, glassmorphic form, pill inputs, brand logo, animations
 
