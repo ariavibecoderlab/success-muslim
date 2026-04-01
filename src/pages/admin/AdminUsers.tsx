@@ -218,9 +218,18 @@ const AdminUsers = () => {
     else { setSortBy(col); setSortAsc(false); }
   };
 
+  const loadUserStats = async (userId: string) => {
+    setLoadingStats(true);
+    const { data } = await supabase.rpc('admin_user_detail_stats', { _user_id: userId });
+    if (data) setUserStats(data);
+    setLoadingStats(false);
+  };
+
   const openUserDetail = (profile: Profile) => {
     setSelectedUser(profile);
+    setUserStats(null);
     loadUserActivity(profile.id);
+    loadUserStats(profile.id);
   };
 
   const copyId = (id: string) => {
