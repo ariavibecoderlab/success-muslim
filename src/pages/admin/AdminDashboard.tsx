@@ -48,7 +48,7 @@ const AdminDashboard = () => {
     { label: 'Active DAU', value: stats?.dau ?? 0, icon: Activity, color: 'text-blue-500' },
     { label: 'Active MAU', value: stats?.mau ?? 0, icon: CalendarCheck, color: 'text-violet-500' },
     { label: 'Onboarded', value: `${onboardingPct}%`, icon: CheckCircle, color: 'text-emerald-500' },
-    { label: 'Drop-off', value: `${100 - onboardingPct}%`, icon: XCircle, color: 'text-red-500' },
+    { label: 'Drop-off', value: `${100 - onboardingPct}%`, icon: XCircle, color: 'text-destructive' },
     { label: 'Avg Session', value: '—', icon: Clock, color: 'text-amber-500' },
     { label: 'D7 Retention', value: '—', icon: TrendingUp, color: 'text-blue-500' },
   ];
@@ -57,11 +57,16 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Overview</h1>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {cards.map(c => (
-          <Card key={c.label}>
+          <Card
+            key={c.label}
+            className="bg-card/70 backdrop-blur-sm border-border/50 rounded-xl shadow-sm hover:shadow-md transition-shadow"
+          >
             <CardContent className="p-4 flex items-start gap-3">
-              <div className={`mt-0.5 ${c.color}`}><c.icon className="h-5 w-5" /></div>
+              <div className={`mt-0.5 ${c.color}`}>
+                <c.icon className="h-5 w-5" />
+              </div>
               <div>
                 <p className="text-xl font-bold">{typeof c.value === 'number' ? c.value.toLocaleString() : c.value}</p>
                 <p className="text-[11px] text-muted-foreground">{c.label}</p>
@@ -71,7 +76,7 @@ const AdminDashboard = () => {
         ))}
       </div>
 
-      <Card>
+      <Card className="bg-card/70 backdrop-blur-sm border-border/50 rounded-xl shadow-sm">
         <CardContent className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">User Growth</h2>
@@ -101,7 +106,7 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-card/70 backdrop-blur-sm border-border/50 rounded-xl shadow-sm">
         <CardContent className="p-5">
           <h2 className="font-semibold mb-4">Module Usage</h2>
           {moduleData.length > 0 ? (
