@@ -14,6 +14,7 @@ import AppLayout from "./components/AppLayout";
 import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
 import Landing from "./pages/Landing";
+import MobileLanding from "./pages/MobileLanding";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
