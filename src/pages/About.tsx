@@ -24,7 +24,7 @@ const values = [
     iconBg: 'bg-emerald-100 text-emerald-700',
   },
   {
-    icon: ShieldCheckIcon,
+    icon: ShieldCheck,
     title: 'Privacy First',
     desc: "Your data belongs to you. We don't sell your information, show ads, or track you across the web. Period.",
     iconBg: 'bg-teal-100 text-teal-700',
