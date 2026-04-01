@@ -115,6 +115,27 @@ const AdminSystem = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Table Row Counts */}
+      <Card>
+        <CardContent className="p-5">
+          <h2 className="font-semibold mb-3">Table Row Counts</h2>
+          {tableSizes ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+              {Object.entries(tableSizes)
+                .sort(([, a], [, b]) => b - a)
+                .map(([table, count]) => (
+                  <div key={table} className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                    <span className="text-xs font-medium truncate mr-2">{table}</span>
+                    <span className="text-xs text-muted-foreground font-mono">{Number(count).toLocaleString()}</span>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">Loading...</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
