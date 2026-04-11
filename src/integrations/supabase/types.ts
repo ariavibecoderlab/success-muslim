@@ -2034,6 +2034,14 @@ export type Database = {
       }
       is_family_admin: { Args: { p_family_id: string }; Returns: boolean }
       is_family_member: { Args: { p_family_id: string }; Returns: boolean }
+      lookup_family_by_invite: {
+        Args: { p_code: string }
+        Returns: {
+          group_type: string
+          id: string
+          name: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
