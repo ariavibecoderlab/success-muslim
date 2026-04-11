@@ -176,12 +176,10 @@ export function useFamily() {
   };
 
   const previewFamily = async (code: string): Promise<{ family: Family; memberCount: number } | null> => {
-    const { data: family } = await supabase
-      .from('families')
-      .select('*')
-      .eq('invite_code', code.toUpperCase().trim())
-      .single();
+    const { data: lookupData } = await supabase
+      .rpc('lookup_family_by_invite', { p_code: code.toUpperCase().trim() });
 
+    const family = lookupData?.[0] as unknown as Family | undefined;
     if (!family) return null;
 
     const { count } = await supabase
