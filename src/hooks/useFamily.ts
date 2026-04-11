@@ -128,16 +128,16 @@ export function useFamily() {
     if (!user) return null;
 
 
-    const { data: family, error: familyError } = await supabase
-      .from('families')
-      .select('*')
-      .eq('invite_code', code.toUpperCase().trim())
-      .single();
+    const { data: lookupData, error: lookupError } = await supabase
+      .rpc('lookup_family_by_invite', { p_code: code.toUpperCase().trim() });
 
-    if (familyError || !family) {
+    const familyRow = lookupData?.[0];
+    if (lookupError || !familyRow) {
       toast({ title: 'Invalid code', description: 'No family found with that invite code.', variant: 'destructive' });
       return null;
     }
+
+    const family = familyRow as unknown as Family;
 
     const { data: existing } = await supabase
       .from('family_members')
