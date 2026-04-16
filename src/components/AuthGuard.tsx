@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { hydrateFromDatabase } from '@/lib/db-sync';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 
 const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -15,17 +15,15 @@ const AuthGuard = ({ children }: { children: React.ReactNode }) => {
       hydrated.current = true;
       hydrateFromDatabase();
 
-      // Check onboarding status
-      supabase.from('profiles')
-        .select('onboarding_completed')
-        .eq('id', user.id)
-        .single()
-        .then(({ data }) => {
+      // Check onboarding status via API
+      api<any>('api-profile')
+        .then((data) => {
           if (data && !data.onboarding_completed) {
             setNeedsOnboarding(true);
           }
           setCheckingOnboarding(false);
-        });
+        })
+        .catch(() => setCheckingOnboarding(false));
     } else if (user) {
       setCheckingOnboarding(false);
     } else {

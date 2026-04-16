@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
@@ -39,36 +39,6 @@ function generateInviteCode(): string {
   return code;
 }
 
-async function fetchFamilies(userId: string): Promise<Family[]> {
-  const { data: memberRows } = await supabase
-    .from('family_members')
-    .select('family_id, role')
-    .eq('user_id', userId);
-
-  if (!memberRows || memberRows.length === 0) return [];
-
-  const familyIds = memberRows.map(r => r.family_id);
-  const { data: familyRows } = await supabase
-    .from('families')
-    .select('*')
-    .in('id', familyIds);
-
-  if (!familyRows) return [];
-
-  const withCounts: Family[] = await Promise.all(
-    familyRows.map(async (f) => {
-      const { count } = await supabase
-        .from('family_members')
-        .select('*', { count: 'exact', head: true })
-        .eq('family_id', f.id);
-      const role = memberRows.find(r => r.family_id === f.id)?.role || 'member';
-      return { ...f, member_count: count ?? 0, user_role: role };
-    })
-  );
-
-  return withCounts;
-}
-
 export function useFamily() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -76,7 +46,7 @@ export function useFamily() {
 
   const { data: families = [], isLoading: loading } = useQuery({
     queryKey: ['families', user?.id],
-    queryFn: () => fetchFamilies(user!.id),
+    queryFn: () => api<Family[]>('api-family', { params: { resource: 'families' } }),
     enabled: !!user,
   });
 
@@ -86,251 +56,148 @@ export function useFamily() {
 
   const createFamily = async (name: string, groupType: 'family' | 'class' = 'family'): Promise<Family | null> => {
     if (!user) return null;
-
-
-    let invite_code = generateInviteCode();
-    let attempts = 0;
-    while (attempts < 5) {
-      const { data: existing } = await supabase
-        .from('families')
-        .select('id')
-        .eq('invite_code', invite_code)
-        .single();
-      if (!existing) break;
-      invite_code = generateInviteCode();
-      attempts++;
-    }
-
-    const invite_link = `https://www.successmuslim.app/family/join/${invite_code}`;
-
-    const { data: family, error } = await supabase
-      .from('families')
-      .insert({ name: name.trim(), created_by: user.id, invite_code, invite_link, group_type: groupType } as any)
-      .select()
-      .single();
-
-    if (error || !family) {
-      toast({ title: 'Error', description: error?.message, variant: 'destructive' });
+    try {
+      const invite_code = generateInviteCode();
+      const family = await api<Family>('api-family', {
+        method: 'POST',
+        params: { resource: 'families' },
+        body: { action: 'create', name: name.trim(), invite_code, group_type: groupType },
+      });
+      invalidate();
+      return family;
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
       return null;
     }
-
-    await supabase.from('family_members').insert({
-      family_id: family.id,
-      user_id: user.id,
-      role: 'admin',
-    });
-
-    invalidate();
-    return family;
   };
 
   const joinFamily = async (code: string): Promise<Family | null> => {
     if (!user) return null;
-
-
-    const { data: lookupData, error: lookupError } = await supabase
-      .rpc('lookup_family_by_invite', { p_code: code.toUpperCase().trim() });
-
-    const familyRow = lookupData?.[0];
-    if (lookupError || !familyRow) {
+    try {
+      const result = await api<{ family: Family; joined?: boolean; already_member?: boolean; error?: string }>('api-family', {
+        method: 'POST',
+        params: { resource: 'families' },
+        body: { action: 'join', code: code.toUpperCase().trim() },
+      });
+      if ((result as any)?.error) {
+        toast({ title: 'Error', description: (result as any).error, variant: 'destructive' });
+        return null;
+      }
+      if (result.already_member) {
+        toast({ title: 'Already a member', description: 'You are already in this family.' });
+        return result.family;
+      }
+      invalidate();
+      toast({ title: `Welcome to ${result.family.name}!`, description: 'You have joined the family group.' });
+      return result.family;
+    } catch (e: any) {
       toast({ title: 'Invalid code', description: 'No family found with that invite code.', variant: 'destructive' });
       return null;
     }
-
-    const family = familyRow as unknown as Family;
-
-    const { data: existing } = await supabase
-      .from('family_members')
-      .select('id')
-      .eq('family_id', family.id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (existing) {
-      toast({ title: 'Already a member', description: 'You are already in this family.' });
-      return family;
-    }
-
-    const { count: memberCount } = await supabase
-      .from('family_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('family_id', family.id);
-
-    if ((memberCount ?? 0) >= 20) {
-      toast({ title: 'Family is full', description: 'This group has reached the 20-member limit.', variant: 'destructive' });
-      return null;
-    }
-
-    const { error: joinError } = await supabase
-      .from('family_members')
-      .insert({ family_id: family.id, user_id: user.id, role: 'member' });
-
-    if (joinError) {
-      toast({ title: 'Error joining', description: joinError.message, variant: 'destructive' });
-      return null;
-    }
-
-    invalidate();
-    toast({ title: `Welcome to ${family.name}!`, description: 'You have joined the family group.' });
-    return family;
   };
 
   const previewFamily = async (code: string): Promise<{ family: Family; memberCount: number } | null> => {
-    const { data: lookupData } = await supabase
-      .rpc('lookup_family_by_invite', { p_code: code.toUpperCase().trim() });
-
-    const family = lookupData?.[0] as unknown as Family | undefined;
-    if (!family) return null;
-
-    const { count } = await supabase
-      .from('family_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('family_id', family.id);
-
-    return { family, memberCount: count ?? 0 };
+    try {
+      const result = await api<{ family: Family; memberCount: number } | null>('api-family', {
+        method: 'POST',
+        params: { resource: 'families' },
+        body: { action: 'preview', code: code.toUpperCase().trim() },
+      });
+      return result;
+    } catch {
+      return null;
+    }
   };
 
   const deleteFamily = async (familyId: string): Promise<boolean> => {
     if (!user) return false;
-
-    await supabase.from('family_activity_feed').delete().eq('family_id', familyId);
-    await supabase.from('family_announcements').delete().eq('family_id', familyId);
-    await supabase.from('family_members').delete().eq('family_id', familyId);
-    const { error } = await supabase.from('families').delete().eq('id', familyId);
-
-    if (error) {
-      toast({ title: 'Error deleting group', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-family', { method: 'DELETE', params: { resource: 'families', family_id: familyId } });
+      invalidate();
+      toast({ title: 'Group deleted' });
+      return true;
+    } catch (e: any) {
+      toast({ title: 'Error deleting group', description: e.message, variant: 'destructive' });
       return false;
     }
-
-    invalidate();
-    toast({ title: 'Group deleted' });
-    return true;
   };
 
   const leaveFamily = async (familyId: string): Promise<boolean> => {
     if (!user) return false;
-
-    const { error } = await supabase
-      .from('family_members')
-      .delete()
-      .eq('family_id', familyId)
-      .eq('user_id', user.id);
-
-    if (error) {
-      toast({ title: 'Error leaving group', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-family', { method: 'DELETE', params: { resource: 'families', family_id: familyId, action: 'leave' } });
+      invalidate();
+      toast({ title: 'You left the group' });
+      return true;
+    } catch (e: any) {
+      toast({ title: 'Error leaving group', description: e.message, variant: 'destructive' });
       return false;
     }
-
-    // Auto-delete family if no members remain
-    const { count } = await supabase
-      .from('family_members')
-      .select('*', { count: 'exact', head: true })
-      .eq('family_id', familyId);
-
-    if (count === 0) {
-      await supabase.from('family_activity_feed').delete().eq('family_id', familyId);
-      await supabase.from('family_announcements').delete().eq('family_id', familyId);
-      await supabase.from('families').delete().eq('id', familyId);
-    } else if (count === 1) {
-      // Auto-promote the sole remaining member to admin
-      await supabase
-        .from('family_members')
-        .update({ role: 'admin' })
-        .eq('family_id', familyId);
-    }
-
-    invalidate();
-    toast({ title: 'You left the group' });
-    return true;
   };
 
   const renameFamily = async (familyId: string, name: string): Promise<boolean> => {
-    const { error } = await supabase
-      .from('families')
-      .update({ name: name.trim() })
-      .eq('id', familyId);
-
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-family', {
+        method: 'POST', params: { resource: 'families' },
+        body: { action: 'rename', family_id: familyId, name: name.trim() },
+      });
+      invalidate();
+      toast({ title: 'Family renamed!' });
+      return true;
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
       return false;
     }
-
-    invalidate();
-    toast({ title: 'Family renamed!' });
-    return true;
   };
 
   const removeMember = async (familyId: string, memberId: string): Promise<boolean> => {
-    const { error } = await supabase
-      .from('family_members')
-      .delete()
-      .eq('family_id', familyId)
-      .eq('user_id', memberId);
-
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-family', {
+        method: 'POST', params: { resource: 'families' },
+        body: { action: 'remove_member', family_id: familyId, member_id: memberId },
+      });
+      toast({ title: 'Member removed' });
+      return true;
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
       return false;
     }
-
-    toast({ title: 'Member removed' });
-    return true;
   };
 
   const transferAdmin = async (familyId: string, newAdminId: string): Promise<boolean> => {
     if (!user) return false;
-
-    const { error: e1 } = await supabase
-      .from('family_members')
-      .update({ role: 'member' })
-      .eq('family_id', familyId)
-      .eq('user_id', user.id);
-
-    const { error: e2 } = await supabase
-      .from('family_members')
-      .update({ role: 'admin' })
-      .eq('family_id', familyId)
-      .eq('user_id', newAdminId);
-
-    if (e1 || e2) {
+    try {
+      await api('api-family', {
+        method: 'POST', params: { resource: 'families' },
+        body: { action: 'transfer_admin', family_id: familyId, new_admin_id: newAdminId },
+      });
+      invalidate();
+      toast({ title: 'Admin transferred!' });
+      return true;
+    } catch {
       toast({ title: 'Error transferring admin', variant: 'destructive' });
       return false;
     }
-
-    invalidate();
-    toast({ title: 'Admin transferred!' });
-    return true;
   };
 
   const getFamilyMembers = async (familyId: string): Promise<FamilyMember[]> => {
-    const { data } = await supabase
-      .from('family_members')
-      .select('*')
-      .eq('family_id', familyId);
-
-    if (!data) return [];
-
-    const userIds = data.map(m => m.user_id);
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('id, display_name, avatar_url')
-      .in('id', userIds);
-
-    return data.map(m => ({
-      ...m,
-      display_name: profiles?.find(p => p.id === m.user_id)?.display_name ?? null,
-      avatar_url: profiles?.find(p => p.id === m.user_id)?.avatar_url ?? null,
-    }));
+    try {
+      return await api<FamilyMember[]>('api-family', {
+        params: { resource: 'members', family_id: familyId },
+      });
+    } catch {
+      return [];
+    }
   };
 
   const postFeedEvent = async (familyId: string, activityType: string, message: string) => {
     if (!user) return;
-    await supabase.from('family_activity_feed').insert({
-      family_id: familyId,
-      user_id: user.id,
-      activity_type: activityType,
-      message,
-    });
+    try {
+      await api('api-family', {
+        method: 'POST', params: { resource: 'families' },
+        body: { action: 'post_feed', family_id: familyId, activity_type: activityType, message },
+      });
+    } catch {}
   };
 
   return {
