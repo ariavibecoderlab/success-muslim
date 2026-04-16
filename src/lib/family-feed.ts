@@ -3,9 +3,10 @@
  * 
  * Utility functions to post events to all family groups the user belongs to.
  * Call these after key ibadah actions are completed.
+ * Now routes through the api-family edge function.
  */
 
-import { supabase } from '@/integrations/supabase/client';
+import { api, apiAsync } from '@/lib/api-client';
 
 /**
  * Post an activity message to all families the user is in.
@@ -17,25 +18,11 @@ export async function postFamilyFeedEvent(
   message: string
 ): Promise<void> {
   try {
-    // Get all families the user belongs to
-    const { data: memberships } = await supabase
-      .from('family_members')
-      .select('family_id')
-      .eq('user_id', userId);
-
-    if (!memberships || memberships.length === 0) return;
-
-    // Post to each family concurrently
-    await Promise.all(
-      memberships.map(m =>
-        supabase.from('family_activity_feed').insert({
-          family_id: m.family_id,
-          user_id: userId,
-          activity_type: activityType,
-          message,
-        })
-      )
-    );
+    await api('api-family', {
+      method: 'POST',
+      params: { resource: 'feed-post' },
+      body: { activity_type: activityType, message },
+    });
   } catch {
     // Silently fail — feed posting should never break the core flow
   }

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 import { DEFAULT_SETTINGS, type PrayerSettings } from '@/lib/prayer-times';
 
@@ -15,42 +15,34 @@ function getLocal(): PrayerSettings {
   }
 }
 
-async function fetchPrayerSettings(userId: string): Promise<PrayerSettings> {
-  const { data } = await supabase
-    .from('prayer_settings')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (!data) return getLocal();
-
-  const s: PrayerSettings = {
-    latitude: data.latitude,
-    longitude: data.longitude,
-    city: data.city || DEFAULT_SETTINGS.city,
-    country: data.country || DEFAULT_SETTINGS.country,
-    location_method: (data.location_method as 'gps' | 'manual') || 'manual',
-    calculation_method: data.calculation_method ?? 3,
-    madhab: (data.madhab as 'shafi' | 'hanafi') || 'shafi',
-    mosque_fajr: data.mosque_fajr,
-    mosque_dhuhr: data.mosque_dhuhr,
-    mosque_asr: data.mosque_asr,
-    mosque_maghrib: data.mosque_maghrib,
-    mosque_isha: data.mosque_isha,
-    mosque_enabled: data.mosque_enabled ?? false,
-    adhan_settings: (data.adhan_settings as Record<string, any>) ?? DEFAULT_SETTINGS.adhan_settings,
-  };
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
-  return s;
-}
-
 export function usePrayerSettings() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: settings = getLocal(), isLoading: loading } = useQuery({
     queryKey: ['prayer-settings', user?.id],
-    queryFn: () => fetchPrayerSettings(user!.id),
+    queryFn: async () => {
+      const data = await api<any>('api-misc', { params: { resource: 'prayer-settings' } });
+      if (!data) return getLocal();
+      const s: PrayerSettings = {
+        latitude: data.latitude,
+        longitude: data.longitude,
+        city: data.city || DEFAULT_SETTINGS.city,
+        country: data.country || DEFAULT_SETTINGS.country,
+        location_method: (data.location_method as 'gps' | 'manual') || 'manual',
+        calculation_method: data.calculation_method ?? 3,
+        madhab: (data.madhab as 'shafi' | 'hanafi') || 'shafi',
+        mosque_fajr: data.mosque_fajr,
+        mosque_dhuhr: data.mosque_dhuhr,
+        mosque_asr: data.mosque_asr,
+        mosque_maghrib: data.mosque_maghrib,
+        mosque_isha: data.mosque_isha,
+        mosque_enabled: data.mosque_enabled ?? false,
+        adhan_settings: (data.adhan_settings as Record<string, any>) ?? DEFAULT_SETTINGS.adhan_settings,
+      };
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
+      return s;
+    },
     enabled: !!user,
     initialData: getLocal,
   });
@@ -58,30 +50,25 @@ export function usePrayerSettings() {
   const saveSettings = useCallback(async (updated: Partial<PrayerSettings>) => {
     const merged = { ...settings, ...updated };
     localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
-    // Optimistic update
     queryClient.setQueryData(['prayer-settings', user?.id], merged);
 
     if (!user) return;
 
-    const dbRow = {
-      user_id: user.id,
-      latitude: merged.latitude,
-      longitude: merged.longitude,
-      city: merged.city,
-      country: merged.country,
-      location_method: merged.location_method,
-      calculation_method: merged.calculation_method,
-      madhab: merged.madhab,
-      mosque_fajr: merged.mosque_fajr,
-      mosque_dhuhr: merged.mosque_dhuhr,
-      mosque_asr: merged.mosque_asr,
-      mosque_maghrib: merged.mosque_maghrib,
-      mosque_isha: merged.mosque_isha,
-      mosque_enabled: merged.mosque_enabled,
-      adhan_settings: merged.adhan_settings,
-    };
-
-    await supabase.from('prayer_settings').upsert(dbRow as any, { onConflict: 'user_id' });
+    await api('api-misc', {
+      method: 'POST',
+      params: { resource: 'prayer-settings' },
+      body: {
+        latitude: merged.latitude, longitude: merged.longitude,
+        city: merged.city, country: merged.country,
+        location_method: merged.location_method,
+        calculation_method: merged.calculation_method,
+        madhab: merged.madhab,
+        mosque_fajr: merged.mosque_fajr, mosque_dhuhr: merged.mosque_dhuhr,
+        mosque_asr: merged.mosque_asr, mosque_maghrib: merged.mosque_maghrib,
+        mosque_isha: merged.mosque_isha, mosque_enabled: merged.mosque_enabled,
+        adhan_settings: merged.adhan_settings,
+      },
+    });
   }, [settings, user, queryClient]);
 
   return { settings, saveSettings, loading };
