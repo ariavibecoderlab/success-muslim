@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,38 +59,19 @@ export default function AdminBlog() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['admin-blog-posts'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as BlogPost[];
+      return await api<BlogPost[]>('api-misc', { params: { resource: 'blog' } }) || [];
     },
   });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        title,
-        slug,
-        content,
-        excerpt: excerpt || null,
-        cover_image_url: coverUrl || null,
-        status,
-        author_id: user!.id,
+      const payload: any = {
+        title, slug, content, excerpt: excerpt || null,
+        cover_image_url: coverUrl || null, status,
         published_at: status === 'published' ? new Date().toISOString() : editingPost?.published_at || null,
       };
-
-      if (editingPost) {
-        const { error } = await supabase
-          .from('blog_posts')
-          .update(payload)
-          .eq('id', editingPost.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from('blog_posts').insert(payload);
-        if (error) throw error;
-      }
+      if (editingPost) payload.id = editingPost.id;
+      await api('api-misc', { method: 'POST', params: { resource: 'blog' }, body: payload });
     },
     onSuccess: () => {
       toast.success(editingPost ? 'Post updated' : 'Post created');
@@ -102,8 +83,7 @@ export default function AdminBlog() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('blog_posts').delete().eq('id', id);
-      if (error) throw error;
+      await api('api-misc', { method: 'DELETE', params: { resource: 'blog', id } });
     },
     onSuccess: () => {
       toast.success('Post deleted');
@@ -114,14 +94,10 @@ export default function AdminBlog() {
   const toggleStatus = useMutation({
     mutationFn: async (post: BlogPost) => {
       const newStatus = post.status === 'published' ? 'draft' : 'published';
-      const { error } = await supabase
-        .from('blog_posts')
-        .update({
-          status: newStatus,
-          published_at: newStatus === 'published' ? new Date().toISOString() : post.published_at,
-        })
-        .eq('id', post.id);
-      if (error) throw error;
+      await api('api-misc', { method: 'POST', params: { resource: 'blog' }, body: {
+        id: post.id, status: newStatus,
+        published_at: newStatus === 'published' ? new Date().toISOString() : post.published_at,
+      }});
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-blog-posts'] }),
   });

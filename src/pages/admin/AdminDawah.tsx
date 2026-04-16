@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,11 +30,7 @@ const AdminDawah = () => {
   const { logAction } = useAdminAudit();
 
   const loadPosters = async () => {
-    const { data, error } = await supabase.from('dakwah_posters').select('*').order('date', { ascending: false });
-    if (error) {
-      console.error('Failed to load posters:', error);
-      return;
-    }
+    const data = await api<Poster[]>('api-misc', { params: { resource: 'dakwah' } });
     if (data) setPosters(data);
   };
 
@@ -84,20 +81,10 @@ const AdminDawah = () => {
         throw new Error('Failed to get public URL for uploaded file');
       }
 
-      // 3. Insert record into database
-      const { error: insertErr } = await supabase.from('dakwah_posters').insert({
-        title: title.trim(),
-        image_url: publicUrl,
-        date,
-        created_by: user.id,
-      });
-
-      if (insertErr) {
-        console.error('DB insert error:', insertErr);
-        // Clean up uploaded file if DB insert fails
-        await supabase.storage.from('dakwah-posters').remove([path]);
-        throw new Error(`Database save failed: ${insertErr.message}`);
-      }
+      // 3. Insert record via API
+      await api('api-misc', { method: 'POST', params: { resource: 'dakwah' }, body: {
+        title: title.trim(), image_url: publicUrl, date,
+      }});
 
       // 4. Log audit action
       await logAction('upload_poster', 'dakwah_poster', path, { title: title.trim() });
