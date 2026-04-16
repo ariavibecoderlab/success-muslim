@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -75,16 +75,16 @@ const AdminUsers = () => {
   const { logAction } = useAdminAudit();
 
   const loadData = useCallback(async () => {
-    const [profilesRes, rolesRes, lastActiveRes] = await Promise.all([
-      supabase.from('profiles').select('*').order('created_at', { ascending: false }),
-      supabase.from('user_roles').select('*'),
-      supabase.rpc('admin_user_last_active'),
+    const [profilesData, rolesData, lastActiveData] = await Promise.all([
+      api<Profile[]>('api-admin', { params: { resource: 'profiles' } }),
+      api<UserRole[]>('api-admin', { params: { resource: 'user-roles' } }),
+      api<LastActive[]>('api-admin', { params: { resource: 'user-last-active' } }),
     ]);
-    if (profilesRes.data) setProfiles(profilesRes.data);
-    if (rolesRes.data) setRoles(rolesRes.data as UserRole[]);
-    if (lastActiveRes.data) {
+    if (profilesData) setProfiles(profilesData);
+    if (rolesData) setRoles(rolesData);
+    if (lastActiveData) {
       const map: Record<string, string> = {};
-      (lastActiveRes.data as LastActive[]).forEach(r => { map[r.user_id] = r.last_active; });
+      lastActiveData.forEach(r => { map[r.user_id] = r.last_active; });
       setLastActiveMap(map);
     }
   }, []);
@@ -93,12 +93,7 @@ const AdminUsers = () => {
 
   const loadUserActivity = async (userId: string) => {
     setLoadingActivity(true);
-    const { data } = await supabase
-      .from('user_activity')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const data = await api<UserActivityEntry[]>('api-admin', { params: { resource: 'user-activity', user_id: userId, limit: '10' } });
     setUserActivity(data || []);
     setLoadingActivity(false);
   };
@@ -114,46 +109,40 @@ const AdminUsers = () => {
   }, [profiles]);
 
   const toggleDisable = async (profile: Profile) => {
-    const { error } = await supabase.from('profiles').update({ is_disabled: !profile.is_disabled }).eq('id', profile.id);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await api('api-admin', { method: 'PUT', params: { resource: 'profiles' }, body: { id: profile.id, is_disabled: !profile.is_disabled } });
       await logAction(profile.is_disabled ? 'enable_user' : 'disable_user', 'user', profile.id);
       loadData();
       if (selectedUser?.id === profile.id) {
         setSelectedUser({ ...profile, is_disabled: !profile.is_disabled });
       }
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
   };
 
   const assignRole = async (userId: string, newRole: string) => {
     const existing = roles.find(r => r.user_id === userId);
-    let error: any = null;
-
-    if (newRole === 'user') {
-      if (existing) {
-        const res = await supabase.from('user_roles').delete().eq('id', existing.id);
-        error = res.error;
-        if (!error) await logAction('remove_role', 'user', userId, { old_role: existing.role });
-      }
-    } else {
-      const roleValue = newRole as 'admin' | 'moderator';
-      if (existing) {
-        const res = await supabase.from('user_roles').update({ role: roleValue }).eq('id', existing.id);
-        error = res.error;
-        if (!error) await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
+    try {
+      if (newRole === 'user') {
+        if (existing) {
+          await api('api-admin', { method: 'DELETE', params: { resource: 'user-roles', id: existing.id } });
+          await logAction('remove_role', 'user', userId, { old_role: existing.role });
+        }
       } else {
-        const res = await supabase.from('user_roles').insert({ user_id: userId, role: roleValue });
-        error = res.error;
-        if (!error) await logAction('assign_role', 'user', userId, { new_role: newRole });
+        const roleValue = newRole as 'admin' | 'moderator';
+        if (existing) {
+          await api('api-admin', { method: 'PUT', params: { resource: 'user-roles' }, body: { id: existing.id, role: roleValue } });
+          await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
+        } else {
+          await api('api-admin', { method: 'POST', params: { resource: 'user-roles' }, body: { user_id: userId, role: roleValue } });
+          await logAction('assign_role', 'user', userId, { new_role: newRole });
+        }
       }
-    }
-
-    if (error) {
-      toast({ title: 'Error assigning role', description: error.message, variant: 'destructive' });
-    } else {
       toast({ title: 'Role updated' });
       loadData();
+    } catch (e: any) {
+      toast({ title: 'Error assigning role', description: e.message, variant: 'destructive' });
     }
   };
 
@@ -220,7 +209,7 @@ const AdminUsers = () => {
 
   const loadUserStats = async (userId: string) => {
     setLoadingStats(true);
-    const { data } = await supabase.rpc('admin_user_detail_stats', { _user_id: userId });
+    const data = await api('api-admin', { params: { resource: 'user-detail-stats', user_id: userId } });
     if (data) setUserStats(data);
     setLoadingStats(false);
   };
@@ -267,7 +256,7 @@ const AdminUsers = () => {
     setBulkProcessing(true);
     const ids = Array.from(selectedIds);
     for (const id of ids) {
-      await supabase.from('profiles').update({ is_disabled: disable }).eq('id', id);
+      await api('api-admin', { method: 'PUT', params: { resource: 'profiles' }, body: { id, is_disabled: disable } });
       await logAction(disable ? 'disable_user' : 'enable_user', 'user', id);
     }
     toast({ title: `${ids.length} user(s) ${disable ? 'disabled' : 'enabled'}` });
@@ -292,16 +281,16 @@ const AdminUsers = () => {
     const existing = roles.find(r => r.user_id === userId);
     if (newRole === 'user') {
       if (existing) {
-        await supabase.from('user_roles').delete().eq('id', existing.id);
+        await api('api-admin', { method: 'DELETE', params: { resource: 'user-roles', id: existing.id } });
         await logAction('remove_role', 'user', userId, { old_role: existing.role });
       }
     } else {
       const roleValue = newRole as 'admin' | 'moderator';
       if (existing) {
-        await supabase.from('user_roles').update({ role: roleValue }).eq('id', existing.id);
+        await api('api-admin', { method: 'PUT', params: { resource: 'user-roles' }, body: { id: existing.id, role: roleValue } });
         await logAction('change_role', 'user', userId, { old_role: existing.role, new_role: newRole });
       } else {
-        await supabase.from('user_roles').insert({ user_id: userId, role: roleValue });
+        await api('api-admin', { method: 'POST', params: { resource: 'user-roles' }, body: { user_id: userId, role: roleValue } });
         await logAction('assign_role', 'user', userId, { new_role: newRole });
       }
     }
@@ -309,13 +298,13 @@ const AdminUsers = () => {
 
   const deleteUser = async (userId: string) => {
     setDeleting(true);
-    const { error } = await (supabase.rpc as any)('admin_delete_user', { target_user_id: userId });
-    if (error) {
-      toast({ title: 'Error deleting user', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await api('api-admin', { method: 'POST', params: { resource: 'delete-user' }, body: { user_id: userId } });
       await logAction('delete_user', 'user', userId);
       toast({ title: 'User deleted' });
       setSelectedUser(null);
+    } catch (e: any) {
+      toast({ title: 'Error deleting user', description: e.message, variant: 'destructive' });
     }
     setDeleting(false);
     await loadData();
@@ -325,8 +314,10 @@ const AdminUsers = () => {
     setBulkProcessing(true);
     const ids = Array.from(selectedIds);
     for (const id of ids) {
-      const { error } = await (supabase.rpc as any)('admin_delete_user', { target_user_id: id });
-      if (!error) await logAction('delete_user', 'user', id);
+      try {
+        await api('api-admin', { method: 'POST', params: { resource: 'delete-user' }, body: { user_id: id } });
+        await logAction('delete_user', 'user', id);
+      } catch {}
     }
     toast({ title: `${ids.length} user(s) deleted` });
     clearSelection();
