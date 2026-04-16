@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 import { useQuranPrefs } from './useQuranData';
 import { notifyQuranTargetMet, notifyStreakMilestone } from '@/lib/family-feed';
@@ -29,15 +29,8 @@ export interface ReadingLogEntry {
 }
 
 async function fetchLogs(userId: string): Promise<ReadingLogEntry[]> {
-  const since = new Date();
-  since.setDate(since.getDate() - 90);
-  const { data } = await supabase
-    .from('quran_reading_log' as any)
-    .select('*')
-    .eq('user_id', userId)
-    .gte('date', since.toISOString().split('T')[0])
-    .order('created_at', { ascending: false });
-  return (data || []) as unknown as ReadingLogEntry[];
+  const data = await api<any[]>('api-quran', { params: { resource: 'reading-log', days: '90' } });
+  return (data || []) as ReadingLogEntry[];
 }
 
 export function useQuranReadingLog() {
@@ -120,35 +113,37 @@ export function useQuranReadingLog() {
     const page_count = pageCountInRange(entry.start_surah, entry.start_ayah, entry.end_surah, entry.end_ayah);
     const juz_segments = juzSegmentsInRange(entry.start_surah, entry.start_ayah, entry.end_surah, entry.end_ayah);
 
-    await supabase.from('quran_reading_log' as any).insert({
-      user_id: user.id,
-      date: today,
-      log_type: entry.log_type,
-      start_surah: entry.start_surah,
-      start_ayah: entry.start_ayah,
-      end_surah: entry.end_surah,
-      end_ayah: entry.end_ayah,
-      ayah_count,
-      page_count,
-      juz_segments,
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'reading-log' },
+      body: {
+        date: today,
+        log_type: entry.log_type,
+        start_surah: entry.start_surah,
+        start_ayah: entry.start_ayah,
+        end_surah: entry.end_surah,
+        end_ayah: entry.end_ayah,
+        ayah_count,
+        page_count,
+        juz_segments,
+      },
     });
 
     await savePrefs({ last_surah: entry.end_surah, last_ayah: entry.end_ayah });
 
-    await supabase.from('quran_daily_log' as any).upsert({
-      user_id: user.id,
-      date: today,
-      target_met: true,
-      surah_number: entry.end_surah,
-      ayah_number: entry.end_ayah,
-    }, { onConflict: 'user_id,date' });
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'daily-log' },
+      body: {
+        date: today,
+        target_met: true,
+        surah_number: entry.end_surah,
+        ayah_number: entry.end_ayah,
+      },
+    });
 
     if (!hasDoneToday) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', user.id)
-        .single();
+      const profile = await api<{ display_name: string } | null>('api-quran', { params: { resource: 'profile' } });
       const name = profile?.display_name || 'A member';
       await notifyQuranTargetMet(user.id, name);
       const newStreak = streak + 1;
@@ -173,19 +168,20 @@ export function useQuranReadingLog() {
     const page_count = pageCountInRange(updates.start_surah, updates.start_ayah, updates.end_surah, updates.end_ayah);
     const juz_segments = juzSegmentsInRange(updates.start_surah, updates.start_ayah, updates.end_surah, updates.end_ayah);
 
-    await supabase.from('quran_reading_log' as any)
-      .update({ ...updates, ayah_count, page_count, juz_segments })
-      .eq('id', id)
-      .eq('user_id', user.id);
+    await api('api-quran', {
+      method: 'PUT',
+      params: { resource: 'reading-log' },
+      body: { id, ...updates, ayah_count, page_count, juz_segments },
+    });
     invalidate();
   }, [user, invalidate]);
 
   const deleteLog = useCallback(async (id: string) => {
     if (!user) return;
-    await supabase.from('quran_reading_log' as any)
-      .delete()
-      .eq('id', id)
-      .eq('user_id', user.id);
+    await api('api-quran', {
+      method: 'DELETE',
+      params: { resource: 'reading-log', id },
+    });
     invalidate();
   }, [user, invalidate]);
 
