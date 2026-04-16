@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,8 +26,7 @@ const AdminAnnouncements = () => {
   const [creating, setCreating] = useState(false);
 
   const load = async () => {
-    // Admins see all announcements (active + inactive) via the admin policy
-    const { data } = await supabase.from('announcements').select('*').order('created_at', { ascending: false });
+    const data = await api<Announcement[]>('api-misc', { params: { resource: 'announcements' } });
     if (data) setAnnouncements(data);
   };
 
@@ -36,26 +35,24 @@ const AdminAnnouncements = () => {
   const handleCreate = async () => {
     if (!title.trim() || !content.trim() || !user) return;
     setCreating(true);
-    const { error } = await supabase.from('announcements').insert({
-      title, content, created_by: user.id,
-    });
-    setCreating(false);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await api('api-misc', { method: 'POST', params: { resource: 'announcements' }, body: { title, content } });
       setTitle('');
       setContent('');
       load();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
+    setCreating(false);
   };
 
   const toggleActive = async (ann: Announcement) => {
-    await supabase.from('announcements').update({ is_active: !ann.is_active }).eq('id', ann.id);
+    await api('api-misc', { method: 'POST', params: { resource: 'announcements' }, body: { id: ann.id, is_active: !ann.is_active } });
     load();
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from('announcements').delete().eq('id', id);
+    await api('api-misc', { method: 'DELETE', params: { resource: 'announcements', id } });
     load();
   };
 
