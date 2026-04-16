@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -90,14 +90,7 @@ const HajjUmrahPlanner = () => {
 
   const loadProgress = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('hajj_umrah_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('journey_type', tab)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const data = await api<any>('api-misc', { params: { resource: 'hajj-umrah', journey_type: tab } });
     setProgress(data);
   };
 
@@ -105,13 +98,11 @@ const HajjUmrahPlanner = () => {
     if (!user) return;
     const steps = (tab === 'umrah' ? UMRAH_STEPS : HAJJ_STEPS).map(s => ({ id: s.id, completed: false }));
     const packing = PACKING_ITEMS.flatMap(cat => cat.items.map(item => ({ category: cat.cat, item, checked: false })));
-    const { data } = await supabase.from('hajj_umrah_progress').insert({
-      user_id: user.id,
-      journey_type: tab,
-      started_at: new Date().toISOString(),
-      steps: steps as any,
-      packing_checklist: packing as any,
-    }).select().single();
+    const data = await api<any>('api-misc', {
+      method: 'POST',
+      params: { resource: 'hajj-umrah' },
+      body: { journey_type: tab, started_at: new Date().toISOString(), steps, packing_checklist: packing },
+    });
     if (data) setProgress(data);
     toast.success(`${tab === 'umrah' ? 'Umrah' : 'Hajj'} journey started! May Allah accept it.`);
   };
@@ -121,7 +112,7 @@ const HajjUmrahPlanner = () => {
     const steps = (progress.steps as any[]).map((s: any) =>
       s.id === stepId ? { ...s, completed: !s.completed } : s
     );
-    await supabase.from('hajj_umrah_progress').update({ steps: steps as any }).eq('id', progress.id);
+    await api('api-misc', { method: 'POST', params: { resource: 'hajj-umrah' }, body: { id: progress.id, updates: { steps } } });
     setProgress({ ...progress, steps });
   };
 
@@ -130,7 +121,7 @@ const HajjUmrahPlanner = () => {
     const checklist = (progress.packing_checklist as any[]).map((p: any) =>
       p.item === item ? { ...p, checked: !p.checked } : p
     );
-    await supabase.from('hajj_umrah_progress').update({ packing_checklist: checklist as any }).eq('id', progress.id);
+    await api('api-misc', { method: 'POST', params: { resource: 'hajj-umrah' }, body: { id: progress.id, updates: { packing_checklist: checklist } } });
     setProgress({ ...progress, packing_checklist: checklist });
   };
 

@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import SubPageLayout from '@/components/SubPageLayout';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { format, parseISO, differenceInDays, differenceInMonths } from 'date-fns';
@@ -86,25 +86,24 @@ const SavingsGoals = () => {
 
   const fetchGoals = async () => {
     if (!user) return;
-    const { data, error } = await supabase
-      .from('savings_goals')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (!error && data) setGoals(data as SavingsGoal[]);
+    const result = await api<any>('api-wealth', { params: { resource: 'savings-goals' } });
+    if (result?.goals) {
+      setGoals(result.goals as SavingsGoal[]);
+      // Index contributions by goal
+      const contribMap: Record<string, Contribution[]> = {};
+      (result.contributions || []).forEach((c: any) => {
+        if (!contribMap[c.goal_id]) contribMap[c.goal_id] = [];
+        contribMap[c.goal_id].push(c);
+      });
+      setContributions(contribMap);
+    } else if (Array.isArray(result)) {
+      setGoals([]);
+    }
     setLoading(false);
   };
 
-  const fetchContributions = async (goalId: string) => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('savings_contributions')
-      .select('*')
-      .eq('goal_id', goalId)
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .limit(10);
-    if (data) setContributions(prev => ({ ...prev, [goalId]: data as Contribution[] }));
+  const fetchContributions = async (_goalId: string) => {
+    // Already loaded from fetchGoals
   };
 
   useEffect(() => { fetchGoals(); }, [user]);
@@ -114,13 +113,11 @@ const SavingsGoals = () => {
     const preset = GOAL_PRESETS.find(p => p.value === goalType);
     const name = goalType === 'custom' ? goalName : preset?.label || goalName;
     if (!name) { toast.error('Please enter a goal name'); return; }
-    const { error } = await supabase.from('savings_goals').insert({
-      user_id: user.id,
-      name,
-      goal_type: goalType,
-      target_amount: parseFloat(targetAmount),
-      deadline: deadline || null,
-    });
+    const { error } = await api<any>('api-wealth', {
+      method: 'POST',
+      params: { resource: 'savings-goals' },
+      body: { action: 'create', name, goal_type: goalType, target_amount: parseFloat(targetAmount), deadline: deadline || null },
+    }).catch(() => ({ error: true })) as any;
     if (error) { toast.error('Failed to create goal'); return; }
     toast.success('Goal created!');
     setGoalName(''); setTargetAmount(''); setDeadline(''); setCreateOpen(false);
@@ -132,27 +129,20 @@ const SavingsGoals = () => {
     const amt = parseFloat(contributionAmount);
     const goal = goals.find(g => g.id === contributeGoalId);
     if (!goal) return;
-    await supabase.from('savings_contributions').insert({
-      user_id: user.id,
-      goal_id: contributeGoalId,
-      amount: amt,
-      note: contributionNote || null,
-    });
     const newAmount = Number(goal.current_amount) + amt;
-    const { error } = await supabase
-      .from('savings_goals')
-      .update({ current_amount: newAmount })
-      .eq('id', contributeGoalId);
-    if (error) { toast.error('Failed to add contribution'); return; }
+    await api('api-wealth', {
+      method: 'POST',
+      params: { resource: 'savings-goals' },
+      body: { action: 'contribute', goal_id: contributeGoalId, amount: amt, new_total: newAmount, note: contributionNote || null, date: new Date().toISOString().split('T')[0] },
+    });
     const reached = newAmount >= Number(goal.target_amount);
     toast.success(reached ? `${goal.name} goal reached! 🎉` : `Added ${amt.toLocaleString()} to ${goal.name}`);
     setContributionAmount(''); setContributionNote(''); setContributeGoalId(null);
     fetchGoals();
-    if (expandedGoalId === contributeGoalId) fetchContributions(contributeGoalId);
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from('savings_goals').delete().eq('id', id);
+    await api('api-wealth', { method: 'DELETE', params: { resource: 'savings-goals', id } });
     setGoals(prev => prev.filter(g => g.id !== id));
     toast.success('Goal deleted');
   };

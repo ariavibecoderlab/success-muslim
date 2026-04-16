@@ -27,13 +27,13 @@ const AdminSystem = () => {
 
       // DB check
       const dbStart = Date.now();
-      const { error: dbErr } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
-      const dbTime = Date.now() - dbStart;
-      newServices[0] = {
-        ...newServices[0],
-        status: dbErr ? 'error' : 'ok',
-        detail: dbErr ? dbErr.message : `${dbTime}ms response`,
-      };
+      try {
+        await api('api-admin', { params: { resource: 'overview-stats' } });
+        const dbTime = Date.now() - dbStart;
+        newServices[0] = { ...newServices[0], status: 'ok', detail: `${dbTime}ms response` };
+      } catch (e: any) {
+        newServices[0] = { ...newServices[0], status: 'error', detail: e.message };
+      }
 
       // Auth check
       const { data: session } = await supabase.auth.getSession();

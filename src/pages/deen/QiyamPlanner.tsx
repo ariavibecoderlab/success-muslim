@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -96,11 +96,7 @@ const QiyamPlanner = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: s } = await supabase
-        .from('qiyam_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const s = await api<any>('api-misc', { params: { resource: 'qiyam-settings' } });
       if (s) {
         const loaded = {
           default_sleep_time: s.default_sleep_time,
@@ -111,12 +107,7 @@ const QiyamPlanner = () => {
         setSettings(loaded);
         setTempSettings(loaded);
       }
-      const { data: l } = await supabase
-        .from('qiyam_log')
-        .select('id, date, performed, notes, sleep_time, wake_time, tahajjud_start')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(90);
+      const l = await api<any[]>('api-misc', { params: { resource: 'qiyam-log', limit: '90' } });
       if (l) setLogs(l);
     };
     load();
@@ -168,7 +159,7 @@ const QiyamPlanner = () => {
     if (!user) return;
     if (todayLog) {
       // Toggle off
-      await supabase.from('qiyam_log').update({ performed: !todayLog.performed }).eq('id', todayLog.id);
+      await api('api-misc', { method: 'POST', params: { resource: 'qiyam-log' }, body: { id: todayLog.id, performed: !todayLog.performed } });
       setLogs(prev => prev.map(l => l.id === todayLog.id ? { ...l, performed: !l.performed } : l));
       toast.success(todayLog.performed ? 'Unmarked qiyam' : 'Qiyam logged! 🌙');
     } else {
@@ -178,14 +169,11 @@ const QiyamPlanner = () => {
 
   const confirmLogQiyam = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('qiyam_log')
-      .insert({
-        user_id: user.id, date: today, performed: true,
-        sleep_time: logSleepTime, wake_time: logWakeTime, tahajjud_start: logTahajjudStart,
-      })
-      .select('id, date, performed, notes, sleep_time, wake_time, tahajjud_start')
-      .single();
+    const data = await api<any>('api-misc', {
+      method: 'POST',
+      params: { resource: 'qiyam-log' },
+      body: { date: today, performed: true, sleep_time: logSleepTime, wake_time: logWakeTime, tahajjud_start: logTahajjudStart },
+    });
     if (data) setLogs(prev => [data, ...prev]);
     setShowLogDialog(false);
     toast.success('Qiyam logged! 🌙');
@@ -193,10 +181,7 @@ const QiyamPlanner = () => {
 
   const saveSettings = async () => {
     if (!user) return;
-    await supabase.from('qiyam_settings').upsert({
-      user_id: user.id,
-      ...tempSettings,
-    }, { onConflict: 'user_id' });
+    await api('api-misc', { method: 'POST', params: { resource: 'qiyam-settings' }, body: tempSettings });
     setSettings(tempSettings);
     setSettingsOpen(false);
     toast.success('Settings saved');
