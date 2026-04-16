@@ -89,12 +89,11 @@ const Settings = () => {
     setSaving(true);
     try {
       await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { display_name: displayName, gender: gender || null, city, country } });
-      toast({ title: 'Settings saved!' });
+      toast({ title: 'Profile updated!' });
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
-    } else {
-      toast({ title: 'Profile updated!' });
     }
+    setSaving(false);
   };
 
   const handlePasswordReset = async () => {
