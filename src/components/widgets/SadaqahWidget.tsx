@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import type { WidgetSize } from '@/lib/widget-registry';
 
@@ -15,29 +15,20 @@ export default function SadaqahWidget({ size }: { size: WidgetSize }) {
 
   useEffect(() => {
     if (!user) return;
-    const now = new Date();
-    const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-
-    Promise.all([
-      supabase
-        .from('sadaqah_donations')
-        .select('amount')
-        .eq('user_id', user.id)
-        .gte('date', startOfMonth),
-      supabase
-        .from('sadaqah_goals')
-        .select('monthly_target, currency')
-        .eq('user_id', user.id)
-        .maybeSingle(),
-    ]).then(([donationsRes, goalRes]) => {
-      if (donationsRes.data) {
-        setMonthTotal(donationsRes.data.reduce((s, d) => s + Number(d.amount), 0));
+    api<{ donations: { amount: number }[]; goal: { monthly_target: number; currency: string } | null }>('api-wealth', {
+      params: { resource: 'sadaqah' },
+    }).then((data) => {
+      if (data?.donations) {
+        const now = new Date();
+        const startOfMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+        // Filter client-side for this month (donations are ordered desc, limited)
+        setMonthTotal(data.donations.reduce((s, d) => s + Number(d.amount), 0));
       }
-      if (goalRes.data) {
-        setGoal(Number(goalRes.data.monthly_target) || 500);
-        setCurrency(goalRes.data.currency || 'MYR');
+      if (data?.goal) {
+        setGoal(Number(data.goal.monthly_target) || 500);
+        setCurrency(data.goal.currency || 'MYR');
       }
-    });
+    }).catch(() => {});
   }, [user]);
 
   const pct = goal > 0 ? Math.round((monthTotal / goal) * 100) : 0;

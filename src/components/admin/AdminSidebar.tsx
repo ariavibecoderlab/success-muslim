@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api-client';
 import {
   Sidebar,
   SidebarContent,
@@ -58,14 +59,11 @@ export function AdminSidebar() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('display_name')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.display_name) setDisplayName(data.display_name);
-      });
+    api<{ display_name: string | null }>('api-profile', {
+      params: { resource: 'profile' },
+    }).then((data) => {
+      if (data?.display_name) setDisplayName(data.display_name);
+    }).catch(() => {});
   }, [user]);
 
   const handleLogout = async () => {

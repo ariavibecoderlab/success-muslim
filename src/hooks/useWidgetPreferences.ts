@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 import { WIDGET_REGISTRY, getDefaultWidgetPreferences, type WidgetSize } from '@/lib/widget-registry';
 
@@ -27,32 +27,34 @@ function saveLocal(prefs: WidgetPreference[]) {
 }
 
 async function fetchWidgetPrefs(userId: string): Promise<{ prefs: WidgetPreference[]; isFirstTime: boolean }> {
-  const { data, error } = await supabase
-    .from('widget_preferences')
-    .select('widget_id, enabled, position, size')
-    .eq('user_id', userId)
-    .order('position', { ascending: true });
+  try {
+    const data = await api<WidgetPreference[]>('api-misc', {
+      params: { resource: 'widget-prefs' },
+    });
 
-  if (!error && data && data.length > 0) {
-    const existingIds = new Set(data.map(d => d.widget_id));
-    const merged = [
-      ...data,
-      ...WIDGET_REGISTRY
-        .filter(w => !existingIds.has(w.id))
-        .map(w => ({
-          widget_id: w.id,
-          enabled: false,
-          position: w.defaultPosition + 100,
-          size: w.defaultSize,
-        })),
-    ];
-    saveLocal(merged);
-    return { prefs: merged, isFirstTime: false };
+    if (data && data.length > 0) {
+      const existingIds = new Set(data.map(d => d.widget_id));
+      const merged = [
+        ...data,
+        ...WIDGET_REGISTRY
+          .filter(w => !existingIds.has(w.id))
+          .map(w => ({
+            widget_id: w.id,
+            enabled: false,
+            position: w.defaultPosition + 100,
+            size: w.defaultSize,
+          })),
+      ];
+      saveLocal(merged);
+      return { prefs: merged, isFirstTime: false };
+    }
+  } catch {
+    // fall through to defaults
   }
 
   const defaults = getDefaultWidgetPreferences();
   saveLocal(defaults);
-  return { prefs: defaults, isFirstTime: !error && (!data || data.length === 0) };
+  return { prefs: defaults, isFirstTime: true };
 }
 
 export function useWidgetPreferences() {
@@ -74,16 +76,11 @@ export function useWidgetPreferences() {
 
   const saveToDb = useCallback(async (prefs: WidgetPreference[]) => {
     if (!user) return;
-    const rows = prefs.map(p => ({
-      user_id: user.id,
-      widget_id: p.widget_id,
-      enabled: p.enabled,
-      position: p.position,
-      size: p.size,
-    }));
-    await supabase
-      .from('widget_preferences')
-      .upsert(rows as any, { onConflict: 'user_id,widget_id' });
+    await api('api-misc', {
+      method: 'POST',
+      params: { resource: 'widget-prefs' },
+      body: { prefs },
+    });
   }, [user]);
 
   const updatePrefs = useCallback((updater: (prev: WidgetPreference[]) => WidgetPreference[]) => {
