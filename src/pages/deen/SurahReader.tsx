@@ -12,7 +12,7 @@ import { useQuranPrefs, useQuranBookmarks, useQuranMemorization } from '@/hooks/
 import { fetchAyahs, fetchTafsir, SURAH_NAMES, TRANSLATION_IDS, type Ayah } from '@/lib/quran-api';
 import { getPageForSurah, pageToSurahAyah } from '@/lib/quran-mapping';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { AyahContextMenu } from '@/components/quran/AyahContextMenu';
 import { MushafPageView } from '@/components/quran/MushafPageView';
