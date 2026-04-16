@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, XCircle, Database, Shield, HardDrive } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -53,17 +54,12 @@ const AdminSystem = () => {
       setServices(newServices);
 
       // Recent errors
-      const { data: errors } = await supabase
-        .from('user_activity')
-        .select('action, module, created_at')
-        .ilike('action', '%error%')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const errors = await api<any[]>('api-admin', { params: { resource: 'user-activity', filter: 'error', limit: '20' } });
       if (errors) setRecentErrors(errors);
 
       // Table sizes
-      const { data: sizes } = await supabase.rpc('admin_table_sizes');
-      if (sizes) setTableSizes(sizes as unknown as Record<string, number>);
+      const sizes = await api<Record<string, number>>('api-admin', { params: { resource: 'table-sizes' } });
+      if (sizes) setTableSizes(sizes);
     };
 
     checkHealth();

@@ -13,7 +13,7 @@ import { Progress } from '@/components/ui/progress';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -107,11 +107,7 @@ const RamadanOptimizer = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: s } = await supabase
-        .from('ramadan_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const s = await api<any>('api-misc', { params: { resource: 'ramadan-settings' } });
       if (s) {
         const loaded: RamadanSettings = {
           suhoor_minutes_before_fajr: s.suhoor_minutes_before_fajr,
@@ -124,12 +120,7 @@ const RamadanOptimizer = () => {
         setSettings(loaded);
         setTempSettings(loaded);
       }
-      const { data: l } = await supabase
-        .from('ramadan_daily_log')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(30);
+      const l = await api<any[]>('api-misc', { params: { resource: 'ramadan-log' } });
       if (l) {
         setLogs(l.map((row: any) => ({
           ...row,
@@ -177,12 +168,11 @@ const RamadanOptimizer = () => {
   const logForDate = async (field: string, value: any) => {
     if (!user) return;
     if (selectedLog) {
-      await supabase.from('ramadan_daily_log').update({ [field]: value }).eq('id', selectedLog.id);
+      await api('api-misc', { method: 'POST', params: { resource: 'ramadan-log' }, body: { id: selectedLog.id, field, value } });
       setLogs(prev => prev.map(l => l.id === selectedLog.id ? { ...l, [field]: value } : l));
     } else {
-      const entry = { user_id: user.id, date: selectedDateKey, [field]: value };
-      const { data } = await supabase.from('ramadan_daily_log').insert(entry).select().single();
-      if (data) {
+      const data = await api<any>('api-misc', { method: 'POST', params: { resource: 'ramadan-log' }, body: { entry: { date: selectedDateKey, [field]: value } } });
+      if (data && data.id) {
         setLogs(prev => [{
           ...(data as any),
           selawat_count: (data as any).selawat_count ?? 0,
@@ -203,7 +193,7 @@ const RamadanOptimizer = () => {
 
   const saveSettings = async () => {
     if (!user) return;
-    await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...tempSettings }, { onConflict: 'user_id' });
+    await api('api-misc', { method: 'POST', params: { resource: 'ramadan-settings' }, body: tempSettings });
     setSettings(tempSettings);
     setSettingsOpen(false);
     toast.success('Settings saved');
@@ -419,13 +409,13 @@ const RamadanOptimizer = () => {
                     onClick={async () => {
                       setTempSettings(p => ({ ...p, tarawih_target: 8 }));
                       setSettings(p => ({ ...p, tarawih_target: 8 }));
-                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 8 }, { onConflict: 'user_id' });
+                      if (user) await api('api-misc', { method: 'POST', params: { resource: 'ramadan-settings' }, body: { ...settings, tarawih_target: 8 } });
                     }}>8 Rakaat</Button>
                   <Button size="sm" variant={settings.tarawih_target === 20 ? 'default' : 'outline'} className="h-6 text-xs px-2"
                     onClick={async () => {
                       setTempSettings(p => ({ ...p, tarawih_target: 20 }));
                       setSettings(p => ({ ...p, tarawih_target: 20 }));
-                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 20 }, { onConflict: 'user_id' });
+                      if (user) await api('api-misc', { method: 'POST', params: { resource: 'ramadan-settings' }, body: { ...settings, tarawih_target: 20 } });
                     }}>20 Rakaat</Button>
                 </div>
                 <div className="flex gap-2">

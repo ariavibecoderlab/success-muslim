@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { calculateZakat, CURRENCIES, type ZakatInput, type ZakatResult } from '@/lib/zakat';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import SubPageLayout from '@/components/SubPageLayout';
@@ -51,13 +51,8 @@ const ZakatCalculator = () => {
 
   const loadHistory = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from('zakat_history')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .limit(20);
-    if (data) setHistory(data as ZakatRecord[]);
+    const data = await api<ZakatRecord[]>('api-wealth', { params: { resource: 'zakat' } });
+    if (data) setHistory(data);
   };
 
   const handleCalculate = async () => {
@@ -75,32 +70,27 @@ const ZakatCalculator = () => {
 
     // Save to DB
     if (user) {
-      await supabase.from('zakat_history').insert({
-        user_id: user.id,
-        input: input as any,
-        total_wealth: res.totalWealth,
-        net_zakatable: res.netZakatable,
-        zakat_amount: res.zakatAmount,
-        nisab_gold: res.nisabGold,
-        nisab_silver: res.nisabSilver,
-        meets_nisab: res.meetsNisab,
-        date: res.date,
+      await api('api-wealth', {
+        method: 'POST',
+        params: { resource: 'zakat' },
+        body: {
+          input, total_wealth: res.totalWealth, net_zakatable: res.netZakatable,
+          zakat_amount: res.zakatAmount, nisab_gold: res.nisabGold, nisab_silver: res.nisabSilver,
+          meets_nisab: res.meetsNisab, date: res.date,
+        },
       });
       loadHistory();
     }
   };
 
   const markPaid = async (id: string) => {
-    await supabase.from('zakat_history').update({
-      is_paid: true,
-      paid_date: new Date().toISOString().split('T')[0],
-    }).eq('id', id);
+    await api('api-wealth', { method: 'PUT', params: { resource: 'zakat', id }, body: { is_paid: true, paid_date: new Date().toISOString().split('T')[0] } });
     toast.success('Marked as paid');
     loadHistory();
   };
 
   const deleteRecord = async (id: string) => {
-    await supabase.from('zakat_history').delete().eq('id', id);
+    await api('api-wealth', { method: 'DELETE', params: { resource: 'zakat', id } });
     toast.success('Deleted');
     loadHistory();
   };

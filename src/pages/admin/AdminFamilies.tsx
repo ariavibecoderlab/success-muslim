@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, UsersRound, GraduationCap, ChevronRight, ArrowLeft } from 'lucide-react';
@@ -36,16 +36,16 @@ const AdminFamilies = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
 
   useEffect(() => {
-    supabase.rpc('admin_family_overview').then(({ data: d }) => {
-      if (d) setData(d as unknown as FamilyOverview);
+    api<FamilyOverview>('api-admin', { params: { resource: 'family-overview' } }).then(d => {
+      if (d) setData(d);
     });
   }, []);
 
   const viewGroup = async (id: string, name: string) => {
     setSelectedGroup({ id, name });
     setLoadingMembers(true);
-    const { data: m } = await supabase.rpc('admin_family_members', { _family_id: id });
-    if (m) setMembers(m as unknown as MemberInfo[]);
+    const m = await api<MemberInfo[]>('api-admin', { params: { resource: 'family-members', family_id: id } });
+    if (m) setMembers(m);
     setLoadingMembers(false);
   };
 

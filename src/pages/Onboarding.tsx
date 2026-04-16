@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { formatHijriDate } from '@/lib/hijri';
 import { fetchPrayerTimes, getNextPrayerIndex, getCountdownToNextPrayer, formatPrayerTime, getEffectiveTime } from '@/lib/prayer-times';
@@ -87,7 +88,7 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('onboarding_completed').eq('id', user.id).single().then(({ data }) => {
+    api<any>('api-profile', { params: { resource: 'profile' } }).then(data => {
       if (data?.onboarding_completed) navigateAfterOnboarding();
     });
   }, [user, navigateAfterOnboarding]);
@@ -111,17 +112,16 @@ const Onboarding = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('display_name, onboarding_step, focus_areas, consistency_level, city, country')
-      .eq('id', user.id).single().then(({ data }) => {
-        if (data) {
-          if (data.display_name) setDisplayName(data.display_name);
-          if (data.onboarding_step && data.onboarding_step > 1) setStep(data.onboarding_step);
-          if (data.focus_areas && Array.isArray(data.focus_areas)) setFocusAreas(data.focus_areas as string[]);
-          if (data.consistency_level) setConsistency(data.consistency_level);
-          if (data.city) setManualCity(data.city);
-          if (data.country) setManualCountry(data.country);
-        }
-      });
+    api<any>('api-profile', { params: { resource: 'profile' } }).then(data => {
+      if (data) {
+        if (data.display_name) setDisplayName(data.display_name);
+        if (data.onboarding_step && data.onboarding_step > 1) setStep(data.onboarding_step);
+        if (data.focus_areas && Array.isArray(data.focus_areas)) setFocusAreas(data.focus_areas as string[]);
+        if (data.consistency_level) setConsistency(data.consistency_level);
+        if (data.city) setManualCity(data.city);
+        if (data.country) setManualCountry(data.country);
+      }
+    });
     if (user.user_metadata?.full_name && !displayName) {
       setDisplayName(user.user_metadata.full_name.split(' ')[0]);
     } else if (user.user_metadata?.display_name && !displayName) {
@@ -132,10 +132,7 @@ const Onboarding = () => {
   const saveProgress = useCallback(async (updates: Record<string, any>, nextStep: number) => {
     if (!user) return;
     setSaving(true);
-    await supabase.from('profiles').update({
-      ...updates,
-      onboarding_step: nextStep,
-    }).eq('id', user.id);
+    await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { ...updates, onboarding_step: nextStep } });
     setSaving(false);
   }, [user]);
 
@@ -163,9 +160,7 @@ const Onboarding = () => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
       if (user) {
-        await supabase.from('prayer_settings').upsert({
-          user_id: user.id, latitude: lat, longitude: lng, location_method: 'gps',
-        }, { onConflict: 'user_id' });
+        await api('api-misc', { method: 'POST', params: { resource: 'prayer-settings' }, body: { latitude: lat, longitude: lng, location_method: 'gps' } });
       }
       setLocationStatus('done');
       await saveProgress({}, 6);
@@ -179,10 +174,8 @@ const Onboarding = () => {
   const handleLocationManual = async () => {
     if (!manualCity.trim()) return;
     if (user) {
-      await supabase.from('prayer_settings').upsert({
-        user_id: user.id, city: manualCity.trim(), country: manualCountry.trim() || 'Malaysia', location_method: 'manual',
-      }, { onConflict: 'user_id' });
-      await supabase.from('profiles').update({ city: manualCity.trim(), country: manualCountry.trim() || 'Malaysia' }).eq('id', user.id);
+      await api('api-misc', { method: 'POST', params: { resource: 'prayer-settings' }, body: { city: manualCity.trim(), country: manualCountry.trim() || 'Malaysia', location_method: 'manual' } });
+      await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { city: manualCity.trim(), country: manualCountry.trim() || 'Malaysia' } });
     }
     setLocationStatus('done');
     await saveProgress({}, 6);
@@ -227,10 +220,7 @@ const Onboarding = () => {
   const finishOnboarding = async () => {
     if (!user) return;
     setSaving(true);
-    await supabase.from('profiles').update({
-      onboarding_completed: true,
-      onboarding_step: TOTAL_STEPS,
-    }).eq('id', user.id);
+    await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { onboarding_completed: true, onboarding_step: TOTAL_STEPS } });
     setSaving(false);
     navigateAfterOnboarding();
   };

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { PiggyBank, Receipt, Calculator, HandCoins, TrendingUp, TrendingDown, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import AppHeader from '@/components/AppHeader';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 
@@ -23,19 +23,19 @@ const Wealth = () => {
     const fetchStats = async () => {
       const start = format(startOfMonth(new Date()), 'yyyy-MM-dd');
       const end = format(endOfMonth(new Date()), 'yyyy-MM-dd');
-      const [txRes, goalsRes] = await Promise.all([
-        supabase.from('transactions').select('type, amount').eq('user_id', user.id).gte('date', start).lte('date', end),
-        supabase.from('savings_goals').select('current_amount').eq('user_id', user.id),
+      const [txs, goals] = await Promise.all([
+        api<{ type: string; amount: number }[]>('api-wealth', { params: { resource: 'transactions', start, end } }),
+        api<{ current_amount: number }[]>('api-wealth', { params: { resource: 'savings-goals' } }),
       ]);
-      const txs = (txRes.data || []) as { type: string; amount: number }[];
-      const inc = txs.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-      const exp = txs.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-      const goals = (goalsRes.data || []) as { current_amount: number }[];
+      const txList = txs || [];
+      const inc = txList.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
+      const exp = txList.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+      const goalList = goals || [];
       setStats({
         income: inc,
         expense: exp,
-        totalSaved: goals.reduce((s, g) => s + Number(g.current_amount), 0),
-        goalsCount: goals.length,
+        totalSaved: goalList.reduce((s, g) => s + Number(g.current_amount), 0),
+        goalsCount: goalList.length,
       });
     };
     fetchStats();

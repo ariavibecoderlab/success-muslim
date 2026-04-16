@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,27 +23,8 @@ const AdminAuditLog = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await (supabase as any)
-        .from('admin_audit_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(100);
-
-      if (!data) return;
-
-      // Fetch admin names
-      const adminIds = [...new Set(data.map((e: any) => e.admin_id))] as string[];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, display_name')
-        .in('id', adminIds);
-
-      const nameMap = new Map((profiles || []).map(p => [p.id, p.display_name]));
-
-      setEntries(data.map((e: any) => ({
-        ...e,
-        admin_name: nameMap.get(e.admin_id) || 'Unknown',
-      })));
+      const data = await api<AuditEntry[]>('api-admin', { params: { resource: 'audit-log' } });
+      if (data) setEntries(data);
     };
     load();
   }, []);
