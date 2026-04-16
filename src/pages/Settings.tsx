@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { Button } from '@/components/ui/button';
@@ -43,20 +44,15 @@ const Settings = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('display_name, gender, city, country, avatar_url')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data) {
-          setDisplayName(data.display_name || '');
-          setGender(data.gender || '');
-          setCity(data.city || '');
-          setCountry(data.country || '');
-          setAvatarUrl(data.avatar_url || null);
-        }
-      });
+    api<any>('api-profile', { params: { resource: 'profile' } }).then(data => {
+      if (data) {
+        setDisplayName(data.display_name || '');
+        setGender(data.gender || '');
+        setCity(data.city || '');
+        setCountry(data.country || '');
+        setAvatarUrl(data.avatar_url || null);
+      }
+    });
   }, [user]);
 
   const getInitials = () => {
@@ -82,7 +78,7 @@ const Settings = () => {
     }
     const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
     const url = `${publicUrl}?t=${Date.now()}`;
-    await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id);
+    await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { avatar_url: url } });
     setAvatarUrl(url);
     setUploading(false);
     toast({ title: 'Avatar updated!' });
@@ -91,13 +87,11 @@ const Settings = () => {
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ display_name: displayName, gender: gender || null, city, country })
-      .eq('id', user.id);
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-profile', { method: 'POST', params: { resource: 'profile' }, body: { display_name: displayName, gender: gender || null, city, country } });
+      toast({ title: 'Settings saved!' });
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message, variant: 'destructive' });
     } else {
       toast({ title: 'Profile updated!' });
     }
