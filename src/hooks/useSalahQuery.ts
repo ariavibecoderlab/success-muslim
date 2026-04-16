@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api, apiAsync } from '@/lib/api-client';
 import {
   getSalahLog, logSalah, getTodaySalah, getTodaySalahCount,
   type DailySalahLog, type SalahName, type SalahStatus, SALAH_NAMES,
@@ -34,11 +34,7 @@ export function useSalahLog(date: string) {
     queryKey: ['salah', user?.id ?? 'anon', date],
     queryFn: async () => {
       if (!user) return getSalahLog(date);
-      const { data } = await supabase
-        .from('salah_logs')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', date);
+      const data = await api<any[]>('api-salah', { params: { date } });
       if (!data?.length) return getSalahLog(date);
       return transformDbRows(date, data);
     },
@@ -52,8 +48,21 @@ export function useSalahMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (args: { prayer: SalahName; status: SalahStatus; date: string }) => {
-      // Write localStorage + fire-and-forget DB sync
-      return logSalah(args.prayer, args.status, args.date);
+      // Write localStorage
+      const result = logSalah(args.prayer, args.status, args.date);
+      // Sync to API (replaces db-sync)
+      if (user) {
+        apiAsync('api-salah', {
+          method: 'POST',
+          body: {
+            date: args.date,
+            prayer_name: args.prayer,
+            status: args.status,
+            logged_at: args.status ? new Date().toISOString() : null,
+          },
+        });
+      }
+      return result;
     },
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ['salah', user?.id ?? 'anon', vars.date] });
