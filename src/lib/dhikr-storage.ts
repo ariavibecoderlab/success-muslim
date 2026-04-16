@@ -1,4 +1,4 @@
-import { syncDhikrSession } from './db-sync';
+// DB sync now handled by useDhikrMutation via api-client
 
 export interface DhikrPreset {
   id: string;
@@ -77,7 +77,7 @@ export function saveDhikrCount(presetId: string, count: number, target: number, 
 
     all[key] = daily;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-    syncDhikrSession(key, presetId, count, target);
+    // Note: DB sync now handled by useDhikrMutation via api-client
   } catch {}
 }
 

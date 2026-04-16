@@ -1,4 +1,4 @@
-import { syncSunnahLog } from './db-sync';
+// DB sync now handled by useSunnahToggle via api-client
 
 export type SunnahCategory = 'intention' | 'morning-routine' | 'morning-dhikr' | 'selawat' | 'quran' | 'afternoon-dhikr' | 'prayer' | 'other';
 
@@ -105,7 +105,7 @@ export function toggleSunnahItem(itemId: string, date?: string) {
     }
     all[key] = log;
     localStorage.setItem(LOG_KEY, JSON.stringify(all));
-    syncSunnahLog(key, log.completed);
+    // Note: DB sync now handled by useSunnahToggle via api-client
     return log;
   } catch {
     return { completed: [], date: key };
