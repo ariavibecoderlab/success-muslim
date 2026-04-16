@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 
 const POINTS = [10, 10, 15, 20, 25, 30, 150];
@@ -24,38 +24,22 @@ export function useDailyCheckin() {
     queryFn: async () => {
       if (!user) return { claimedToday: false, streakDay: 0, pointsToday: 10 };
 
-      // Get recent checkins to calculate streak
-      const { data: rows } = await supabase
-        .from('daily_checkins')
-        .select('date, streak_day, points_earned')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false })
-        .limit(8);
-
+      const rows = await api<{ date: string; streak_day: number; points_earned: number }[]>('api-checkin');
       if (!rows?.length) return { claimedToday: false, streakDay: 0, pointsToday: 10 };
 
-      const todayRow = rows.find((r: any) => r.date === today);
+      const todayRow = rows.find(r => r.date === today);
       if (todayRow) {
-        return {
-          claimedToday: true,
-          streakDay: todayRow.streak_day,
-          pointsToday: todayRow.points_earned,
-        };
+        return { claimedToday: true, streakDay: todayRow.streak_day, pointsToday: todayRow.points_earned };
       }
 
-      // Calculate streak from yesterday
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       const yesterdayKey = yesterday.toISOString().slice(0, 10);
-      const yesterdayRow = rows.find((r: any) => r.date === yesterdayKey);
+      const yesterdayRow = rows.find(r => r.date === yesterdayKey);
       const currentStreak = yesterdayRow ? yesterdayRow.streak_day : 0;
       const nextDay = (currentStreak % 7) + 1;
 
-      return {
-        claimedToday: false,
-        streakDay: nextDay,
-        pointsToday: getPointsForDay(nextDay),
-      };
+      return { claimedToday: false, streakDay: nextDay, pointsToday: getPointsForDay(nextDay) };
     },
     enabled: !!user,
     staleTime: 30_000,
@@ -64,16 +48,12 @@ export function useDailyCheckin() {
   const claimMutation = useMutation({
     mutationFn: async () => {
       if (!user || !data || data.claimedToday) return;
-      await supabase.from('daily_checkins').insert({
-        user_id: user.id,
-        date: today,
-        streak_day: data.streakDay,
-        points_earned: data.pointsToday,
+      await api('api-checkin', {
+        method: 'POST',
+        body: { date: today, streak_day: data.streakDay, points_earned: data.pointsToday },
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['daily-checkin'] });
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['daily-checkin'] }); },
   });
 
   return {

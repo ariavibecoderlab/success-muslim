@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import {
-  getLifeAreaEntries, getLatestLifeAreaEntry,
-  type LifeAreaEntry, type LifeAreaScore,
+  getLifeAreaEntries, type LifeAreaEntry, type LifeAreaScore,
 } from '@/lib/productivity-storage';
 
 export function useLifeAreaEntries() {
@@ -12,13 +11,8 @@ export function useLifeAreaEntries() {
     queryKey: ['life-areas', user?.id ?? 'anon'],
     queryFn: async () => {
       if (!user) return getLifeAreaEntries();
-      const { data } = await supabase
-        .from('life_area_scores')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+      const data = await api<any[]>('api-productivity', { params: { resource: 'life-areas' } });
       if (!data?.length) return getLifeAreaEntries();
-      // Group by date
       const grouped: Record<string, LifeAreaScore[]> = {};
       for (const r of data) {
         if (!grouped[r.date]) grouped[r.date] = [];
@@ -27,7 +21,6 @@ export function useLifeAreaEntries() {
       const entries: LifeAreaEntry[] = Object.entries(grouped)
         .map(([date, scores]) => ({ date, scores }))
         .sort((a, b) => b.date.localeCompare(a.date));
-      // Update localStorage
       localStorage.setItem('sm_life_areas', JSON.stringify(entries));
       return entries;
     },
@@ -46,29 +39,21 @@ export function useSaveLifeAreaEntry() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (entry: LifeAreaEntry) => {
-      // localStorage
       const entries = getLifeAreaEntries();
       const idx = entries.findIndex(e => e.date === entry.date);
       if (idx >= 0) entries[idx] = entry;
       else entries.push(entry);
       entries.sort((a, b) => b.date.localeCompare(a.date));
       localStorage.setItem('sm_life_areas', JSON.stringify(entries));
-      // DB
       if (user) {
-        const rows = entry.scores.map(s => ({
-          user_id: user.id,
-          date: entry.date,
-          area: s.area,
-          score: s.score,
-        }));
-        await supabase.from('life_area_scores').upsert(rows, {
-          onConflict: 'user_id,date,area',
+        await api('api-productivity', {
+          method: 'POST',
+          params: { resource: 'life-areas' },
+          body: { date: entry.date, scores: entry.scores },
         });
       }
       return entries;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['life-areas'] });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['life-areas'] }); },
   });
 }
