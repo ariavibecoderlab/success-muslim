@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 
 export interface HealthProfile {
@@ -22,22 +22,16 @@ export interface HealthProfile {
   completed_at: string | null;
 }
 
-async function fetchHealthProfile(userId: string): Promise<HealthProfile | null> {
-  const { data } = await supabase
-    .from('user_health_profiles')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-  return data ? (data as unknown as HealthProfile) : null;
-}
-
 export function useHealthProfile() {
   const { user, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: profile = null, isLoading: queryLoading } = useQuery({
     queryKey: ['health-profile', user?.id],
-    queryFn: () => fetchHealthProfile(user!.id),
+    queryFn: async () => {
+      const data = await api<HealthProfile | null>('api-health', { params: { resource: 'profile' } });
+      return data;
+    },
     enabled: !!user && !authLoading,
   });
 
@@ -46,13 +40,13 @@ export function useHealthProfile() {
 
   const saveProfile = useCallback(async (updates: Partial<HealthProfile>) => {
     if (!user) return;
-    const { data } = await supabase
-      .from('user_health_profiles')
-      .upsert({ user_id: user.id, ...updates } as any, { onConflict: 'user_id' })
-      .select()
-      .single();
+    const data = await api<HealthProfile>('api-health', {
+      method: 'POST',
+      params: { resource: 'profile' },
+      body: updates,
+    });
     if (data) {
-      queryClient.setQueryData(['health-profile', user.id], data as unknown as HealthProfile);
+      queryClient.setQueryData(['health-profile', user.id], data);
     }
   }, [user, queryClient]);
 
