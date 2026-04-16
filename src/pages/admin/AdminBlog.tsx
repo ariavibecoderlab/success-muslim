@@ -133,9 +133,10 @@ export default function AdminBlog() {
     if (!file) return;
     const ext = file.name.split('.').pop();
     const path = `covers/${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from('blog-images').upload(path, file);
+    const { default: { storage } } = await import('@/integrations/supabase/client').then(m => ({ default: m.supabase }));
+    const { error } = await storage.from('blog-images').upload(path, file);
     if (error) { toast.error('Upload failed'); return; }
-    const { data: { publicUrl } } = supabase.storage.from('blog-images').getPublicUrl(path);
+    const { data: { publicUrl } } = storage.from('blog-images').getPublicUrl(path);
     setCoverUrl(publicUrl);
   };
 
