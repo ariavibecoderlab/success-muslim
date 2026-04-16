@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notifyQuranTargetMet, notifyStreakMilestone } from '@/lib/family-feed';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from './useAuth';
 
 export interface QuranPrefs {
@@ -44,12 +44,7 @@ function getLocalPrefs(): QuranPrefs {
 }
 
 async function fetchQuranPrefs(userId: string): Promise<QuranPrefs> {
-  const { data } = await supabase
-    .from('quran_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
+  const data = await api<any>('api-quran', { params: { resource: 'preferences' } });
   if (!data) return getLocalPrefs();
 
   const p: QuranPrefs = {
@@ -62,9 +57,9 @@ async function fetchQuranPrefs(userId: string): Promise<QuranPrefs> {
     night_mode: data.night_mode ?? false,
     memorization_enabled: data.memorization_enabled ?? false,
     daily_memo_goal: data.daily_memo_goal ?? 3,
-    daily_target_type: (data as any).daily_target_type ?? null,
-    target_selected_at: (data as any).target_selected_at ?? null,
-    monthly_page_goal: (data as any).monthly_page_goal ?? 100,
+    daily_target_type: data.daily_target_type ?? null,
+    target_selected_at: data.target_selected_at ?? null,
+    monthly_page_goal: data.monthly_page_goal ?? 100,
   };
   localStorage.setItem(LOCAL_KEY, JSON.stringify(p));
   return p;
@@ -87,21 +82,25 @@ export function useQuranPrefs() {
     queryClient.setQueryData(['quran-prefs', user?.id], merged);
 
     if (!user) return;
-    await supabase.from('quran_preferences').upsert({
-      user_id: user.id,
-      tracker_enabled: merged.tracker_enabled,
-      daily_goal_pages: merged.daily_goal_pages,
-      font_size: merged.font_size,
-      translation_lang: merged.translation_lang,
-      last_surah: merged.last_surah,
-      last_ayah: merged.last_ayah,
-      night_mode: merged.night_mode,
-      memorization_enabled: merged.memorization_enabled,
-      daily_memo_goal: merged.daily_memo_goal,
-      daily_target_type: merged.daily_target_type,
-      target_selected_at: merged.target_selected_at,
-      monthly_page_goal: merged.monthly_page_goal,
-    } as any, { onConflict: 'user_id' });
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'preferences' },
+      body: {
+        user_id: user.id,
+        tracker_enabled: merged.tracker_enabled,
+        daily_goal_pages: merged.daily_goal_pages,
+        font_size: merged.font_size,
+        translation_lang: merged.translation_lang,
+        last_surah: merged.last_surah,
+        last_ayah: merged.last_ayah,
+        night_mode: merged.night_mode,
+        memorization_enabled: merged.memorization_enabled,
+        daily_memo_goal: merged.daily_memo_goal,
+        daily_target_type: merged.daily_target_type,
+        target_selected_at: merged.target_selected_at,
+        monthly_page_goal: merged.monthly_page_goal,
+      },
+    });
   }, [prefs, user, queryClient]);
 
   return { prefs, savePrefs, loading };
@@ -118,15 +117,8 @@ export interface DailyLogEntry {
 }
 
 async function fetchDailyLog(userId: string): Promise<DailyLogEntry[]> {
-  const since = new Date();
-  since.setDate(since.getDate() - 90);
-  const { data } = await supabase
-    .from('quran_daily_log' as any)
-    .select('*')
-    .eq('user_id', userId)
-    .gte('date', since.toISOString().split('T')[0])
-    .order('date', { ascending: false });
-  return (data || []) as unknown as DailyLogEntry[];
+  const data = await api<any[]>('api-quran', { params: { resource: 'daily-log', days: '90' } });
+  return (data || []) as DailyLogEntry[];
 }
 
 export function useQuranDailyTarget() {
@@ -163,24 +155,23 @@ export function useQuranDailyTarget() {
   const markTodayDone = async (surahNumber?: number, ayahNumber?: number) => {
     if (!user) return;
     const wasAlreadyDone = isDoneToday;
-    await supabase.from('quran_daily_log' as any).upsert({
-      user_id: user.id,
-      date: today,
-      target_met: true,
-      surah_number: surahNumber ?? null,
-      ayah_number: ayahNumber ?? null,
-    }, { onConflict: 'user_id,date' });
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'daily-log' },
+      body: {
+        date: today,
+        target_met: true,
+        surah_number: surahNumber ?? null,
+        ayah_number: ayahNumber ?? null,
+      },
+    });
     if (surahNumber) {
       await savePrefs({ last_surah: surahNumber, last_ayah: ayahNumber ?? 1 });
     }
     queryClient.invalidateQueries({ queryKey: ['quran-daily-log', user.id] });
 
     if (!wasAlreadyDone) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('display_name')
-        .eq('id', user.id)
-        .single();
+      const profile = await api<{ display_name: string } | null>('api-quran', { params: { resource: 'profile' } });
       const name = profile?.display_name || 'A member';
       await notifyQuranTargetMet(user.id, name);
       const newStreak = streak + 1;
@@ -228,12 +219,8 @@ export function useQuranBookmarks() {
   const { data: bookmarks = [] } = useQuery({
     queryKey: ['quran-bookmarks', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('quran_bookmarks')
-        .select('*')
-        .eq('user_id', user!.id)
-        .order('created_at', { ascending: false });
-      return (data || []) as any as Bookmark[];
+      const data = await api<any[]>('api-quran', { params: { resource: 'bookmarks' } });
+      return (data || []) as Bookmark[];
     },
     enabled: !!user,
   });
@@ -244,17 +231,19 @@ export function useQuranBookmarks() {
 
   const addBookmark = async (surah: number, ayah: number, note?: string) => {
     if (!user) return;
-    await supabase.from('quran_bookmarks').insert({
-      user_id: user.id,
-      surah_number: surah,
-      ayah_number: ayah,
-      note: note || null,
-    } as any);
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'bookmarks' },
+      body: { surah_number: surah, ayah_number: ayah, note: note || null },
+    });
     invalidate();
   };
 
   const removeBookmark = async (id: string) => {
-    await supabase.from('quran_bookmarks').delete().eq('id', id);
+    await api('api-quran', {
+      method: 'DELETE',
+      params: { resource: 'bookmarks', id },
+    });
     invalidate();
   };
 
@@ -273,10 +262,7 @@ export function useQuranMemorization() {
   const { data: memorized = [] } = useQuery({
     queryKey: ['quran-memorization', user?.id],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('quran_memorization')
-        .select('surah_number, ayah_number')
-        .eq('user_id', user!.id);
+      const data = await api<any[]>('api-quran', { params: { resource: 'memorization' } });
       return (data || []) as any[];
     },
     enabled: !!user,
@@ -288,19 +274,11 @@ export function useQuranMemorization() {
 
   const toggleMemorized = async (surah: number, ayah: number) => {
     if (!user) return;
-    const existing = memorized.find(m => m.surah_number === surah && m.ayah_number === ayah);
-    if (existing) {
-      await supabase.from('quran_memorization').delete()
-        .eq('user_id', user.id)
-        .eq('surah_number', surah)
-        .eq('ayah_number', ayah);
-    } else {
-      await supabase.from('quran_memorization').insert({
-        user_id: user.id,
-        surah_number: surah,
-        ayah_number: ayah,
-      } as any);
-    }
+    await api('api-quran', {
+      method: 'POST',
+      params: { resource: 'memorization' },
+      body: { surah_number: surah, ayah_number: ayah },
+    });
     invalidate();
   };
 
