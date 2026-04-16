@@ -16,8 +16,8 @@ export function LiveActivityFeed() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase.rpc('admin_live_feed', { _limit: 15 });
-      if (data) setItems(data as unknown as FeedItem[]);
+      const data = await api<FeedItem[]>('api-admin', { params: { resource: 'live-feed', limit: '15' } });
+      if (data) setItems(data);
     };
     load();
     const i = setInterval(load, 30000);

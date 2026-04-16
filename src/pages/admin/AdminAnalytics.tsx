@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
@@ -13,11 +13,11 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: bd } = await supabase.rpc('admin_user_breakdown');
+      const bd = await api('api-admin', { params: { resource: 'user-breakdown' } });
       if (bd) setBreakdown(bd);
 
-      const { data: co } = await supabase.rpc('admin_retention_cohorts');
-      if (co) setCohorts(co as unknown as Cohort[]);
+      const co = await api<Cohort[]>('api-admin', { params: { resource: 'retention-cohorts' } });
+      if (co) setCohorts(co);
     };
     load();
     const i = setInterval(load, 60000);

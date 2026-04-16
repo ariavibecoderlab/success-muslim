@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Moon, BookOpen, Heart, HandCoins, Sparkles } from 'lucide-react';
@@ -42,14 +42,14 @@ const AdminImanAnalytics = () => {
   const [range, setRange] = useState(30);
 
   const load = useCallback(async () => {
-    const [{ data: s }, { data: t }, { data: sc }] = await Promise.all([
-      supabase.rpc('admin_iman_stats'),
-      supabase.rpc('admin_iman_trends', { _days: range }),
-      supabase.rpc('admin_sadaqah_by_category'),
+    const [s, t, sc] = await Promise.all([
+      api<ImanStats>('api-admin', { params: { resource: 'iman-stats' } }),
+      api<ImanTrends>('api-admin', { params: { resource: 'iman-trends', days: String(range) } }),
+      api<SadaqahCat[]>('api-admin', { params: { resource: 'sadaqah-by-category' } }),
     ]);
-    if (s) setStats(s as unknown as ImanStats);
-    if (t) setTrends(t as unknown as ImanTrends);
-    if (sc) setSadaqahCats(sc as unknown as SadaqahCat[]);
+    if (s) setStats(s);
+    if (t) setTrends(t);
+    if (sc) setSadaqahCats(sc);
   }, [range]);
 
   useEffect(() => { load(); }, [load]);

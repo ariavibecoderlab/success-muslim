@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Zap, Calendar, TrendingUp } from 'lucide-react';
@@ -29,14 +29,14 @@ const AdminEngagement = () => {
   const [range, setRange] = useState(30);
 
   const load = useCallback(async () => {
-    const { data: eng } = await supabase.rpc('admin_engagement_stats', { _days: range });
-    if (eng) setData(eng as unknown as EngagementData);
+    const eng = await api<EngagementData>('api-admin', { params: { resource: 'engagement-stats', days: String(range) } });
+    if (eng) setData(eng);
 
-    const { data: chk } = await supabase.rpc('admin_checkin_stats');
-    if (chk) setCheckins(chk as unknown as CheckinData);
+    const chk = await api<CheckinData>('api-admin', { params: { resource: 'checkin-stats' } });
+    if (chk) setCheckins(chk);
 
-    const { data: wdg } = await supabase.rpc('admin_widget_popularity');
-    if (wdg) setWidgets(wdg as unknown as WidgetRow[]);
+    const wdg = await api<WidgetRow[]>('api-admin', { params: { resource: 'widget-popularity' } });
+    if (wdg) setWidgets(wdg);
   }, [range]);
 
   useEffect(() => { load(); }, [load]);

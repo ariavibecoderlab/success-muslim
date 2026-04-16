@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Activity, Moon, Weight, Scale } from 'lucide-react';
@@ -37,12 +37,12 @@ const AdminHealthAnalytics = () => {
   const [range, setRange] = useState(30);
 
   const load = useCallback(async () => {
-    const [{ data: s }, { data: t }] = await Promise.all([
-      supabase.rpc('admin_health_stats'),
-      supabase.rpc('admin_health_trends', { _days: range }),
+    const [s, t] = await Promise.all([
+      api<HealthStats>('api-admin', { params: { resource: 'health-stats' } }),
+      api<HealthTrends>('api-admin', { params: { resource: 'health-trends', days: String(range) } }),
     ]);
-    if (s) setStats(s as unknown as HealthStats);
-    if (t) setTrends(t as unknown as HealthTrends);
+    if (s) setStats(s);
+    if (t) setTrends(t);
   }, [range]);
 
   useEffect(() => { load(); }, [load]);

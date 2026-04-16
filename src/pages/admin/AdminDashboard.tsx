@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, UserPlus, Activity, CalendarCheck, CheckCircle, XCircle, Clock, TrendingUp } from 'lucide-react';
@@ -22,20 +22,20 @@ const AdminDashboard = () => {
   const [range, setRange] = useState(30);
 
   const load = useCallback(async () => {
-    const { data: s } = await supabase.rpc('admin_overview_stats');
-    if (s) setStats(s as unknown as Stats);
+    const s = await api<Stats>('api-admin', { params: { resource: 'overview-stats' } });
+    if (s) setStats(s);
 
-    const { data: chart } = await supabase.rpc('admin_signup_chart', { _days: range });
+    const chart = await api<any[]>('api-admin', { params: { resource: 'signup-chart', days: String(range) } });
     if (chart) {
       let cum = 0;
-      setChartData((chart as any[]).map(r => {
+      setChartData(chart.map(r => {
         cum += Number(r.signup_count);
         return { date: new Date(r.signup_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), signups: Number(r.signup_count), cumulative: cum };
       }));
     }
 
-    const { data: mod } = await supabase.rpc('admin_module_usage');
-    if (mod) setModuleData((mod as any[]).map(m => ({ module: m.module, unique_users: Number(m.unique_users) })));
+    const mod = await api<any[]>('api-admin', { params: { resource: 'module-usage' } });
+    if (mod) setModuleData(mod.map(m => ({ module: m.module, unique_users: Number(m.unique_users) })));
   }, [range]);
 
   useEffect(() => { load(); const i = setInterval(load, 60000); return () => clearInterval(i); }, [load]);
