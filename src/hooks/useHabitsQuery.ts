@@ -1,12 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import {
   getHabits, saveHabits, getHabitLog, saveHabitLog,
   getHabitStreak, getHeatmapData,
   type Habit, type HabitLog,
 } from '@/lib/productivity-storage';
-import { format, subDays } from 'date-fns';
 
 export function useHabits() {
   const { user } = useAuth();
@@ -14,18 +13,10 @@ export function useHabits() {
     queryKey: ['habits', user?.id ?? 'anon'],
     queryFn: async () => {
       if (!user) return getHabits();
-      const { data } = await supabase
-        .from('habits')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at');
+      const data = await api<any[]>('api-productivity', { params: { resource: 'habits' } });
       if (!data?.length) return getHabits();
       const habits: Habit[] = data.map(r => ({
-        id: r.id,
-        name: r.name,
-        icon: r.icon,
-        color: r.color,
-        createdAt: r.created_at,
+        id: r.id, name: r.name, icon: r.icon, color: r.color, createdAt: r.created_at,
       }));
       saveHabits(habits);
       return habits;
@@ -41,10 +32,9 @@ export function useHabitLog() {
     queryKey: ['habit-log', user?.id ?? 'anon'],
     queryFn: async () => {
       if (!user) return getHabitLog();
-      const { data } = await supabase
-        .from('habit_log')
-        .select('habit_id, date')
-        .eq('user_id', user.id);
+      const data = await api<{ habit_id: string; date: string }[]>('api-productivity', {
+        params: { resource: 'habit-log' },
+      });
       if (!data?.length) return getHabitLog();
       const log: HabitLog = {};
       for (const r of data) {
@@ -66,26 +56,22 @@ export function useAddHabit() {
     mutationFn: async (args: { name: string; icon?: string; color?: string }) => {
       const id = crypto.randomUUID();
       const habit: Habit = {
-        id,
-        name: args.name,
-        icon: args.icon || 'Check',
-        color: args.color || 'primary',
-        createdAt: new Date().toISOString(),
+        id, name: args.name, icon: args.icon || 'Check',
+        color: args.color || 'primary', createdAt: new Date().toISOString(),
       };
       const habits = getHabits();
       habits.push(habit);
       saveHabits(habits);
       if (user) {
-        await supabase.from('habits').insert({
-          id, user_id: user.id, name: args.name,
-          icon: habit.icon, color: habit.color,
+        await api('api-productivity', {
+          method: 'POST',
+          params: { resource: 'habits' },
+          body: { id, name: args.name, icon: habit.icon, color: habit.color },
         });
       }
       return habits;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['habits'] });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['habits'] }); },
   });
 }
 
@@ -97,7 +83,10 @@ export function useDeleteHabit() {
       const habits = getHabits().filter(h => h.id !== id);
       saveHabits(habits);
       if (user) {
-        await supabase.from('habits').delete().eq('id', id).eq('user_id', user.id);
+        await api('api-productivity', {
+          method: 'DELETE',
+          params: { resource: 'habits', id },
+        });
       }
       return habits;
     },
@@ -122,22 +111,22 @@ export function useToggleHabit() {
       saveHabitLog(log);
       if (user) {
         if (isCompleted) {
-          await supabase.from('habit_log').insert({
-            user_id: user.id, habit_id: args.habitId, date: args.date,
+          await api('api-productivity', {
+            method: 'POST',
+            params: { resource: 'habit-log' },
+            body: { habit_id: args.habitId, date: args.date },
           });
         } else {
-          await supabase.from('habit_log').delete().match({
-            user_id: user.id, habit_id: args.habitId, date: args.date,
+          await api('api-productivity', {
+            method: 'DELETE',
+            params: { resource: 'habit-log', habit_id: args.habitId, date: args.date },
           });
         }
       }
       return log;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['habit-log'] });
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['habit-log'] }); },
   });
 }
 
-// Re-export localStorage helpers for computed data
 export { getHabitStreak, getHeatmapData };
