@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { syncStepLog, syncStepLogDelete, syncStepsPrefs } from './db-sync';
 
 // ── Types ──────────────────────────────────────────
 
@@ -66,14 +65,12 @@ export function setStepsTarget(target: number) {
   const prefs = getStepsPrefs();
   prefs.dailyTarget = target;
   set(KEYS.prefs, prefs);
-  syncStepsPrefs(prefs.dailyTarget, prefs.strideLengthCm, prefs.reminderEnabled, prefs.reminderTime);
 }
 
 export function setStepsPrefs(prefs: Partial<StepsPrefs>) {
   const current = getStepsPrefs();
   const updated = { ...current, ...prefs };
   set(KEYS.prefs, updated);
-  syncStepsPrefs(updated.dailyTarget, updated.strideLengthCm, updated.reminderEnabled, updated.reminderTime);
 }
 
 // ── Calculations ───────────────────────────────────
@@ -119,14 +116,12 @@ export function addStepLog(steps: number, activityType: ActivityType, loggedAt?:
   const logs = getAllLogs();
   logs.push(entry);
   saveAllLogs(logs);
-  syncStepLog(entry.date, entry.steps, entry.activityType, entry.distanceMeters, entry.caloriesBurned, entry.loggedAt);
   return entry;
 }
 
 export function deleteStepLog(id: string) {
   const logs = getAllLogs().filter(l => l.id !== id);
   saveAllLogs(logs);
-  syncStepLogDelete(id);
 }
 
 export function getStepsHistory(days: number = 7): { date: string; label: string; steps: number }[] {
