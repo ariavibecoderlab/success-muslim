@@ -1,5 +1,4 @@
 import { format } from 'date-fns';
-import { syncBMI, syncWeightEntry, syncHydration, syncSleepEntry, syncFastingToggle, syncIFStart, syncIFStop } from './db-sync';
 
 // ── Types ──────────────────────────────────────────
 
@@ -81,7 +80,6 @@ export function getBMI(): BMIData | null {
 
 export function saveBMI(data: BMIData) {
   set(KEYS.bmi, data);
-  syncBMI(data);
 }
 
 export function calculateBMI(weightKg: number, heightCm: number): number {
@@ -118,7 +116,6 @@ export function addWeightEntry(entry: WeightEntry) {
   log.push(entry);
   log.sort((a, b) => a.date.localeCompare(b.date));
   set(KEYS.weightLog, log);
-  syncWeightEntry(entry.date, entry.weight);
 }
 
 export function getWeightGoal(): number | null {
@@ -144,7 +141,6 @@ export function addCup(dateKey?: string) {
   day.cups += 1;
   all[key] = day;
   set(KEYS.hydration, all);
-  syncHydration(key, day.cups, day.goal);
 }
 
 export function removeCup(dateKey?: string) {
@@ -154,7 +150,6 @@ export function removeCup(dateKey?: string) {
   day.cups = Math.max(0, day.cups - 1);
   all[key] = day;
   set(KEYS.hydration, all);
-  syncHydration(key, day.cups, day.goal);
 }
 
 export function setHydrationGoal(goal: number) {
@@ -164,7 +159,6 @@ export function setHydrationGoal(goal: number) {
   day.goal = goal;
   all[key] = day;
   set(KEYS.hydration, all);
-  syncHydration(key, day.cups, day.goal);
 }
 
 export function getHydrationHistory(days: number = 7): { date: string; cups: number }[] {
@@ -190,7 +184,6 @@ export function addSleepEntry(entry: SleepEntry) {
   log.push(entry);
   log.sort((a, b) => a.date.localeCompare(b.date));
   set(KEYS.sleep, log);
-  syncSleepEntry(entry.date, entry.bedtime, entry.wakeTime, entry.duration);
 }
 
 export function calculateSleepDuration(bedtime: string, wakeTime: string): number {
@@ -220,7 +213,6 @@ export function toggleFasting(dateKey: string) {
   log[dateKey] = !log[dateKey];
   if (!log[dateKey]) delete log[dateKey];
   set(KEYS.fasting, log);
-  syncFastingToggle(dateKey, !wasFasting);
 }
 
 // ── Intermittent Fasting ───────────────────────────
@@ -236,7 +228,6 @@ export function getActiveIF(): IFActive | null {
 export function startIF(mode: string, fastingHours: number, customStartTime?: string) {
   const startTime = customStartTime || new Date().toISOString();
   set(KEYS.ifActive, { mode, startTime, fastingHours });
-  syncIFStart(mode, startTime, fastingHours);
 }
 
 export function stopIF(completed: boolean, endTimeOverride?: string) {
@@ -256,7 +247,6 @@ export function stopIF(completed: boolean, endTimeOverride?: string) {
   });
   set(KEYS.ifSessions, sessions.slice(0, 50));
   localStorage.removeItem(KEYS.ifActive);
-  syncIFStop(active.startTime, endTime, completed);
 }
 
 export function editIFSession(index: number, updates: { startTime?: string; endTime?: string }): string | null {
@@ -281,8 +271,6 @@ export function editIFSession(index: number, updates: { startTime?: string; endT
   session.durationSeconds = Math.round((endMs - startMs) / 1000);
   set(KEYS.ifSessions, sessions);
 
-  // Sync: update the DB record matching the old start time
-  syncIFStop(oldStartTime, newEnd, session.completed);
   return null;
 }
 
@@ -301,6 +289,4 @@ export function logPastIF(date: string, mode: string, hours: number) {
     completed: true,
   });
   set(KEYS.ifSessions, sessions.slice(0, 50));
-  syncIFStart(mode, startTime, hours);
-  syncIFStop(startTime, endTime, true);
 }
