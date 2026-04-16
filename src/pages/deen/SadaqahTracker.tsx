@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { motion } from 'framer-motion';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import BackdatePrompt from '@/components/BackdatePrompt';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -75,46 +75,42 @@ const SadaqahTracker = () => {
   const loadData = async () => {
     if (!user) return;
     setLoading(true);
-    const [donRes, goalRes] = await Promise.all([
-      supabase.from('sadaqah_donations').select('*').eq('user_id', user.id).order('date', { ascending: false }).limit(100),
-      supabase.from('sadaqah_goals').select('*').eq('user_id', user.id).limit(1),
-    ]);
-    if (donRes.data) setDonations(donRes.data as Donation[]);
-    if (goalRes.data && goalRes.data.length > 0) setGoal(goalRes.data[0] as SadaqahGoal);
+    const result = await api<any>('api-wealth', { params: { resource: 'sadaqah' } });
+    if (result) {
+      setDonations(result.donations || []);
+      setGoal(result.goal || null);
+    }
     setLoading(false);
   };
 
   const handleAdd = async () => {
     if (!user || !amount || parseFloat(amount) <= 0) return;
-    const { error } = await supabase.from('sadaqah_donations').insert({
-      user_id: user.id,
-      amount: parseFloat(amount),
-      currency,
-      category,
-      recipient: recipient || null,
-      notes: notes || null,
-      date,
-    });
-    if (error) { toast.error('Failed to save'); return; }
-    toast.success('Donation logged!');
-    setAmount(''); setRecipient(''); setNotes(''); setAddOpen(false);
-    loadData();
+    try {
+      await api('api-wealth', {
+        method: 'POST',
+        params: { resource: 'sadaqah' },
+        body: { action: 'donate', amount: parseFloat(amount), currency, category, recipient: recipient || null, notes: notes || null, date },
+      });
+      toast.success('Donation logged!');
+      setAmount(''); setRecipient(''); setNotes(''); setAddOpen(false);
+      loadData();
+    } catch { toast.error('Failed to save'); }
   };
 
   const handleSetGoal = async () => {
     if (!user || !goalAmount || parseFloat(goalAmount) <= 0) return;
-    if (goal) {
-      await supabase.from('sadaqah_goals').update({ monthly_target: parseFloat(goalAmount), currency: goalCurrency }).eq('id', goal.id);
-    } else {
-      await supabase.from('sadaqah_goals').insert({ user_id: user.id, monthly_target: parseFloat(goalAmount), currency: goalCurrency });
-    }
+    await api('api-wealth', {
+      method: 'POST',
+      params: { resource: 'sadaqah' },
+      body: { action: 'set_goal', monthly_target: parseFloat(goalAmount), currency: goalCurrency, goal_id: goal?.id || null },
+    });
     toast.success('Goal updated!');
     setGoalOpen(false);
     loadData();
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from('sadaqah_donations').delete().eq('id', id);
+    await api('api-wealth', { method: 'DELETE', params: { resource: 'sadaqah', id } });
     toast.success('Deleted');
     loadData();
   };

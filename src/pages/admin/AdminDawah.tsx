@@ -109,8 +109,7 @@ const AdminDawah = () => {
       const filePath = urlParts[urlParts.length - 1];
 
       // Delete from database first
-      const { error } = await supabase.from('dakwah_posters').delete().eq('id', poster.id);
-      if (error) throw error;
+      await api('api-misc', { method: 'DELETE', params: { resource: 'dakwah', id: poster.id } });
 
       // Delete from storage (best effort)
       if (filePath) {

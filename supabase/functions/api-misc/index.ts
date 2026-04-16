@@ -128,19 +128,21 @@ Deno.serve(async (req) => {
     // ── HAJJ/UMRAH ──
     if (resource === "hajj-umrah") {
       if (method === "GET") {
-        const { data } = await supabase.from("hajj_umrah_progress").select("*").eq("user_id", userId).order("created_at", { ascending: false });
-        return json(data ?? []);
+        const journeyType = url.searchParams.get("journey_type") || "umrah";
+        const { data } = await supabase.from("hajj_umrah_progress").select("*").eq("user_id", userId).eq("journey_type", journeyType).order("created_at", { ascending: false }).limit(1).maybeSingle();
+        return json(data);
       }
       if (method === "POST") {
         const body = await req.json();
         if (body.id) {
           const { error } = await supabase.from("hajj_umrah_progress").update(body.updates).eq("id", body.id).eq("user_id", userId);
           if (error) return json({ error: error.message }, 400);
+          return json({ ok: true });
         } else {
-          const { error } = await supabase.from("hajj_umrah_progress").insert({ user_id: userId, ...body });
+          const { data, error } = await supabase.from("hajj_umrah_progress").insert({ user_id: userId, ...body }).select().single();
           if (error) return json({ error: error.message }, 400);
+          return json(data);
         }
-        return json({ ok: true });
       }
       if (method === "DELETE") {
         const id = url.searchParams.get("id");
@@ -153,12 +155,31 @@ Deno.serve(async (req) => {
     // ── QIYAM ──
     if (resource === "qiyam-log") {
       if (method === "GET") {
-        const { data } = await supabase.from("qiyam_log").select("*").eq("user_id", userId).order("date", { ascending: false });
+        const limit = parseInt(url.searchParams.get("limit") || "90");
+        const { data } = await supabase.from("qiyam_log").select("id, date, performed, notes, sleep_time, wake_time, tahajjud_start").eq("user_id", userId).order("date", { ascending: false }).limit(limit);
         return json(data ?? []);
       }
       if (method === "POST") {
         const body = await req.json();
-        const { error } = await supabase.from("qiyam_log").upsert({ user_id: userId, ...body }, { onConflict: "user_id,date" });
+        if (body.id) {
+          // Update existing log
+          const { error } = await supabase.from("qiyam_log").update({ performed: body.performed }).eq("id", body.id).eq("user_id", userId);
+          if (error) return json({ error: error.message }, 400);
+          return json({ ok: true });
+        } else {
+          // Insert new log
+          const { data, error } = await supabase.from("qiyam_log").insert({ user_id: userId, ...body }).select("id, date, performed, notes, sleep_time, wake_time, tahajjud_start").single();
+          if (error) return json({ error: error.message }, 400);
+          return json(data);
+        }
+      }
+    }
+
+    // ── QURAN READING SESSIONS ──
+    if (resource === "quran-sessions") {
+      if (method === "POST") {
+        const body = await req.json();
+        const { error } = await supabase.from("quran_reading_sessions").insert({ user_id: userId, ...body });
         if (error) return json({ error: error.message }, 400);
         return json({ ok: true });
       }

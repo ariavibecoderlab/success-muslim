@@ -12,7 +12,7 @@ import { useQuranPrefs, useQuranBookmarks, useQuranMemorization } from '@/hooks/
 import { fetchAyahs, fetchTafsir, SURAH_NAMES, TRANSLATION_IDS, type Ayah } from '@/lib/quran-api';
 import { getPageForSurah, pageToSurahAyah } from '@/lib/quran-mapping';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { AyahContextMenu } from '@/components/quran/AyahContextMenu';
 import { MushafPageView } from '@/components/quran/MushafPageView';
@@ -186,7 +186,7 @@ const SurahReader = () => {
           localStorage.setItem(flushedKey, sessionId);
           localStorage.removeItem('quran_pending_session');
           const { _sessionId: _removed, ...row } = session;
-          supabase.from('quran_reading_sessions').insert(row as any).then();
+          api('api-misc', { method: 'POST', params: { resource: 'quran-sessions' }, body: row }).catch(() => {});
         }
       } catch {}
     }

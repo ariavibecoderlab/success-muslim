@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import SubPageLayout from '@/components/SubPageLayout';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { format, startOfMonth, endOfMonth, parseISO, addMonths, subMonths } from 'date-fns';
@@ -107,14 +107,8 @@ const BudgetTracker = () => {
     if (!user) return;
     const start = format(startOfMonth(viewMonth), 'yyyy-MM-dd');
     const end = format(endOfMonth(viewMonth), 'yyyy-MM-dd');
-    const { data, error } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('date', start)
-      .lte('date', end)
-      .order('date', { ascending: false });
-    if (!error && data) setTransactions(data as Transaction[]);
+    const data = await api<Transaction[]>('api-wealth', { params: { resource: 'transactions', start, end } });
+    if (data) setTransactions(data);
     setLoading(false);
   };
 
@@ -122,24 +116,20 @@ const BudgetTracker = () => {
 
   const handleAdd = async () => {
     if (!user || !amount || !category) return;
-    const { error } = await supabase.from('transactions').insert({
-      user_id: user.id,
-      type: txType,
-      amount: parseFloat(amount),
-      category,
-      description: description || null,
-      date,
-      is_recurring: isRecurring,
-      recurrence_interval: isRecurring ? recurrenceInterval : null,
-    });
-    if (error) { toast.error('Failed to add transaction'); return; }
-    toast.success(`${txType === 'income' ? 'Income' : 'Expense'} added${isRecurring ? ' (recurring)' : ''}`);
-    setAmount(''); setCategory(''); setDescription(''); setIsRecurring(false); setDialogOpen(false);
-    fetchTransactions();
+    try {
+      await api('api-wealth', {
+        method: 'POST',
+        params: { resource: 'transactions' },
+        body: { type: txType, amount: parseFloat(amount), category, description: description || null, date, is_recurring: isRecurring, recurrence_interval: isRecurring ? recurrenceInterval : null },
+      });
+      toast.success(`${txType === 'income' ? 'Income' : 'Expense'} added${isRecurring ? ' (recurring)' : ''}`);
+      setAmount(''); setCategory(''); setDescription(''); setIsRecurring(false); setDialogOpen(false);
+      fetchTransactions();
+    } catch { toast.error('Failed to add transaction'); }
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from('transactions').delete().eq('id', id);
+    await api('api-wealth', { method: 'DELETE', params: { resource: 'transactions', id } });
     setTransactions(prev => prev.filter(t => t.id !== id));
     toast.success('Deleted');
   };
