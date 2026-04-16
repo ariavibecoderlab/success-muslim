@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import MarketingLayout from '@/components/MarketingLayout';
@@ -8,13 +8,10 @@ export default function Blog() {
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['blog-posts-public'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('id, title, slug, excerpt, cover_image_url, published_at')
-        .eq('status', 'published')
-        .order('published_at', { ascending: false });
-      if (error) throw error;
-      return data;
+      const data = await api<any[]>('api-misc', {
+        params: { resource: 'blog', status: 'published' },
+      });
+      return data ?? [];
     },
   });
 
@@ -30,7 +27,7 @@ export default function Blog() {
           <div className="text-center py-20 text-muted-foreground">No posts yet. Check back soon!</div>
         ) : (
           <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {posts.map(post => (
+            {posts.map((post: any) => (
               <Link
                 key={post.id}
                 to={`/blog/${post.slug}`}

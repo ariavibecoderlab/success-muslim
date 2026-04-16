@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -21,14 +21,12 @@ export default function BlogPost() {
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['blog-post', slug],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('blog_posts')
-        .select('*')
-        .eq('slug', slug!)
-        .eq('status', 'published')
-        .single();
-      if (error) throw error;
-      return data;
+      const data = await api<any[]>('api-misc', {
+        params: { resource: 'blog', status: 'published' },
+      });
+      const found = data?.find((p: any) => p.slug === slug);
+      if (!found) throw new Error('Not found');
+      return found;
     },
     enabled: !!slug,
   });

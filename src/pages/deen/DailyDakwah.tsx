@@ -3,7 +3,7 @@ import { Download, Share2, Moon, ImageIcon } from 'lucide-react';
 import SubPageLayout from '@/components/SubPageLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -29,12 +29,12 @@ const DailyDakwah = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await supabase
-        .from('dakwah_posters')
-        .select('id, title, image_url, date')
-        .order('date', { ascending: false })
-        .limit(30);
-      if (data) setPosters(data);
+      try {
+        const data = await api<Poster[]>('api-misc', {
+          params: { resource: 'dakwah' },
+        });
+        if (data) setPosters(data);
+      } catch {}
       setLoading(false);
     };
     load();

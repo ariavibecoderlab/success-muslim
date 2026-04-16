@@ -91,6 +91,29 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── WIDGET PREFERENCES ──
+    if (resource === "widget-prefs") {
+      if (method === "GET") {
+        const { data } = await supabase.from("widget_preferences")
+          .select("widget_id, enabled, position, size")
+          .eq("user_id", userId)
+          .order("position", { ascending: true });
+        return json(data ?? []);
+      }
+      if (method === "POST") {
+        const body = await req.json();
+        if (body.prefs && Array.isArray(body.prefs)) {
+          const rows = body.prefs.map((p: any) => ({
+            user_id: userId, widget_id: p.widget_id,
+            enabled: p.enabled, position: p.position, size: p.size,
+          }));
+          const { error } = await supabase.from("widget_preferences").upsert(rows, { onConflict: "user_id,widget_id" });
+          if (error) return json({ error: error.message }, 400);
+        }
+        return json({ ok: true });
+      }
+    }
+
     // ── RAMADAN OPTIMIZER ──
     if (resource === "ramadan-log") {
       if (method === "GET") {

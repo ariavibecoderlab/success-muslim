@@ -2,22 +2,21 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Megaphone } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import type { WidgetSize } from '@/lib/widget-registry';
 
 export default function DakwahWidget({ size }: { size: WidgetSize }) {
   const [hasNew, setHasNew] = useState(false);
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0];
-    supabase
-      .from('dakwah_posters')
-      .select('id')
-      .eq('date', today)
-      .limit(1)
-      .then(({ data }) => {
-        setHasNew(!!(data && data.length > 0));
-      });
+    api<{ id: string; date: string }[]>('api-misc', {
+      params: { resource: 'dakwah' },
+    }).then((data) => {
+      if (data?.length) {
+        const today = new Date().toISOString().split('T')[0];
+        setHasNew(data[0].date === today);
+      }
+    }).catch(() => {});
   }, []);
 
   if (size === 'small') {

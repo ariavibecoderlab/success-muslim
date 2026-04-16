@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -36,12 +36,11 @@ const FamilyPrivacySettings = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('family_privacy_settings')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-      .then(({ data }) => { if (data) setSettings(data as PrivacySettings); });
+    api<PrivacySettings | null>('api-family', {
+      params: { resource: 'privacy' },
+    }).then((data) => {
+      if (data) setSettings(data);
+    }).catch(() => {});
   }, [user]);
 
   const update = async (key: keyof PrivacySettings, value: boolean) => {
@@ -50,15 +49,17 @@ const FamilyPrivacySettings = () => {
     setSettings(next);
     setSaving(true);
 
-    const { error } = await supabase
-      .from('family_privacy_settings')
-      .upsert({ user_id: user.id, ...next }, { onConflict: 'user_id' });
-
-    setSaving(false);
-    if (error) {
-      toast({ title: 'Error saving', description: error.message, variant: 'destructive' });
+    try {
+      await api('api-family', {
+        method: 'POST',
+        params: { resource: 'privacy' },
+        body: next,
+      });
+    } catch (err: any) {
+      toast({ title: 'Error saving', description: err.message, variant: 'destructive' });
       setSettings(settings); // revert
     }
+    setSaving(false);
   };
 
   const Row = ({ label, desc, field }: { label: string; desc?: string; field: keyof PrivacySettings }) => (

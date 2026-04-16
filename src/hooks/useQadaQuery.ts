@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import {
   getQadaSetup, getQadaProgress, logQadaPrayer, undoQadaPrayer, saveQadaSetup,
   getRamadhanSetup, getRamadhanProgress,
@@ -13,11 +13,9 @@ export function useQadaSolat() {
     queryKey: ['qada', user?.id ?? 'anon'],
     queryFn: async (): Promise<{ setup: QadaSolatSetup | null; progress: QadaSolatProgress }> => {
       if (!user) return { setup: getQadaSetup(), progress: getQadaProgress() };
-      const { data } = await supabase
-        .from('qada_solat')
-        .select('setup, progress')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const data = await api<{ setup: unknown; progress: unknown } | null>('api-misc', {
+        params: { resource: 'qada-solat' },
+      });
       if (!data) return { setup: getQadaSetup(), progress: getQadaProgress() };
       return {
         setup: data.setup as unknown as QadaSolatSetup,
@@ -69,11 +67,9 @@ export function useRamadhanQada() {
     queryKey: ['ramadhan-qada', user?.id ?? 'anon'],
     queryFn: async (): Promise<{ setup: RamadhanQadaSetup | null; progress: RamadhanQadaProgress }> => {
       if (!user) return { setup: getRamadhanSetup(), progress: getRamadhanProgress() };
-      const { data } = await supabase
-        .from('ramadhan_qada')
-        .select('setup, progress')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      const data = await api<{ setup: unknown; progress: unknown } | null>('api-misc', {
+        params: { resource: 'ramadhan-qada' },
+      });
       if (!data) return { setup: getRamadhanSetup(), progress: getRamadhanProgress() };
       return {
         setup: data.setup as unknown as RamadhanQadaSetup,

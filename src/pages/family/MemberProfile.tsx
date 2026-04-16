@@ -7,7 +7,7 @@ import { getGroupTerms } from '@/lib/family-helpers';
 import { ArrowLeft, Flame, Loader2, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { motion } from 'framer-motion';
 
 interface PrivacySettings {
@@ -37,15 +37,12 @@ const MemberProfile = () => {
   useEffect(() => {
     if (!uid) return;
     if (isOwnProfile) {
-      supabase
-        .from('family_privacy_settings')
-        .select('show_prayer,show_quran,show_fasting,show_health,show_streaks,ghost_mode')
-        .eq('user_id', uid)
-        .single()
-        .then(({ data }) => {
-          setPrivacy(data as PrivacySettings | null);
-          setLoadingPrivacy(false);
-        });
+      api<PrivacySettings | null>('api-family', {
+        params: { resource: 'privacy' },
+      }).then((data) => {
+        setPrivacy(data);
+        setLoadingPrivacy(false);
+      }).catch(() => setLoadingPrivacy(false));
     } else {
       setLoadingPrivacy(false);
     }
