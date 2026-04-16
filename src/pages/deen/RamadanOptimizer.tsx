@@ -409,13 +409,13 @@ const RamadanOptimizer = () => {
                     onClick={async () => {
                       setTempSettings(p => ({ ...p, tarawih_target: 8 }));
                       setSettings(p => ({ ...p, tarawih_target: 8 }));
-                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 8 }, { onConflict: 'user_id' });
+                      if (user) await api('api-misc', { method: 'POST', params: { resource: 'ramadan-settings' }, body: { ...settings, tarawih_target: 8 } });
                     }}>8 Rakaat</Button>
                   <Button size="sm" variant={settings.tarawih_target === 20 ? 'default' : 'outline'} className="h-6 text-xs px-2"
                     onClick={async () => {
                       setTempSettings(p => ({ ...p, tarawih_target: 20 }));
                       setSettings(p => ({ ...p, tarawih_target: 20 }));
-                      if (user) await supabase.from('ramadan_settings').upsert({ user_id: user.id, ...settings, tarawih_target: 20 }, { onConflict: 'user_id' });
+                      if (user) await api('api-misc', { method: 'POST', params: { resource: 'ramadan-settings' }, body: { ...settings, tarawih_target: 20 } });
                     }}>20 Rakaat</Button>
                 </div>
                 <div className="flex gap-2">
