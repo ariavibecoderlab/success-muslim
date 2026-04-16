@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api, apiAsync } from '@/lib/api-client';
 import {
   getDayLog, toggleSunnahItem, getSunnahStreak, getSunnahWeekData,
   getSunnahItems, type SunnahDayLog,
@@ -17,16 +17,12 @@ export function useSunnahLog(date?: string) {
     queryKey: ['sunnah', user?.id ?? 'anon', key],
     queryFn: async (): Promise<SunnahDayLog> => {
       if (!user) return getDayLog(key);
-      const { data } = await supabase
-        .from('sunnah_log')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', key)
-        .maybeSingle();
-      if (!data) return getDayLog(key);
+      const data = await api<any[]>('api-sunnah', { params: { date: key } });
+      if (!data?.length) return getDayLog(key);
+      const row = data[0];
       return {
-        completed: (data.completed_items as string[]) || [],
-        date: data.date,
+        completed: (row.completed_items as string[]) || [],
+        date: row.date,
       };
     },
     initialData: () => getDayLog(key),
@@ -39,7 +35,18 @@ export function useSunnahToggle() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (args: { itemId: string; date?: string }) => {
-      return toggleSunnahItem(args.itemId, args.date);
+      const result = toggleSunnahItem(args.itemId, args.date);
+      // Sync to API instead of db-sync
+      if (user) {
+        apiAsync('api-sunnah', {
+          method: 'POST',
+          body: {
+            date: args.date || getTodayKey(),
+            completed_items: result.completed,
+          },
+        });
+      }
+      return result;
     },
     onSuccess: (_, vars) => {
       const key = vars.date || getTodayKey();

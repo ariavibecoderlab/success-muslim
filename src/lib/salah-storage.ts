@@ -1,5 +1,4 @@
 import { getTodayKey } from './calculations';
-import { syncSalahLog } from './db-sync';
 
 export type SalahStatus = 'ontime' | 'late' | 'missed' | null;
 
@@ -49,7 +48,7 @@ export function logSalah(prayer: SalahName, status: SalahStatus, date?: string):
   all[dateKey].prayers[prayer] = { status, loggedAt };
 
   saveAll(all);
-  syncSalahLog(dateKey, prayer, status, loggedAt);
+  // Note: DB sync now handled by useSalahMutation via api-client
   return all[dateKey];
 }
 

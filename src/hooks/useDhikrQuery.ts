@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { api, apiAsync } from '@/lib/api-client';
 import {
   getDailyDhikr, saveDhikrCount, getDhikrStreak, getDhikrHistory,
   type DhikrDailyData,
@@ -17,11 +17,7 @@ export function useDhikrDaily(date?: string) {
     queryKey: ['dhikr', user?.id ?? 'anon', key],
     queryFn: async (): Promise<DhikrDailyData> => {
       if (!user) return getDailyDhikr(key);
-      const { data } = await supabase
-        .from('dhikr_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('date', key);
+      const data = await api<any[]>('api-dhikr', { params: { date: key } });
       if (!data?.length) return getDailyDhikr(key);
       const sessions = data.map(r => ({
         presetId: r.preset_id,
@@ -43,6 +39,18 @@ export function useDhikrMutation() {
   return useMutation({
     mutationFn: async (args: { presetId: string; count: number; target: number; date?: string }) => {
       saveDhikrCount(args.presetId, args.count, args.target, args.date);
+      // Sync to API instead of db-sync
+      if (user) {
+        apiAsync('api-dhikr', {
+          method: 'POST',
+          body: {
+            date: args.date || getTodayKey(),
+            preset_id: args.presetId,
+            count: args.count,
+            target: args.target,
+          },
+        });
+      }
     },
     onSuccess: (_, vars) => {
       const key = vars.date || getTodayKey();
@@ -52,7 +60,6 @@ export function useDhikrMutation() {
 }
 
 export function useDhikrStats() {
-  // These are lightweight localStorage reads, no need for React Query
   return {
     streak: getDhikrStreak(),
     history: getDhikrHistory(7),
