@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { api, apiAsync } from '@/lib/api-client';
 import { notifyFastingLogged, notifyAllPrayersComplete } from '@/lib/family-feed';
 
 /** Get the current user ID, or null if not authenticated */
@@ -13,7 +14,7 @@ function syncAsync(fn: () => Promise<void>) {
 }
 
 // =============================================
-// SALAH
+// SALAH — now routed through api-salah
 // =============================================
 
 export function syncSalahLog(date: string, prayerName: string, status: string | null, loggedAt: string | null) {
@@ -21,25 +22,20 @@ export function syncSalahLog(date: string, prayerName: string, status: string | 
     const userId = await getUserId();
     if (!userId) return;
     if (status === null) {
-      await supabase.from('salah_logs').delete().match({ user_id: userId, date, prayer_name: prayerName });
+      await api('api-salah', { method: 'DELETE', params: { date, prayer_name: prayerName } });
     } else {
-      await supabase.from('salah_logs').upsert({
-        user_id: userId, date, prayer_name: prayerName, status, logged_at: loggedAt,
-      }, { onConflict: 'user_id,date,prayer_name' });
+      await api('api-salah', {
+        method: 'POST',
+        body: { date, prayer_name: prayerName, status, logged_at: loggedAt },
+      });
 
-      // Check if all 5 prayers are now completed for today (only on non-missed prayers)
       if (status !== 'missed') {
-        const { data: todayLogs } = await supabase
-          .from('salah_logs')
-          .select('prayer_name, status')
-          .eq('user_id', userId)
-          .eq('date', date)
-          .neq('status', 'missed');
+        const todayLogs = await api<any[]>('api-salah', { params: { date } });
         const PRAYERS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-        const completedNames = (todayLogs || []).map(r => r.prayer_name);
+        const completedNames = (todayLogs || []).filter(r => r.status !== 'missed').map(r => r.prayer_name);
         const allDone = PRAYERS.every(p => completedNames.includes(p));
         if (allDone) {
-          const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
+          const profile = await api<any>('api-profile');
           const name = profile?.display_name || 'A member';
           await notifyAllPrayersComplete(userId, name);
         }
@@ -51,7 +47,7 @@ export function syncSalahLog(date: string, prayerName: string, status: string | 
 export async function pullSalahLogs(): Promise<Record<string, any> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('salah_logs').select('*').eq('user_id', userId);
+  const data = await api<any[]>('api-salah');
   if (!data || data.length === 0) return null;
   const logs: Record<string, any> = {};
   for (const row of data) {
@@ -68,23 +64,19 @@ export async function pullSalahLogs(): Promise<Record<string, any> | null> {
 }
 
 // =============================================
-// DHIKR
+// DHIKR — now routed through api-dhikr
 // =============================================
 
 export function syncDhikrSession(date: string, presetId: string, count: number, target: number) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('dhikr_sessions').upsert({
-      user_id: userId, date, preset_id: presetId, count, target,
-    }, { onConflict: 'user_id,date,preset_id' });
+    await api('api-dhikr', { method: 'POST', body: { date, preset_id: presetId, count, target } });
   });
 }
 
 export async function pullDhikrSessions(): Promise<Record<string, any> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('dhikr_sessions').select('*').eq('user_id', userId);
+  const data = await api<any[]>('api-dhikr');
   if (!data || data.length === 0) return null;
   const result: Record<string, any> = {};
   for (const row of data) {
@@ -96,24 +88,22 @@ export async function pullDhikrSessions(): Promise<Record<string, any> | null> {
 }
 
 // =============================================
-// HEALTH: BMI
+// HEALTH: BMI — now routed through api-health
 // =============================================
 
 export function syncBMI(data: { weight: number; height: number; age: number; gender: string; activityLevel: string; bmi: number; tdee: number }) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('health_bmi').upsert({
-      user_id: userId, weight: data.weight, height: data.height, age: data.age,
-      gender: data.gender, activity_level: data.activityLevel, bmi: data.bmi, tdee: data.tdee,
-    }, { onConflict: 'user_id' });
+    await api('api-health', {
+      method: 'POST', params: { resource: 'bmi' },
+      body: { weight: data.weight, height: data.height, age: data.age, gender: data.gender, activity_level: data.activityLevel, bmi: data.bmi, tdee: data.tdee },
+    });
   });
 }
 
 export async function pullBMI(): Promise<any | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('health_bmi').select('*').eq('user_id', userId).single();
+  const data = await api<any>('api-health', { params: { resource: 'bmi' } });
   if (!data) return null;
   return { weight: Number(data.weight), height: Number(data.height), age: data.age, gender: data.gender, activityLevel: data.activity_level, bmi: Number(data.bmi), tdee: data.tdee, date: data.updated_at };
 }
@@ -124,16 +114,14 @@ export async function pullBMI(): Promise<any | null> {
 
 export function syncWeightEntry(date: string, weight: number) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('weight_log').upsert({ user_id: userId, date, weight }, { onConflict: 'user_id,date' });
+    await api('api-health', { method: 'POST', params: { resource: 'weight' }, body: { date, weight } });
   });
 }
 
 export async function pullWeightLog(): Promise<any[] | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('weight_log').select('*').eq('user_id', userId).order('date');
+  const data = await api<any[]>('api-health', { params: { resource: 'weight' } });
   if (!data || data.length === 0) return null;
   return data.map(r => ({ date: r.date, weight: Number(r.weight) }));
 }
@@ -144,16 +132,14 @@ export async function pullWeightLog(): Promise<any[] | null> {
 
 export function syncHydration(date: string, cups: number, goal: number) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('hydration_log').upsert({ user_id: userId, date, cups, goal }, { onConflict: 'user_id,date' });
+    await api('api-health', { method: 'POST', params: { resource: 'hydration' }, body: { date, cups, goal } });
   });
 }
 
 export async function pullHydration(): Promise<Record<string, { cups: number; goal: number }> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('hydration_log').select('*').eq('user_id', userId);
+  const data = await api<any[]>('api-health', { params: { resource: 'hydration' } });
   if (!data || data.length === 0) return null;
   const result: Record<string, { cups: number; goal: number }> = {};
   for (const r of data) result[r.date] = { cups: r.cups, goal: r.goal };
@@ -166,16 +152,14 @@ export async function pullHydration(): Promise<Record<string, { cups: number; go
 
 export function syncSleepEntry(date: string, bedtime: string, wakeTime: string, duration: number) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('sleep_log').upsert({ user_id: userId, date, bedtime, wake_time: wakeTime, duration }, { onConflict: 'user_id,date' });
+    await api('api-health', { method: 'POST', params: { resource: 'sleep' }, body: { date, bedtime, wake_time: wakeTime, duration } });
   });
 }
 
 export async function pullSleepLog(): Promise<any[] | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('sleep_log').select('*').eq('user_id', userId).order('date');
+  const data = await api<any[]>('api-health', { params: { resource: 'sleep' } });
   if (!data || data.length === 0) return null;
   return data.map(r => ({ date: r.date, bedtime: r.bedtime, wakeTime: r.wake_time, duration: Number(r.duration) }));
 }
@@ -189,13 +173,12 @@ export function syncFastingToggle(date: string, isFasting: boolean) {
     const userId = await getUserId();
     if (!userId) return;
     if (isFasting) {
-      await supabase.from('fasting_log').upsert({ user_id: userId, date }, { onConflict: 'user_id,date' });
-      // Post to family feed (only when user starts fasting, not when un-toggling)
-      const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', userId).single();
+      await api('api-health', { method: 'POST', params: { resource: 'fasting' }, body: { date, is_fasting: true } });
+      const profile = await api<any>('api-profile');
       const name = profile?.display_name || 'A member';
       await notifyFastingLogged(userId, name);
     } else {
-      await supabase.from('fasting_log').delete().match({ user_id: userId, date });
+      await api('api-health', { method: 'DELETE', params: { resource: 'fasting', date } });
     }
   });
 }
@@ -203,7 +186,7 @@ export function syncFastingToggle(date: string, isFasting: boolean) {
 export async function pullFastingLog(): Promise<Record<string, boolean> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('fasting_log').select('date').eq('user_id', userId);
+  const data = await api<any[]>('api-health', { params: { resource: 'fasting' } });
   if (!data || data.length === 0) return null;
   const result: Record<string, boolean> = {};
   for (const r of data) result[r.date] = true;
@@ -216,95 +199,69 @@ export async function pullFastingLog(): Promise<Record<string, boolean> | null> 
 
 export function syncIFStart(mode: string, startTime: string, fastingHours: number) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('if_sessions').insert({ user_id: userId, mode, start_time: startTime, fasting_hours: fastingHours });
+    await api('api-health', { method: 'POST', params: { resource: 'if-sessions' }, body: { action: 'start', mode, start_time: startTime, fasting_hours: fastingHours } });
   });
 }
 
 export function syncIFStop(startTime: string, endTime: string, completed: boolean) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('if_sessions').update({ end_time: endTime, completed }).match({ user_id: userId, start_time: startTime });
+    await api('api-health', { method: 'POST', params: { resource: 'if-sessions' }, body: { action: 'stop', start_time: startTime, end_time: endTime, completed } });
   });
 }
 
 export async function pullIFSessions(): Promise<any[] | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('if_sessions').select('*').eq('user_id', userId).order('created_at', { ascending: false }).limit(10);
+  const data = await api<any[]>('api-health', { params: { resource: 'if-sessions' } });
   if (!data || data.length === 0) return null;
   return data.map(r => ({ mode: r.mode, startTime: r.start_time, endTime: r.end_time, completed: r.completed }));
 }
 
 // =============================================
-// PRODUCTIVITY: DAILY TASKS
+// PRODUCTIVITY: DAILY TASKS — via api-productivity
 // =============================================
 
 export function syncTaskAdd(id: string, date: string, text: string, isMIT: boolean) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('daily_tasks').insert({ id, user_id: userId, date, text, is_mit: isMIT });
+    await api('api-productivity', { method: 'POST', params: { resource: 'tasks' }, body: { id, date, text, is_mit: isMIT } });
   });
 }
 
 export function syncTaskToggle(id: string, completed: boolean) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('daily_tasks').update({ completed }).eq('id', id).eq('user_id', userId);
+    await api('api-productivity', { method: 'PUT', params: { resource: 'tasks' }, body: { id, completed } });
   });
 }
 
 export function syncTaskDelete(id: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('daily_tasks').delete().eq('id', id).eq('user_id', userId);
+    await api('api-productivity', { method: 'DELETE', params: { resource: 'tasks', id } });
   });
 }
 
 export async function pullDailyTasks(): Promise<Record<string, any> | null> {
-  const userId = await getUserId();
-  if (!userId) return null;
-  const { data } = await supabase.from('daily_tasks').select('*').eq('user_id', userId).order('created_at');
-  if (!data || data.length === 0) return null;
-  const result: Record<string, any> = {};
-  for (const r of data) {
-    if (!result[r.date]) result[r.date] = { date: r.date, tasks: [] };
-    result[r.date].tasks.push({ id: r.id, text: r.text, completed: r.completed, isMIT: r.is_mit, createdAt: r.created_at });
-  }
-  return result;
+  // This is now handled by useTasksQuery hook via api-productivity
+  return null;
 }
 
 // =============================================
-// PRODUCTIVITY: HABITS
+// PRODUCTIVITY: HABITS — via api-productivity
 // =============================================
 
 export function syncHabitAdd(id: string, name: string, icon: string, color: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('habits').insert({ id, user_id: userId, name, icon, color });
+    await api('api-productivity', { method: 'POST', params: { resource: 'habits' }, body: { id, name, icon, color } });
   });
 }
 
 export function syncHabitDelete(id: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('habits').delete().eq('id', id).eq('user_id', userId);
+    await api('api-productivity', { method: 'DELETE', params: { resource: 'habits', id } });
   });
 }
 
 export async function pullHabits(): Promise<any[] | null> {
-  const userId = await getUserId();
-  if (!userId) return null;
-  const { data } = await supabase.from('habits').select('*').eq('user_id', userId).order('created_at');
-  if (!data || data.length === 0) return null;
-  return data.map(r => ({ id: r.id, name: r.name, icon: r.icon, color: r.color, createdAt: r.created_at }));
+  return null; // Handled by useHabitsQuery
 }
 
 // =============================================
@@ -313,27 +270,16 @@ export async function pullHabits(): Promise<any[] | null> {
 
 export function syncHabitLogToggle(habitId: string, date: string, isCompleted: boolean) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
     if (isCompleted) {
-      await supabase.from('habit_log').upsert({ user_id: userId, habit_id: habitId, date }, { onConflict: 'user_id,habit_id,date' });
+      await api('api-productivity', { method: 'POST', params: { resource: 'habit-log' }, body: { habit_id: habitId, date } });
     } else {
-      await supabase.from('habit_log').delete().match({ user_id: userId, habit_id: habitId, date });
+      await api('api-productivity', { method: 'DELETE', params: { resource: 'habit-log', habit_id: habitId, date } });
     }
   });
 }
 
 export async function pullHabitLog(): Promise<Record<string, string[]> | null> {
-  const userId = await getUserId();
-  if (!userId) return null;
-  const { data } = await supabase.from('habit_log').select('habit_id, date').eq('user_id', userId);
-  if (!data || data.length === 0) return null;
-  const result: Record<string, string[]> = {};
-  for (const r of data) {
-    if (!result[r.date]) result[r.date] = [];
-    result[r.date].push(r.habit_id);
-  }
-  return result;
+  return null; // Handled by useHabitsQuery
 }
 
 // =============================================
@@ -342,43 +288,28 @@ export async function pullHabitLog(): Promise<Record<string, string[]> | null> {
 
 export function syncLifeAreaScores(date: string, scores: { area: string; score: number }[]) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    const rows = scores.map(s => ({ user_id: userId, date, area: s.area, score: s.score }));
-    await supabase.from('life_area_scores').upsert(rows, { onConflict: 'user_id,date,area' });
+    await api('api-productivity', { method: 'POST', params: { resource: 'life-areas' }, body: { date, scores } });
   });
 }
 
 export async function pullLifeAreaScores(): Promise<any[] | null> {
-  const userId = await getUserId();
-  if (!userId) return null;
-  const { data } = await supabase.from('life_area_scores').select('*').eq('user_id', userId).order('date', { ascending: false });
-  if (!data || data.length === 0) return null;
-  // Group by date
-  const grouped: Record<string, any[]> = {};
-  for (const r of data) {
-    if (!grouped[r.date]) grouped[r.date] = [];
-    grouped[r.date].push({ area: r.area, score: r.score });
-  }
-  return Object.entries(grouped).map(([date, scores]) => ({ date, scores })).sort((a, b) => b.date.localeCompare(a.date));
+  return null; // Handled by useLifeAreasQuery
 }
 
 // =============================================
-// SUNNAH TRACKER
+// SUNNAH TRACKER — via api-sunnah
 // =============================================
 
 export function syncSunnahLog(date: string, completedItems: string[]) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('sunnah_log').upsert({ user_id: userId, date, completed_items: completedItems }, { onConflict: 'user_id,date' });
+    await api('api-sunnah', { method: 'POST', body: { date, completed_items: completedItems } });
   });
 }
 
 export async function pullSunnahLog(): Promise<Record<string, { completed: string[]; date: string }> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('sunnah_log').select('*').eq('user_id', userId);
+  const data = await api<any[]>('api-sunnah');
   if (!data || data.length === 0) return null;
   const result: Record<string, any> = {};
   for (const r of data) {
@@ -388,84 +319,76 @@ export async function pullSunnahLog(): Promise<Record<string, { completed: strin
 }
 
 // =============================================
-// QADA SOLAT
+// QADA SOLAT — via api-misc
 // =============================================
 
 export function syncQadaSolat(setup: any, progress: any) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('qada_solat').upsert({ user_id: userId, setup, progress }, { onConflict: 'user_id' });
+    await api('api-misc', { method: 'POST', params: { resource: 'qada-solat' }, body: { setup, progress } });
   });
 }
 
 export async function pullQadaSolat(): Promise<{ setup: any; progress: any } | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('qada_solat').select('setup, progress').eq('user_id', userId).single();
+  const data = await api<any>('api-misc', { params: { resource: 'qada-solat' } });
   if (!data) return null;
   return { setup: data.setup, progress: data.progress };
 }
 
 // =============================================
-// RAMADHAN QADA
+// RAMADHAN QADA — via api-misc
 // =============================================
 
 export function syncRamadhanQada(setup: any, progress: any) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('ramadhan_qada').upsert({ user_id: userId, setup, progress }, { onConflict: 'user_id' });
+    await api('api-misc', { method: 'POST', params: { resource: 'ramadhan-qada' }, body: { setup, progress } });
   });
 }
 
 export async function pullRamadhanQada(): Promise<{ setup: any; progress: any } | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('ramadhan_qada').select('setup, progress').eq('user_id', userId).single();
+  const data = await api<any>('api-misc', { params: { resource: 'ramadhan-qada' } });
   if (!data) return null;
   return { setup: data.setup, progress: data.progress };
 }
 
 // =============================================
-// FIDYAH
+// FIDYAH — via api-misc
 // =============================================
 
 export function syncFidyahEntry(entry: any) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('fidyah_history').insert({ user_id: userId, entry });
+    await api('api-misc', { method: 'POST', params: { resource: 'fidyah' }, body: { entry } });
   });
 }
 
 export async function pullFidyahHistory(): Promise<any[] | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('fidyah_history').select('entry, created_at').eq('user_id', userId).order('created_at', { ascending: false });
+  const data = await api<any[]>('api-misc', { params: { resource: 'fidyah' } });
   if (!data || data.length === 0) return null;
   return data.map(r => r.entry);
 }
 
 // =============================================
-// QURAN
+// QURAN — via api-quran
 // =============================================
 
 export function syncQuranLog(date: string, pagesRead: number, juzNumber: number | null, surahName: string, notes: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await (supabase.from('quran_log') as any).upsert({
-      user_id: userId, date, pages_read: pagesRead,
-      juz_number: juzNumber, surah_name: surahName, notes,
-    }, { onConflict: 'user_id,date' });
+    await api('api-quran', {
+      method: 'POST', params: { resource: 'quran-log' },
+      body: { date, pages_read: pagesRead, juz_number: juzNumber, surah_name: surahName, notes },
+    });
   });
 }
 
 export async function pullQuranLog(): Promise<Record<string, any> | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await (supabase.from('quran_log') as any).select('date, pages_read, juz_number, surah_name, notes').eq('user_id', userId);
+  const data = await api<any[]>('api-quran', { params: { resource: 'quran-log' } });
   if (!data || data.length === 0) return null;
   const result: Record<string, any> = {};
   for (const r of data) {
@@ -480,14 +403,14 @@ export async function pullQuranLog(): Promise<Record<string, any> | null> {
 }
 
 // =============================================
-// USER ACTIVITY LOGGING
+// USER ACTIVITY LOGGING — via api-misc
 // =============================================
 
 export function logActivity(module: string, action: string, metadata?: Record<string, any>) {
-  syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('user_activity').insert({ user_id: userId, module, action, metadata: metadata || {} });
+  apiAsync('api-misc', {
+    method: 'POST',
+    params: { resource: 'activity' },
+    body: { module, action, metadata: metadata || {} },
   });
 }
 
@@ -500,7 +423,7 @@ export async function hydrateFromDatabase(): Promise<void> {
   if (!userId) return;
 
   try {
-    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, tasks, habits, habitLog, lifeAreas, sunnah, qada, ramadhan, fidyah, quran, stepsLogs, stepsPrefs] = await Promise.all([
+    const [salah, dhikr, bmi, weight, hydration, sleep, fasting, ifSessions, sunnah, qada, ramadhan, fidyah, quran, stepsLogs, stepsPrefs] = await Promise.all([
       pullSalahLogs(),
       pullDhikrSessions(),
       pullBMI(),
@@ -509,10 +432,6 @@ export async function hydrateFromDatabase(): Promise<void> {
       pullSleepLog(),
       pullFastingLog(),
       pullIFSessions(),
-      pullDailyTasks(),
-      pullHabits(),
-      pullHabitLog(),
-      pullLifeAreaScores(),
       pullSunnahLog(),
       pullQadaSolat(),
       pullRamadhanQada(),
@@ -530,10 +449,6 @@ export async function hydrateFromDatabase(): Promise<void> {
     if (sleep) localStorage.setItem('health_sleep', JSON.stringify(sleep));
     if (fasting) localStorage.setItem('health_fasting', JSON.stringify(fasting));
     if (ifSessions) localStorage.setItem('health_if_sessions', JSON.stringify(ifSessions));
-    if (tasks) localStorage.setItem('sm_daily_tasks', JSON.stringify(tasks));
-    if (habits) localStorage.setItem('sm_habits', JSON.stringify(habits));
-    if (habitLog) localStorage.setItem('sm_habit_log', JSON.stringify(habitLog));
-    if (lifeAreas) localStorage.setItem('sm_life_areas', JSON.stringify(lifeAreas));
     if (sunnah) localStorage.setItem('sunnah_logs', JSON.stringify(sunnah));
     if (qada) {
       if (qada.setup && Object.keys(qada.setup).length > 0) localStorage.setItem('qada_solat_setup', JSON.stringify(qada.setup));
@@ -555,43 +470,37 @@ export async function hydrateFromDatabase(): Promise<void> {
 }
 
 // =============================================
-// HEALTH: STEPS
+// HEALTH: STEPS — via api-health
 // =============================================
 
 export function syncStepLog(date: string, steps: number, activityType: string, distanceMeters: number, caloriesBurned: number, loggedAt: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('steps_logs').insert({
-      user_id: userId, date, steps, activity_type: activityType,
-      distance_meters: distanceMeters, calories_burned: caloriesBurned, logged_at: loggedAt, source: 'manual',
+    await api('api-health', {
+      method: 'POST', params: { resource: 'steps' },
+      body: { date, steps, activity_type: activityType, distance_meters: distanceMeters, calories_burned: caloriesBurned, logged_at: loggedAt, source: 'manual' },
     });
   });
 }
 
 export function syncStepLogDelete(id: string) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('steps_logs').delete().eq('id', id).eq('user_id', userId);
+    await api('api-health', { method: 'DELETE', params: { resource: 'steps', id } });
   });
 }
 
 export function syncStepsPrefs(dailyTarget: number, strideLengthCm: number, reminderEnabled: boolean, reminderTime: string | null) {
   syncAsync(async () => {
-    const userId = await getUserId();
-    if (!userId) return;
-    await supabase.from('steps_preferences').upsert({
-      user_id: userId, daily_target: dailyTarget, stride_length_cm: strideLengthCm,
-      reminder_enabled: reminderEnabled, reminder_time: reminderTime,
-    }, { onConflict: 'user_id' });
+    await api('api-health', {
+      method: 'POST', params: { resource: 'steps-prefs' },
+      body: { daily_target: dailyTarget, stride_length_cm: strideLengthCm, reminder_enabled: reminderEnabled, reminder_time: reminderTime },
+    });
   });
 }
 
 export async function pullStepsLogs(): Promise<any[] | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('steps_logs').select('*').eq('user_id', userId).order('logged_at', { ascending: false });
+  const data = await api<any[]>('api-health', { params: { resource: 'steps' } });
   if (!data || data.length === 0) return null;
   return data.map(r => ({
     id: r.id, date: r.date, steps: r.steps, activityType: r.activity_type,
@@ -603,7 +512,7 @@ export async function pullStepsLogs(): Promise<any[] | null> {
 export async function pullStepsPrefs(): Promise<any | null> {
   const userId = await getUserId();
   if (!userId) return null;
-  const { data } = await supabase.from('steps_preferences').select('*').eq('user_id', userId).single();
+  const data = await api<any>('api-health', { params: { resource: 'steps-prefs' } });
   if (!data) return null;
   return {
     dailyTarget: data.daily_target, strideLengthCm: Number(data.stride_length_cm),

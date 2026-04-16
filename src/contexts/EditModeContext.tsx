@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
 import { useAdmin } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -43,19 +43,17 @@ export const EditModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const fetchOverrides = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('page_overrides')
-        .select('*')
-        .eq('page', pageKey);
-
-      if (!error && data) {
-        const map = new Map<string, Override>();
-        data.forEach((row: any) => {
-          const key = `${row.element_key}::${row.override_type}`;
-          map.set(key, { id: row.id, override_type: row.override_type, value: row.value });
-        });
-        setOverrides(map);
-      }
+      try {
+        const data = await api<any[]>('api-misc', { params: { resource: 'page-overrides', page: pageKey } });
+        if (data) {
+          const map = new Map<string, Override>();
+          data.forEach((row: any) => {
+            const key = `${row.element_key}::${row.override_type}`;
+            map.set(key, { id: row.id, override_type: row.override_type, value: row.value });
+          });
+          setOverrides(map);
+        }
+      } catch {}
       setLoading(false);
     };
 
@@ -79,32 +77,25 @@ export const EditModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const saveOverride = useCallback(async (elementKey: string, overrideType: string, value: any) => {
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('page_overrides')
-      .upsert(
-        {
-          page: pageKey,
-          element_key: elementKey,
-          override_type: overrideType,
-          value,
-          updated_by: user.id,
-        },
-        { onConflict: 'page,element_key,override_type' }
-      )
-      .select()
-      .single();
-
-    if (!error && data) {
-      setOverrides(prev => {
-        const next = new Map(prev);
-        next.set(`${elementKey}::${overrideType}`, {
-          id: (data as any).id,
-          override_type: overrideType,
-          value,
-        });
-        return next;
+    try {
+      const data = await api<any>('api-misc', {
+        method: 'POST',
+        params: { resource: 'page-overrides' },
+        body: { page: pageKey, element_key: elementKey, override_type: overrideType, value },
       });
-    }
+
+      if (data) {
+        setOverrides(prev => {
+          const next = new Map(prev);
+          next.set(`${elementKey}::${overrideType}`, {
+            id: data.id,
+            override_type: overrideType,
+            value,
+          });
+          return next;
+        });
+      }
+    } catch {}
   }, [pageKey, user]);
 
   const deleteOverride = useCallback(async (elementKey: string, overrideType: string) => {
@@ -112,13 +103,14 @@ export const EditModeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const existing = overrides.get(key);
     if (!existing) return;
 
-    await supabase.from('page_overrides').delete().eq('id', existing.id);
-
-    setOverrides(prev => {
-      const next = new Map(prev);
-      next.delete(key);
-      return next;
-    });
+    try {
+      await api('api-misc', { method: 'DELETE', params: { resource: 'page-overrides', id: existing.id } });
+      setOverrides(prev => {
+        const next = new Map(prev);
+        next.delete(key);
+        return next;
+      });
+    } catch {}
   }, [overrides]);
 
   return (
