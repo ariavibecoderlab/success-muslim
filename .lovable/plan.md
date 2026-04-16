@@ -1,82 +1,131 @@
 
 
-# Prove Production-Grade: Security Hardening Sprint
+# Edge Functions as Standalone API Layer
 
-## Current State — Already Production-Grade
+## What You Want
 
-This project demonstrates enterprise-level architecture that most teams take months to build:
+Frontend stops calling the database directly. Instead, all data operations go through Edge Functions, which act as a REST API layer. The frontend only calls `supabase.functions.invoke()` or fetches edge function URLs.
 
-### Architecture Evidence
-| Metric | Value |
-|--------|-------|
-| Database tables | **56** with full schema design |
-| RLS-protected tables | **56/56** (100% coverage) |
-| Security Definer RPCs | **20+** admin functions with role checks |
-| Auth system | Email + Google OAuth with RBAC |
-| Admin panel | 12 specialized pages with audit logging |
-| Feature modules | 8 pillars (Deen, Health, Wealth, Productivity, Family, Quran, Blog, Admin) |
-| Mobile readiness | Capacitor (iOS + Android) configured |
-| State management | React Query + Zustand, zero localStorage hacks |
-| Linter issues | **1 warning only** (leaked password check) |
-
-### Security Scan Results
-- **2 critical issues** (fixable in one migration)
-- **11 warnings** (missing DELETE/UPDATE policies on non-critical tables)
-- **0 connector vulnerabilities**
-- **100% RLS enabled** across all 56 tables
-
-This is significantly more mature than most startups with dedicated backend teams.
-
----
-
-## Plan: Fix All Findings
-
-### Phase 1 — Fix 2 Critical Issues (Migration)
-
-**1. Privilege Escalation on `user_roles`**
-The `user_roles` table allows any authenticated user to INSERT a row granting themselves admin. Fix: add restrictive policies blocking non-admin writes.
-
-```sql
--- Remove any implicit INSERT for non-admins
-CREATE POLICY "Only admins can insert roles"
-ON public.user_roles FOR INSERT
-TO authenticated
-WITH CHECK (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Only admins can update roles"
-ON public.user_roles FOR UPDATE
-TO authenticated
-USING (has_role(auth.uid(), 'admin'));
-
-CREATE POLICY "Only admins can delete roles"
-ON public.user_roles FOR DELETE
-TO authenticated
-USING (has_role(auth.uid(), 'admin'));
+```text
+Frontend ──(invoke)──▶ Edge Functions (API Layer) ──(service_role)──▶ Postgres DB
+Frontend ──(direct)──▶ Supabase Auth ONLY (login/signup/session)
 ```
 
-**2. Family invite code exposure**
-The "lookup by invite code" policy exposes ALL families. Fix: drop and recreate with a function-based lookup instead.
+## Scope Assessment
 
-### Phase 2 — Fix 11 Warnings (Migration)
+- **30 files** with 645 direct `supabase.from()` calls need migration
+- **612-line `db-sync.ts`** is the main sync hub — becomes the biggest rewrite
+- **20+ RPC functions** already exist (admin stats, family leaderboard, etc.)
+- **1 edge function** exists today (`jakim-proxy`)
 
-Add missing DELETE/UPDATE policies to: `hydration_log`, `life_area_scores`, `sadaqah_goals`, `quran_daily_log`, `sunnah_log`, `family_activity_feed`, `fidyah_history`, `fasting_log`, `quran_bookmarks`, `quran_memorization`, `savings_contributions`.
+This is a large migration. Recommended approach: **batch by module** across multiple sprints.
 
-All follow the same pattern: `auth.uid() = user_id`.
+## Architecture
 
-### Phase 3 — Enable Leaked Password Protection
+Each edge function becomes a REST-style API endpoint handling one module's CRUD:
 
-Use `configure_auth` to enable HIBP password checking.
+```text
+supabase/functions/
+├── jakim-proxy/        (existing - no change)
+├── api-salah/          POST/GET/DELETE salah logs
+├── api-quran/          reading logs, bookmarks, memorization, prefs
+├── api-dhikr/          dhikr sessions CRUD
+├── api-health/         BMI, weight, hydration, sleep, IF, steps, fasting
+├── api-productivity/   tasks, habits, habit-log, life areas
+├── api-sunnah/         sunnah log
+├── api-qada/           qada solat + ramadhan qada + fidyah
+├── api-family/         families, members, feed, reactions, announcements
+├── api-profile/        profile CRUD
+├── api-wealth/         budget, savings, sadaqah, transactions
+├── api-checkin/        daily check-ins
+├── api-admin/          admin stats (wraps existing RPCs)
+├── api-blog/           blog posts
+├── api-cms/            page overrides, dakwah posters
+└── api-activity/       user activity logging
+```
 
-### Summary
+Each function:
+1. Validates JWT via `getClaims()` to get `user_id`
+2. Uses `createClient` with `SERVICE_ROLE_KEY` to bypass RLS
+3. Scopes all queries to the authenticated `user_id` in code
+4. Returns JSON responses
 
-| Category | Before | After |
-|----------|--------|-------|
-| Critical findings | 2 | 0 |
-| Warnings | 11 | 0 |
-| RLS coverage | 100% | 100% |
-| Password protection | Off | HIBP enabled |
+## Example Pattern
 
-**Total: 1 migration + 1 auth config change. ~15 minutes of work.**
+**Edge Function (`api-salah/index.ts`):**
+```typescript
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { corsHeaders } from "npm:@supabase/supabase-js/cors";
 
-This proves the architecture is already production-grade — we just need to tighten a few policy gaps that the automated scanner caught.
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Auth
+  const token = req.headers.get("Authorization")?.replace("Bearer ", "");
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const { data: { user } } = await supabase.auth.getUser(token);
+  if (!user) return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+
+  const url = new URL(req.url);
+
+  if (req.method === "GET") {
+    const date = url.searchParams.get("date");
+    const { data } = await supabase.from("salah_logs")
+      .select("*").eq("user_id", user.id).eq("date", date);
+    return new Response(JSON.stringify(data), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  if (req.method === "POST") {
+    const body = await req.json();
+    // validate, then upsert scoped to user.id
+  }
+});
+```
+
+**Frontend change (`useSalahQuery.ts`):**
+```typescript
+// BEFORE:
+const { data } = await supabase.from('salah_logs').select('*').eq('user_id', user.id);
+
+// AFTER:
+const { data } = await supabase.functions.invoke('api-salah', {
+  body: null,
+  method: 'GET',
+  // or use fetch directly:
+});
+// Or simpler with a wrapper:
+const data = await api('/api-salah?date=2026-04-16');
+```
+
+## Frontend Changes
+
+1. **Create `src/lib/api-client.ts`** — thin wrapper around `supabase.functions.invoke()` that handles auth token and error formatting
+2. **Rewrite `src/lib/db-sync.ts`** (612 lines) — replace all `supabase.from()` calls with API calls
+3. **Rewrite 30 hook/page files** — same pattern: replace `supabase.from()` with API calls
+4. **Keep `supabase.auth.*`** — login/signup/session stays direct
+
+## Phased Rollout
+
+| Phase | Modules | Edge Functions | Files Changed |
+|-------|---------|---------------|---------------|
+| 1 | Salah, Dhikr, Sunnah, Fasting | 4 | ~8 |
+| 2 | Quran (reading, bookmarks, memorization, prefs) | 1 | ~6 |
+| 3 | Health (BMI, weight, hydration, sleep, IF, steps) | 1 | ~8 |
+| 4 | Productivity, Checkin, Profile | 3 | ~6 |
+| 5 | Family, Wealth, Admin, Blog, CMS | 5 | ~8 |
+
+**Phase 1 first** — covers the most-used modules and establishes the pattern. Each subsequent phase is mechanical.
+
+## What Stays Direct
+
+- `supabase.auth.*` — login, signup, session, password reset
+- `supabase.storage.*` — avatar uploads, blog images, CMS uploads
+- Existing RPC functions called via `supabase.rpc()` can either stay or move into edge functions
+
+## Trade-offs
+
+**Pros:** Clean API layer, frontend never touches DB, easier to add rate limiting/validation/logging, portable pattern
+**Cons:** Added latency (~50-200ms per call), 16 edge functions to maintain, cold starts
+
+Shall I start with Phase 1 (Salah + Dhikr + Sunnah + Fasting)?
 
