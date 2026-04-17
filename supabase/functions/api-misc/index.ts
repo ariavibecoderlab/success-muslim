@@ -5,24 +5,49 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: authErr } = await supabase.auth.getUser(token);
-    if (authErr || !claims?.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-    const userId = claims.user.id;
     const url = new URL(req.url);
     const resource = url.searchParams.get("resource") || "activity";
     const method = req.method;
 
     const json = (data: unknown, status = 200) =>
       new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+    // ── PUBLIC READS (no auth required) ──
+    if (method === "GET" && (resource === "page-overrides" || resource === "blog" || resource === "announcements" || resource === "dakwah")) {
+      if (resource === "page-overrides") {
+        const page = url.searchParams.get("page") || "";
+        const { data } = await supabase.from("page_overrides").select("*").eq("page", page);
+        return json(data ?? []);
+      }
+      if (resource === "blog") {
+        const status = url.searchParams.get("status");
+        let q = supabase.from("blog_posts").select("*").order("created_at", { ascending: false });
+        if (status) q = q.eq("status", status);
+        const { data } = await q;
+        return json(data ?? []);
+      }
+      if (resource === "announcements") {
+        const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false });
+        return json(data ?? []);
+      }
+      if (resource === "dakwah") {
+        const { data } = await supabase.from("dakwah_posters").select("*").order("date", { ascending: false });
+        return json(data ?? []);
+      }
+    }
+
+    // ── AUTHENTICATED ROUTES ──
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: authErr } = await supabase.auth.getUser(token);
+    if (authErr || !claims?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    const userId = claims.user.id;
 
     // ── USER ACTIVITY ──
     if (resource === "activity") {
