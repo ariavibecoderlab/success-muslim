@@ -32,6 +32,10 @@ export interface PrayerSettings {
   mosque_isha?: string | null;
   mosque_enabled: boolean;
   adhan_settings: Record<string, AdhanConfig>;
+  /** Send a follow-up nag if the user hasn't logged the prayer (native only). */
+  log_nag_enabled?: boolean;
+  /** Minutes after prayer time to fire the log-reminder nag. */
+  log_nag_delay_min?: number;
 }
 
 export interface AdhanConfig {
@@ -49,6 +53,8 @@ export const DEFAULT_SETTINGS: PrayerSettings = {
   calculation_method: 3,
   madhab: 'shafi',
   mosque_enabled: false,
+  log_nag_enabled: true,
+  log_nag_delay_min: 30,
   adhan_settings: {
     fajr: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },
     dhuhr: { mode: 'full', audio: 'makkah', preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6] },

@@ -35,11 +35,12 @@ import { Separator } from "@/components/ui/separator";
 import SubPageLayout from "@/components/SubPageLayout";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { usePrayerSettings } from "@/hooks/usePrayerSettings";
+import { usePrayerNotifications } from "@/hooks/usePrayerNotifications";
 import {
-  usePrayerNotifications,
   getNotificationPermission,
   requestNotificationPermission,
-} from "@/hooks/usePrayerNotifications";
+  checkNotificationPermission,
+} from "@/utils/notification-permission";
 import { formatHijriDate } from "@/lib/hijri";
 import { useSalahLog, useSalahMutation, useTodaySalahCount } from "@/hooks/useSalahQuery";
 import { getTodayKey } from "@/lib/calculations";
@@ -109,6 +110,11 @@ const PrayerTimes = () => {
   const salahCount = useTodaySalahCount();
 
   usePrayerNotifications(data?.timings ?? null, settings);
+
+  // Refresh permission accurately on mount (handles native async check)
+  useEffect(() => {
+    checkNotificationPermission().then(setNotifPermission);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -329,6 +335,43 @@ const PrayerTimes = () => {
 
                     {/* ADHAN TAB */}
                     <TabsContent value="adhan" className="space-y-4 mt-4">
+                      {/* Salah log nag */}
+                      <Card>
+                        <CardContent className="p-3 space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold">Salah check-in reminder</p>
+                              <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                                Nudges you to log each prayer if you haven't already.
+                              </p>
+                            </div>
+                            <Switch
+                              checked={settings.log_nag_enabled !== false}
+                              onCheckedChange={(v) => saveSettings({ log_nag_enabled: v })}
+                            />
+                          </div>
+                          {settings.log_nag_enabled !== false && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] text-muted-foreground">Remind after</span>
+                              <Select
+                                value={String(settings.log_nag_delay_min ?? 30)}
+                                onValueChange={(v) => saveSettings({ log_nag_delay_min: Number(v) })}
+                              >
+                                <SelectTrigger className="h-7 w-28 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="15">15 min</SelectItem>
+                                  <SelectItem value="30">30 min</SelectItem>
+                                  <SelectItem value="45">45 min</SelectItem>
+                                  <SelectItem value="60">1 hour</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+
                       {["fajr", "dhuhr", "asr", "maghrib", "isha"].map((key) => {
                         const config: AdhanConfig = { mode: "full", audio: "makkah", preReminder: 0, enabled: true, days: [0,1,2,3,4,5,6], ...settings.adhan_settings[key] };
                         const updateAdhan = (patch: Partial<AdhanConfig>) => {

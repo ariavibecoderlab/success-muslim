@@ -1,115 +1,83 @@
-## 🎯 Goal
+## Goal
+Schedule **native** (Capacitor LocalNotifications) reminders on iOS/Android so the user gets prayer-time alerts and a follow-up "log your Salah" nag if a prayer hasn't been logged. Web fallback (browser `Notification`) stays as-is.
 
-Eliminate 7-tab cognitive overload. Adopt the proven lifestyle-app pattern: **4 equally-weighted pillar tabs flanking a prominent center primary action**, matching the "4 Pillars" brand DNA (Iman / Health / Wealth / Productivity) and surfacing the highest-frequency action — **Salah check-in (5x/day)** — as a one-tap FAB.
+## Current State (verified)
 
----
+| Layer | Status |
+|---|---|
+| `@capacitor/local-notifications` package | ✅ installed |
+| `src/utils/native/notifications.ts` (schedule/cancel helpers) | ✅ exists, but **never called** |
+| `src/hooks/usePrayerNotifications.ts` | ⚠️ Web-only (`new Notification(...)` + `setTimeout`) — won't fire when app is backgrounded on native |
+| Permission request | ⚠️ Uses only `Notification.requestPermission()` — fails on native |
+| Salah "you haven't logged" nag | ❌ Doesn't exist |
+| Settings UI to toggle nag | ❌ Doesn't exist |
 
-## 🧭 New Bottom Nav Layout
+Call sites of the existing hook: `PrayerTimes.tsx`, `HeroPrayerCard.tsx`, `Onboarding.tsx`.
 
-```
-┌───────────────────────────────────────────┐
-│  Iman    Health    [✓]    Wealth   Tasks │
-│   🕌      ❤️    Salah ✓    💰      ✅    │
-└───────────────────────────────────────────┘
-              ↑ elevated FAB
-```
+## Plan
 
-- **5 slots total**, but middle slot is the FAB (not a tab) → mentally only 4 destinations to scan
-- FAB sits **8–12px above** the nav baseline, emerald gradient, white check icon, subtle shadow
-- Tap FAB → opens **Salah Quick-Log Sheet** (bottom sheet) with today's 5 prayers as toggleable rows, defaulting to the next unlogged prayer
+### 1. Unified permission helper (`src/utils/notification-permission.ts` — new)
+- Detect `Capacitor.isNativePlatform()`.
+- On native → call `LocalNotifications.requestPermissions()`.
+- On web → call `Notification.requestPermission()`.
+- Export `requestNotificationPermission()` and `getNotificationPermission()` returning the same shape (`'granted' | 'denied' | 'default' | 'unsupported'`).
+- Update `HeroPrayerCard.tsx` and `Onboarding.tsx` imports to use this helper instead of the web-only one in `usePrayerNotifications.ts`.
 
----
+### 2. Native scheduler (`src/hooks/useNativePrayerNotifications.ts` — new)
+- Runs only when `Capacitor.isNativePlatform()` is true; otherwise no-op (web path keeps using `usePrayerNotifications`).
+- On every change to `timings` or `settings`:
+  - `LocalNotifications.cancel(...)` all of our scheduled IDs (use a deterministic ID space, e.g. `1000–1099` for prayers, `1100–1199` for pre-reminders, `1200–1299` for log nags) so we don't double-schedule.
+  - For each enabled prayer in `settings.adhan_settings`:
+    - Schedule **main** notification at the prayer time (skip if mode = `silent`, respect `enabled` + `days`).
+    - Schedule **pre-reminder** at `prayerMs - preReminder*60000` if `preReminder > 0`.
+    - Schedule **log nag** at `prayerMs + nagDelayMin*60000` (default 30 min) — title: "Log your {Prayer}", body: "Tap to mark as on-time, late, or missed". Tapping deep-links to `/iman/prayer-times`.
+  - Schedule for **today + next 6 days** so reminders survive even if the app is never opened (Capacitor doesn't have true repeating with our config-per-prayer needs, so we re-schedule a 7-day rolling window each app open).
+- Add a listener via `addActionListener` so tapping the nag opens the Salah quick-log sheet (route param `?salah=open`).
 
-## 🗺 IA Relocations
+### 3. Skip nag when already logged
+- Before scheduling each day's nag, read today's `salah_log` (and tomorrow's snapshot via `salah_log` cache for future days isn't possible — only skip *today's* nags based on `useSalahLog`). Future-day nags always schedule; on app open we re-sync.
+- Also re-run scheduling whenever `useSalahLog(today)` updates → cancels today's nag for prayers already logged.
 
+### 4. Wire into app
+- In `src/App.tsx` (or a new top-level `<NotificationScheduler/>` mounted inside `AppLayout`), call:
+  - `useNativePrayerNotifications(timings, settings)` — fed from `usePrayerSettings()` + `fetchPrayerTimes()`.
+  - Keep `usePrayerNotifications(...)` mounted for web (it already runs in `PrayerTimes.tsx`; move the call to a global mount so it works from any page on web too).
+- Add a Capacitor `App` `appStateChange` listener: when app resumes, re-run scheduling (handles timezone changes, day rollover).
 
-| Removed from BottomNav | New Home                                                                                                                                                                                                                                       |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Home (`/`)**         | Tap app logo in `AppHeader` → `/` (already wired). Also remains the **default route after login**.                                                                                                                                             |
-| **Family**             | New "Family" icon in `AppHeader` right-side cluster (between Bell and Admin shield). Badge dot when there's new family activity.                                                                                                               |
-| **Profile / Settings** | Replace the placeholder Bell button in `AppHeader` with an **avatar/initials button** → opens a small dropdown: Profile, Settings, Notifications, Sign out. (Keeps Bell as a separate icon if notifications are wired; otherwise consolidate.) |
+### 5. Settings UI (in `src/pages/deen/PrayerTimes.tsx` notification tab)
+- Add new toggle row: **"Remind me to log my Salah"** (default ON).
+- Add slider/select: **Nag delay** — 15 / 30 / 45 / 60 min after prayer time (default 30).
+- Persist on `PrayerSettings.adhan_settings` as new fields:
+  - `log_nag_enabled: boolean` (per-app, store at top level — see schema note below).
+  - `log_nag_delay_min: number`.
+- Since `prayer_settings` table stores `adhan_settings` as `jsonb`, no DB migration needed — just extend the TS type in `src/lib/prayer-times.ts` (`PrayerSettings`) with the two new optional fields and default them in `DEFAULT_SETTINGS`.
 
+### 6. Permission prompt UX
+- On first launch after onboarding (or first visit to `/iman/prayer-times`), if `getNotificationPermission() === 'default'`, show an inline card: "Get reminded for every Salah — Enable notifications". One-tap → `requestNotificationPermission()`.
+- Already partially exists for web in `HeroPrayerCard` — extend to native.
 
-> Rationale: Home is an aggregator (reachable via logo, the universal "home" affordance). Family & Settings are utility/secondary destinations that don't deserve 14% of the most expensive screen real estate.
+## Files
 
----
+**New**
+- `src/utils/notification-permission.ts` — unified permission API
+- `src/hooks/useNativePrayerNotifications.ts` — native scheduler with nag logic
 
-## 🛠 Implementation Plan
+**Modified**
+- `src/lib/prayer-times.ts` — add `log_nag_enabled` + `log_nag_delay_min` to `PrayerSettings` + defaults
+- `src/App.tsx` (or `AppLayout.tsx`) — mount global notification scheduler
+- `src/pages/deen/PrayerTimes.tsx` — add nag toggle + delay control in notification settings tab; switch permission imports to the unified helper
+- `src/components/dashboard/HeroPrayerCard.tsx` — use unified permission helper
+- `src/pages/Onboarding.tsx` — use unified permission helper
+- `src/components/SalahQuickLogSheet.tsx` — auto-open when URL param `?salah=open` is present (deep link from notification tap)
 
-### 1. New file: `src/components/SalahQuickLogSheet.tsx`
+**Untouched**
+- `src/utils/native/notifications.ts` (helpers already correct)
+- `src/hooks/usePrayerNotifications.ts` (kept as web fallback)
+- DB schema (settings stored in existing `adhan_settings` jsonb)
 
-- Controlled `<Sheet side="bottom">` from shadcn
-- Lists today's 5 prayers (Subuh, Zohor, Asar, Maghrib, Isyak) as rows with status pills: `On time / Late / Missed / —`
-- Uses existing `useTodaySalahCount` + `useSalahMutation` from `src/hooks/useSalahQuery.ts`
-- Auto-scrolls/highlights the **next unlogged prayer** based on current time vs prayer schedule (read from `usePrayerSettings`)
-- Haptic feedback on log via existing `src/utils/native/haptics.ts`
-- Toast confirmation via existing sonner setup
-
-### 2. Rewrite `src/components/BottomNav.tsx`
-
-- Reduce tabs array from 7 → 4: `Iman`, `Health`, `Wealth`, `Tasks`
-- Render 5 slots in a grid: `[tab][tab][FAB][tab][tab]` using `grid-cols-5`
-- Center slot renders `<SalahFabButton />` instead of a Link
-- FAB styling: 56px circle, `bg-gradient-to-br from-primary to-emerald-600`, `-mt-6` to elevate, `shadow-lg shadow-primary/30`, white check icon
-- FAB tap state: brief scale + haptic; opens `SalahQuickLogSheet`
-- Keep `matchPaths` mechanism for `/deen-journey` → Iman highlighting
-- Tab labels shrink? No — with 4 tabs at 390px we get ~78px each → comfortable for a 44px target + readable 12px label
-
-### 3. Update `src/components/AppHeader.tsx`
-
-- Add `<Link to="/family">` icon button (UserGroup icon from Hugeicons) in the right cluster, before the Bell
-- Replace Bell button with **AvatarButton**: shows user's initials in a primary-tinted circle (use `useAuth` for `user.user_metadata.full_name` per existing identity-resolution rule)
-- Avatar tap → `<DropdownMenu>` with: **Profile**, **Settings**, **Notifications**, **Sign out** (sign out via existing `supabase.auth.signOut()` flow already in `Settings.tsx`)
-- Keep the Admin shield button untouched
-
-### 4. Routing tweaks (`src/App.tsx`)
-
-- No route changes needed — `/`, `/family`, `/settings` all stay reachable via header/redirects
-- Optional: add `/profile` as alias → `/settings` (or split later — out of scope for this round)
-
-### 5. Wire the FAB primary action data flow
-
-- Sheet pulls from existing hooks; **no new tables, no migrations, no Supabase changes**
-- After logging, invalidate `['salah', userId, today]` (already handled by `useSalahMutation.onSuccess`)
-- Sheet shows today's count: "3 / 5 prayers logged" header
-- "View full log" link at sheet bottom → navigates to `/iman/salah-log`
-
-### 6. Quietly fix the runtime error
-
-- `goalList.reduce is not a function` — investigate during implementation (likely in `LifeAreas.tsx` or a wealth/savings query returning non-array). Will patch root cause without ceremony.
-
----
-
-## ✅ Acceptance Criteria
-
-1. Bottom nav shows exactly **4 tab labels + 1 center FAB**, no other items
-2. FAB has visible elevation (above nav line) and emerald gradient consistent with brand
-3. Tapping FAB opens a bottom sheet with all 5 daily prayers, **next unlogged prayer is visually emphasized**
-4. Logging a prayer in the sheet updates the dashboard's prayer card in real time (React Query cache invalidation)
-5. AppHeader shows: logo (left) → Family icon → Avatar dropdown → Admin shield (if admin)
-6. Avatar dropdown contains working Profile, Settings, and Sign out items
-7. Bottom-nav active highlighting still works for `/iman`, `/iman/*`, `/deen-journey`, `/health/*`, `/wealth/*`, `/productivity/*`
-8. Touch targets ≥ 44×44px (verified at 390px viewport)
-9. No regression on `AuthGuard`, `AppLayout`, or any existing route
-10. Runtime error `goalList.reduce is not a function` is gone
-
----
-
-## 🚫 Out of Scope (Explicitly Deferred)
-
-- Notification system rewiring (Bell remains unimplemented or merged into avatar dropdown — TBD during impl)
-- Splitting Profile from Settings into separate pages
-- Adding new "More" drawer (header dropdown is enough)
-- Animating FAB on prayer time arrival (good v2 idea, not now)
-- A/B test instrumentation (would need analytics setup)
-
----
-
-## 📁 Files to Modify
-
-- `src/components/BottomNav.tsx` (rewrite)
-- `src/components/AppHeader.tsx` (add Family + Avatar dropdown, remove plain Bell)
-- `src/components/SalahQuickLogSheet.tsx` (new)
-- Possibly 1 file for the `goalList.reduce` runtime fix (root cause TBD)
-
-No changes to: routing, database, edge functions, auth flow, AppLayout shell, or any pillar pages.
+## Acceptance criteria
+- On a native build (iOS/Android), with permission granted: 5 prayer-time notifications + optional pre-reminders + log-nags fire reliably for the next 7 days even if the app is closed.
+- Tapping a "Log your Maghrib" nag opens the app to the Salah quick-log sheet pre-focused on Maghrib.
+- Logging a prayer cancels its pending nag for today.
+- On web, behavior is unchanged (existing in-foreground browser notifications).
+- Settings → Prayer → Notifications shows the new "Remind to log" toggle + delay picker.

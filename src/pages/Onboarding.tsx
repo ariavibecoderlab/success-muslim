@@ -26,7 +26,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { formatHijriDate } from '@/lib/hijri';
 import { fetchPrayerTimes, getNextPrayerIndex, getCountdownToNextPrayer, formatPrayerTime, getEffectiveTime } from '@/lib/prayer-times';
 import { toast } from 'sonner';
-import { requestNotificationPermission } from '@/hooks/usePrayerNotifications';
+import { requestNotificationPermission } from '@/utils/notification-permission';
 
 const TOTAL_STEPS = 7;
 
