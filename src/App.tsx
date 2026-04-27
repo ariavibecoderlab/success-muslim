@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { useEffect } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
@@ -14,7 +14,6 @@ import AppLayout from "./components/AppLayout";
 import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
 import Landing from "./pages/Landing";
-import MobileLanding from "./pages/MobileLanding";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
@@ -148,7 +147,11 @@ const App = () => {
                 {/* ==================== */}
 
                 {/* Public routes */}
-                <Route path="/" element={Capacitor.isNativePlatform() ? <MobileLanding /> : <Landing />} />
+                {/* Marketing landing lives at /home (web only). On native, redirect to "/" */}
+                <Route
+                  path="/home"
+                  element={Capacitor.isNativePlatform() ? <Navigate to="/" replace /> : <Landing />}
+                />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
@@ -161,7 +164,8 @@ const App = () => {
 
                 {/* Protected pillar pages with bottom nav */}
                 <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
-                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/dashboard" element={<Navigate to="/" replace />} />
                   <Route path="/iman" element={<Iman />} />
                   <Route path="/health" element={<Health />} />
                   <Route path="/wealth" element={<Wealth />} />
