@@ -74,6 +74,23 @@ const BudgetTracker = () => {
   const [filterType, setFilterType] = useState<'all' | 'income' | 'expense'>('all');
   const [showSearch, setShowSearch] = useState(false);
 
+  const location = useLocation();
+
+  // Auto-open dialog when navigated with state.openAdd (e.g. from "Log income" CTA)
+  useEffect(() => {
+    const state = location.state as { openAdd?: boolean; type?: 'income' | 'expense' } | null;
+    if (state?.openAdd) {
+      if (state.type === 'income' || state.type === 'expense') {
+        setTxType(state.type);
+        setCategory('');
+      }
+      setDialogOpen(true);
+      // Clear state so it doesn't reopen on re-render
+      window.history.replaceState({}, document.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const fetchTransactions = async () => {
     if (!user) return;
     const start = format(startOfMonth(viewMonth), 'yyyy-MM-dd');
