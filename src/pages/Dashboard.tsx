@@ -10,6 +10,7 @@ import AnnouncementsBanner from '@/components/dashboard/AnnouncementsBanner';
 import LifeScoreCard from '@/components/dashboard/LifeScoreCard';
 import QuickLogGrid from '@/components/dashboard/QuickLogGrid';
 import ForYouSection from '@/components/dashboard/ForYouSection';
+import WealthSummaryStrip from '@/components/dashboard/WealthSummaryStrip';
 
 const Dashboard = () => {
   const { displayName, announcements, lifeScore, isRamadan, ramadanDay, activeIF, dailyDhikrCount } = useDashboardData();
@@ -40,6 +41,8 @@ const Dashboard = () => {
         <HeroPrayerCard />
         <QuickLogGrid />
         <DailyCheckinCard />
+
+        <WealthSummaryStrip />
 
         <div>
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Life Score</p>
