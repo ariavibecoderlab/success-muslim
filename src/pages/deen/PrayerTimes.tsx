@@ -35,11 +35,12 @@ import { Separator } from "@/components/ui/separator";
 import SubPageLayout from "@/components/SubPageLayout";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { usePrayerSettings } from "@/hooks/usePrayerSettings";
+import { usePrayerNotifications } from "@/hooks/usePrayerNotifications";
 import {
-  usePrayerNotifications,
   getNotificationPermission,
   requestNotificationPermission,
-} from "@/hooks/usePrayerNotifications";
+  checkNotificationPermission,
+} from "@/utils/notification-permission";
 import { formatHijriDate } from "@/lib/hijri";
 import { useSalahLog, useSalahMutation, useTodaySalahCount } from "@/hooks/useSalahQuery";
 import { getTodayKey } from "@/lib/calculations";
