@@ -22,7 +22,7 @@ const MarketingLayout = ({ children }: { children: React.ReactNode }) => {
       <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-xl border-b border-white/20 shadow-sm">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-16 px-6">
           {/* Logo */}
-          <Link to="/" className="group flex items-center gap-2.5 shrink-0">
+          <Link to="/home" className="group flex items-center gap-2.5 shrink-0">
             <img src={smlogo} alt="Success Muslim" className="w-8 h-8 rounded-lg shadow-sm transition-transform group-hover:scale-105" />
             <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
               Success Muslim
@@ -121,7 +121,7 @@ const MarketingLayout = ({ children }: { children: React.ReactNode }) => {
       {/* ── Footer ── */}
       <footer className="border-t border-white/20 py-10 px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/home" className="flex items-center gap-2">
             <img src={smlogo} alt="Success Muslim" className="w-6 h-6 rounded-lg shadow-sm" />
             <span className="text-sm font-semibold bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-transparent">
               Success Muslim

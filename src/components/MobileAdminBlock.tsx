@@ -12,7 +12,7 @@ const MobileAdminBlock = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Redirect away from admin routes if running on mobile
     if (Capacitor.isNativePlatform()) {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 

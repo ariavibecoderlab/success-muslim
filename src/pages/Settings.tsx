@@ -122,7 +122,7 @@ const Settings = () => {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate('/auth');
   };
 
   const joinedDate = user?.created_at

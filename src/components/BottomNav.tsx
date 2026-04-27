@@ -12,7 +12,7 @@ import {
 } from '@hugeicons/core-free-icons';
 
 const tabs = [
-  { icon: Mosque02Icon, label: 'Home', path: '/dashboard' },
+  { icon: Mosque02Icon, label: 'Home', path: '/' },
   { icon: Moon02Icon, label: 'Iman', path: '/iman' },
   { icon: HeartCheckIcon, label: 'Health', path: '/health' },
   { icon: Coins01Icon, label: 'Wealth', path: '/wealth' },
@@ -28,7 +28,10 @@ const BottomNav = () => {
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md z-50 bg-background/95 backdrop-blur-md border-t border-border">
       <div className="flex items-center justify-around h-16 pb-[env(safe-area-inset-bottom)]">
         {tabs.map(tab => {
-          const active = pathname === tab.path || pathname.startsWith(tab.path + '/');
+          const active =
+            tab.path === '/'
+              ? pathname === '/'
+              : pathname === tab.path || pathname.startsWith(tab.path + '/');
           return (
             <Link
               key={tab.path}
