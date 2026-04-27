@@ -27,14 +27,14 @@ const Wealth = () => {
         api<{ type: string; amount: number }[]>('api-wealth', { params: { resource: 'transactions', start, end } }),
         api<{ current_amount: number }[]>('api-wealth', { params: { resource: 'savings-goals' } }),
       ]);
-      const txList = txs || [];
-      const inc = txList.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-      const exp = txList.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
-      const goalList = goals || [];
+      const txList = Array.isArray(txs) ? txs : [];
+      const goalList = Array.isArray(goals) ? goals : [];
+      const inc = txList.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0);
+      const exp = txList.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0);
       setStats({
         income: inc,
         expense: exp,
-        totalSaved: goalList.reduce((s, g) => s + Number(g.current_amount), 0),
+        totalSaved: goalList.reduce((s, g) => s + Number(g.current_amount || 0), 0),
         goalsCount: goalList.length,
       });
     };
