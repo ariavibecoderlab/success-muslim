@@ -110,6 +110,11 @@ const PrayerTimes = () => {
 
   usePrayerNotifications(data?.timings ?? null, settings);
 
+  // Refresh permission accurately on mount (handles native async check)
+  useEffect(() => {
+    checkNotificationPermission().then(setNotifPermission);
+  }, []);
+
   const load = useCallback(async () => {
     setLoading(true);
     const result = await fetchPrayerTimes(settings);
