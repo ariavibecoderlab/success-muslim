@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import {
   Plus, TrendingUp, TrendingDown, Wallet, Trash2, RefreshCw,
   ChevronLeft, ChevronRight, Search, Filter, ArrowUpDown,
-  Package,
+  Package, CircleDollarSign,
 } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
