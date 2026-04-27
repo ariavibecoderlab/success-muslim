@@ -5,6 +5,7 @@ import AppHeader from '@/components/AppHeader';
 import { api } from '@/lib/api-client';
 import { useAuth } from '@/hooks/useAuth';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
+import IncomeSourcesCard from '@/components/wealth/IncomeSourcesCard';
 
 const features = [
   { icon: Receipt, title: 'Budget Tracker', desc: 'Income, expenses & balance overview', path: '/wealth/budget', ready: true },
@@ -64,6 +65,9 @@ const Wealth = () => {
             ))}
           </div>
         )}
+
+        {/* Income Sources */}
+        <IncomeSourcesCard />
 
         {/* Feature list */}
         <div className="bg-card rounded-xl border border-border divide-y divide-border">
