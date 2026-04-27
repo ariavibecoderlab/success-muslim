@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Sunrise, Sun, CloudSun, Sunset, Moon, CheckCircle2, Star, Clock, Bell } from 'lucide-react';
+import { Sunrise, Sun, CloudSun, Sunset, Moon, CheckCircle2, Star, Clock, Bell, MapPin, RefreshCw, ArrowRight } from 'lucide-react';
 import { usePrayerSettings } from '@/hooks/usePrayerSettings';
 import { toast } from 'sonner';
 import { requestNotificationPermission, getNotificationPermission } from '@/hooks/usePrayerNotifications';
@@ -23,6 +23,7 @@ const PRAYER_ICONS = [Sunrise, Sun, CloudSun, Sunset, Moon];
 
 export default function HeroPrayerCard() {
   const [prayerData, setPrayerData] = useState<PrayerTimesData | null>(null);
+  const [fetchFailed, setFetchFailed] = useState(false);
   const [countdown, setCountdown] = useState('');
   const today = getTodayKey();
   const { data: salahLog } = useSalahLog(today);
@@ -30,11 +31,30 @@ export default function HeroPrayerCard() {
   const salahCount = useTodaySalahCount();
   const { settings, loading: settingsLoading } = usePrayerSettings();
 
+  const hasLocation = !!(
+    settings &&
+    (settings.latitude != null || (settings.city && settings.country))
+  );
+
+  const loadPrayerTimes = useCallback(() => {
+    setFetchFailed(false);
+    fetchPrayerTimes(settings)
+      .then(d => {
+        if (d) {
+          setPrayerData(d);
+          setFetchFailed(false);
+        } else {
+          setFetchFailed(true);
+        }
+      })
+      .catch(() => setFetchFailed(true));
+  }, [settings]);
+
   useEffect(() => {
-    if (!settingsLoading) {
-      fetchPrayerTimes(settings).then(d => d && setPrayerData(d));
+    if (!settingsLoading && hasLocation) {
+      loadPrayerTimes();
     }
-  }, [settings, settingsLoading]);
+  }, [settingsLoading, hasLocation, loadPrayerTimes]);
 
   useEffect(() => {
     if (!prayerData) return;
@@ -49,7 +69,78 @@ export default function HeroPrayerCard() {
     salahMutation.mutate({ prayer, status: 'ontime', date: today });
   }, [today, salahMutation]);
 
+  // Tri-state empty handling
   if (!prayerData) {
+    // 1. Settings still loading — brief skeleton
+    if (settingsLoading) {
+      return (
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
+          <CardContent className="p-4 space-y-3">
+            <Skeleton className="h-3 w-24 bg-white/20" />
+            <Skeleton className="h-7 w-40 bg-white/20" />
+            <Skeleton className="h-4 w-32 bg-white/20" />
+            <Skeleton className="h-1.5 w-full bg-white/20" />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // 2. No location configured — actionable setup CTA
+    if (!hasLocation) {
+      return (
+        <Link to="/iman/prayer-times">
+          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
+            <CardContent className="p-4 relative">
+              <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
+              <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-1.5">
+                Prayer Times
+              </p>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-lg font-bold leading-tight flex items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    Setup prayer times
+                  </p>
+                  <p className="text-xs text-white/70 mt-1">
+                    Pick your location to see today's schedule
+                  </p>
+                </div>
+                <ArrowRight className="h-5 w-5 text-white/80 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      );
+    }
+
+    // 3. Location set but fetch failed — retry CTA
+    if (fetchFailed) {
+      return (
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
+          <CardContent className="p-4 relative">
+            <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full bg-white/10" />
+            <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-1.5">
+              Prayer Times
+            </p>
+            <p className="text-base font-bold leading-tight">Couldn't load prayer times</p>
+            <p className="text-xs text-white/70 mt-1 mb-3">Check your connection and try again</p>
+            <Button
+              size="sm"
+              className="bg-white text-emerald-700 hover:bg-white/90 border-0 text-xs h-8 rounded-lg font-semibold"
+              onClick={(e) => {
+                e.preventDefault();
+                loadPrayerTimes();
+              }}
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Fallback brief skeleton while initial fetch is in-flight
     return (
       <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-700 to-teal-800 text-white rounded-2xl overflow-hidden">
         <CardContent className="p-4 space-y-3">
