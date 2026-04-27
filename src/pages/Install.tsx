@@ -35,7 +35,7 @@ const Install = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto px-6 py-8">
         {/* Header */}
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
+        <Link to="/home" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-8">
           <ArrowLeft className="h-4 w-4" /> Back to home
         </Link>
 

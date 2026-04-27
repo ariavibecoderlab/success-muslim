@@ -252,7 +252,7 @@ function QuranTrend() {
 
 export default function DeenJourney() {
   return (
-    <SubPageLayout title="Deen Journey" backTo="/dashboard">
+    <SubPageLayout title="Deen Journey" backTo="/">
       {/* Today's Progress */}
       <section className="space-y-3 mb-6">
         <h2 className="text-base font-bold">Progress Hari Ini</h2>

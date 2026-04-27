@@ -82,7 +82,7 @@ const Onboarding = () => {
       localStorage.removeItem('post_auth_redirect');
       navigate(redirect, { replace: true });
     } else {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [navigate]);
 

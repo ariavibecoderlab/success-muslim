@@ -126,7 +126,7 @@ export function AdminSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Back to App">
               <Link
-                to="/dashboard"
+                to="/"
                 className="flex items-center gap-2.5 text-muted-foreground"
               >
                 <ArrowLeft className="h-4 w-4 shrink-0" />

@@ -29,7 +29,7 @@ const Auth = () => {
     );
   }
 
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +39,7 @@ const Auth = () => {
       if (isLogin) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate('/dashboard');
+        navigate('/');
       } else {
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -81,7 +81,7 @@ const Auth = () => {
       {/* Nav */}
       <nav className="border-b border-gray-100 bg-white/80 backdrop-blur-lg relative z-10">
         <div className="max-w-md mx-auto px-6 h-14 flex items-center">
-          <Link to="/" className="flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors">
+          <Link to="/home" className="flex items-center gap-2 text-gray-400 hover:text-gray-900 transition-colors">
             <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
             <span className="text-sm">Back</span>
           </Link>

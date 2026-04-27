@@ -17,7 +17,7 @@ const AuthCallback = () => {
           const redirect = localStorage.getItem('post_auth_redirect');
           localStorage.removeItem('post_auth_redirect');
           toast({ title: 'Email verified!', description: 'Welcome to Success Muslim.' });
-          navigate(redirect || '/dashboard', { replace: true });
+          navigate(redirect || '/', { replace: true });
         } else {
           toast({ title: 'Verification failed', description: 'Please try signing in again.', variant: 'destructive' });
           navigate('/auth', { replace: true });
