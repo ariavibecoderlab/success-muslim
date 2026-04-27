@@ -1,85 +1,159 @@
-# Income Sources Section — Plan
+# Income Sources — Advanced Enhancement
 
-Add a dedicated **Income Sources** card to the Wealth hub (`/wealth`) that breaks down income by source category (Salary, Freelance, Business, Investment, Gift, Other) with **Today / This Week / This Month** totals and a quick-add CTA. Uses existing `transactions` table — no schema changes.
+Make the Income Sources card feel like a real financial tool: insights, trends, forecasting, and inline quick-add — without making the UI heavier. Everything stays in one tap or one swipe.
 
-## What the user will see
+## What the user will get
 
-On `/wealth`, between the existing 3-stat strip and the feature list, a new card titled **"Income Sources"** with:
+### 1. Header upgrades — sparkline + month-over-month delta
 
-- **Period toggle** at the top: `Today` · `Week` · `Month` (default: Month)
-- **Total income** for the selected period (large, emerald)
-- **Source breakdown rows** — one row per income category that has data:
-  - Colored icon chip (matches Budget Tracker colors: Salary green, Freelance blue, Business orange, Investment purple, Gift pink, Other gray)
-  - Source name + transaction count (e.g. "Salary · 2 entries")
-  - Amount + % of period total
-  - Thin progress bar showing relative share
-- **Today / Week mini-stats** footer: two pills showing today's income and this week's income, regardless of selected toggle — so the user always sees both at a glance
-- **"+ Log income"** button → opens Budget Tracker with income tab pre-selected
-- **Empty state** (no income this period): subtle dashed card "No income recorded for {period} — Log your first income source"
+- 7-day **sparkline** above the total (tiny SVG, emerald). Shows daily income momentum at a glance.
+- **MoM delta pill** next to the total: "+18% vs last month" (green if up, gray if flat, red if down). Auto-hides if no prior-month data.
+- The total animates with a count-up when period switches (subtle, 400ms).
+
+### 2. Smart highlights row — replaces the static "Today / This Week" pills
+
+A 3-stat strip that surfaces **insights**, not just numbers:
+
+| Stat | Shows |
+|---|---|
+| **Top source** | Icon + name of biggest source this period (e.g. "💼 Salary 71%") |
+| **Daily avg** | Average per active day in the selected period |
+| **Forecast** | Projected month-end income based on current pace (only on Month period; otherwise shows "Best day" — the highest single-day income) |
+
+All three are tappable filter chips — tapping "Top source" filters the breakdown to just that source; tap again to clear.
+
+### 3. Sources breakdown — richer, still simple
+
+Each source row gains:
+- **Trend arrow**: ▲ / ▼ / – vs same-length prior period (last month for Month, last 7d for Week, yesterday for Today). Color-coded, tiny.
+- **Last entry**: "Last: 3d ago" in muted text under the source name (replaces the static count, which moves to a tooltip on the count pill).
+- **Tap any row → opens a Source Detail Sheet** (bottom sheet) with:
+  - Last 6 months mini bar chart for that source
+  - Recent 5 entries with date + amount + description
+  - Quick "Add to {source}" CTA
+  - Long-press / swipe pattern not needed — single tap is enough.
+
+### 4. Inline Quick-Add — one tap to log
+
+Replace the bottom "Log income" button with a **two-mode footer**:
+
+- **Default state**: a horizontal scroll of source chips (`+ Salary`, `+ Freelance`, `+ Business`, …). Tap a chip to inline-expand a compact form **inside the card** with just three fields:
+  1. Amount (auto-focused, numeric keypad)
+  2. Date (defaults to today, tap to pick)
+  3. Note (optional)
+  - Save button on the right; X to cancel.
+- **Power user**: small "Advanced" link → opens full Budget Tracker dialog (current behavior preserved).
+
+This eliminates the navigate-to-tracker round-trip for 90% of logging actions.
+
+### 5. Privacy / Hide amounts toggle
+
+A tiny eye icon in the header toggles **amount masking** (`••••`) — useful when showing the phone to someone. Persisted to `localStorage`.
+
+### 6. Empty state upgrade
+
+When `hasAnyIncome === false`, show 3 illustrated suggestion cards:
+- "Salary — most common"
+- "Freelance — gig work"
+- "Other — gifts, refunds"
+
+One tap on any opens the inline quick-add prefilled with that source.
+
+## Interaction model
 
 ```text
-┌────────────────────────────────────────────┐
-│ Income Sources              [Day Wk Month] │
-│                                            │
-│ RM 8,420  this month                       │
-│                                            │
-│ 💼 Salary · 1 entry        6,000  71% ▓▓▓  │
-│ 💻 Freelance · 3 entries   1,800  21% ▓░   │
-│ 🏪 Business · 2 entries      620   8% ▓    │
-│                                            │
-│  Today  RM 0   │   This Week  RM 1,200     │
-│                                            │
-│           [ + Log income ]                 │
-└────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ ✦ Income Sources    👁  [Day Wk Month]          │
+│                                                 │
+│   ▁▃▂▅▇▆█  ← 7d sparkline                       │
+│   8,420  this month   ▲ +18% vs last month     │
+│                                                 │
+│ ┌──────────┬──────────┬──────────┐             │
+│ │ Top      │ Daily    │ Forecast │             │
+│ │ Salary   │ avg 421  │ ~12,300  │             │
+│ │ 71%      │          │ end of Apr│            │
+│ └──────────┴──────────┴──────────┘             │
+│                                                 │
+│ 💼 Salary       6,000  71% ▲          ▓▓▓▓▓▓▓ │
+│    Last 14d ago · 1 entry                       │
+│                                                 │
+│ 💻 Freelance    1,800  21% ▲          ▓▓░░░░░ │
+│    Last 2d ago · 3 entries                      │
+│                                                 │
+│ 🏪 Business       620   8% ▼          ▓░░░░░░ │
+│    Last 6d ago · 2 entries                      │
+│                                                 │
+│ Quick add:  [+ Salary] [+ Freelance] [+ ...]   │
+│                                  Advanced →     │
+└─────────────────────────────────────────────────┘
 ```
+
+Tap a source row → bottom sheet opens with chart + recent entries.
+Tap "+ Freelance" chip → inline form expands in-place; type amount → Save → toast → form collapses, card refreshes.
 
 ## Technical implementation
 
-### 1. New hook: `src/hooks/useIncomeSources.ts`
+### Hook upgrade — `useIncomeSources.ts`
 
-React Query hook (key: `['income-sources', user.id]`, staleTime 60s) that:
+Expand the query to fetch **a 90-day window** (current month + last 2 months + 30 prior days, single round-trip):
 
-- Fetches transactions for the **current month** via `api-wealth?resource=transactions&start={monthStart}&end={monthEnd}` (already supported by edge function — no backend changes)
-- Filters to `type === 'income'`
-- Computes three buckets in a single pass: `today`, `week` (Mon–Sun via `date-fns` with `weekStartsOn: 1`), `month`
-- For each bucket returns:
-  ```ts
-  {
-    total: number;
-    sources: Array<{ category: string; amount: number; count: number; pct: number }>;
-  }
-  ```
-- Sources sorted by amount desc
+```ts
+const start = format(subDays(today, 90), 'yyyy-MM-dd');
+const end   = format(endOfMonth(today),  'yyyy-MM-dd');
+```
 
-### 2. New component: `src/components/wealth/IncomeSourcesCard.tsx`
+Compute additionally:
+- `sparkline7d: number[]` — array of 7 daily totals (Mon..today)
+- `prevMonth: { total, sources: Map<cat, amount> }` — for MoM delta and per-source trend arrows
+- `prevWeek` / `yesterday` — for Week / Today trends respectively
+- `last6MonthsBySource: Record<cat, { month: string; total: number }[]>` — fuels the source detail sheet
+- `lastEntryByCategory: Record<cat, string>` — ISO date of most recent entry per source
+- `forecast: number` — `monthTotal × (daysInMonth / dayOfMonth)` (linear pace)
+- `dailyAvg: number` — `total / activeDays` for the selected period
 
-- Local state `period: 'today' | 'week' | 'month'` (default `'month'`)
-- Reads bucket from hook based on `period`
-- Reuses `INCOME_CATEGORIES` color/icon map — extracted to a shared constant file `src/lib/wealth-categories.ts` (move both `INCOME_CATEGORIES` and `EXPENSE_CATEGORIES` from `BudgetTracker.tsx` to this shared file; update Budget Tracker to import from there — no behavior change)
-- Currency formatting matches existing pattern (`toLocaleString()`, no symbol prefix to stay locale-agnostic, consistent with rest of Wealth)
-- "+ Log income" button navigates to `/wealth/budget` with `state: { openAdd: true, type: 'income' }`
+All derivation stays in the hook (memoized via React Query), so the component stays presentation-only.
 
-### 3. Budget Tracker auto-open dialog
+### Source Detail Sheet — `src/components/wealth/IncomeSourceDetailSheet.tsx`
 
-In `src/pages/wealth/BudgetTracker.tsx`, read `useLocation().state` on mount; if `openAdd` is set, call `setDialogOpen(true)` and `setTxType(state.type)`. Tiny addition, no refactor.
+- Uses shadcn `Sheet` (side="bottom") so it feels native on mobile.
+- Fetches recent 5 entries by reusing the already-loaded transactions (passed in via prop) — no extra round-trip.
+- 6-month bar chart via `recharts` `BarChart` (already used in the project).
 
-### 4. Mount on Wealth hub
+### Inline Quick-Add — `src/components/wealth/InlineIncomeQuickAdd.tsx`
 
-In `src/pages/Wealth.tsx`, render `<IncomeSourcesCard />` between the 3-stat strip (line 66) and the feature list (line 69), wrapped in a `mb-4` container.
+- Tiny controlled form: amount (number, autofocus), date (defaults today), optional note.
+- On submit, calls `api('api-wealth', { method: 'POST', params: { resource: 'transactions' }, body: { type: 'income', category, amount, date, description } })`.
+- Invalidates `['income-sources']` and `['wealth-summary']` so the dashboard strip and the card both refresh instantly.
+- Keyboard handling: Enter saves, Esc cancels.
 
-## Files
+### Sparkline — `src/components/wealth/Sparkline.tsx`
+
+Inline lightweight SVG (no recharts) — ~30 lines, renders a smoothed polyline from a `number[]`. Reused later for other modules.
+
+### Amount masking
+
+```ts
+const [hideAmounts, setHideAmounts] = useLocalStorage('wealth_hide_amounts', false);
+const fmt = (n: number) => hideAmounts ? '••••' : n.toLocaleString();
+```
+
+Tiny `useLocalStorage` hook (or extend existing one if present).
+
+### Files
 
 **New**
-- `src/hooks/useIncomeSources.ts`
-- `src/components/wealth/IncomeSourcesCard.tsx`
-- `src/lib/wealth-categories.ts` (shared categories)
+- `src/components/wealth/IncomeSourceDetailSheet.tsx`
+- `src/components/wealth/InlineIncomeQuickAdd.tsx`
+- `src/components/wealth/Sparkline.tsx`
 
 **Modified**
-- `src/pages/Wealth.tsx` — mount the new card
-- `src/pages/wealth/BudgetTracker.tsx` — import categories from shared file; honor `location.state.openAdd`
+- `src/hooks/useIncomeSources.ts` — wider window + new derived fields
+- `src/components/wealth/IncomeSourcesCard.tsx` — full redesign per mockup; orchestrates the new pieces
 
-## Out of scope (can follow up)
+No backend changes — `api-wealth` already supports the wider date range and POST.
 
-- Editing/recurring source forecasts
-- Source-level deep-link page
-- Custom user-defined income sources beyond the 6 presets
+## Out of scope (future)
+
+- Recurring income reminders / "expected on the 25th" alerts
+- Custom user-defined income sources
+- CSV / PDF export of income history
