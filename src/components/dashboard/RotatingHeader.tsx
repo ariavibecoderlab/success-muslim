@@ -28,11 +28,10 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
     month: 'long',
   });
 
-  const titles = [
-    `salaam, ${firstName || 'Muslim'}`,
-    hijriDate || '',
-    gregorianDate,
-  ].filter(Boolean);
+  const primaryGreeting = firstName
+    ? `Assalamualaikum, ${firstName}`
+    : 'Assalamualaikum';
+  const titles = [primaryGreeting, hijriDate || '', gregorianDate].filter(Boolean);
 
   useEffect(() => {
     fetchPrayerTimes().then(d => d && setPrayerData(d));
@@ -41,7 +40,7 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex(i => (i + 1) % titles.length);
-    }, 3000);
+    }, 4000);
     return () => clearInterval(interval);
   }, [titles.length]);
 
@@ -59,14 +58,14 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
     : null;
 
   const subtitle = isRamadan && ramadanDay > 0
-    ? `Ramadan Hari ${ramadanDay} · ${nextPrayer ? nextPrayer.name + ' ' + formatPrayerTime(nextPrayer.time) : ''}`
+    ? `Ramadan · Hari ${ramadanDay}${nextPrayer ? ` · ${nextPrayer.name} ${formatPrayerTime(nextPrayer.time)}` : ''}`
     : nextPrayer
-      ? `${nextPrayer.name} · ${formatPrayerTime(nextPrayer.time)} · ${countdown}`
+      ? `${nextPrayer.name} · ${formatPrayerTime(nextPrayer.time)}${countdown ? ` · in ${countdown}` : ''}`
       : greeting;
 
   return (
-    <div className="flex flex-col min-w-0">
-      <div className="h-7 relative overflow-hidden">
+    <div className="flex flex-col min-w-0 leading-tight">
+      <div className="h-5 relative overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.span
             key={activeIndex}
@@ -74,12 +73,15 @@ export default function RotatingHeader({ firstName, isRamadan, ramadanDay, greet
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 text-base font-bold tracking-tight text-foreground truncate"
+            className="absolute inset-0 text-[15px] font-bold tracking-tight text-foreground truncate"
           >
             {titles[activeIndex]}
           </motion.span>
         </AnimatePresence>
       </div>
+      <span className="text-[11px] font-medium text-muted-foreground truncate">
+        {subtitle}
+      </span>
     </div>
   );
 }
