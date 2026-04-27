@@ -11,9 +11,16 @@ import {
   Settings02Icon,
 } from '@hugeicons/core-free-icons';
 
-const tabs = [
+type Tab = {
+  icon: typeof Mosque02Icon;
+  label: string;
+  path: string;
+  matchPaths?: string[];
+};
+
+const tabs: Tab[] = [
   { icon: Mosque02Icon, label: 'Home', path: '/' },
-  { icon: Moon02Icon, label: 'Iman', path: '/iman' },
+  { icon: Moon02Icon, label: 'Iman', path: '/iman', matchPaths: ['/deen-journey'] },
   { icon: HeartCheckIcon, label: 'Health', path: '/health' },
   { icon: Coins01Icon, label: 'Wealth', path: '/wealth' },
   { icon: TaskDaily01Icon, label: 'Tasks', path: '/productivity' },
@@ -31,7 +38,11 @@ const BottomNav = () => {
           const active =
             tab.path === '/'
               ? pathname === '/'
-              : pathname === tab.path || pathname.startsWith(tab.path + '/');
+              : pathname === tab.path
+                || pathname.startsWith(tab.path + '/')
+                || (tab.matchPaths?.some(
+                     p => pathname === p || pathname.startsWith(p + '/')
+                   ) ?? false);
           return (
             <Link
               key={tab.path}
