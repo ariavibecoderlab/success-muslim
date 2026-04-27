@@ -39,6 +39,10 @@ export function usePrayerSettings() {
         mosque_isha: data.mosque_isha,
         mosque_enabled: data.mosque_enabled ?? false,
         adhan_settings: (data.adhan_settings as Record<string, any>) ?? DEFAULT_SETTINGS.adhan_settings,
+        log_nag_enabled:
+          (data.adhan_settings as any)?.__log_nag_enabled ?? DEFAULT_SETTINGS.log_nag_enabled,
+        log_nag_delay_min:
+          (data.adhan_settings as any)?.__log_nag_delay_min ?? DEFAULT_SETTINGS.log_nag_delay_min,
       };
       localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
       return s;
@@ -54,6 +58,13 @@ export function usePrayerSettings() {
 
     if (!user) return;
 
+    // Persist log-nag fields inside adhan_settings JSONB (no schema migration needed).
+    const adhanWithNag = {
+      ...merged.adhan_settings,
+      __log_nag_enabled: merged.log_nag_enabled,
+      __log_nag_delay_min: merged.log_nag_delay_min,
+    };
+
     await api('api-misc', {
       method: 'POST',
       params: { resource: 'prayer-settings' },
@@ -66,7 +77,7 @@ export function usePrayerSettings() {
         mosque_fajr: merged.mosque_fajr, mosque_dhuhr: merged.mosque_dhuhr,
         mosque_asr: merged.mosque_asr, mosque_maghrib: merged.mosque_maghrib,
         mosque_isha: merged.mosque_isha, mosque_enabled: merged.mosque_enabled,
-        adhan_settings: merged.adhan_settings,
+        adhan_settings: adhanWithNag,
       },
     });
   }, [settings, user, queryClient]);
