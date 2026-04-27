@@ -6,21 +6,38 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Switch } from '@/components/ui/switch';
 import { useQuickLogPreferences } from '@/hooks/useQuickLogPreferences';
 import EditableText from '@/components/cms/EditableText';
+import { useTodaySalahCount } from '@/hooks/useSalahQuery';
+import { useDhikrDaily } from '@/hooks/useDhikrQuery';
+import { useHydration, useFastingLog } from '@/hooks/useHealthQuery';
+import { todayKey } from '@/lib/health-storage';
 
-const QUICK_LOGS: Record<string, { icon: typeof Star; label: string; to: string; gradient: string }> = {
-  prayer: { icon: Star, label: 'Prayer', to: '/iman/prayer-times', gradient: 'from-emerald-400/80 to-emerald-500/80' },
-  quran: { icon: BookOpen, label: 'Quran', to: '/iman/quran', gradient: 'from-amber-400/80 to-amber-500/80' },
-  dhikr: { icon: HandHeart, label: 'Dhikr', to: '/iman/dhikr', gradient: 'from-pink-400/80 to-rose-500/80' },
-  fast: { icon: Moon, label: 'Fast', to: '/health/fasting', gradient: 'from-orange-400/80 to-orange-500/80' },
-  water: { icon: Droplets, label: 'Water', to: '/health/hydration', gradient: 'from-blue-400/80 to-blue-500/80' },
-  sleep: { icon: BedDouble, label: 'Sleep', to: '/health/sleep', gradient: 'from-indigo-400/80 to-indigo-500/80' },
-  tasks: { icon: ListChecks, label: 'Tasks', to: '/productivity/tasks', gradient: 'from-rose-400/80 to-rose-500/80' },
-  habits: { icon: Dumbbell, label: 'Habits', to: '/productivity/habits', gradient: 'from-teal-400/80 to-teal-500/80' },
+const QUICK_LOGS: Record<string, { icon: typeof Star; label: string; to: string }> = {
+  prayer: { icon: Star, label: 'Prayer', to: '/iman/prayer-times' },
+  quran: { icon: BookOpen, label: 'Quran', to: '/iman/quran' },
+  dhikr: { icon: HandHeart, label: 'Dhikr', to: '/iman/dhikr' },
+  fast: { icon: Moon, label: 'Fast', to: '/health/fasting' },
+  water: { icon: Droplets, label: 'Water', to: '/health/hydration' },
+  sleep: { icon: BedDouble, label: 'Sleep', to: '/health/sleep' },
+  tasks: { icon: ListChecks, label: 'Tasks', to: '/productivity/tasks' },
+  habits: { icon: Dumbbell, label: 'Habits', to: '/productivity/habits' },
 };
 
 export default function QuickLogGrid() {
   const { enabledIds, allIds, toggleItem } = useQuickLogPreferences();
   const [editOpen, setEditOpen] = useState(false);
+
+  // "Logged today" signals (only for items with a meaningful daily completion state)
+  const salahCount = useTodaySalahCount();
+  const { data: dhikr } = useDhikrDaily();
+  const { data: hydration } = useHydration();
+  const { data: fastingLog } = useFastingLog();
+
+  const completedToday: Record<string, boolean> = {
+    prayer: (salahCount?.logged ?? 0) > 0,
+    dhikr: (dhikr?.totalCount ?? 0) > 0,
+    water: (hydration?.cups ?? 0) > 0,
+    fast: !!fastingLog?.[todayKey()],
+  };
 
   const visibleItems = enabledIds.map(id => ({ id, ...QUICK_LOGS[id] })).filter(i => i.icon);
 
@@ -36,6 +53,7 @@ export default function QuickLogGrid() {
       <div className="flex items-start gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory px-0.5 pb-1">
         {visibleItems.map((q, i) => {
           const Icon = q.icon;
+          const done = completedToday[q.id];
           return (
             <motion.div
               key={q.id}
@@ -45,10 +63,24 @@ export default function QuickLogGrid() {
               className="snap-center"
             >
               <Link to={q.to} className="flex flex-col items-center gap-1.5 min-w-[56px]">
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center bg-gradient-to-br ${q.gradient} shadow-sm active:scale-95 transition-transform`}>
-                  <Icon className="h-5 w-5 text-white" />
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center ring-1 active:scale-95 transition-all ${
+                    done
+                      ? 'bg-emerald-50 ring-emerald-200'
+                      : 'bg-muted ring-border/50'
+                  }`}
+                >
+                  <Icon
+                    className={`h-5 w-5 ${done ? 'text-emerald-700' : 'text-foreground/70'}`}
+                  />
                 </div>
-                <span className="text-[11px] font-medium text-muted-foreground">{q.label}</span>
+                <span
+                  className={`text-[11px] font-medium ${
+                    done ? 'text-emerald-700' : 'text-muted-foreground'
+                  }`}
+                >
+                  {q.label}
+                </span>
               </Link>
             </motion.div>
           );
@@ -68,8 +100,8 @@ export default function QuickLogGrid() {
               return (
                 <label key={id} className="flex items-center justify-between py-2.5 px-1 cursor-pointer">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br ${item.gradient}`}>
-                      <Icon className="h-4 w-4 text-white" />
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-muted ring-1 ring-border/50">
+                      <Icon className="h-4 w-4 text-foreground/70" />
                     </div>
                     <span className="text-sm font-medium">{item.label}</span>
                   </div>
