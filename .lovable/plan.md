@@ -1,83 +1,66 @@
-## Goal
-Schedule **native** (Capacitor LocalNotifications) reminders on iOS/Android so the user gets prayer-time alerts and a follow-up "log your Salah" nag if a prayer hasn't been logged. Web fallback (browser `Notification`) stays as-is.
+# Dashboard Polish — Priority 1-3
 
-## Current State (verified)
+Three high-leverage fixes to make the home dashboard feel premium and on-brand. No new features, only refinement.
 
-| Layer | Status |
-|---|---|
-| `@capacitor/local-notifications` package | ✅ installed |
-| `src/utils/native/notifications.ts` (schedule/cancel helpers) | ✅ exists, but **never called** |
-| `src/hooks/usePrayerNotifications.ts` | ⚠️ Web-only (`new Notification(...)` + `setTimeout`) — won't fire when app is backgrounded on native |
-| Permission request | ⚠️ Uses only `Notification.requestPermission()` — fails on native |
-| Salah "you haven't logged" nag | ❌ Doesn't exist |
-| Settings UI to toggle nag | ❌ Doesn't exist |
+---
 
-Call sites of the existing hook: `PrayerTimes.tsx`, `HeroPrayerCard.tsx`, `Onboarding.tsx`.
+## 1. Header — Fix cropping & greeting copy
 
-## Plan
+**Problem:** "Success Muslim" logo crops to "Succ..." on 390px screens. The rotating greeting `salaam, Muslim` is lowercase and reads like an unfinished sentence.
 
-### 1. Unified permission helper (`src/utils/notification-permission.ts` — new)
-- Detect `Capacitor.isNativePlatform()`.
-- On native → call `LocalNotifications.requestPermissions()`.
-- On web → call `Notification.requestPermission()`.
-- Export `requestNotificationPermission()` and `getNotificationPermission()` returning the same shape (`'granted' | 'denied' | 'default' | 'unsupported'`).
-- Update `HeroPrayerCard.tsx` and `Onboarding.tsx` imports to use this helper instead of the web-only one in `usePrayerNotifications.ts`.
+**Changes in `src/components/AppHeader.tsx`:**
+- Allow brand container to shrink properly: replace `flex-1 min-w-0` on the Link with `min-w-0` only, and let the right-side cluster keep `shrink-0`. This stops the logo+title from pushing past the avatar.
+- Reduce header right-side icon spacing from `gap-2` to `gap-1.5` to recover ~6px.
 
-### 2. Native scheduler (`src/hooks/useNativePrayerNotifications.ts` — new)
-- Runs only when `Capacitor.isNativePlatform()` is true; otherwise no-op (web path keeps using `usePrayerNotifications`).
-- On every change to `timings` or `settings`:
-  - `LocalNotifications.cancel(...)` all of our scheduled IDs (use a deterministic ID space, e.g. `1000–1099` for prayers, `1100–1199` for pre-reminders, `1200–1299` for log nags) so we don't double-schedule.
-  - For each enabled prayer in `settings.adhan_settings`:
-    - Schedule **main** notification at the prayer time (skip if mode = `silent`, respect `enabled` + `days`).
-    - Schedule **pre-reminder** at `prayerMs - preReminder*60000` if `preReminder > 0`.
-    - Schedule **log nag** at `prayerMs + nagDelayMin*60000` (default 30 min) — title: "Log your {Prayer}", body: "Tap to mark as on-time, late, or missed". Tapping deep-links to `/iman/prayer-times`.
-  - Schedule for **today + next 6 days** so reminders survive even if the app is never opened (Capacitor doesn't have true repeating with our config-per-prayer needs, so we re-schedule a 7-day rolling window each app open).
-- Add a listener via `addActionListener` so tapping the nag opens the Salah quick-log sheet (route param `?salah=open`).
+**Changes in `src/components/dashboard/RotatingHeader.tsx`:**
+- Capitalize and humanize the first slide:
+  - Logged-in user with name → `Assalamualaikum, {FirstName}`
+  - No name → `Assalamualaikum`
+- Keep the 3-slide rotation (greeting → Hijri date → Gregorian date) but tighten timing to 4s (current 3s feels twitchy).
+- Add a tiny secondary line below (text-[11px] text-muted-foreground) showing next prayer + countdown so the header earns its space — this is the only place in the app where countdown stays visible while scrolling.
 
-### 3. Skip nag when already logged
-- Before scheduling each day's nag, read today's `salah_log` (and tomorrow's snapshot via `salah_log` cache for future days isn't possible — only skip *today's* nags based on `useSalahLog`). Future-day nags always schedule; on app open we re-sync.
-- Also re-run scheduling whenever `useSalahLog(today)` updates → cancels today's nag for prayers already logged.
+**Acceptance:** Logo never crops on 360–430px widths. Greeting reads as a complete, properly-cased Islamic salutation.
 
-### 4. Wire into app
-- In `src/App.tsx` (or a new top-level `<NotificationScheduler/>` mounted inside `AppLayout`), call:
-  - `useNativePrayerNotifications(timings, settings)` — fed from `usePrayerSettings()` + `fetchPrayerTimes()`.
-  - Keep `usePrayerNotifications(...)` mounted for web (it already runs in `PrayerTimes.tsx`; move the call to a global mount so it works from any page on web too).
-- Add a Capacitor `App` `appStateChange` listener: when app resumes, re-run scheduling (handles timezone changes, day rollover).
+---
 
-### 5. Settings UI (in `src/pages/deen/PrayerTimes.tsx` notification tab)
-- Add new toggle row: **"Remind me to log my Salah"** (default ON).
-- Add slider/select: **Nag delay** — 15 / 30 / 45 / 60 min after prayer time (default 30).
-- Persist on `PrayerSettings.adhan_settings` as new fields:
-  - `log_nag_enabled: boolean` (per-app, store at top level — see schema note below).
-  - `log_nag_delay_min: number`.
-- Since `prayer_settings` table stores `adhan_settings` as `jsonb`, no DB migration needed — just extend the TS type in `src/lib/prayer-times.ts` (`PrayerSettings`) with the two new optional fields and default them in `DEFAULT_SETTINGS`.
+## 2. Hero Prayer Card — Real empty state, no skeleton dead-zone
 
-### 6. Permission prompt UX
-- On first launch after onboarding (or first visit to `/iman/prayer-times`), if `getNotificationPermission() === 'default'`, show an inline card: "Get reminded for every Salah — Enable notifications". One-tap → `requestNotificationPermission()`.
-- Already partially exists for web in `HeroPrayerCard` — extend to native.
+**Problem:** When prayer times haven't loaded (no location set, offline, or first launch) the hero shows ~150px of grey skeleton bars. Feels broken.
 
-## Files
+**Changes in `src/components/dashboard/HeroPrayerCard.tsx`:**
+- Replace the skeleton-only loading branch with a tri-state:
+  1. **Settings still loading** → keep skeleton (legitimate, brief).
+  2. **Settings loaded but no location/method configured** → show a compact "Setup prayer times" CTA card (same emerald gradient, single line of copy + arrow → `/iman/prayer-times`). No skeleton.
+  3. **Location set but fetch failed** → show "Couldn't load prayer times. Tap to retry." with retry handler that re-runs `fetchPrayerTimes`.
+- Add a `hasLocation` check derived from `settings` (zone code or lat/lng present).
+- Keep the existing "all done" celebration and the active "next prayer" view unchanged.
 
-**New**
-- `src/utils/notification-permission.ts` — unified permission API
-- `src/hooks/useNativePrayerNotifications.ts` — native scheduler with nag logic
+**Acceptance:** No user ever sees grey skeleton bars for more than ~500ms. Empty/error states are actionable, not decorative.
 
-**Modified**
-- `src/lib/prayer-times.ts` — add `log_nag_enabled` + `log_nag_delay_min` to `PrayerSettings` + defaults
-- `src/App.tsx` (or `AppLayout.tsx`) — mount global notification scheduler
-- `src/pages/deen/PrayerTimes.tsx` — add nag toggle + delay control in notification settings tab; switch permission imports to the unified helper
-- `src/components/dashboard/HeroPrayerCard.tsx` — use unified permission helper
-- `src/pages/Onboarding.tsx` — use unified permission helper
-- `src/components/SalahQuickLogSheet.tsx` — auto-open when URL param `?salah=open` is present (deep link from notification tap)
+---
 
-**Untouched**
-- `src/utils/native/notifications.ts` (helpers already correct)
-- `src/hooks/usePrayerNotifications.ts` (kept as web fallback)
-- DB schema (settings stored in existing `adhan_settings` jsonb)
+## 3. Quick Log Grid — Brand-aligned monochrome palette
 
-## Acceptance criteria
-- On a native build (iOS/Android), with permission granted: 5 prayer-time notifications + optional pre-reminders + log-nags fire reliably for the next 7 days even if the app is closed.
-- Tapping a "Log your Maghrib" nag opens the app to the Salah quick-log sheet pre-focused on Maghrib.
-- Logging a prayer cancels its pending nag for today.
-- On web, behavior is unchanged (existing in-foreground browser notifications).
-- Settings → Prayer → Notifications shows the new "Remind to log" toggle + delay picker.
+**Problem:** 8 different rainbow gradients (emerald, amber, pink, orange, blue, indigo, rose, teal) compete with the emerald hero card and central Salah FAB. Violates "Refined Islamic Calm" memory.
+
+**Changes in `src/components/dashboard/QuickLogGrid.tsx`:**
+- Replace all 8 per-item gradients with a unified system:
+  - **Default state:** `bg-muted` circle, `text-foreground/70` icon, subtle `ring-1 ring-border/50`.
+  - **Logged today (where applicable — prayer, dhikr, water, fast):** swap to `bg-emerald-50 ring-emerald-200`, icon `text-emerald-700`. Connect to the relevant query hooks already imported elsewhere (useSalahQuery, useDhikrQuery, useHealthQuery for water, fastingStore for fast). For items without a "logged today" signal (quran, sleep, tasks, habits), keep default.
+  - **Active/pressed:** `active:scale-95` (already there, keep).
+- Remove `gradient` from the `QUICK_LOGS` config; replace with a single shared style. Icons stay the same.
+- Keep the Edit sheet functional but mirror the same monochrome treatment in its preview swatches.
+
+**Acceptance:** Quick Log row reads as one quiet utility strip; only items the user has *completed today* glow emerald. Visual weight clearly subordinate to the Hero card and the central FAB.
+
+---
+
+## Out of scope (parking lot)
+- Wealth Summary Strip — separate batch.
+- Admin UI leakage (Shield icon, CMS pencil) — separate batch, needs role-gating audit.
+- Daily Check-in vs Life Score CTA competition — needs a copy + IA decision first.
+
+## Technical notes
+- No DB migrations, no new hooks, no new dependencies.
+- Files touched: `AppHeader.tsx`, `RotatingHeader.tsx`, `HeroPrayerCard.tsx`, `QuickLogGrid.tsx` (4 files).
+- All changes are visual / state-handling; existing data flow and routes untouched.
