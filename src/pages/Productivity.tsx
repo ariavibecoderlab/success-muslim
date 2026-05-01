@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ListChecks, Target, Flame, Star, ChevronRight } from 'lucide-react';
+import { ListChecks, Target, Flame, Star, ChevronRight, HeartPulse } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useDailyTasks, useTaskStreak } from '@/hooks/useTasksQuery';
 import { useHabits, useHabitLog } from '@/hooks/useHabitsQuery';
@@ -71,6 +71,12 @@ const Productivity = () => {
                 title: 'Life Areas',
                 sub: `${avgScore}/10 avg`,
                 path: '/productivity/life-areas',
+              },
+              {
+                icon: HeartPulse,
+                title: 'Health',
+                sub: 'Track wellness',
+                path: '/health',
               },
             ].map((f, idx, arr) => (
               <button

@@ -7,7 +7,7 @@ import {
   Moon02Icon,
   HeartCheckIcon,
   Coins01Icon,
-  TaskDaily01Icon,
+  QuranIcon,
 } from '@hugeicons/core-free-icons';
 import SalahQuickLogSheet from './SalahQuickLogSheet';
 import { useTodaySalahCount } from '@/hooks/useSalahQuery';
@@ -23,9 +23,9 @@ type Tab = {
 
 const tabs: Tab[] = [
   { icon: Moon02Icon, label: 'Iman', path: '/iman', matchPaths: ['/deen-journey'] },
-  { icon: HeartCheckIcon, label: 'Health', path: '/health' },
+  { icon: QuranIcon, label: 'Quran', path: '/iman/quran' },
   { icon: Coins01Icon, label: 'Wealth', path: '/wealth' },
-  { icon: TaskDaily01Icon, label: 'Tasks', path: '/productivity' },
+  { icon: HeartCheckIcon, label: 'Health', path: '/health' },
 ];
 
 const BottomNav = () => {
