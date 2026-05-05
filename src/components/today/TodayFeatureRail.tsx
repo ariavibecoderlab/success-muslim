@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  Kaaba01Icon,
+  KaabaIcon,
   MosqueIcon,
   TasbihIcon,
   QuranIcon,
@@ -14,7 +14,7 @@ import {
 } from '@hugeicons/core-free-icons';
 
 const features = [
-  { icon: Kaaba01Icon, label: 'Hajj', href: '/iman/hajj', tint: 'bg-amber-50 text-amber-700' },
+  { icon: KaabaIcon, label: 'Hajj', href: '/iman/hajj', tint: 'bg-amber-50 text-amber-700' },
   { icon: MosqueIcon, label: 'Salah', href: '/iman/salah-log', tint: 'bg-emerald-50 text-emerald-700' },
   { icon: TasbihIcon, label: 'Dhikr', href: '/iman/dhikr', tint: 'bg-teal-50 text-teal-700' },
   { icon: QuranIcon, label: 'Quran', href: '/iman/quran', tint: 'bg-emerald-50 text-emerald-700' },
