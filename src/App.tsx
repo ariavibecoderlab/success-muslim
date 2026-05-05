@@ -19,6 +19,7 @@ import AuthCallback from "./pages/AuthCallback";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import Dashboard from "./pages/Dashboard";
+import Today from "./pages/Today";
 import Iman from "./pages/Deen";
 import Health from "./pages/Health";
 import Wealth from "./pages/Wealth";
@@ -166,6 +167,7 @@ const App = () => {
                 <Route element={<AuthGuard><AppLayout /></AuthGuard>}>
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/dashboard" element={<Navigate to="/" replace />} />
+                  <Route path="/today" element={<Today />} />
                   <Route path="/iman" element={<Iman />} />
                   <Route path="/health" element={<Health />} />
                   <Route path="/wealth" element={<Wealth />} />
