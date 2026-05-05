@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { ReactNode, useRef } from 'react';
 import { motion, PanInfo } from 'framer-motion';
+import { hapticLight } from '@/utils/native/haptics';
 
 interface SubPageLayoutProps {
   title: string;
@@ -43,18 +44,21 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
 
     // Edge-swipe right → Back (iOS interactive pop)
     if (startedFromEdge && (offset.x > SWIPE_THRESHOLD || velocity.x > VELOCITY_THRESHOLD)) {
+      hapticLight();
       handleBack();
       return;
     }
 
     // Swipe left → Next sibling
     if (nextRoute && (offset.x < -SWIPE_THRESHOLD || velocity.x < -VELOCITY_THRESHOLD)) {
+      hapticLight();
       navigate(nextRoute.path);
       return;
     }
 
     // Swipe right (mid-screen) → Prev sibling
     if (prevRoute && !startedFromEdge && (offset.x > SWIPE_THRESHOLD || velocity.x > VELOCITY_THRESHOLD)) {
+      hapticLight();
       navigate(prevRoute.path);
       return;
     }
