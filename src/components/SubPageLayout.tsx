@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { ReactNode, useRef } from 'react';
+import { motion, PanInfo } from 'framer-motion';
 
 interface SubPageLayoutProps {
   title: string;
@@ -27,6 +27,38 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
   const prevRoute = currentIndex > 0 ? siblingRoutes![currentIndex - 1] : null;
   const nextRoute = currentIndex >= 0 && currentIndex < (siblingRoutes?.length ?? 0) - 1 ? siblingRoutes![currentIndex + 1] : null;
   const hasSiblings = siblingRoutes && siblingRoutes.length > 1 && currentIndex >= 0;
+
+  // Gesture: track where the swipe started (edge vs middle)
+  const dragStartXRef = useRef<number>(0);
+
+  const handleDragStart = (_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
+    dragStartXRef.current = info.point.x;
+  };
+
+  const handleDragEnd = (_: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
+    const { offset, velocity } = info;
+    const startedFromEdge = dragStartXRef.current < 30;
+    const SWIPE_THRESHOLD = 80;
+    const VELOCITY_THRESHOLD = 500;
+
+    // Edge-swipe right → Back (iOS interactive pop)
+    if (startedFromEdge && (offset.x > SWIPE_THRESHOLD || velocity.x > VELOCITY_THRESHOLD)) {
+      handleBack();
+      return;
+    }
+
+    // Swipe left → Next sibling
+    if (nextRoute && (offset.x < -SWIPE_THRESHOLD || velocity.x < -VELOCITY_THRESHOLD)) {
+      navigate(nextRoute.path);
+      return;
+    }
+
+    // Swipe right (mid-screen) → Prev sibling
+    if (prevRoute && !startedFromEdge && (offset.x > SWIPE_THRESHOLD || velocity.x > VELOCITY_THRESHOLD)) {
+      navigate(prevRoute.path);
+      return;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col overflow-x-hidden">
@@ -91,6 +123,15 @@ const SubPageLayout = ({ title, backTo, children, headerRight, siblingRoutes, cu
         initial={{ x: '6%', opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.35, ease: [0.32, 0.72, 0, 1] }}
+        drag="x"
+        dragDirectionLock
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.25}
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        dragTransition={{ bounceStiffness: 400, bounceDamping: 35 }}
+        style={{ touchAction: 'pan-y' }}
         className="flex-1 max-w-md mx-auto w-full px-5 py-6"
       >
         {children}
