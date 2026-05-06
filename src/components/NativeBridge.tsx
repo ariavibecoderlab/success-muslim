@@ -3,6 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+const PUBLIC_PREFIXES = ['/auth', '/reset-password', '/home', '/install', '/features', '/about', '/blog', '/onboarding'];
+const isPublicRoute = (path: string) =>
+  path === '/home' || PUBLIC_PREFIXES.some((p) => path === p || path.startsWith(p + '/'));
 
 /**
  * Wires native lifecycle events (deep links, hardware back button, resume)
@@ -20,11 +25,22 @@ const NativeBridge = () => {
     (async () => {
       // Deep link: parse path/query from incoming URL and navigate
       handles.push(
-        await CapApp.addListener('appUrlOpen', ({ url }) => {
+        await CapApp.addListener('appUrlOpen', async ({ url }) => {
           try {
             const parsed = new URL(url);
             const target = parsed.pathname + parsed.search + parsed.hash;
-            if (target && target !== '/') navigate(target);
+            if (!target || target === '/') return;
+
+            // If route requires auth and user is signed out, stash for post-login redirect
+            if (!isPublicRoute(parsed.pathname)) {
+              const { data } = await supabase.auth.getSession();
+              if (!data.session) {
+                localStorage.setItem('post_auth_redirect', target);
+                navigate('/auth');
+                return;
+              }
+            }
+            navigate(target);
           } catch (e) {
             console.warn('Bad deep link', url, e);
           }
