@@ -26,7 +26,7 @@
 
 ### ✅ Completed (Phase 1-3)
 - **Capacitor 8.1.0** configured and synced
-- **Custom App ID:** `com.successmuslim.app`
+- **Custom App ID:** `com.brainybunch.successmuslim`
 - **Android & iOS platforms** ready
 - **Mobile optimization styles** created (safe areas, touch targets)
 - **HTML meta tags** configured for mobile
@@ -98,7 +98,7 @@ server: {
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.successmuslim.app', // Replace with your domain
+  appId: 'com.brainybunch.successmuslim', // Replace with your domain
   appName: 'Success Muslim',
   webDir: 'dist',
   bundledWebRuntime: false,
@@ -427,7 +427,7 @@ function App() {
 ```gradle
 android {
     defaultConfig {
-        applicationId "com.successmuslim.app"
+        applicationId "com.brainybunch.successmuslim"
         minVersion 24
         targetVersion 34
         versionCode 1
@@ -458,7 +458,7 @@ android {
 
 - **Version:** 1.0.0
 - **Build:** 1
-- **Bundle Identifier:** com.successmuslim.app
+- **Bundle Identifier:** com.brainybunch.successmuslim
 
 **Capabilities (Xcode → Signing & Capabilities):**
 

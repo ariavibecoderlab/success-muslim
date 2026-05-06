@@ -13,7 +13,7 @@ Add to `ios/App/App/Info.plist`:
 <array>
   <dict>
     <key>CFBundleURLName</key>
-    <string>com.successmuslim.app</string>
+    <string>com.brainybunch.successmuslim</string>
     <key>CFBundleURLSchemes</key>
     <array>
       <string>successmuslim</string>
@@ -53,12 +53,12 @@ Expected: app opens directly on the named route.
 ### Android — universal links (requires hosted assetlinks.json)
 ```bash
 adb shell am start -W -a android.intent.action.VIEW \
-  -d "https://successmuslim.app/today" com.successmuslim.app
+  -d "https://successmuslim.app/today" com.brainybunch.successmuslim
 ```
 Expected with `assetlinks.json` live + matching SHA-256: opens app without chooser.
 Verify the autoVerify status:
 ```bash
-adb shell pm get-app-links com.successmuslim.app
+adb shell pm get-app-links com.brainybunch.successmuslim
 ```
 Should show `verified` for `successmuslim.app`.
 
