@@ -3,6 +3,7 @@
 
     <application
         android:allowBackup="true"
+        android:usesCleartextTraffic="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -20,6 +21,24 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Custom URL scheme: successmuslim:// -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="successmuslim" />
+            </intent-filter>
+
+            <!-- Universal app links: https://successmuslim.app/* -->
+            <!-- TODO: host /.well-known/assetlinks.json on successmuslim.app to enable autoVerify -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="successmuslim.app" />
+                <data android:scheme="https" android:host="www.successmuslim.app" />
             </intent-filter>
 
         </activity>

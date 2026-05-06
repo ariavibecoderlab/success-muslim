@@ -1,75 +1,89 @@
-# /today Page — Muslim Pro Style + Logo FAB
+# Production-Ready Capacitor Hardening
 
-Reference image (Muslim Pro home) jadi inspirasi visual & susunan. Aku adapt ke aesthetik **Refined Islamic Calm** (light mode, white + emerald + orange) — bukan dark theme reference.
+The project **already has Capacitor v8 installed** with iOS + Android platforms, `capacitor.config.ts`, `mobile.css` (safe-area utilities), `src/utils/native/*` wrappers (statusBar, splash, haptics, network, share, storage, notifications, etc.), and `MainActivity` / `AppDelegate` scaffolded. Bundle ID is `com.successmuslim.app`.
 
-## 1. Asset
-- Copy `user-uploads://logo.svg` → `src/assets/sm-mark.svg` (untuk FAB, lebih tajam dari `.webp`).
+So this plan focuses on **gaps**, not a fresh install — the safest minimal changes to take it from "scaffolded" to "production-ready".
 
-## 2. `src/components/BottomNav.tsx` — FAB jadi Logo + Link
-- Buang `SalahQuickLogSheet`, `useTodaySalahCount`, sheet state, badge logged.
-- Tukar `<button>` FAB → `<Link to="/today">`.
-- Render `<img src={smMark} />` di dalam bulatan FAB:
-  - Bulatan 56x56, ring-4 background, shadow emerald.
-  - Background putih (bukan gradient hijau lagi) supaya logo hijau menonjol — atau kekal gradient + logo putih. **Cadangan:** background gradient emerald kekal, logo invert ke putih (guna CSS filter atau versi putih SVG).
-- Active state: bila `pathname === '/today'`, scale 1.05 + glow ring lebih tebal.
-- Haptic light kekal pada tap.
+## What's already done (skip)
+- Capacitor core/ios/android/cli installed
+- Native plugin wrappers in `src/utils/native/`
+- `capacitor.config.ts` with iOS contentInset + Android debugging
+- Safe-area CSS utilities in `src/styles/mobile.css`
+- iOS/Android native projects added with correct appId
 
-## 3. Halaman Baru `src/pages/Today.tsx`
-Susunan ikut reference, adapted:
+## Plan
 
-```text
-┌─────────────────────────────────────┐
-│ [avatar] 18 Dhu'l-Qi'dah  🔔 🎁     │  ← greeting header (Hijri date)
-├─────────────────────────────────────┤
-│ ╭─ Daily Inspiration carousel ─╮    │  ← horizontal scroll round cards
-│ │  ⊙   ⊙   ⊙   ⊙   ⊙           │     (link ke /iman/dakwah posters)
-│ ╰──────────────────────────────╯    │
-├─────────────────────────────────────┤
-│ ┌──Now──────┐ ┌──Next─────┐         │  ← prayer cards 2-col
-│ │ Maghrib🌅 │ │ Isha 🌙   │            (live from useNextPrayer hook)
-│ │ 17:33     │ │ View →    │
-│ └───────────┘ └───────────┘         │
-├─────────────────────────────────────┤
-│ ┌─────────────────────────────────┐ │  ← Track prayer card
-│ │ ◐ Track Maghrib prayer       → │ │     (progress 0/5, tap → SalahLog)
-│ │   2/5 prayers tracked          │ │
-│ └─────────────────────────────────┘ │
-├─────────────────────────────────────┤
-│ Features                  [More →]  │
-│ 🕋  🤲  📿  📖  📓  …               │  ← horizontal scroll features
-│ Qibla Duas Tasbih Quran Journal     │     (link ke modul masing-masing)
-├─────────────────────────────────────┤
-│ For You                             │  ← daily ayah / hadith / dakwah feed
-│ [card] [card] …                     │
-└─────────────────────────────────────┘
-```
+### 1. Tighten `capacitor.config.ts` for production
+- Remove `server.cleartext: true` (security risk in release; keep only behind a dev flag comment)
+- Set `android.webContentsDebuggingEnabled: false` for release (comment with dev override)
+- Add `loggingBehavior: "production"` for ios + android
+- Add `SplashScreen` plugin config (launchAutoHide: false, background colors matching `--primary` emerald, fade duration)
+- Add `Keyboard` plugin config (resize: "native", style: "light")
+- Add `StatusBar` plugin config (overlaysWebView: false, style: light, bg `#10B981`)
 
-**Reuse komponen sedia ada (jangan buat baharu kalau dah ada):**
-- `GreetingHeader` (Hijri date, avatar) — `src/components/dashboard/GreetingHeader.tsx`
-- `HeroPrayerCard` / Next prayer hook
-- `DailyCheckinCard` / SalahQuickLog inline
-- `DakwahWidget` posters carousel
-- `ForYouSection`
+### 2. Wire native init on app boot
+- `src/App.tsx` imports `initStatusBar` and `hideSplashWhenReady` but verify they actually run inside a `useEffect` guarded by `Capacitor.isNativePlatform()`. Add `App.addListener('appUrlOpen', ...)` for deep links and `App.addListener('backButton', ...)` for Android hardware back navigation (history.back, exit on root).
+- Add `Network` listener to expose offline state (toast + offline banner via existing toaster).
 
-**Komponen baharu (kecil) kalau perlu:**
-- `TodayPrayerDuo.tsx` — 2-col Now/Next prayer cards
-- `TodayFeatureRail.tsx` — horizontal scroll features (Qibla, Duas, Tasbih, Quran, Journal, Sadaqah, Zakat, More)
+### 3. Safe-area + viewport audit
+- Add `viewport-fit=cover` to `index.html` meta viewport (required for iOS notch safe areas).
+- Replace any `min-h-screen` / `h-screen` on root layouts with `min-h-dvh` (already present in `mobile.css` as `.mobile-100vh`); audit `AppLayout.tsx`, `BottomNav.tsx`, modals.
+- Ensure `BottomNav` uses `bottom-nav-safe` (env safe-area-inset-bottom).
+- Ensure top headers respect `safe-top`.
 
-**Quick Log Salah** — kekal accessible: tap Track Prayer card buka `SalahQuickLogSheet` (komponen kekal wujud, dipanggil dari dalam Today page). Jadi fungsi quick log tak hilang, cuma tak lagi pada FAB.
+### 4. Replace unsafe browser-only behavior
+Audit and branch with `Capacitor.isNativePlatform()`:
+- `window.open(...)` and external `<a target="_blank">` for blog/marketing/share links → use `@capacitor/browser` `Browser.open()` on native.
+- `window.location.href = "https://..."` for any external redirects (OAuth callback excluded — that already uses `/~oauth` flow).
+- Keep `localStorage` for cache, but mirror critical auth/onboarding flags to `@capacitor/preferences` via the existing `src/utils/native/storage.ts` helpers.
 
-## 4. Route
-`src/App.tsx`:
-```tsx
-<Route path="/today" element={<Today />} />
-```
-Letak dalam group `AppLayout` supaya BottomNav nampak. AuthGuard mengikut pattern Dashboard sedia ada.
+### 5. Deep link / OAuth return readiness
+- Add `App.addListener('appUrlOpen')` handler that parses URL and `navigate()`s into the SPA route, restoring `post_auth_redirect` from localStorage (matches existing memory).
+- Android: add intent-filter scaffold in `AndroidManifest.xml` for `https://successmuslim.app` + custom scheme `successmuslim://` (with TODO for assetlinks.json).
+- iOS: add Associated Domains placeholder in `Info.plist` capabilities + TODO for `apple-app-site-association`.
 
-## 5. Files
-- **New**: `src/pages/Today.tsx`, `src/assets/sm-mark.svg`, `src/components/today/TodayPrayerDuo.tsx`, `src/components/today/TodayFeatureRail.tsx`
-- **Modified**: `src/components/BottomNav.tsx`, `src/App.tsx`
+### 6. Android native polish
+- Set `android:usesCleartextTraffic="false"` for release (network_security_config for dev override).
+- Confirm `minSdkVersion` ≥ 23 and `targetSdkVersion` = 35 (Capacitor 8 requirement; bump in `variables.gradle` if low).
+- Hardware back button: handled in step 2.
 
-## 6. Tidak Disentuh
-- `SalahQuickLogSheet.tsx` — kekal, dipanggil dari Today page Track card.
-- `Dashboard.tsx` (`/`) kekal sebagai home utama.
+### 7. iOS native polish
+- `Info.plist`: add `UIViewControllerBasedStatusBarAppearance=false` (already true — flip), `NSAppTransportSecurity` defaults (no arbitrary loads), and stub `NSCameraUsageDescription` / `NSPhotoLibraryUsageDescription` / `NSLocationWhenInUseUsageDescription` only with TODO comments since the app currently uses none.
+- Confirm `iOS Deployment Target` ≥ 14.0 in `project.pbxproj`.
 
-Approve untuk laksana.
+### 8. Mobile UX wins (small, high-impact)
+- Add light haptic on primary buttons via `useHaptics()` hook (wrap `@capacitor/haptics`); fire on Salah log, fasting start/stop, dhikr tap.
+- Offline banner: small top bar when `Network.getStatus().connected === false`.
+- App resume hook: on `App.addListener('resume')`, invalidate critical React Query keys (prayer times, salah, fasting) so stale data refreshes.
+
+### 9. Package scripts
+Add the missing scripts to `package.json`:
+- `cap:copy`: `npx cap copy`
+- `cap:run:ios`: `npx cap run ios`
+- `cap:run:android`: `npx cap run android`
+- `mobile:build`: `npm run build && npx cap sync`
+
+### 10. Documentation
+Create `docs/MOBILE_CAPACITOR_CHECKLIST.md` covering:
+- Local dev build & run on simulator/device
+- Sync workflow (`npm run mobile:build`)
+- Permissions checklist (none required today; how to add)
+- Deep link verification (assetlinks.json, AASA file URLs)
+- Release signing (manual — no fake keystore)
+- App Store / Play Store readiness checklist
+- App icon + splash regeneration via existing `scripts/generate-icons.js`
+
+## Out of scope (explicitly NOT changing)
+- Routing, auth flow, business logic, Supabase wiring
+- Visual design / theme / fonts
+- Existing service worker / PWA `/install` page
+- No Ionic UI introduction
+- No React Native migration
+- Push notifications stay scaffolded only (no Firebase/APNs keys yet)
+
+## Manual steps user must do after
+1. Pull repo locally, `npm install`, `npm run mobile:build`.
+2. `npx cap open ios` / `npx cap open android` to build & sign.
+3. Generate real icons: `npm run generate:icons` then `npm run sync:icons`.
+4. For deep links: host real `assetlinks.json` and `apple-app-site-association` on `successmuslim.app/.well-known/`.
+5. Add Firebase config + APNs key when push is needed.

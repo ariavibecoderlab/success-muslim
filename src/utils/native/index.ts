@@ -12,3 +12,4 @@ export * from './network';
 export * from './share';
 export * from './device';
 export * from './storage';
+export * from './browser';
