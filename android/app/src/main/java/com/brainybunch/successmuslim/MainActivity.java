@@ -1,4 +1,4 @@
-package com.successmuslim.app;
+package com.brainybunch.successmuslim;
 
 import com.getcapacitor.BridgeActivity;
 

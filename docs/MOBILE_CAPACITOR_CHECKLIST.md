@@ -64,7 +64,7 @@ xcrun simctl openurl booted "successmuslim://today"
 # Android emulator
 adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://today"
 # Verify Android autoVerify after install
-adb shell pm get-app-links com.successmuslim.app
+adb shell pm get-app-links com.brainybunch.successmuslim
 # iOS universal links: cannot be tested via simctl. Tap the https link from Notes/Messages.
 ```
 

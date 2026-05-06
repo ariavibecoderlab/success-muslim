@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: "com.successmuslim.app",
+  appId: "com.brainybunch.successmuslim",
   appName: "Success Muslim",
   webDir: "dist",
   bundledWebRuntime: false,

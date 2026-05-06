@@ -9,7 +9,7 @@
 ## ✅ What's Been Done
 
 ### 1. **Capacitor Configuration** ✅
-- Custom App ID: `com.successmuslim.app`
+- Custom App ID: `com.brainybunch.successmuslim`
 - Production-ready config
 - iOS & Android settings optimized
 
