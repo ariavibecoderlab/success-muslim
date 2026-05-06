@@ -52,6 +52,19 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.successmuslim.app</string>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>successmuslim</string>
+			</array>
+		</dict>
+	</array>
 	<!-- TODO: add associated domains capability + apple-app-site-association on successmuslim.app for universal links -->
 	<!-- TODO: when adding camera/photo/location features, add NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSLocationWhenInUseUsageDescription with clear user-facing reasons -->
 </dict>
