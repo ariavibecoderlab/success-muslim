@@ -10,6 +10,7 @@ import { initStatusBar, hideSplashWhenReady } from "./utils/native";
 import { AuthProvider } from "./contexts/AuthContext";
 import { EditModeProvider } from "./contexts/EditModeContext";
 import EditModeToggle from "./components/cms/EditModeToggle";
+import NativeBridge from "./components/NativeBridge";
 import AppLayout from "./components/AppLayout";
 import AuthGuard from "./components/AuthGuard";
 import AdminGuard from "./components/AdminGuard";
@@ -141,6 +142,7 @@ const App = () => {
           <BrowserRouter>
             <EditModeProvider>
               <EditModeToggle />
+              <NativeBridge />
               <Routes>
                 {/* ==================== */}
                 {/* MOBILE APP ROUTES    */}
