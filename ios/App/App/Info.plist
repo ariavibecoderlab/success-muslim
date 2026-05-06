@@ -46,6 +46,13 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	<!-- TODO: add associated domains capability + apple-app-site-association on successmuslim.app for universal links -->
+	<!-- TODO: when adding camera/photo/location features, add NSCameraUsageDescription, NSPhotoLibraryUsageDescription, NSLocationWhenInUseUsageDescription with clear user-facing reasons -->
 </dict>
 </plist>
