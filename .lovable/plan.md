@@ -1,89 +1,91 @@
-# Production-Ready Capacitor Hardening
+# Verify & Harden Deep Linking (iOS + Android)
 
-The project **already has Capacitor v8 installed** with iOS + Android platforms, `capacitor.config.ts`, `mobile.css` (safe-area utilities), `src/utils/native/*` wrappers (statusBar, splash, haptics, network, share, storage, notifications, etc.), and `MainActivity` / `AppDelegate` scaffolded. Bundle ID is `com.successmuslim.app`.
+I cannot run simulators from the sandbox, so this plan does two things:
+1. Closes the remaining gaps so deep links actually work end-to-end.
+2. Gives you a copy-paste verification checklist to run on your machine.
 
-So this plan focuses on **gaps**, not a fresh install — the safest minimal changes to take it from "scaffolded" to "production-ready".
+## Code gaps to close first
 
-## What's already done (skip)
-- Capacitor core/ios/android/cli installed
-- Native plugin wrappers in `src/utils/native/`
-- `capacitor.config.ts` with iOS contentInset + Android debugging
-- Safe-area CSS utilities in `src/styles/mobile.css`
-- iOS/Android native projects added with correct appId
+### A. Register iOS custom URL scheme
+Add to `ios/App/App/Info.plist`:
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLName</key>
+    <string>com.successmuslim.app</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>successmuslim</string>
+    </array>
+  </dict>
+</array>
+```
 
-## Plan
+### B. Preserve deep-link target through auth redirect
+Update `src/components/NativeBridge.tsx`:
+- Before `navigate(target)`, if the target is a protected route and there is no auth session, write `target` to `localStorage.post_auth_redirect` (matches existing memory pattern in `Post-Auth Redirect`).
+- Existing `AuthGuard` / `AuthCallback` will then route the user to the original page after login.
 
-### 1. Tighten `capacitor.config.ts` for production
-- Remove `server.cleartext: true` (security risk in release; keep only behind a dev flag comment)
-- Set `android.webContentsDebuggingEnabled: false` for release (comment with dev override)
-- Add `loggingBehavior: "production"` for ios + android
-- Add `SplashScreen` plugin config (launchAutoHide: false, background colors matching `--primary` emerald, fade duration)
-- Add `Keyboard` plugin config (resize: "native", style: "light")
-- Add `StatusBar` plugin config (overlaysWebView: false, style: light, bg `#10B981`)
+### C. Generate the verification files
+Create two **example** files under `public/.well-known/` so they ship at `https://successmuslim.app/.well-known/...`:
 
-### 2. Wire native init on app boot
-- `src/App.tsx` imports `initStatusBar` and `hideSplashWhenReady` but verify they actually run inside a `useEffect` guarded by `Capacitor.isNativePlatform()`. Add `App.addListener('appUrlOpen', ...)` for deep links and `App.addListener('backButton', ...)` for Android hardware back navigation (history.back, exit on root).
-- Add `Network` listener to expose offline state (toast + offline banner via existing toaster).
+- `public/.well-known/assetlinks.json` (Android — needs the release SHA-256 fingerprint, leave a clear placeholder)
+- `public/.well-known/apple-app-site-association` (iOS — uses Team ID + bundle ID, leave Team ID placeholder)
 
-### 3. Safe-area + viewport audit
-- Add `viewport-fit=cover` to `index.html` meta viewport (required for iOS notch safe areas).
-- Replace any `min-h-screen` / `h-screen` on root layouts with `min-h-dvh` (already present in `mobile.css` as `.mobile-100vh`); audit `AppLayout.tsx`, `BottomNav.tsx`, modals.
-- Ensure `BottomNav` uses `bottom-nav-safe` (env safe-area-inset-bottom).
-- Ensure top headers respect `safe-top`.
+Both files must be served as `application/json` — Lovable hosting does this automatically for files in `public/`.
 
-### 4. Replace unsafe browser-only behavior
-Audit and branch with `Capacitor.isNativePlatform()`:
-- `window.open(...)` and external `<a target="_blank">` for blog/marketing/share links → use `@capacitor/browser` `Browser.open()` on native.
-- `window.location.href = "https://..."` for any external redirects (OAuth callback excluded — that already uses `/~oauth` flow).
-- Keep `localStorage` for cache, but mirror critical auth/onboarding flags to `@capacitor/preferences` via the existing `src/utils/native/storage.ts` helpers.
+### D. (iOS only) Document the Xcode-side capability
+The Associated Domains capability cannot be added from code — it must be added in Xcode → Signing & Capabilities → `applinks:successmuslim.app`. Add a one-paragraph note in `MOBILE_CAPACITOR_CHECKLIST.md` step 4.
 
-### 5. Deep link / OAuth return readiness
-- Add `App.addListener('appUrlOpen')` handler that parses URL and `navigate()`s into the SPA route, restoring `post_auth_redirect` from localStorage (matches existing memory).
-- Android: add intent-filter scaffold in `AndroidManifest.xml` for `https://successmuslim.app` + custom scheme `successmuslim://` (with TODO for assetlinks.json).
-- iOS: add Associated Domains placeholder in `Info.plist` capabilities + TODO for `apple-app-site-association`.
+## Verification checklist (run locally)
 
-### 6. Android native polish
-- Set `android:usesCleartextTraffic="false"` for release (network_security_config for dev override).
-- Confirm `minSdkVersion` ≥ 23 and `targetSdkVersion` = 35 (Capacitor 8 requirement; bump in `variables.gradle` if low).
-- Hardware back button: handled in step 2.
+After `npm run mobile:build` and installing on simulator/emulator:
 
-### 7. iOS native polish
-- `Info.plist`: add `UIViewControllerBasedStatusBarAppearance=false` (already true — flip), `NSAppTransportSecurity` defaults (no arbitrary loads), and stub `NSCameraUsageDescription` / `NSPhotoLibraryUsageDescription` / `NSLocationWhenInUseUsageDescription` only with TODO comments since the app currently uses none.
-- Confirm `iOS Deployment Target` ≥ 14.0 in `project.pbxproj`.
+### Android — custom scheme (works immediately)
+```bash
+adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://today"
+adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://health/if-timer"
+adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://iman/quran"
+```
+Expected: app opens directly on the named route.
 
-### 8. Mobile UX wins (small, high-impact)
-- Add light haptic on primary buttons via `useHaptics()` hook (wrap `@capacitor/haptics`); fire on Salah log, fasting start/stop, dhikr tap.
-- Offline banner: small top bar when `Network.getStatus().connected === false`.
-- App resume hook: on `App.addListener('resume')`, invalidate critical React Query keys (prayer times, salah, fasting) so stale data refreshes.
+### Android — universal links (requires hosted assetlinks.json)
+```bash
+adb shell am start -W -a android.intent.action.VIEW \
+  -d "https://successmuslim.app/today" com.successmuslim.app
+```
+Expected with `assetlinks.json` live + matching SHA-256: opens app without chooser.
+Verify the autoVerify status:
+```bash
+adb shell pm get-app-links com.successmuslim.app
+```
+Should show `verified` for `successmuslim.app`.
 
-### 9. Package scripts
-Add the missing scripts to `package.json`:
-- `cap:copy`: `npx cap copy`
-- `cap:run:ios`: `npx cap run ios`
-- `cap:run:android`: `npx cap run android`
-- `mobile:build`: `npm run build && npx cap sync`
+### iOS — custom scheme (after step A above)
+```bash
+xcrun simctl openurl booted "successmuslim://today"
+xcrun simctl openurl booted "successmuslim://health/if-timer"
+```
+Expected: app opens on the named route.
 
-### 10. Documentation
-Create `docs/MOBILE_CAPACITOR_CHECKLIST.md` covering:
-- Local dev build & run on simulator/device
-- Sync workflow (`npm run mobile:build`)
-- Permissions checklist (none required today; how to add)
-- Deep link verification (assetlinks.json, AASA file URLs)
-- Release signing (manual — no fake keystore)
-- App Store / Play Store readiness checklist
-- App icon + splash regeneration via existing `scripts/generate-icons.js`
+### iOS — universal links (after step D + AASA hosted)
+1. In Xcode add Associated Domain `applinks:successmuslim.app`.
+2. Send yourself an iMessage with `https://successmuslim.app/today`, tap the link.
+3. Or in Notes app, long-press the link → "Open in Success Muslim".
+Expected: opens app, lands on `/today`. (iOS does **not** support universal links from `xcrun simctl openurl` — must test via Messages/Notes.)
 
-## Out of scope (explicitly NOT changing)
-- Routing, auth flow, business logic, Supabase wiring
-- Visual design / theme / fonts
-- Existing service worker / PWA `/install` page
-- No Ionic UI introduction
-- No React Native migration
-- Push notifications stay scaffolded only (no Firebase/APNs keys yet)
+### Foreground vs cold-start
+Test each link in **two states**:
+- App killed (cold start) — `appUrlOpen` fires after `BrowserRouter` mounts, our listener handles it.
+- App in background (warm) — `appUrlOpen` fires immediately, listener navigates.
 
-## Manual steps user must do after
-1. Pull repo locally, `npm install`, `npm run mobile:build`.
-2. `npx cap open ios` / `npx cap open android` to build & sign.
-3. Generate real icons: `npm run generate:icons` then `npm run sync:icons`.
-4. For deep links: host real `assetlinks.json` and `apple-app-site-association` on `successmuslim.app/.well-known/`.
-5. Add Firebase config + APNs key when push is needed.
+### Auth-required routes
+Sign out, then trigger `successmuslim://settings`. Expected (after step B):
+- Redirected to `/auth`.
+- After login, lands on `/settings`, not `/`.
+
+## Out of scope
+- Real release-keystore SHA-256 (you must paste it into `assetlinks.json` from your Play Console signing config).
+- Apple Team ID (paste into AASA from Apple Developer account).
+- Push notification deep links (separate flow).

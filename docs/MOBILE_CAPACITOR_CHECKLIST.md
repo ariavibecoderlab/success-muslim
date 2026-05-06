@@ -45,12 +45,27 @@ The app currently requires no native permissions. When adding features:
   - **iOS**: enable Associated Domains capability in Xcode → add `applinks:successmuslim.app`. Host `apple-app-site-association` at `https://successmuslim.app/.well-known/apple-app-site-association`.
   - **Android**: host `assetlinks.json` at `https://successmuslim.app/.well-known/assetlinks.json` (autoVerify is already enabled in the manifest).
 
+### iOS Associated Domains (manual Xcode step)
+The iOS `Associated Domains` entitlement cannot be added from JS or Info.plist alone. In Xcode:
+1. Open `ios/App/App.xcworkspace`
+2. Select the `App` target → **Signing & Capabilities** → **+ Capability** → **Associated Domains**
+3. Add: `applinks:successmuslim.app` and `applinks:www.successmuslim.app`
+4. Rebuild. Capacitor preserves this on `npx cap sync`.
+
+### .well-known files
+Templates ship in `public/.well-known/` and are served at:
+- `https://successmuslim.app/.well-known/assetlinks.json` — replace `REPLACE_WITH_RELEASE_KEYSTORE_SHA256_FINGERPRINT` with the SHA-256 from your release keystore (`keytool -list -v -keystore ...`) and the Play App Signing fingerprint from Play Console → Setup → App integrity.
+- `https://successmuslim.app/.well-known/apple-app-site-association` — replace `REPLACE_WITH_TEAM_ID` with your Apple Developer Team ID. Must be served as `application/json` with no `.json` extension.
+
 Test:
 ```bash
 # iOS simulator
 xcrun simctl openurl booted "successmuslim://today"
 # Android emulator
 adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://today"
+# Verify Android autoVerify after install
+adb shell pm get-app-links com.successmuslim.app
+# iOS universal links: cannot be tested via simctl. Tap the https link from Notes/Messages.
 ```
 
 ## 5. OAuth / payment redirects
