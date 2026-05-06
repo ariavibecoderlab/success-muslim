@@ -15,7 +15,11 @@
     "sync:icons": "node scripts/sync-icons.js",
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
-    "cap:open:ios": "npx cap open ios"
+    "cap:open:ios": "npx cap open ios",
+    "cap:copy": "npx cap copy",
+    "cap:run:ios": "npx cap run ios",
+    "cap:run:android": "npx cap run android",
+    "mobile:build": "npm run build && npx cap sync"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
