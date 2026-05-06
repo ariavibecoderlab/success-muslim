@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     // ── Hydration ──────────────────────────
     if (resource === "hydration") {
       if (method === "GET") {
-        const date = url.searchParams.get("date");
+        const date = url.searchParams.get("date") ?? new Date().toISOString().split("T")[0];
         const days = url.searchParams.get("days");
         if (days) {
           // History: last N days
@@ -87,11 +87,8 @@ Deno.serve(async (req) => {
           const { data } = await supabase.from("hydration_log").select("date, cups").eq("user_id", userId).in("date", dates);
           return json(data || []);
         }
-        if (date) {
-          const { data } = await supabase.from("hydration_log").select("*").eq("user_id", userId).eq("date", date).maybeSingle();
-          return json(data);
-        }
-        return err("date or days param required");
+        const { data } = await supabase.from("hydration_log").select("*").eq("user_id", userId).eq("date", date).maybeSingle();
+        return json(data);
       }
       if (method === "POST") {
         const body = await req.json();
