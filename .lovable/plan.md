@@ -1,91 +1,77 @@
-# Verify & Harden Deep Linking (iOS + Android)
+## Goal
 
-I cannot run simulators from the sandbox, so this plan does two things:
-1. Closes the remaining gaps so deep links actually work end-to-end.
-2. Gives you a copy-paste verification checklist to run on your machine.
+The current `/iman/quran` page crams 7 sections into one scroll: backdate prompt, date picker, khatam ring, today's reading counter, current position inputs, 3 stat tiles, khatam progress bar, and a weekly chart. It feels dense and the primary action (logging pages) competes with stats. We'll restructure for a clearer hierarchy and move secondary content to a dedicated stats screen.
 
-## Code gaps to close first
+## Approach
 
-### A. Register iOS custom URL scheme
-Add to `ios/App/App/Info.plist`:
-```xml
-<key>CFBundleURLTypes</key>
-<array>
-  <dict>
-    <key>CFBundleURLName</key>
-    <string>com.brainybunch.successmuslim</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>successmuslim</string>
-    </array>
-  </dict>
-</array>
+Split the page into two routes:
+
+1. **`/iman/quran`** — focused on the *primary action*: log today's reading.
+2. **`/iman/quran/stats`** — full analytics view (khatam ring, streaks, weekly chart, history heatmap).
+
+This matches the pattern already used elsewhere in the app (e.g. setup/track splits) and keeps the sibling-route arrows in `SubPageLayout` clean.
+
+## New `/iman/quran` layout (top → bottom)
+
+```text
+[ Backdate prompt + date picker (only if backdated) ]
+
+┌────────────── Hero log card ──────────────┐
+│  Today / 21 Feb                           │
+│            ┌─────┐                        │
+│   −        │  3  │       +                │
+│            └─────┘                        │
+│        pages read today                   │
+│  [ +1 ]  [ +5 ]  [ +10 ]  [ +1 Juz ]      │
+└───────────────────────────────────────────┘
+
+┌────────── Reading position ──────────────┐
+│  Surah  [Al-Baqarah        ]              │
+│  Juz    [ 2 ]    Page  [ 23 ]             │
+└───────────────────────────────────────────┘
+
+┌── Compact summary strip (tappable → stats)┐
+│  🔥 12d   📖 247 pages   🏆 0 khatam   ›  │
+└───────────────────────────────────────────┘
+
+[ Continue Reading → /iman/quran/reader ]   (existing CTA, kept)
 ```
 
-### B. Preserve deep-link target through auth redirect
-Update `src/components/NativeBridge.tsx`:
-- Before `navigate(target)`, if the target is a protected route and there is no auth session, write `target` to `localStorage.post_auth_redirect` (matches existing memory pattern in `Post-Auth Redirect`).
-- Existing `AuthGuard` / `AuthCallback` will then route the user to the original page after login.
+Changes from current:
+- Hero counter becomes the visual anchor (larger number, clearer label).
+- Quick-add buttons relabeled `+1 / +5 / +10 / +1 Juz` (drop `+2`, add `+1` for finer control).
+- "Current Position" merged into one card; add optional Page input alongside Surah/Juz.
+- Khatam ring, khatam progress bar, 3 stat tiles, and weekly chart **removed from this page**.
+- Replaced by a single tappable summary strip (streak · total pages · khatam count) that links to the new stats page.
+- Date picker only renders when the user has tapped backdate (reduces visual noise on default view).
 
-### C. Generate the verification files
-Create two **example** files under `public/.well-known/` so they ship at `https://successmuslim.app/.well-known/...`:
+## New `/iman/quran/stats` page
 
-- `public/.well-known/assetlinks.json` (Android — needs the release SHA-256 fingerprint, leave a clear placeholder)
-- `public/.well-known/apple-app-site-association` (iOS — uses Team ID + bundle ID, leave Team ID placeholder)
+A dedicated `SubPageLayout` titled "Quran Stats" with back to `/iman/quran`:
 
-Both files must be served as `application/json` — Lovable hosting does this automatically for files in `public/`.
+```text
+[ Khatam progress ring (large, centered) ]
+[ Khatam progress bar + % + ETA ]
 
-### D. (iOS only) Document the Xcode-side capability
-The Associated Domains capability cannot be added from code — it must be added in Xcode → Signing & Capabilities → `applinks:successmuslim.app`. Add a one-paragraph note in `MOBILE_CAPACITOR_CHECKLIST.md` step 4.
+[ Stat tiles: streak · total pages · est. days · khatam count ]
 
-## Verification checklist (run locally)
-
-After `npm run mobile:build` and installing on simulator/emulator:
-
-### Android — custom scheme (works immediately)
-```bash
-adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://today"
-adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://health/if-timer"
-adb shell am start -W -a android.intent.action.VIEW -d "successmuslim://iman/quran"
+[ Last 7 days bar chart ]
+[ Reading heatmap (reuse src/components/quran/ReadingHeatmap.tsx) ]
 ```
-Expected: app opens directly on the named route.
 
-### Android — universal links (requires hosted assetlinks.json)
-```bash
-adb shell am start -W -a android.intent.action.VIEW \
-  -d "https://successmuslim.app/today" com.brainybunch.successmuslim
-```
-Expected with `assetlinks.json` live + matching SHA-256: opens app without chooser.
-Verify the autoVerify status:
-```bash
-adb shell pm get-app-links com.brainybunch.successmuslim
-```
-Should show `verified` for `successmuslim.app`.
+The existing `ReadingHeatmap` component is already in the codebase but not used on the tracker — we surface it here.
 
-### iOS — custom scheme (after step A above)
-```bash
-xcrun simctl openurl booted "successmuslim://today"
-xcrun simctl openurl booted "successmuslim://health/if-timer"
-```
-Expected: app opens on the named route.
+## Files to change
 
-### iOS — universal links (after step D + AASA hosted)
-1. In Xcode add Associated Domain `applinks:successmuslim.app`.
-2. Send yourself an iMessage with `https://successmuslim.app/today`, tap the link.
-3. Or in Notes app, long-press the link → "Open in Success Muslim".
-Expected: opens app, lands on `/today`. (iOS does **not** support universal links from `xcrun simctl openurl` — must test via Messages/Notes.)
+- `src/pages/QuranTracker.tsx` — slim down to log-focused layout.
+- `src/pages/QuranStats.tsx` — **new**, holds the analytics moved out of the tracker.
+- `src/App.tsx` — register the `/iman/quran/stats` route.
+- `SubPageLayout` `headerRight` on `/iman/quran` — add a small chart icon button → `/iman/quran/stats` (alternative entry point alongside the summary strip).
 
-### Foreground vs cold-start
-Test each link in **two states**:
-- App killed (cold start) — `appUrlOpen` fires after `BrowserRouter` mounts, our listener handles it.
-- App in background (warm) — `appUrlOpen` fires immediately, listener navigates.
-
-### Auth-required routes
-Sign out, then trigger `successmuslim://settings`. Expected (after step B):
-- Redirected to `/auth`.
-- After login, lands on `/settings`, not `/`.
+No backend, no hook, no storage changes — this is purely a presentation refactor over the existing `useQuranStorageQuery` data.
 
 ## Out of scope
-- Real release-keystore SHA-256 (you must paste it into `assetlinks.json` from your Play Console signing config).
-- Apple Team ID (paste into AASA from Apple Developer account).
-- Push notification deep links (separate flow).
+
+- No changes to logging logic, khatam math, or data sync.
+- No redesign of the Quran reader (`/iman/quran/reader`).
+- Heatmap component itself is reused as-is.
