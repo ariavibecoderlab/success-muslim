@@ -4,7 +4,7 @@ import {
   BookOpen, Search, BookMarked, ChevronRight, Settings2,
   CheckCircle2, Flame, Calendar, Trophy, Star, Sparkles,
   Crown, Layers, FileText, Leaf, Hash, Zap, Award, Medal, RotateCcw,
-  Plus, Pencil, Trash2, ChevronDown, Target,
+  Plus, Pencil, Trash2, ChevronDown, Target, BarChart3,
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent } from '@/components/ui/card';
@@ -159,7 +159,6 @@ const QuranReader = () => {
   const [logSheetOpen, setLogSheetOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('surah');
-  const [last7Open, setLast7Open] = useState(false);
   const [monthlyGoalOpen, setMonthlyGoalOpen] = useState(false);
   const [monthlyGoalInput, setMonthlyGoalInput] = useState(prefs.monthly_page_goal);
 
@@ -206,9 +205,6 @@ const QuranReader = () => {
       return { number: i + 1, surahs: names.slice(0, 3).join(', ') + (names.length > 3 ? '...' : '') };
     });
   }, []);
-
-  // Khatam progress (based on total ayahs / 6236)
-  const khatamPercent = Math.min(100, (allTimeTotalAyahs / 6236) * 100);
 
   // Open log sheet
   const openLogSheet = useCallback((editEntry?: ReadingLogEntry) => {
@@ -344,14 +340,6 @@ const QuranReader = () => {
     });
     toast.success('Your Quran journey begins! Bismillah 🤲');
   };
-
-  // Stats
-  const achievements = [
-    { label: 'First Day', icon: <CheckCircle2 className="h-5 w-5" />, earned: allTimeTotalAyahs >= 1 },
-    { label: '7 Day Streak', icon: <Flame className="h-5 w-5" />, earned: streak >= 7 },
-    { label: '30 Day Streak', icon: <Award className="h-5 w-5" />, earned: streak >= 30 },
-    { label: 'Khatam', icon: <Medal className="h-5 w-5" />, earned: allTimeTotalAyahs >= 6236 },
-  ];
 
   if (loading) {
     return (
