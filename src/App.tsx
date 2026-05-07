@@ -42,6 +42,7 @@ import SunnahTracker from "./pages/SunnahTracker";
 import QuranTracker from "./pages/QuranTracker";
 import QuranReader from "./pages/deen/QuranReader";
 import SurahReader from "./pages/deen/SurahReader";
+import QuranStats from "./pages/deen/QuranStats";
 import PrayerTimes from "./pages/deen/PrayerTimes";
 import DeenFasting from "./pages/deen/DeenFasting";
 import SadaqahTracker from "./pages/deen/SadaqahTracker";
@@ -188,6 +189,7 @@ const App = () => {
                 <Route path="/iman/zakat" element={<AuthGuard><ZakatCalculator /></AuthGuard>} />
                 <Route path="/iman/sunnah" element={<AuthGuard><SunnahTracker /></AuthGuard>} />
                 <Route path="/iman/quran" element={<AuthGuard><QuranReader /></AuthGuard>} />
+                <Route path="/iman/quran/stats" element={<AuthGuard><QuranStats /></AuthGuard>} />
                 <Route path="/iman/quran/read/:surahNum" element={<AuthGuard><SurahReader /></AuthGuard>} />
                 <Route path="/iman/quran/legacy" element={<AuthGuard><QuranTracker /></AuthGuard>} />
                 <Route path="/iman/prayer-times" element={<AuthGuard><PrayerTimes /></AuthGuard>} />
