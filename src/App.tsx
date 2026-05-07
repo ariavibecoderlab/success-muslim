@@ -42,6 +42,7 @@ import SunnahTracker from "./pages/SunnahTracker";
 import QuranTracker from "./pages/QuranTracker";
 import QuranReader from "./pages/deen/QuranReader";
 import SurahReader from "./pages/deen/SurahReader";
+import QuranStats from "./pages/deen/QuranStats";
 import PrayerTimes from "./pages/deen/PrayerTimes";
 import DeenFasting from "./pages/deen/DeenFasting";
 import SadaqahTracker from "./pages/deen/SadaqahTracker";
