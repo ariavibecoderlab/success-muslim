@@ -444,17 +444,47 @@ const QuranReader = () => {
   }, {});
 
   return (
-    <SubPageLayout title="Quran" backTo="/iman" siblingRoutes={IMAN_SIBLINGS} currentPath="/iman/quran">
+    <SubPageLayout
+      title="Quran"
+      backTo="/iman"
+      siblingRoutes={IMAN_SIBLINGS}
+      currentPath="/iman/quran"
+      headerRight={
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 rounded-full text-primary"
+          onClick={() => navigate('/iman/quran/stats')}
+          aria-label="View Quran stats"
+        >
+          <BarChart3 className="h-5 w-5" strokeWidth={2.25} />
+        </Button>
+      }
+    >
       <div className="space-y-4">
 
-        {/* Khatam Progress Ring */}
-        <div className="flex justify-center py-2">
-          <ProgressRing
-            percent={khatamPercent}
-            label="Khatam Progress"
-            sublabel={`${allTimeTotalAyahs} of 6,236 ayahs read`}
-          />
-        </div>
+        {/* Continue Reading (primary action) */}
+        {lastPosition.surah > 0 && (
+          <Card
+            className="cursor-pointer border-primary/30 bg-gradient-to-br from-primary/5 to-transparent hover:border-primary/50 transition-all"
+            onClick={() => navigate(`/iman/quran/read/${lastPosition.surah}?ayah=${lastPosition.ayah}`)}
+          >
+            <CardContent className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Continue reading</p>
+                  <p className="text-sm font-semibold truncate">
+                    {SURAH_NAMES[lastPosition.surah - 1]?.name} · Ayah {lastPosition.ayah}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-primary shrink-0" />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Log Reading Button */}
         <Button className="w-full flex items-center gap-2" size="lg" onClick={() => openLogSheet()}>
@@ -497,170 +527,26 @@ const QuranReader = () => {
           </CardContent>
         </Card>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-3 gap-2">
-          <Card>
-            <CardContent className="p-3 text-center">
-              <BookOpen className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{allTimeTotalAyahs}</p>
-              <p className="text-[10px] text-muted-foreground">Total Ayahs</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <FileText className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{allTimeTotalPages}</p>
-              <p className="text-[10px] text-muted-foreground">Total Pages</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 text-center">
-              <Flame className="h-4 w-4 text-primary mx-auto mb-1" />
-              <p className="text-lg font-bold">{streak}</p>
-              <p className="text-[10px] text-muted-foreground">Streak</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Hijri Monthly Goal */}
-        {hijriParts && (
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Monthly Goal · {hijriParts.monthName} {hijriParts.year}
-                </p>
-                <Dialog open={monthlyGoalOpen} onOpenChange={setMonthlyGoalOpen}>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setMonthlyGoalInput(prefs.monthly_page_goal)}>
-                      <Settings2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Monthly Page Goal</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4 py-2">
-                      <div>
-                        <Label>Pages per Hijri month</Label>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={604}
-                          value={monthlyGoalInput}
-                          onChange={e => setMonthlyGoalInput(Number(e.target.value) || 1)}
-                          className="mt-1"
-                        />
-                      </div>
-                      <Button className="w-full" onClick={() => {
-                        savePrefs({ monthly_page_goal: monthlyGoalInput });
-                        setMonthlyGoalOpen(false);
-                        toast.success('Monthly goal updated');
-                      }}>
-                        Save
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-              <div className="flex items-baseline gap-2 mb-2">
-                <span className="text-2xl font-bold">{hijriMonthPages}</span>
-                <span className="text-sm text-muted-foreground">/ {prefs.monthly_page_goal} pages</span>
-              </div>
-              <Progress value={Math.min(100, (hijriMonthPages / prefs.monthly_page_goal) * 100)} className="h-2 mb-2" />
-              {(() => {
-                const dayOfMonth = hijriParts.day;
-                const daysInMonth = 30; // Hijri months are 29-30 days
-                const expectedProgress = (dayOfMonth / daysInMonth) * prefs.monthly_page_goal;
-                const paceRatio = hijriMonthPages / Math.max(expectedProgress, 0.1);
-                const paceLabel = paceRatio >= 1.1 ? 'Ahead' : paceRatio >= 0.85 ? 'On track' : 'Behind';
-                const paceColor = paceRatio >= 1.1 ? 'text-green-600' : paceRatio >= 0.85 ? 'text-primary' : 'text-orange-500';
-                const percent = Math.min(100, Math.round((hijriMonthPages / prefs.monthly_page_goal) * 100));
-                return (
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{percent}% complete · Day {dayOfMonth}</span>
-                    <span className={`font-medium ${paceColor}`}>{paceLabel}</span>
-                  </div>
-                );
-              })()}
-            </CardContent>
-          </Card>
-        )}
-
-
-        {lastPosition.surah > 0 && (
-          <Card
-            className="cursor-pointer hover:border-primary/30 transition-all"
-            onClick={() => navigate(`/iman/quran/read/${lastPosition.surah}?ayah=${lastPosition.ayah}`)}
-          >
-            <CardContent className="p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  <BookOpen className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Last Read</p>
-                  <p className="text-sm font-semibold">
-                    {SURAH_NAMES[lastPosition.surah - 1]?.name} · Ayah {lastPosition.ayah}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-xs text-primary font-medium">
-                Continue <ChevronRight className="h-3.5 w-3.5" />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Last 7 Days (collapsible) */}
-        {Object.keys(last7ByDate).length > 0 && (
-          <Collapsible open={last7Open} onOpenChange={setLast7Open}>
-            <Card>
-              <CardContent className="p-4">
-                <CollapsibleTrigger className="flex items-center justify-between w-full">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Last 7 Days
-                  </p>
-                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${last7Open ? 'rotate-180' : ''}`} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2 space-y-3">
-                  {Object.entries(last7ByDate).sort(([a], [b]) => b.localeCompare(a)).map(([date, entries]) => (
-                    <div key={date}>
-                      <p className="text-xs font-medium text-muted-foreground mb-1">
-                        {new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
-                      </p>
-                      {entries.map(entry => (
-                        <LogEntryRow
-                          key={entry.id}
-                          entry={entry}
-                          onEdit={() => openLogSheet(entry)}
-                          onDelete={() => handleDelete(entry)}
-                        />
-                      ))}
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </CardContent>
-            </Card>
-          </Collapsible>
-        )}
-
-        {/* Achievements */}
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Achievements
-            </p>
-            <div className="grid grid-cols-4 gap-2">
-              {achievements.map(a => (
-                <div key={a.label} className={`text-center p-2 rounded-lg min-h-[60px] flex flex-col items-center justify-center ${a.earned ? 'bg-primary/10 text-primary' : 'bg-secondary/50 text-muted-foreground opacity-50'}`}>
-                  <div className="flex justify-center">{a.icon}</div>
-                  <p className="text-[10px] mt-1 leading-tight font-medium break-words text-center">{a.label}</p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        {/* Compact summary strip → Stats */}
+        <button
+          onClick={() => navigate('/iman/quran/stats')}
+          className="w-full text-left rounded-xl border border-border bg-card hover:border-primary/30 transition-all p-3 flex items-center justify-between gap-3"
+        >
+          <div className="flex items-center gap-4 text-xs">
+            <span className="flex items-center gap-1 font-semibold">
+              <Flame className="h-3.5 w-3.5 text-primary" /> {streak}d
+            </span>
+            <span className="flex items-center gap-1 font-semibold">
+              <FileText className="h-3.5 w-3.5 text-primary" /> {allTimeTotalPages}p
+            </span>
+            <span className="flex items-center gap-1 font-semibold">
+              <BookOpen className="h-3.5 w-3.5 text-primary" /> {allTimeTotalAyahs.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-xs text-primary font-medium">
+            Stats <ChevronRight className="h-3.5 w-3.5" />
+          </div>
+        </button>
 
         {/* Settings */}
         <div className="flex items-center justify-between">
