@@ -1,0 +1,86 @@
+import { useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api-client';
+import { useAuth } from './useAuth';
+import { DEFAULT_SETTINGS, type PrayerSettings } from '@/lib/prayer-times';
+
+const LOCAL_KEY = 'prayer_settings_v2';
+
+function getLocal(): PrayerSettings {
+  try {
+    const raw = localStorage.getItem(LOCAL_KEY);
+    return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : { ...DEFAULT_SETTINGS };
+  } catch {
+    return { ...DEFAULT_SETTINGS };
+  }
+}
+
+export function usePrayerSettings() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: settings = getLocal(), isLoading: loading } = useQuery({
+    queryKey: ['prayer-settings', user?.id],
+    queryFn: async () => {
+      const data = await api<any>('api-misc', { params: { resource: 'prayer-settings' } });
+      if (!data) return getLocal();
+      const s: PrayerSettings = {
+        latitude: data.latitude,
+        longitude: data.longitude,
+        city: data.city || DEFAULT_SETTINGS.city,
+        country: data.country || DEFAULT_SETTINGS.country,
+        location_method: (data.location_method as 'gps' | 'manual') || 'manual',
+        calculation_method: data.calculation_method ?? 3,
+        madhab: (data.madhab as 'shafi' | 'hanafi') || 'shafi',
+        mosque_fajr: data.mosque_fajr,
+        mosque_dhuhr: data.mosque_dhuhr,
+        mosque_asr: data.mosque_asr,
+        mosque_maghrib: data.mosque_maghrib,
+        mosque_isha: data.mosque_isha,
+        mosque_enabled: data.mosque_enabled ?? false,
+        adhan_settings: (data.adhan_settings as Record<string, any>) ?? DEFAULT_SETTINGS.adhan_settings,
+        log_nag_enabled:
+          (data.adhan_settings as any)?.__log_nag_enabled ?? DEFAULT_SETTINGS.log_nag_enabled,
+        log_nag_delay_min:
+          (data.adhan_settings as any)?.__log_nag_delay_min ?? DEFAULT_SETTINGS.log_nag_delay_min,
+      };
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(s));
+      return s;
+    },
+    enabled: !!user,
+    initialData: getLocal,
+  });
+
+  const saveSettings = useCallback(async (updated: Partial<PrayerSettings>) => {
+    const merged = { ...settings, ...updated };
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
+    queryClient.setQueryData(['prayer-settings', user?.id], merged);
+
+    if (!user) return;
+
+    // Persist log-nag fields inside adhan_settings JSONB (no schema migration needed).
+    const adhanWithNag = {
+      ...merged.adhan_settings,
+      __log_nag_enabled: merged.log_nag_enabled,
+      __log_nag_delay_min: merged.log_nag_delay_min,
+    };
+
+    await api('api-misc', {
+      method: 'POST',
+      params: { resource: 'prayer-settings' },
+      body: {
+        latitude: merged.latitude, longitude: merged.longitude,
+        city: merged.city, country: merged.country,
+        location_method: merged.location_method,
+        calculation_method: merged.calculation_method,
+        madhab: merged.madhab,
+        mosque_fajr: merged.mosque_fajr, mosque_dhuhr: merged.mosque_dhuhr,
+        mosque_asr: merged.mosque_asr, mosque_maghrib: merged.mosque_maghrib,
+        mosque_isha: merged.mosque_isha, mosque_enabled: merged.mosque_enabled,
+        adhan_settings: adhanWithNag,
+      },
+    });
+  }, [settings, user, queryClient]);
+
+  return { settings, saveSettings, loading };
+}

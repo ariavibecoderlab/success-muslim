@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Success Muslim</string>
+    <string name="title_activity_main">Success Muslim</string>
+    <string name="package_name">com.brainybunch.successmuslim</string>
+    <string name="custom_url_scheme">com.brainybunch.successmuslim</string>
+</resources>

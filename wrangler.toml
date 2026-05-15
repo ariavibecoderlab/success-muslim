@@ -1,0 +1,25 @@
+# ── Cloudflare Pages config for Success Muslim ──────────────
+# The frontend (Vite SPA) deploys to Cloudflare Pages. The backend
+# (Postgres + edge functions) stays on Supabase — Cloudflare only
+# serves the static build and proxies the custom domain.
+#
+# Deploy from the CLI:
+#   npm run build
+#   npx wrangler pages deploy dist --project-name=success-muslim
+#
+# Or connect this repo in the Cloudflare dashboard (Pages → Create →
+# Connect to Git) with build command "npm run build" and output "dist".
+
+name = "success-muslim"
+compatibility_date = "2026-05-15"
+
+# Pages serves the Vite build output. `npm run build` writes to dist/.
+pages_build_output_dir = "dist"
+
+# SPA routing is handled by public/_redirects ( /*  /index.html  200 ),
+# which Vite copies into dist/ automatically — no extra config needed.
+
+# NOTE: VITE_* environment variables are NOT set here. They are build-time
+# vars and must be configured in the Cloudflare Pages dashboard under
+# Settings → Environment variables (Production + Preview), or passed in CI.
+# See docs/DEPLOYMENT.md.
