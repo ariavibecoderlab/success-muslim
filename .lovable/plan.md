@@ -1,89 +1,61 @@
 ## Goal
 
-Produce a complete, IEEE 1016-style **Software Design Specification (SDS)** for Success Muslim, complementing the existing SRS in `docs/srs/`. The SDS describes **how** the system is built (architecture, modules, data, interfaces, algorithms), where the SRS describes **what** it must do.
+Produce a complete, restorable backup of the Lovable Cloud backend for Success Muslim, written to `/mnt/documents/backup-<timestamp>/` and delivered as a single downloadable zip.
 
-No code, schema, routes, or UI changes. Documentation only.
+## What gets backed up
 
-## Deliverable
+| Category | Source | Output file(s) |
+|---|---|---|
+| Database schema | `pg_dump --schema-only` via `$PGHOST` | `db/schema.sql` |
+| Database data | `pg_dump --data-only --inserts` (public schema only) | `db/data.sql` |
+| Per-table CSVs (human-readable) | `COPY ... TO STDOUT CSV HEADER` for every public table | `db/csv/<table>.csv` |
+| RLS policies | `pg_policies` query | `db/rls-policies.json` + `db/rls-policies.md` |
+| Functions / triggers | `pg_proc` + `information_schema.triggers` | `db/functions.sql`, `db/triggers.sql` |
+| Enums & types | `pg_type` query | `db/types.sql` |
+| Indexes | `pg_indexes` | `db/indexes.sql` |
+| Auth users | `SELECT id,email,created_at,last_sign_in_at,raw_user_meta_data,raw_app_meta_data,confirmed_at FROM auth.users` (no password hashes — those are not retrievable) | `auth/users.json` + `auth/users.csv` |
+| User roles | `public.user_roles` | already in CSVs + `auth/roles.csv` |
+| Storage bucket metadata | `storage.buckets`, `storage.objects` listing | `storage/buckets.json`, `storage/objects-<bucket>.csv` |
+| Storage files (binaries) | Download every object from each bucket via Supabase Storage API using service role key | `storage/files/<bucket>/<path>` |
+| Edge functions source | Copy `supabase/functions/**` from repo | `edge-functions/` |
+| `supabase/config.toml` | Copy from repo | `config/config.toml` |
+| Secret names (values not retrievable) | List of secret names from `secrets--fetch_secrets` | `secrets/secret-names.md` |
+| Migrations history | `supabase/migrations/**` from repo | `migrations/` |
+| Generated TS types | `src/integrations/supabase/types.ts` | `types/types.ts` |
+| SRS + SDS docs | `docs/srs/`, `docs/sds/` | `docs/` |
+| Manifest | Counts, sizes, timestamp, project ref | `MANIFEST.md` |
 
-A new folder `docs/sds/` with a master document plus focused chapters:
+## What CANNOT be backed up (documented in MANIFEST)
 
-```text
-docs/sds/
-├── README.md                       Index + reading order, cross-links to SRS
-├── 00-sds-master.md                Single long-form SDS (all chapters concatenated)
-├── 01-introduction.md              Purpose, scope, audience, definitions, relationship to SRS
-├── 02-design-overview.md           Design goals, constraints, principles, key trade-offs
-├── 03-system-architecture.md       C4-style context + container view, runtime topology
-│                                   (React SPA, Capacitor shell, Supabase Postgres,
-│                                   Edge Functions, JAKIM/Aladhan, Google OAuth, Lovable AI)
-├── 04-module-decomposition.md      Frontend module map: pages, components, hooks, lib,
-│                                   stores, contexts, utils/native, integrations
-├── 05-data-design.md               Logical schema by domain, ER notes, RLS pattern,
-│                                   indexing strategy, storage buckets, retention
-├── 06-interface-design.md          Internal API contracts (edge function envelopes,
-│                                   request/response shapes), external API adapters
-│                                   (JAKIM proxy, Aladhan, Google), Capacitor bridge surface
-├── 07-component-design.md          Per-module detailed design: responsibilities,
-│                                   public surface, dependencies, state, error paths
-│                                   for Auth, Onboarding, Dashboard, Iman (Prayer, Quran,
-│                                   Dhikr, Sunnah, Sadaqah/Zakat/Fidyah, Qada, Ramadhan
-│                                   Qada, Qiyam, Hajj/Umrah, Dakwah, Salah Log, Fasting),
-│                                   Health, Wealth, Productivity, Family, Blog/CMS,
-│                                   Admin Console, Settings
-├── 08-algorithms-and-logic.md      Life Score formula, Khatam math, prayer-time
-│                                   calculation method selection, IF timer state machine,
-│                                   streak/backdate rules, leaderboard scoring,
-│                                   offline sync queue + conflict resolution
-├── 09-ui-design.md                 Design system tokens, layout shells (AppLayout,
-│                                   SubPageLayout, MarketingLayout), navigation pattern,
-│                                   accessibility, motion, edit-mode CMS overlay
-├── 10-state-and-data-flow.md       AuthContext, React Query, Zustand stores,
-│                                   localStorage cache contract, db-sync lifecycle,
-│                                   sequence diagrams (login, log salah offline,
-│                                   start IF session, Quran session persist)
-├── 11-security-design.md           AuthZ via has_role, RBAC, RLS templates,
-│                                   admin guard + timeout, audit log, secrets handling,
-│                                   threat model summary
-├── 12-deployment-design.md         Web (Lovable host + custom domain), PWA,
-│                                   Android (Capacitor + App Links + assetlinks.json),
-│                                   iOS (Capacitor + Universal Links + AASA),
-│                                   environments, release channels
-├── 13-error-handling-and-observability.md
-│                                   ErrorBoundary, toast taxonomy, edge function error
-│                                   envelope, admin live activity feed, audit log,
-│                                   client logging strategy
-├── 14-performance-design.md        Bundle/code-split strategy, image policy,
-│                                   query caching, list virtualization, Quran pagination
-│                                   + Intersection Observer, memoization rules
-├── 15-testing-design.md            Vitest setup, unit vs integration scope,
-│                                   smoke-test mapping to SRS §10, manual QA matrix
-└── 16-traceability.md              SRS requirement ID → SDS section → source file(s)
-```
+- **Auth password hashes** — never exposed via API or SQL to clients; only Supabase platform-level project export can move these.
+- **Secret values** (`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`, etc.) — write-only by design. Names only.
+- **JWT signing keys** — managed by Supabase.
+- **Realtime / cron job state** — none configured beyond what's in `config.toml`.
 
-## Method
+## How
 
-1. Audit the codebase to extract the actual design (do not invent):
-   - `src/App.tsx`, `src/main.tsx`, `src/contexts/*`, `src/components/AppLayout.tsx`,
-     `src/components/BottomNav.tsx`, `SubPageLayout.tsx`, `AuthGuard.tsx`, `AdminGuard.tsx`.
-   - `src/hooks/use*Query.ts`, `src/lib/api-client.ts`, `src/lib/db-sync.ts`,
-     all `src/lib/*-storage.ts`, `src/lib/life-score.ts`, `src/lib/quran-mapping.ts`,
-     `src/lib/prayer-times.ts`, `src/lib/zakat.ts`, `src/stores/*`.
-   - `src/utils/native/*` for the Capacitor abstraction surface.
-   - `supabase/functions/*/index.ts` for edge function contracts.
-   - `src/integrations/supabase/types.ts` for the authoritative schema.
-   - `tailwind.config.ts`, `src/index.css` for the token surface.
-   - `capacitor.config.ts`, `public/.well-known/*`, `public/_redirects`, `android/`, `ios/`.
-2. Cross-link each SDS section back to the matching SRS section (`FR-*`, `NFR-*`).
-3. Document sequence flows as fenced ASCII diagrams (no emojis).
-4. Keep the SRS as source of truth for **requirements**; if SDS and SRS disagree, SRS wins for *what*, SDS wins for *how*, and code wins over both.
+Single Node/bash script run via `code--exec`. Uses:
+- `psql` with the session's `PG*` env vars for SQL dumps (read+insert access is sufficient for `SELECT`/`COPY TO STDOUT`).
+- `pg_dump` if available in the sandbox; falls back to per-object SQL reconstruction queries if not.
+- `curl` with `SUPABASE_SERVICE_ROLE_KEY` for storage downloads (`/storage/v1/object/<bucket>/<path>`) and auth admin listing (`/auth/v1/admin/users`).
+- `zip` (via `nix run nixpkgs#zip`) to package the final artifact.
+
+## Deliverables
+
+- `/mnt/documents/backup-<UTC-timestamp>/` — full tree.
+- `/mnt/documents/successmuslim-backup-<UTC-timestamp>.zip` — single download.
+- A `<presentation-artifact>` tag pointing at the zip.
+- `MANIFEST.md` listing every file, row counts per table, byte sizes per bucket, and a restore guide (how to re-apply schema, re-import data, re-upload storage, re-create users via admin API with the exported metadata — noting password reset will be required).
+
+## Restore notes (included in MANIFEST.md)
+
+1. New Supabase project → run `db/schema.sql` → `db/functions.sql` → `db/triggers.sql` → `db/data.sql`.
+2. Re-create storage buckets from `storage/buckets.json`, then re-upload `storage/files/**`.
+3. Re-create auth users via `/auth/v1/admin/users` POST using `auth/users.json` (passwords lost → users must reset).
+4. Re-deploy `edge-functions/**` and re-add secrets manually from `secrets/secret-names.md`.
 
 ## Out of scope
 
-- No code, schema, route, edge function, or UI changes.
-- No new marketing copy, store-listing edits, or test code.
-- No duplication of memory contents (Life Score weights, etc.) — reference `mem://` notes.
-
-## Open question
-
-Same as SRS: produce the **full split set above (17 files)**, or only a **single `00-sds-master.md`** long-form doc? Default if you don't answer: full split set, in English, matching the SRS structure.
+- No code changes.
+- No DB writes (read-only backup).
+- No attempt to exfiltrate secret values.
