@@ -1,77 +1,72 @@
-## Goal
+## Plan: Software Requirements Specification (SRS)
 
-The current `/iman/quran` page crams 7 sections into one scroll: backdate prompt, date picker, khatam ring, today's reading counter, current position inputs, 3 stat tiles, khatam progress bar, and a weekly chart. It feels dense and the primary action (logging pages) competes with stats. We'll restructure for a clearer hierarchy and move secondary content to a dedicated stats screen.
+Create a comprehensive, IEEE 830-style SRS for the Success Muslim app, written from the current codebase (routes, hooks, Supabase schema, edge functions, mobile/Capacitor setup, admin, CMS, etc.).
 
-## Approach
+### Deliverable
 
-Split the page into two routes:
+A single master document plus focused appendices under `docs/srs/`:
 
-1. **`/iman/quran`** — focused on the *primary action*: log today's reading.
-2. **`/iman/quran/stats`** — full analytics view (khatam ring, streaks, weekly chart, history heatmap).
-
-This matches the pattern already used elsewhere in the app (e.g. setup/track splits) and keeps the sibling-route arrows in `SubPageLayout` clean.
-
-## New `/iman/quran` layout (top → bottom)
-
-```text
-[ Backdate prompt + date picker (only if backdated) ]
-
-┌────────────── Hero log card ──────────────┐
-│  Today / 21 Feb                           │
-│            ┌─────┐                        │
-│   −        │  3  │       +                │
-│            └─────┘                        │
-│        pages read today                   │
-│  [ +1 ]  [ +5 ]  [ +10 ]  [ +1 Juz ]      │
-└───────────────────────────────────────────┘
-
-┌────────── Reading position ──────────────┐
-│  Surah  [Al-Baqarah        ]              │
-│  Juz    [ 2 ]    Page  [ 23 ]             │
-└───────────────────────────────────────────┘
-
-┌── Compact summary strip (tappable → stats)┐
-│  🔥 12d   📖 247 pages   🏆 0 khatam   ›  │
-└───────────────────────────────────────────┘
-
-[ Continue Reading → /iman/quran/reader ]   (existing CTA, kept)
+```
+docs/srs/
+├── README.md                          # Index + how to read this SRS
+├── 00-srs-master.md                   # Full SRS (sections 1–10, IEEE 830 style)
+├── 01-introduction.md                 # Purpose, scope, definitions, references
+├── 02-overall-description.md          # Product perspective, users, constraints, assumptions
+├── 03-system-architecture.md          # Frontend (React/Vite), Lovable Cloud (Supabase),
+│                                      # Edge Functions, Capacitor native, data flow diagrams
+├── 04-functional-requirements.md      # FR-### per module:
+│                                      #   Auth, Onboarding, Dashboard/Today, Iman
+│                                      #   (Prayer, Quran, Dhikr, Sunnah, Sadaqah, Zakat,
+│                                      #    Fidyah, Qada, Ramadhan Qada, Qiyam, Hajj,
+│                                      #    Dakwah, Salah Log, Fasting),
+│                                      #   Health (BMI, Weight, Hydration, Sleep,
+│                                      #    Fasting/IF, Steps), Wealth (Budget, Savings,
+│                                      #    Income Sources), Productivity (Tasks, Habits,
+│                                      #    Life Areas), Family/Class groups,
+│                                      #   Blog/CMS, Admin Console, Settings
+├── 05-data-requirements.md            # ER overview, table-by-table contract,
+│                                      # RLS policies, security definer functions,
+│                                      # offline-first sync (localStorage ↔ Supabase),
+│                                      # backdate (90-day) rules, life-score formula
+├── 06-external-interfaces.md          # UI (mobile-first max-w-md), API surface
+│                                      # (edge functions api-*), 3rd-party (JAKIM/Aladhan,
+│                                      # Google OAuth, Lovable AI Gateway), Capacitor plugins
+├── 07-non-functional-requirements.md  # Performance, offline, accessibility (WCAG 2.1 AA,
+│                                      # Apple HIG, 44x44 targets), security (RBAC,
+│                                      # HIBP), i18n (EN/MS/ID/AR), reliability,
+│                                      # observability, maintainability
+├── 08-security-and-privacy.md         # AuthN/AuthZ, roles (admin/moderator/user),
+│                                      # data classification, retention, GDPR/PDPA,
+│                                      # store privacy declarations
+├── 09-deployment-and-release.md       # Web (Lovable), PWA, Android/iOS via Capacitor,
+│                                      # appId com.brainybunch.successmuslim, env matrix
+└── 10-traceability-and-acceptance.md  # Requirement → feature/file traceability,
+                                       # acceptance criteria, MVP scope for 1 Ramadan 1447 AH
 ```
 
-Changes from current:
-- Hero counter becomes the visual anchor (larger number, clearer label).
-- Quick-add buttons relabeled `+1 / +5 / +10 / +1 Juz` (drop `+2`, add `+1` for finer control).
-- "Current Position" merged into one card; add optional Page input alongside Surah/Juz.
-- Khatam ring, khatam progress bar, 3 stat tiles, and weekly chart **removed from this page**.
-- Replaced by a single tappable summary strip (streak · total pages · khatam count) that links to the new stats page.
-- Date picker only renders when the user has tapped backdate (reduces visual noise on default view).
+### Method
 
-## New `/iman/quran/stats` page
+1. Audit the codebase in read-only mode to extract truth:
+   - Routes from `src/App.tsx`
+   - Hooks under `src/hooks/*` and storage libs under `src/lib/*`
+   - Edge functions under `supabase/functions/api-*`
+   - Supabase types (`src/integrations/supabase/types.ts`) for entity model
+   - Memory files under `mem://features/*`, `mem://tech/*`, `mem://ui/*` for canonical rules
+2. Write each section with concrete IDs:
+   - Functional: `FR-IMAN-001`, `FR-HEALTH-IF-004`, etc.
+   - Non-functional: `NFR-PERF-001`, `NFR-A11Y-002`, etc.
+   - Each requirement: ID · Title · Description · Inputs/Outputs · Preconditions ·
+     Acceptance criteria · Source file(s) · Priority (MoSCoW).
+3. Cross-link to existing docs in `docs/store-listings/*` and `docs/MOBILE_*` rather than duplicating.
+4. Keep visuals as ASCII diagrams (architecture, sync flow, auth flow).
 
-A dedicated `SubPageLayout` titled "Quran Stats" with back to `/iman/quran`:
+### Out of scope
 
-```text
-[ Khatam progress ring (large, centered) ]
-[ Khatam progress bar + % + ETA ]
+- No code changes, no schema changes, no new routes.
+- No marketing copy (lives in `docs/store-listings/`).
+- No test plan (can be a follow-up `docs/test-plan/`).
 
-[ Stat tiles: streak · total pages · est. days · khatam count ]
+### Confirm before I proceed
 
-[ Last 7 days bar chart ]
-[ Reading heatmap (reuse src/components/quran/ReadingHeatmap.tsx) ]
-```
-
-The existing `ReadingHeatmap` component is already in the codebase but not used on the tracker — we surface it here.
-
-## Files to change
-
-- `src/pages/QuranTracker.tsx` — slim down to log-focused layout.
-- `src/pages/QuranStats.tsx` — **new**, holds the analytics moved out of the tracker.
-- `src/App.tsx` — register the `/iman/quran/stats` route.
-- `SubPageLayout` `headerRight` on `/iman/quran` — add a small chart icon button → `/iman/quran/stats` (alternative entry point alongside the summary strip).
-
-No backend, no hook, no storage changes — this is purely a presentation refactor over the existing `useQuranStorageQuery` data.
-
-## Out of scope
-
-- No changes to logging logic, khatam math, or data sync.
-- No redesign of the Quran reader (`/iman/quran/reader`).
-- Heatmap component itself is reused as-is.
+- Language: **English** (consistent with existing `docs/`), OK? Or do you want it in **Bahasa Melayu**?
+- Depth: produce the **full split set above** (10 files + index), or only the **single `00-srs-master.md`** as one long doc?
